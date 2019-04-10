@@ -108,7 +108,7 @@ tnpointseq_positions(TemporalSeq *seq)
 		minPos = Min(minPos, np->pos);
 		maxPos = Max(maxPos, np->pos);
 	}
-	return nregion_from_segment_internal(rid, minPos, maxPos);
+	return nregion_from_nsegment_internal(rid, minPos, maxPos);
 }
 
 nregion *

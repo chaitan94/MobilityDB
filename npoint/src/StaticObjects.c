@@ -13,6 +13,18 @@
 #include "TemporalNPoint.h"
 
 /*****************************************************************************
+ * Utility functions
+ *****************************************************************************/
+
+ArrayType *
+nsegmentarr_to_array(nsegment **segments, int count)
+{
+	ArrayType *result = construct_array((Datum *)segments, count, type_oid(T_NSEGMENT), 
+		sizeof(nsegment), false, 'd');
+	return result;
+}
+
+/*****************************************************************************
  * Input/Output functions for npoint
  *****************************************************************************/
 
@@ -27,20 +39,9 @@ PGDLLEXPORT Datum
 npoint_in(PG_FUNCTION_ARGS)
 {
 	char *str = PG_GETARG_CSTRING(0);
-	int64 rid;
-	double pos;
-	npoint *result;
-
-	if (sscanf(str, "(%ld,%lf)", &rid, &pos) != 2)
-		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-			errmsg("invalid input syntax for npoint: \"%s\"", str)));
-	if (pos < 0 || pos > 1)
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("the relative position must be a real number between 0 and 1")));
-
-	result = (npoint *) palloc(sizeof(npoint));
-	result->rid = rid;
-	result->pos = pos;
+	npoint *result = npoint_parse(&str);
+	if (result == NULL)
+		PG_RETURN_NULL();
 	PG_RETURN_POINTER(result);
 }
 
@@ -52,9 +53,7 @@ PGDLLEXPORT Datum
 npoint_out(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
-	char *result;
-
-	result = psprintf("(%ld,%g)", np->rid, np->pos);
+	char *result = psprintf("NPoint(%ld,%g)", np->rid, np->pos);
 	PG_RETURN_CSTRING(result);
 }
 
@@ -87,6 +86,73 @@ npoint_send(PG_FUNCTION_ARGS)
 	pq_begintypsend(&buf);
 	pq_sendint64(&buf, np->rid);
 	pq_sendfloat8(&buf, np->pos);
+	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
+}
+
+/*****************************************************************************
+ * Input/Output functions for nsegment
+ *****************************************************************************/
+
+/*
+ * Input function.
+ * Example of input:
+ * 		(1, 0.5, 0.6)
+ */
+PG_FUNCTION_INFO_V1(nsegment_in);
+
+PGDLLEXPORT Datum
+nsegment_in(PG_FUNCTION_ARGS)
+{
+	char *str = PG_GETARG_CSTRING(0);
+	nsegment *result = nsegment_parse(&str);
+	if (result == NULL)
+		PG_RETURN_NULL();
+	PG_RETURN_POINTER(result);
+}
+
+/* Output function */
+
+PG_FUNCTION_INFO_V1(nsegment_out);
+
+PGDLLEXPORT Datum
+nsegment_out(PG_FUNCTION_ARGS)
+{
+	nsegment *ns = PG_GETARG_NSEGMENT(0);
+	char *result = psprintf("NSegment(%ld,%g,%g)", ns->rid, ns->pos1, ns->pos2);
+	PG_RETURN_CSTRING(result);
+}
+
+/* Receive function */
+
+PG_FUNCTION_INFO_V1(nsegment_recv);
+
+PGDLLEXPORT Datum
+nsegment_recv(PG_FUNCTION_ARGS)
+{
+	StringInfo	buf = (StringInfo) PG_GETARG_POINTER(0);
+	nsegment *result;
+
+	result = (nsegment *) palloc(sizeof(nsegment));
+	result->rid = pq_getmsgint64(buf);
+	result->pos1 = pq_getmsgfloat8(buf);
+	result->pos2 = pq_getmsgfloat8(buf);
+	PG_RETURN_POINTER(result);
+}
+
+/* Send function */
+
+PG_FUNCTION_INFO_V1(nsegment_send);
+
+PGDLLEXPORT Datum
+nsegment_send(PG_FUNCTION_ARGS)
+{
+	nsegment *ns = PG_GETARG_NSEGMENT(0);
+	StringInfoData buf;
+
+	pq_begintypsend(&buf);
+	pq_sendint64(&buf, ns->rid);
+	pq_sendfloat8(&buf, ns->pos1);
+	pq_sendfloat8(&buf, ns->pos2);
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
 
@@ -243,7 +309,7 @@ nregion_recv(PG_FUNCTION_ARGS)
  *****************************************************************************/
 
 npoint *
-npoint_constructor_internal(int64 rid, double pos)
+npoint_make(int64 rid, double pos)
 {
 	if (pos < 0 || pos > 1)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
@@ -262,17 +328,60 @@ npoint_constructor(PG_FUNCTION_ARGS)
 {
 	int64 rid = PG_GETARG_INT64(0);
 	double pos = PG_GETARG_FLOAT8(1);
-	npoint *result = npoint_constructor_internal(rid, pos);
+	npoint *result = npoint_make(rid, pos);
+	PG_RETURN_POINTER(result);
+}
+
+nsegment *
+nsegment_make(int64 rid, double pos1, double pos2)
+{
+	if (pos1 < 0 || pos1 > 1 || pos2 < 0 || pos2 > 1)
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("the relative position must be a real number between 0 and 1")));
+
+	nsegment *result = (nsegment *)palloc(sizeof(nsegment));
+	result->rid = rid;
+	result->pos1 = Min(pos1, pos2);
+	result->pos2 = Max(pos1, pos2);
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(nsegment_constructor);
+
+PGDLLEXPORT Datum
+nsegment_constructor(PG_FUNCTION_ARGS)
+{
+	int64 rid = PG_GETARG_INT64(0);
+	double pos1 = PG_GETARG_FLOAT8(1);
+	double pos2 = PG_GETARG_FLOAT8(2);
+	nsegment *result = nsegment_make(rid, pos1, pos2);
+	PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(nsegment_from_npoint);
+
+PGDLLEXPORT Datum
+nsegment_from_npoint(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	nsegment *result = nsegment_make(np->rid, np->pos, np->pos);
+	PG_FREE_IF_COPY(np, 0);
+	PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(nsegment_from_route);
+
+PGDLLEXPORT Datum
+nsegment_from_route(PG_FUNCTION_ARGS)
+{
+	int64 rid = PG_GETARG_INT64(0);
+	nsegment *result = nsegment_make(rid, 0, 1);
 	PG_RETURN_POINTER(result);
 }
 
 nregion *
-nregion_from_segment_internal(int64 rid, double pos1, double pos2)
+nregion_from_nsegment_internal(int64 rid, double pos1, double pos2)
 {
-	if (pos1 < 0 || pos1 > 1 || pos2 < 0 || pos2 > 1)
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("The relative position must be a real number between 0 and 1")));
-
 	size_t size = VARHDRSZ + sizeof(int32) + sizeof(nsegment);
 	nregion *result = (nregion *)palloc0(size);
 	SET_VARSIZE(result, size);
@@ -281,6 +390,38 @@ nregion_from_segment_internal(int64 rid, double pos1, double pos2)
 	result->nsegs[0].pos1 = pos1;
 	result->nsegs[0].pos2 = pos2;
 	return result;
+}
+
+PG_FUNCTION_INFO_V1(nregion_from_nsegment);
+
+PGDLLEXPORT Datum
+nregion_from_nsegment(PG_FUNCTION_ARGS)
+{
+	nsegment *ns = PG_GETARG_NSEGMENT(0);
+	nregion *result = nregion_from_nsegment_internal(ns->rid, ns->pos1, ns->pos2);
+	PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(nregion_from_nsegmentarr);
+
+PGDLLEXPORT Datum
+nregion_from_nsegmentarr(PG_FUNCTION_ARGS)
+{
+	ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
+	int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
+	if (count < 1)
+	{
+		PG_FREE_IF_COPY(array, 0);
+		PG_RETURN_NULL();
+	}
+	nsegment *nsegs;
+	deconstruct_array(array, array->elemtype, sizeof(nsegment), false, 'd', 
+		(Datum **) &nsegs, NULL, &count);
+
+	nregion *result = nregion_from_nsegmentarr_internal(nsegs, count);
+	PG_FREE_IF_COPY(array, 0);
+	pfree(nsegs);
+	PG_RETURN_POINTER(result);
 }
 
 nregion *
@@ -301,72 +442,6 @@ nregion_from_nregionarr_internal(nregion **nregs, int count)
 	nregion *result = nregion_from_nsegmentarr_internal(nsegs, countsegs);
 	pfree(nsegs);
 	return result;
-}
-
-PG_FUNCTION_INFO_V1(nregion_from_segment);
-
-PGDLLEXPORT Datum
-nregion_from_segment(PG_FUNCTION_ARGS)
-{
-	int64 rid = PG_GETARG_INT64(0);
-	double pos1 = PG_GETARG_FLOAT8(1);
-	double pos2 = PG_GETARG_FLOAT8(2);
-	nregion *result = nregion_from_segment_internal(rid, pos1, pos2);
-	PG_RETURN_POINTER(result);
-}
-
-PG_FUNCTION_INFO_V1(nregion_from_route);
-
-PGDLLEXPORT Datum
-nregion_from_route(PG_FUNCTION_ARGS)
-{
-	int64 rid = PG_GETARG_INT64(0);
-	nregion *result = nregion_from_segment_internal(rid, 0, 1);
-	PG_RETURN_POINTER(result);
-}
-
-PG_FUNCTION_INFO_V1(nregion_from_route_pos);
-
-PGDLLEXPORT Datum
-nregion_from_route_pos(PG_FUNCTION_ARGS)
-{
-	int64 rid = PG_GETARG_INT64(0);
-	double pos = PG_GETARG_FLOAT8(1);
-	nregion *result = nregion_from_segment_internal(rid, pos, pos);
-	PG_RETURN_POINTER(result);
-}
-
-PG_FUNCTION_INFO_V1(nregion_from_npoint);
-
-PGDLLEXPORT Datum
-nregion_from_npoint(PG_FUNCTION_ARGS)
-{
-	npoint *np = PG_GETARG_NPOINT(0);
-	nregion *result = nregion_from_segment_internal(np->rid, np->pos, np->pos);
-	PG_FREE_IF_COPY(np, 0);
-	PG_RETURN_POINTER(result);
-}
-
-PG_FUNCTION_INFO_V1(nregion_from_nregionarr);
-
-PGDLLEXPORT Datum
-nregion_from_nregionarr(PG_FUNCTION_ARGS)
-{
-	ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
-	int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
-	if (count < 1)
-	{
-		PG_FREE_IF_COPY(array, 0);
-		PG_RETURN_NULL();
-	}
-	nregion **nregs;
-	deconstruct_array(array, array->elemtype, -1, false, 'd', 
-		(Datum **) &nregs, NULL, &count);
-
-	nregion *result = nregion_from_nregionarr_internal(nregs, count);
-	PG_FREE_IF_COPY(array, 0);
-	pfree(nregs);
-	PG_RETURN_POINTER(result);
 }
 
 /*****************************************************************************
@@ -393,6 +468,39 @@ npoint_pos(PG_FUNCTION_ARGS)
 	double pos = np->pos;
 	PG_FREE_IF_COPY(np, 0);
 	PG_RETURN_FLOAT8(pos);
+}
+
+PG_FUNCTION_INFO_V1(nsegment_route);
+
+PGDLLEXPORT Datum
+nsegment_route(PG_FUNCTION_ARGS)
+{
+	nsegment *ns = PG_GETARG_NSEGMENT(0);
+	int64 rid = ns->rid;
+	PG_FREE_IF_COPY(ns, 0);
+	PG_RETURN_INT64(rid);
+}
+
+PG_FUNCTION_INFO_V1(nsegment_start_pos);
+
+PGDLLEXPORT Datum
+nsegment_start_pos(PG_FUNCTION_ARGS)
+{
+	nsegment *ns = PG_GETARG_NSEGMENT(0);
+	double pos1 = ns->pos1;
+	PG_FREE_IF_COPY(ns, 0);
+	PG_RETURN_FLOAT8(pos1);
+}
+
+PG_FUNCTION_INFO_V1(nsegment_end_pos);
+
+PGDLLEXPORT Datum
+nsegment_end_pos(PG_FUNCTION_ARGS)
+{
+	nsegment *ns = PG_GETARG_NSEGMENT(0);
+	double pos2 = ns->pos2;
+	PG_FREE_IF_COPY(ns, 0);
+	PG_RETURN_FLOAT8(pos2);
 }
 
 PG_FUNCTION_INFO_V1(nregion_segments);

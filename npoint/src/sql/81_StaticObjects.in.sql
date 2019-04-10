@@ -47,6 +47,35 @@ CREATE TYPE npoint (
 	alignment = double
 );
 
+CREATE FUNCTION nsegment_in(cstring)
+	RETURNS nsegment
+ 	AS 'MODULE_PATHNAME'
+	LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION nsegment_out(nsegment)
+	RETURNS cstring
+ 	AS 'MODULE_PATHNAME'
+	LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION nsegment_recv(internal)
+	RETURNS nsegment
+ 	AS 'MODULE_PATHNAME'
+	LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION nsegment_send(nsegment)
+	RETURNS bytea
+ 	AS 'MODULE_PATHNAME'
+	LANGUAGE C IMMUTABLE STRICT;
+
+CREATE TYPE nsegment (
+	internallength = 24,
+	input = nsegment_in,
+	output = nsegment_out,
+	receive = nsegment_recv,
+	send = nsegment_send,
+	alignment = double
+);
+
 CREATE FUNCTION nregion_in(cstring)
 	RETURNS nregion
  	AS 'MODULE_PATHNAME'
@@ -85,39 +114,26 @@ CREATE FUNCTION npoint(bigint, double precision)
 	RETURNS npoint
 	AS 'MODULE_PATHNAME', 'npoint_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-	
-CREATE FUNCTION nregion(bigint, double precision, double precision)
-	RETURNS nregion
-	AS 'MODULE_PATHNAME', 'nregion_from_segment'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-	
-CREATE FUNCTION nregion(bigint)
-	RETURNS nregion
-	AS 'MODULE_PATHNAME', 'nregion_from_route'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-	
-CREATE FUNCTION nregion(bigint, double precision)
-	RETURNS nregion
-	AS 'MODULE_PATHNAME', 'nregion_from_route_pos'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-	
-CREATE FUNCTION nregion(npoint)
-	RETURNS nregion
-	AS 'MODULE_PATHNAME', 'nregion_from_npoint'
+
+CREATE FUNCTION nsegment(bigint, double precision DEFAULT 0, double precision DEFAULT 1)
+	RETURNS nsegment
+	AS 'MODULE_PATHNAME', 'nsegment_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION nregion_from_nregionarr(nregion[])
+CREATE FUNCTION nsegment(npoint)
+	RETURNS nsegment
+	AS 'MODULE_PATHNAME', 'nsegment_from_npoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION nregion(nsegment)
 	RETURNS nregion
-	AS 'MODULE_PATHNAME', 'nregion_from_nregionarr'
+	AS 'MODULE_PATHNAME', 'nregion_from_nsegment'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 	
-CREATE AGGREGATE nregion_agg(nregion) (
-	SFUNC = array_append,
-	STYPE = nregion[],
-	INITCOND = '{}',
-	FINALFUNC = nregion_from_nregionarr,
-	PARALLEL = SAFE
-);
+CREATE FUNCTION nregion(nsegment[])
+	RETURNS nregion
+	AS 'MODULE_PATHNAME', 'nregion_from_nsegmentarr'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
  * Accessing values
@@ -132,9 +148,24 @@ CREATE FUNCTION pos(npoint)
 	RETURNS double precision
 	AS 'MODULE_PATHNAME', 'npoint_pos'
 	LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION route(nsegment)
+	RETURNS bigint
+	AS 'MODULE_PATHNAME', 'nsegment_route'
+	LANGUAGE C IMMUTABLE STRICT;
 	
-CREATE FUNCTION segments(IN nregion, OUT rid bigint, OUT pos1 double precision, OUT pos2 double precision)
-	RETURNS SETOF RECORD
+CREATE FUNCTION startPosition(nsegment)
+	RETURNS double precision
+	AS 'MODULE_PATHNAME', 'nsegment_start_pos'
+	LANGUAGE C IMMUTABLE STRICT;
+	
+CREATE FUNCTION endPosition(nsegment)
+	RETURNS double precision
+	AS 'MODULE_PATHNAME', 'nsegment_end_pos'
+	LANGUAGE C IMMUTABLE STRICT;
+	
+CREATE FUNCTION segments(nregion)
+	RETURNS nsegment[]
 	AS 'MODULE_PATHNAME', 'nregion_segments'
 	LANGUAGE C IMMUTABLE STRICT;
 
