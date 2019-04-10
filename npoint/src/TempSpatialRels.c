@@ -276,7 +276,7 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 	pfree(DatumGetPointer(startgeom1)); pfree(DatumGetPointer(startgeom2));
 
 	/* If two segments are equal or constant */
-	if ((eq_npoint_npoint_internal(startnp1, startnp2) && eq_npoint_npoint_internal(endnp1, endnp2)) ||
+	if ((npoint_eq_internal(startnp1, startnp2) && npoint_eq_internal(endnp1, endnp2)) ||
 		(startnp1->pos == endnp1->pos && startnp2->pos == endnp2->pos))
 	{
 		/* Compute the operator at the start instants */
@@ -575,7 +575,7 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 	pfree(DatumGetPointer(startgeom1)); pfree(DatumGetPointer(startgeom2));
 
 	/* If two segments are equal or constant */
-	if ((eq_npoint_npoint_internal(startnp1, startnp2) && eq_npoint_npoint_internal(endnp1, endnp2)) ||
+	if ((npoint_eq_internal(startnp1, startnp2) && npoint_eq_internal(endnp1, endnp2)) ||
 		(startnp1->pos == endnp1->pos && startnp2->pos == endnp2->pos))
 	{
 		/* Compute the operator at the start instants */

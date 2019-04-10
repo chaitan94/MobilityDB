@@ -229,15 +229,15 @@ tnpointi_geom(TemporalI *ti)
 Datum
 tnpointseq_geom(TemporalSeq *seq)
 {
-	nregion *nreg = tnpointseq_positions(seq);
-	return nregion_geom_internal(nreg);
+	nsegment *ns = tnpointseq_positions1(seq);
+	return nsegment_geom_internal(ns);
 }
 
 Datum
 tnpoints_geom(TemporalS *ts)
 {
-	nregion *nreg = tnpoints_positions(ts);
-	return nregion_geom_internal(nreg);
+	nsegment **segments = tnpoints_positions1(ts);
+	return nsegmentarr_geom_internal(segments, ts->count);
 }
 
 /*****************************************************************************

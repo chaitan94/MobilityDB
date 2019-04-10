@@ -86,7 +86,7 @@ tnpoint_make_tnpointseq(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Restriction functions
+ * Accessor functions
  *****************************************************************************/
 
 /*
@@ -94,8 +94,38 @@ tnpoint_make_tnpointseq(PG_FUNCTION_ARGS)
  * Return the network region covered by the moving object
  */
 
-nregion *
-tnpointseq_positions(TemporalSeq *seq)
+ArrayType *
+tnpointinst_positions(TemporalInst *inst)
+{
+	npoint *np = DatumGetNpoint(temporalinst_value(inst));
+	nsegment *ns = nsegment_make(np->rid, np->pos, np->pos);
+	ArrayType *result = nsegmentarr_to_array(&ns, 1);
+	pfree(ns);
+	return result;
+}
+
+/* Set of segments taken by the temporal value */
+
+ArrayType *
+tnpointi_positions(TemporalI *ti)
+{
+	int count;
+	Datum *values = temporali_values1(ti, &count);
+	nsegment **segments = palloc(sizeof(nsegment *) * count);
+	for (int i = 0; i < count; i++)
+	{
+		npoint *np = DatumGetNpoint(values[i]);
+		segments[i] = nsegment_make(np->rid, np->pos, np->pos);
+	}
+	ArrayType *result = nsegmentarr_to_array(segments, count);
+	for (int i = 0; i < count; i++)
+		pfree(segments[i]);
+	pfree(segments); pfree(values);
+	return result;
+}
+
+nsegment *
+tnpointseq_positions1(TemporalSeq *seq)
 {
 	TemporalInst *inst = temporalseq_inst_n(seq, 0);
 	npoint *np = DatumGetNpoint(temporalinst_value(inst));
@@ -108,23 +138,39 @@ tnpointseq_positions(TemporalSeq *seq)
 		minPos = Min(minPos, np->pos);
 		maxPos = Max(maxPos, np->pos);
 	}
-	return nregion_from_nsegment_internal(rid, minPos, maxPos);
+	nsegment *result = nsegment_make(rid, minPos, maxPos);
+	return result;
 }
 
-nregion *
-tnpoints_positions(TemporalS *ts)
+ArrayType *
+tnpointseq_positions(TemporalSeq *seq)
 {
-	nregion **nregs = palloc(sizeof(nregion *) * ts->count);
+	nsegment *ns = tnpointseq_positions1(seq);
+	ArrayType *result = nsegmentarr_to_array(&ns, 1);
+	pfree(ns);
+	return result;
+}
+
+nsegment **
+tnpoints_positions1(TemporalS *ts)
+{
+	nsegment **result = palloc(sizeof(nsegment *) * ts->count);
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
-		nregs[i] = tnpointseq_positions(seq);
+		result[i] = tnpointseq_positions1(seq);
 	}
-	nregion *result = nregion_from_nregionarr_internal(nregs, ts->count);
+	return result;
+}
 
+ArrayType *
+tnpoints_positions(TemporalS *ts)
+{
+	nsegment **segments = tnpoints_positions1(ts);
+	ArrayType *result = nsegmentarr_to_array(segments, ts->count);
 	for (int i = 0; i < ts->count; i++)
-		pfree(nregs[i]);
-	pfree(nregs);
+		pfree(segments[i]);
+	pfree(segments);
 	return result;
 }
 
@@ -134,19 +180,18 @@ PGDLLEXPORT Datum
 tnpoint_positions(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	if (temp->type != TEMPORALSEQ && temp->type != TEMPORALS)
-	{
-		PG_FREE_IF_COPY(temp, 0);
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), 
-			errmsg("Input values must be of type temporal sequence (set)")));
-	}
-	
-	nregion *result = NULL; /* initialized to make the compiler quiet */
-	if (temp->type == TEMPORALSEQ) 
+	ArrayType *result = NULL; /* initialized to make the compiler quiet */
+	if (temp->type == TEMPORALINST) 
+		result = tnpointinst_positions((TemporalInst *)temp);
+	else if (temp->type == TEMPORALI) 
+		result = tnpointi_positions((TemporalI *)temp);
+	else if (temp->type == TEMPORALSEQ) 
 		result = tnpointseq_positions((TemporalSeq *)temp);
-	else /* temp->type == TEMPORALS */
+	else if (temp->type == TEMPORALS) 
 		result = tnpoints_positions((TemporalS *)temp);
-	
+	else 
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Bad temporal type")));	
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }

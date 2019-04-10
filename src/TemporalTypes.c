@@ -669,7 +669,7 @@ datum_eq(Datum l, Datum r, Oid type)
 		return false;
 	}
 	else if (type == type_oid(T_NPOINT))
-        return eq_npoint_npoint_internal(DatumGetNpoint(l), DatumGetNpoint(r));
+        return npoint_eq_internal(DatumGetNpoint(l), DatumGetNpoint(r));
 #endif
 
 	List *lst = list_make1(makeString("="));
@@ -703,7 +703,7 @@ datum_lt(Datum l, Datum r, Oid type)
 	else if (type == type_oid(T_GEOGRAPHY))
 		return DatumGetBool(call_function2(geography_lt, l, r));
 	else if (type == type_oid(T_NPOINT))
-		return lt_npoint_npoint(DatumGetNpoint(l), DatumGetNpoint(r));
+		return npoint_lt_internal(DatumGetNpoint(l), DatumGetNpoint(r));
 #endif
 	
 	/* All supported temporal types should have been considered before */
@@ -765,7 +765,7 @@ datum_eq2(Datum l, Datum r, Oid typel, Oid typer)
 	else if (typel == type_oid(T_GEOGRAPHY) && typer == type_oid(T_GEOGRAPHY)) 
 		return DatumGetBool(call_function2(geography_eq, l, r));
 	else if (typel == type_oid(T_NPOINT) && typer == type_oid(T_NPOINT))
-		return eq_npoint_npoint_internal(DatumGetNpoint(l), DatumGetNpoint(r));
+		return npoint_eq_internal(DatumGetNpoint(l), DatumGetNpoint(r));
 #endif
 
 	List *lst = list_make1(makeString("="));
@@ -803,7 +803,7 @@ datum_lt2(Datum l, Datum r, Oid typel, Oid typer)
 	else if (typel == type_oid(T_GEOGRAPHY) && typer == type_oid(T_GEOGRAPHY)) 
 		return DatumGetBool(call_function2(geography_lt, l, r));
 	else if (typel == type_oid(T_NPOINT) && typer == type_oid(T_NPOINT))
-		return lt_npoint_npoint(DatumGetNpoint(l), DatumGetNpoint(r));
+		return npoint_lt_internal(DatumGetNpoint(l), DatumGetNpoint(r));
 #endif
 	
 	List *lst = list_make1(makeString("<")); 
