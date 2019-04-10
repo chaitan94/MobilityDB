@@ -170,7 +170,7 @@ tnpointseq_intersection_instants(TemporalInst *inst1, TemporalInst *inst2,
 				LWGEOM_line_locate_point, line, inter));
 			TimestampTz time = (TimestampTz)(inst1->t + duration * fraction);
 			double pos = np1->pos + (np2->pos * fraction - np1->pos * fraction);
-			npoint *intnp = npoint_constructor_internal(np1->rid, pos);
+			npoint *intnp = npoint_make(np1->rid, pos);
 			instants[k++] = temporalinst_make(PointerGetDatum(intnp), time,
 				type_oid(T_NPOINT));
 			pfree(intnp);
@@ -182,7 +182,7 @@ tnpointseq_intersection_instants(TemporalInst *inst1, TemporalInst *inst2,
 				LWGEOM_line_locate_point, line, inter1));
 			TimestampTz time1 = (TimestampTz)(inst1->t + duration * fraction1);
 			double pos1 = np1->pos + (np2->pos * fraction1 - np1->pos * fraction1);
-			npoint *intnp1 = npoint_constructor_internal(np1->rid, pos1);
+			npoint *intnp1 = npoint_make(np1->rid, pos1);
 			instants[k++] = temporalinst_make(PointerGetDatum(intnp1), time1,
 				type_oid(T_NPOINT));
 
@@ -191,7 +191,7 @@ tnpointseq_intersection_instants(TemporalInst *inst1, TemporalInst *inst2,
 				LWGEOM_line_locate_point, line, inter2));
 			TimestampTz time2 = (TimestampTz)(inst1->t + duration * fraction2);
 			double pos2 = np1->pos + (np2->pos * fraction2 - np1->pos * fraction2);
-			npoint *intnp2 = npoint_constructor_internal(np1->rid, pos2);
+			npoint *intnp2 = npoint_make(np1->rid, pos2);
 			instants[k++] = temporalinst_make(PointerGetDatum(intnp2), time2,
 				type_oid(T_NPOINT));
 
@@ -323,9 +323,9 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 		pfree(instants[0]);
 
 		/* Compute the operator in the middle time */
-		npoint *intnp1 = npoint_constructor_internal(startnp1->rid, (startnp1->pos + endnp1->pos) / 2);
+		npoint *intnp1 = npoint_make(startnp1->rid, (startnp1->pos + endnp1->pos) / 2);
 		Datum intgeom1 = npoint_geom_internal(intnp1);
-		npoint *intnp2 = npoint_constructor_internal(startnp2->rid, (startnp2->pos + endnp2->pos) / 2);
+		npoint *intnp2 = npoint_make(startnp2->rid, (startnp2->pos + endnp2->pos) / 2);
 		Datum intgeom2 = npoint_geom_internal(intnp2);
 		Datum intvalue = operator(intgeom1, intgeom2);
 		instants[0] = temporalinst_make(intvalue, start1->t, valuetypid);
@@ -624,9 +624,9 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 		pfree(instants[0]);
 
 		/* Compute the operator in the middle time */
-		npoint *intnp1 = npoint_constructor_internal(startnp1->rid, (startnp1->pos + endnp1->pos) / 2);
+		npoint *intnp1 = npoint_make(startnp1->rid, (startnp1->pos + endnp1->pos) / 2);
 		Datum intgeom1 = npoint_geom_internal(intnp1);
-		npoint *intnp2 = npoint_constructor_internal(startnp2->rid, (startnp2->pos + endnp2->pos) / 2);
+		npoint *intnp2 = npoint_make(startnp2->rid, (startnp2->pos + endnp2->pos) / 2);
 		Datum intgeom2 = npoint_geom_internal(intnp2);
 		Datum intvalue = operator(intgeom1, intgeom2, param);
 		instants[0] = temporalinst_make(intvalue, start1->t, valuetypid);

@@ -566,7 +566,7 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 				(upper_inc || time < upper))
 			{
 				double pos = np1->pos + (np2->pos * fraction - np1->pos * fraction);
-				npoint *intnp = npoint_constructor_internal(np1->rid, pos);
+				npoint *intnp = npoint_make(np1->rid, pos);
 				instants[0] = temporalinst_make(PointerGetDatum(intnp), time,
 					type_oid(T_NPOINT));
 				result[k++] = temporalseq_from_temporalinstarr(instants,
@@ -582,14 +582,14 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 				LWGEOM_line_locate_point, line, inter1));
 			TimestampTz time1 = (TimestampTz)(lower + (upper - lower) * fraction1);
 			double pos1 = np1->pos + (np2->pos * fraction1 - np1->pos * fraction1);
-			npoint *intnp1 = npoint_constructor_internal(np1->rid, pos1);
+			npoint *intnp1 = npoint_make(np1->rid, pos1);
 
 			Datum inter2 = call_function2(LWGEOM_pointn_linestring, inter, 2);
 			double fraction2 = DatumGetFloat8(call_function2(
 				LWGEOM_line_locate_point, line, inter2));
 			TimestampTz time2 = (TimestampTz)(lower + (upper - lower) * fraction2);
 			double pos2 = np1->pos + (np2->pos * fraction2 - np1->pos * fraction2);
-			npoint *intnp2 = npoint_constructor_internal(np1->rid, pos2);
+			npoint *intnp2 = npoint_make(np1->rid, pos2);
 
 			TimestampTz lower1 = Min(time1, time2);
 			TimestampTz upper1 = Max(time1, time2);

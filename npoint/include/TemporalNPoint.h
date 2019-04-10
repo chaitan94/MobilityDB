@@ -40,6 +40,11 @@ typedef struct
 #define NpointGetDatum(X)		PointerGetDatum(X)
 #define PG_GETARG_NPOINT(i)		((npoint *) PG_GETARG_POINTER(i))
 
+/* nsegment */
+#define DatumGetNsegment(X)		((nsegment *) DatumGetPointer(X))
+#define NsegmentGetDatum(X)		PointerGetDatum(X)
+#define PG_GETARG_NSEGMENT(i)	((nsegment *) PG_GETARG_POINTER(i))
+
 /* nregion */
 #define DatumGetNregion(X)		((nregion *) PG_DETOAST_DATUM(X))
 #define NregionGetDatum(X)		PointerGetDatum(X)
@@ -49,7 +54,8 @@ typedef struct
  * Parser.c
  *****************************************************************************/
 
-extern nsegment nsegment_parse(char **str);
+extern npoint *npoint_parse(char **str);
+extern nsegment *nsegment_parse(char **str);
 extern nregion *nregion_parse(char **str);
 extern TemporalSeq *tnpointseq_parse(char **str, Oid basetype);
 extern TemporalS *tnpoints_parse(char **str, Oid basetype);
@@ -62,9 +68,17 @@ extern Datum npoint_in(PG_FUNCTION_ARGS);
 extern Datum npoint_out(PG_FUNCTION_ARGS);
 extern Datum npoint_recv(PG_FUNCTION_ARGS);
 extern Datum npoint_send(PG_FUNCTION_ARGS);
+
+extern Datum nsegment_in(PG_FUNCTION_ARGS);
+extern Datum nsegment_out(PG_FUNCTION_ARGS);
+extern Datum nsegment_recv(PG_FUNCTION_ARGS);
+extern Datum nsegment_send(PG_FUNCTION_ARGS);
+
 extern Datum nregion_in(PG_FUNCTION_ARGS);
+extern Datum nregion_out(PG_FUNCTION_ARGS);
 extern Datum nregion_recv(PG_FUNCTION_ARGS);
 extern Datum nregion_send(PG_FUNCTION_ARGS);
+
 extern Datum npoint_constructor(PG_FUNCTION_ARGS);
 extern Datum nregion_from_segment(PG_FUNCTION_ARGS);
 extern Datum nregion_from_route(PG_FUNCTION_ARGS);
@@ -77,10 +91,11 @@ extern Datum nregion_segments(PG_FUNCTION_ARGS);
 extern Datum npoint_geom(PG_FUNCTION_ARGS);
 extern Datum nregion_geom(PG_FUNCTION_ARGS);
 
-extern nregion *nregion_from_nsegmentarr_internal(nsegment *nsegs, int count);
+extern npoint *npoint_make(int64 rid, double pos);
+extern nsegment *nsegment_make(int64 rid, double pos1, double pos2);
 
-extern npoint *npoint_constructor_internal(int64 rid, double pos);
-extern nregion *nregion_from_segment_internal(int64 rid, double pos1, double pos2);
+extern nregion *nregion_from_nsegment_internal(int64 rid, double pos1, double pos2);
+extern nregion *nregion_from_nsegmentarr_internal(nsegment *nsegs, int count);
 extern nregion *nregion_from_nregionarr_internal(nregion **nregs, int count);
 
 extern double route_length_with_rid(int64 rid);
