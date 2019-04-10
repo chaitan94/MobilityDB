@@ -23,6 +23,7 @@
 #include "TemporalTypes.h"
 #ifdef WITH_POSTGIS
 #include "TemporalPoint.h"
+#include "TemporalNPoint.h"
 #endif
 
 /*****************************************************************************
@@ -212,6 +213,11 @@ temporalinst_make_bbox(void *box, Datum value, TimestampTz t, Oid valuetypid)
 		valuetypid == type_oid(T_GEOMETRY)) 
 	{
 		tpointinst_make_gbox((GBOX *)box, value, t);
+		return true;
+	}
+	else if (valuetypid == type_oid(T_NPOINT))
+	{
+		tnpointinst_make_gbox((GBOX *)box, value, t);
 		return true;
 	}
 #endif

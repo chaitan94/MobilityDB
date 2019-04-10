@@ -749,6 +749,9 @@ temporalinst_hash(TemporalInst *inst)
 	else if (inst->valuetypid == type_oid(T_GEOMETRY) || 
 		inst->valuetypid == type_oid(T_GEOGRAPHY))
 		value_hash = DatumGetUInt32(call_function1(lwgeom_hash, value));
+	else if (inst->valuetypid == type_oid(T_NPOINT))
+		value_hash = (DatumGetUInt32(call_function1(hashint8, value)) << 1) | 
+			(DatumGetUInt32(call_function1(hashfloat8, value)) >> 31);
 #endif
 	else 
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 

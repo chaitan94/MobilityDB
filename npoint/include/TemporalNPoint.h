@@ -85,11 +85,20 @@ extern Datum nregion_from_route(PG_FUNCTION_ARGS);
 extern Datum nregion_from_route_pos(PG_FUNCTION_ARGS);
 extern Datum nregion_from_npoint(PG_FUNCTION_ARGS);
 extern Datum nregion_from_nregionarr(PG_FUNCTION_ARGS);
+
 extern Datum npoint_route(PG_FUNCTION_ARGS);
-extern Datum npoint_pos(PG_FUNCTION_ARGS);
+extern Datum npoint_position(PG_FUNCTION_ARGS);
+extern Datum nsegment_route(PG_FUNCTION_ARGS);
+extern Datum nsegment_start_position(PG_FUNCTION_ARGS);
+extern Datum nsegment_end_position(PG_FUNCTION_ARGS);
+
 extern Datum nregion_segments(PG_FUNCTION_ARGS);
+
 extern Datum npoint_geom(PG_FUNCTION_ARGS);
+extern Datum nsegment_geom(PG_FUNCTION_ARGS);
 extern Datum nregion_geom(PG_FUNCTION_ARGS);
+
+extern Datum nsegmentarr_geom_internal(nsegment **segments, int count);
 
 extern npoint *npoint_make(int64 rid, double pos);
 extern nsegment *nsegment_make(int64 rid, double pos1, double pos2);
@@ -102,17 +111,50 @@ extern double route_length_with_rid(int64 rid);
 extern Datum route_geom_with_rid(int64 rid);
 
 extern Datum npoint_geom_internal(npoint *np);
+extern Datum nsegment_geom_internal(nsegment *ns);
 extern Datum nregion_geom_internal(nregion *nreg);
 
-extern bool eq_npoint_npoint_internal(npoint *np1, npoint *np2);
-extern bool lt_npoint_npoint(npoint *np1, npoint *np2);
+extern ArrayType *npointarr_to_array(npoint **npointarr, int count);
+extern ArrayType *nsegmentarr_to_array(nsegment **nsegmentarr, int count);
+
+extern Datum npoint_eq(PG_FUNCTION_ARGS);
+extern Datum npoint_ne(PG_FUNCTION_ARGS);
+extern Datum npoint_lt(PG_FUNCTION_ARGS);
+extern Datum npoint_le(PG_FUNCTION_ARGS);
+extern Datum npoint_gt(PG_FUNCTION_ARGS);
+extern Datum npoint_ge(PG_FUNCTION_ARGS);
+
+extern bool npoint_eq_internal(npoint *np1, npoint *np2);
+extern bool npoint_ne_internal(npoint *np1, npoint *np2);
+extern bool npoint_lt_internal(npoint *np1, npoint *np2);
+extern bool npoint_le_internal(npoint *np1, npoint *np2);
+extern bool npoint_gt_internal(npoint *np1, npoint *np2);
+extern bool npoint_ge_internal(npoint *np1, npoint *np2);
+
+extern Datum nsegment_eq(PG_FUNCTION_ARGS);
+extern Datum nsegment_ne(PG_FUNCTION_ARGS);
+extern Datum nsegment_lt(PG_FUNCTION_ARGS);
+extern Datum nsegment_le(PG_FUNCTION_ARGS);
+extern Datum nsegment_gt(PG_FUNCTION_ARGS);
+extern Datum nsegment_ge(PG_FUNCTION_ARGS);
+
+extern bool nsegment_eq_internal(nsegment *np1, nsegment *np2);
+extern bool nsegment_ne_internal(nsegment *np1, nsegment *np2);
+extern bool nsegment_lt_internal(nsegment *np1, nsegment *np2);
+extern bool nsegment_le_internal(nsegment *np1, nsegment *np2);
+extern bool nsegment_gt_internal(nsegment *np1, nsegment *np2);
+extern bool nsegment_ge_internal(nsegment *np1, nsegment *np2);
 
 /*****************************************************************************
  * TemporalNPoint.c
  *****************************************************************************/
 
-extern nregion *tnpointseq_positions(TemporalSeq *seq);
-extern nregion *tnpoints_positions(TemporalS *ts);
+extern ArrayType *tnpointinst_positions(TemporalInst *inst);
+extern ArrayType *tnpointi_positions(TemporalI *ti);
+extern nsegment *tnpointseq_positions1(TemporalSeq *seq);
+extern ArrayType *tnpointseq_positions(TemporalSeq *seq);
+extern nsegment **tnpoints_positions1(TemporalS *ts);
+extern ArrayType *tnpoints_positions(TemporalS *ts);
 
 /*****************************************************************************
  * TemporalGeo.c

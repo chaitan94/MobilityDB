@@ -16,6 +16,7 @@
 #include <liblwgeom.h>
 #include "TemporalTypes.h"
 #include "TemporalPoint.h"
+#include "TemporalNPoint.h"
 
 GBOX 
 get_gbox(Node *node)
@@ -45,6 +46,19 @@ get_gbox(Node *node)
 		gboxi = gbox_copy(gbox);
 		return *gboxi;
 	}
+    else if (value_type == type_oid(T_TNPOINT)){
+        GSERIALIZED *geom;
+        TemporalInst *inst = DatumGetTemporalInst(((Const *) node)->constvalue);
+
+        /* Read the bounds from the gserialized */
+        geom = (GSERIALIZED *)PG_DETOAST_DATUM(tnpointinst_geom(inst));
+        if (gserialized_get_gbox_p(geom, &gbox)) {
+            /* Skip empties too */
+            gbox.zmin = gbox.zmax = gbox.mmin = gbox.mmax = 0.0;
+            return gbox;
+        }
+        return gbox;
+    }
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Function get_gbox does not support this type")));

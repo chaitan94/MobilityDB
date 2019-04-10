@@ -2597,7 +2597,7 @@ tfloat_twavg(PG_FUNCTION_ARGS)
 		result = tfloatseq_twavg((TemporalSeq *)temp);
 	else if (temp->type == TEMPORALS)
 		result = tfloats_twavg((TemporalS *)temp);
-    else
+  else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Bad temporal type")));
 	PG_FREE_IF_COPY(temp, 0);

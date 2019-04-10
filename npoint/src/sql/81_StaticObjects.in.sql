@@ -143,10 +143,11 @@ CREATE FUNCTION route(npoint)
 	RETURNS bigint
 	AS 'MODULE_PATHNAME', 'npoint_route'
 	LANGUAGE C IMMUTABLE STRICT;
-	
-CREATE FUNCTION pos(npoint)
+
+-- position is a reserved word in SQL
+CREATE FUNCTION getPosition(npoint)
 	RETURNS double precision
-	AS 'MODULE_PATHNAME', 'npoint_pos'
+	AS 'MODULE_PATHNAME', 'npoint_position'
 	LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION route(nsegment)
@@ -156,12 +157,12 @@ CREATE FUNCTION route(nsegment)
 	
 CREATE FUNCTION startPosition(nsegment)
 	RETURNS double precision
-	AS 'MODULE_PATHNAME', 'nsegment_start_pos'
+	AS 'MODULE_PATHNAME', 'nsegment_start_position'
 	LANGUAGE C IMMUTABLE STRICT;
 	
 CREATE FUNCTION endPosition(nsegment)
 	RETURNS double precision
-	AS 'MODULE_PATHNAME', 'nsegment_end_pos'
+	AS 'MODULE_PATHNAME', 'nsegment_end_position'
 	LANGUAGE C IMMUTABLE STRICT;
 	
 CREATE FUNCTION segments(nregion)
@@ -233,5 +234,160 @@ BEGIN
 END; 
 $$ LANGUAGE plpgsql;
 	
+/******************************************************************************
+ * Operators
+ ******************************************************************************/
+
+CREATE FUNCTION npoint_eq(npoint, npoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'npoint_eq'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION npoint_ne(npoint, npoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'npoint_ne'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION npoint_lt(npoint, npoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'npoint_lt'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION npoint_le(npoint, npoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'npoint_le'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION npoint_ge(npoint, npoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'npoint_ge'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION npoint_gt(npoint, npoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'npoint_gt'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION npoint_cmp(npoint, npoint)
+	RETURNS int4
+	AS 'MODULE_PATHNAME', 'npoint_cmp'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+
+CREATE OPERATOR = (
+	PROCEDURE = npoint_eq,
+	LEFTARG = npoint, RIGHTARG = npoint,
+	COMMUTATOR = =, NEGATOR = <>,
+	RESTRICT = eqsel, JOIN = eqjoinsel
+);
+CREATE OPERATOR <> (
+	PROCEDURE = npoint_ne,
+	LEFTARG = npoint, RIGHTARG = npoint,
+	COMMUTATOR = <>, NEGATOR = =,
+	RESTRICT = neqsel, JOIN = neqjoinsel
+);
+CREATE OPERATOR < (
+	PROCEDURE = npoint_lt,
+	LEFTARG = npoint, RIGHTARG = npoint,
+	COMMUTATOR = >, NEGATOR = >=,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel 
+);
+CREATE OPERATOR <= (
+	PROCEDURE = npoint_le,
+	LEFTARG = npoint, RIGHTARG = npoint,
+	COMMUTATOR = >=, NEGATOR = >,
+	RESTRICT = scalarlesel, JOIN = scalarlejoinsel 
+);
+CREATE OPERATOR >= (
+	PROCEDURE = npoint_ge,
+	LEFTARG = npoint, RIGHTARG = npoint,
+	COMMUTATOR = <=, NEGATOR = <,
+	RESTRICT = scalargesel, JOIN = scalargejoinsel
+);
+CREATE OPERATOR > (
+	PROCEDURE = npoint_gt,
+	LEFTARG = npoint, RIGHTARG = npoint,
+	COMMUTATOR = <, NEGATOR = <=,
+	RESTRICT = scalargtsel, JOIN = scalargtjoinsel
+);
+
+CREATE OPERATOR CLASS npoint_ops
+	DEFAULT FOR TYPE npoint USING btree	AS
+	OPERATOR	1	< ,
+	OPERATOR	2	<= ,
+	OPERATOR	3	= ,
+	OPERATOR	4	>= ,
+	OPERATOR	5	> ,
+	FUNCTION	1	npoint_cmp(npoint, npoint);
+
 /******************************************************************************/
-	
+
+CREATE FUNCTION nsegment_eq(nsegment, nsegment)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'nsegment_eq'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION nsegment_ne(nsegment, nsegment)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'nsegment_ne'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION nsegment_lt(nsegment, nsegment)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'nsegment_lt'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION nsegment_le(nsegment, nsegment)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'nsegment_le'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION nsegment_ge(nsegment, nsegment)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'nsegment_ge'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION nsegment_gt(nsegment, nsegment)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'nsegment_gt'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION nsegment_cmp(nsegment, nsegment)
+	RETURNS int4
+	AS 'MODULE_PATHNAME', 'nsegment_cmp'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+
+CREATE OPERATOR = (
+	PROCEDURE = nsegment_eq,
+	LEFTARG = nsegment, RIGHTARG = nsegment,
+	COMMUTATOR = =, NEGATOR = <>,
+	RESTRICT = eqsel, JOIN = eqjoinsel
+);
+CREATE OPERATOR <> (
+	PROCEDURE = nsegment_ne,
+	LEFTARG = nsegment, RIGHTARG = nsegment,
+	COMMUTATOR = <>, NEGATOR = =,
+	RESTRICT = neqsel, JOIN = neqjoinsel
+);
+CREATE OPERATOR < (
+	PROCEDURE = nsegment_lt,
+	LEFTARG = nsegment, RIGHTARG = nsegment,
+	COMMUTATOR = >, NEGATOR = >=,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel 
+);
+CREATE OPERATOR <= (
+	PROCEDURE = nsegment_le,
+	LEFTARG = nsegment, RIGHTARG = nsegment,
+	COMMUTATOR = >=, NEGATOR = >,
+	RESTRICT = scalarlesel, JOIN = scalarlejoinsel 
+);
+CREATE OPERATOR >= (
+	PROCEDURE = nsegment_ge,
+	LEFTARG = nsegment, RIGHTARG = nsegment,
+	COMMUTATOR = <=, NEGATOR = <,
+	RESTRICT = scalargesel, JOIN = scalargejoinsel
+);
+CREATE OPERATOR > (
+	PROCEDURE = nsegment_gt,
+	LEFTARG = nsegment, RIGHTARG = nsegment,
+	COMMUTATOR = <, NEGATOR = <=,
+	RESTRICT = scalargtsel, JOIN = scalargtjoinsel
+);
+
+CREATE OPERATOR CLASS nsegment_ops
+	DEFAULT FOR TYPE nsegment USING btree	AS
+	OPERATOR	1	< ,
+	OPERATOR	2	<= ,
+	OPERATOR	3	= ,
+	OPERATOR	4	>= ,
+	OPERATOR	5	> ,
+	FUNCTION	1	nsegment_cmp(nsegment, nsegment);
+
+/******************************************************************************/
