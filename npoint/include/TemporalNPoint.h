@@ -21,16 +21,6 @@ typedef struct
 	double		pos2;			/* position2 */
 } nsegment;
 
-/* Network-based region */
-
-typedef struct
-{
-	int32		vl_len_;		/* varlena header (do not touch directly!) */
-	int32 		count;			/* number of nsegment elements */
-	nsegment	nsegs[1];
-	/* variable-length data follows */
-} nregion;
-
 /*****************************************************************************
  * fmgr macros
  *****************************************************************************/
@@ -45,18 +35,12 @@ typedef struct
 #define NsegmentGetDatum(X)		PointerGetDatum(X)
 #define PG_GETARG_NSEGMENT(i)	((nsegment *) PG_GETARG_POINTER(i))
 
-/* nregion */
-#define DatumGetNregion(X)		((nregion *) PG_DETOAST_DATUM(X))
-#define NregionGetDatum(X)		PointerGetDatum(X)
-#define PG_GETARG_NREGION(i)	((nregion *) PG_GETARG_VARLENA_P(i))
-
 /*****************************************************************************
  * Parser.c
  *****************************************************************************/
 
 extern npoint *npoint_parse(char **str);
 extern nsegment *nsegment_parse(char **str);
-extern nregion *nregion_parse(char **str);
 extern TemporalSeq *tnpointseq_parse(char **str, Oid basetype);
 extern TemporalS *tnpoints_parse(char **str, Oid basetype);
 
@@ -74,17 +58,7 @@ extern Datum nsegment_out(PG_FUNCTION_ARGS);
 extern Datum nsegment_recv(PG_FUNCTION_ARGS);
 extern Datum nsegment_send(PG_FUNCTION_ARGS);
 
-extern Datum nregion_in(PG_FUNCTION_ARGS);
-extern Datum nregion_out(PG_FUNCTION_ARGS);
-extern Datum nregion_recv(PG_FUNCTION_ARGS);
-extern Datum nregion_send(PG_FUNCTION_ARGS);
-
 extern Datum npoint_constructor(PG_FUNCTION_ARGS);
-extern Datum nregion_from_segment(PG_FUNCTION_ARGS);
-extern Datum nregion_from_route(PG_FUNCTION_ARGS);
-extern Datum nregion_from_route_pos(PG_FUNCTION_ARGS);
-extern Datum nregion_from_npoint(PG_FUNCTION_ARGS);
-extern Datum nregion_from_nregionarr(PG_FUNCTION_ARGS);
 
 extern Datum npoint_route(PG_FUNCTION_ARGS);
 extern Datum npoint_position(PG_FUNCTION_ARGS);
@@ -92,28 +66,21 @@ extern Datum nsegment_route(PG_FUNCTION_ARGS);
 extern Datum nsegment_start_position(PG_FUNCTION_ARGS);
 extern Datum nsegment_end_position(PG_FUNCTION_ARGS);
 
-extern Datum nregion_segments(PG_FUNCTION_ARGS);
-
 extern Datum npoint_geom(PG_FUNCTION_ARGS);
 extern Datum nsegment_geom(PG_FUNCTION_ARGS);
-extern Datum nregion_geom(PG_FUNCTION_ARGS);
 
 extern Datum nsegmentarr_geom_internal(nsegment **segments, int count);
 
 extern npoint *npoint_make(int64 rid, double pos);
 extern nsegment *nsegment_make(int64 rid, double pos1, double pos2);
 
-extern nregion *nregion_from_nsegment_internal(int64 rid, double pos1, double pos2);
-extern nregion *nregion_from_nsegmentarr_internal(nsegment *nsegs, int count);
-extern nregion *nregion_from_nregionarr_internal(nregion **nregs, int count);
-
 extern double route_length_with_rid(int64 rid);
 extern Datum route_geom_with_rid(int64 rid);
 
 extern Datum npoint_geom_internal(npoint *np);
 extern Datum nsegment_geom_internal(nsegment *ns);
-extern Datum nregion_geom_internal(nregion *nreg);
 
+extern ArrayType *int64arr_to_array(int64 *int64arr, int count);
 extern ArrayType *npointarr_to_array(npoint **npointarr, int count);
 extern ArrayType *nsegmentarr_to_array(nsegment **nsegmentarr, int count);
 
@@ -149,12 +116,23 @@ extern bool nsegment_ge_internal(nsegment *np1, nsegment *np2);
  * TemporalNPoint.c
  *****************************************************************************/
 
+extern Datum tnpointseq_in(PG_FUNCTION_ARGS);
+extern Datum tnpoints_in(PG_FUNCTION_ARGS);
+extern Datum tnpoint_make_tnpointseq(PG_FUNCTION_ARGS);
+extern Datum tnpoint_positions(PG_FUNCTION_ARGS);
+extern Datum tnpoint_routes(PG_FUNCTION_ARGS);
+
 extern ArrayType *tnpointinst_positions(TemporalInst *inst);
 extern ArrayType *tnpointi_positions(TemporalI *ti);
 extern nsegment *tnpointseq_positions1(TemporalSeq *seq);
 extern ArrayType *tnpointseq_positions(TemporalSeq *seq);
 extern nsegment **tnpoints_positions1(TemporalS *ts);
 extern ArrayType *tnpoints_positions(TemporalS *ts);
+
+extern ArrayType *tnpointinst_routes(TemporalInst *inst);
+extern ArrayType *tnpointi_routes(TemporalI *ti);
+extern ArrayType *tnpointseq_routes(TemporalSeq *seq);
+extern ArrayType *tnpoints_routes(TemporalS *ts);
 
 /*****************************************************************************
  * TemporalGeo.c

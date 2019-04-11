@@ -440,20 +440,20 @@ distance_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	}
 	
 	Temporal *result = NULL;
-	if (temp1->type == TEMPORALINST)
+	if (sync1->type == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_tnpointinst(
-			(TemporalInst *)temp1, (TemporalInst *)temp2, 
+			(TemporalInst *)sync1, (TemporalInst *)sync2, 
 			&geom_distance2d, FLOAT8OID);
-	else if (temp1->type == TEMPORALI)
+	else if (sync1->type == TEMPORALI)
 		result = (Temporal *)tspatialrel_tnpointi_tnpointi(
-			(TemporalI *)temp1, (TemporalI *)temp2, 
+			(TemporalI *)sync1, (TemporalI *)sync2, 
 			&geom_distance2d, FLOAT8OID);
-	else if (temp1->type == TEMPORALSEQ)
+	else if (sync1->type == TEMPORALSEQ)
 		result = (Temporal *)distance_tnpointseq_tnpointseq(
-			(TemporalSeq *)temp1, (TemporalSeq *)temp2);
-	else if (temp1->type == TEMPORALS)
+			(TemporalSeq *)sync1, (TemporalSeq *)sync2);
+	else if (sync1->type == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_tnpoints(
-			(TemporalS *)temp1, (TemporalS *)temp2);
+			(TemporalS *)sync1, (TemporalS *)sync2);
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Operation not supported")));

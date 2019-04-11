@@ -91,7 +91,7 @@ tnpoint_make_tnpointseq(PG_FUNCTION_ARGS)
 
 /*
  * Positions functions
- * Return the network region covered by the moving object
+ * Return the network segments covered by the moving object
  */
 
 ArrayType *
@@ -195,5 +195,102 @@ tnpoint_positions(PG_FUNCTION_ARGS)
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
+
+/*****************************************************************************/
+
+/* Route of a temporal instant */
+
+PG_FUNCTION_INFO_V1(tnpointinst_route);
+
+PGDLLEXPORT Datum
+tnpointinst_route(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	if (temp->type != TEMPORALINST)
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("Input must be a temporal instant")));
+
+	npoint *np = DatumGetNpoint(temporalinst_value((TemporalInst *)temp));
+	int64 result = np->rid;
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_INT64(result);
+}
+
+/*
+ * Routes functions
+ * Return the routes covered by the moving object
+ */
+
+ArrayType *
+tnpointinst_routes(TemporalInst *inst)
+{
+	npoint *np = DatumGetNpoint(temporalinst_value(inst));
+	ArrayType *result = int64arr_to_array(&np->rid, 1);
+	return result;
+}
+
+ArrayType *
+tnpointi_routes(TemporalI *ti)
+{
+	int64 *routes = palloc(sizeof(int64) * ti->count);
+	for (int i = 0; i < ti->count; i++)
+	{
+		TemporalInst *inst = temporali_inst_n(ti, i);
+		npoint *np = DatumGetNpoint(temporalinst_value(inst));
+		routes[i] = np->rid;
+	}
+	ArrayType *result = int64arr_to_array(routes, ti->count);
+	pfree(routes);
+	return result;
+}
+
+ArrayType *
+tnpointseq_routes(TemporalSeq *seq)
+{
+	TemporalInst *inst = temporalseq_inst_n(seq, 0);
+	npoint *np = DatumGetNpoint(temporalinst_value(inst));
+	ArrayType *result = int64arr_to_array(&np->rid, 1);
+	return result;
+}
+
+ArrayType *
+tnpoints_routes(TemporalS *ts)
+{
+	int64 *routes = palloc(sizeof(int64) * ts->count);
+	for (int i = 0; i < ts->count; i++)
+	{
+		TemporalSeq *seq = temporals_seq_n(ts, i);
+		TemporalInst *inst = temporalseq_inst_n(seq, 0);
+		npoint *np = DatumGetNpoint(temporalinst_value(inst));
+		routes[i] = np->rid;
+	}
+	ArrayType *result = int64arr_to_array(routes, ts->count);
+	pfree(routes);
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(tnpoint_routes);
+
+PGDLLEXPORT Datum
+tnpoint_routes(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	ArrayType *result = NULL; /* initialized to make the compiler quiet */
+	if (temp->type == TEMPORALINST) 
+		result = tnpointinst_routes((TemporalInst *)temp);
+	else if (temp->type == TEMPORALI) 
+		result = tnpointi_routes((TemporalI *)temp);
+	else if (temp->type == TEMPORALSEQ) 
+		result = tnpointseq_routes((TemporalSeq *)temp);
+	else if (temp->type == TEMPORALS) 
+		result = tnpoints_routes((TemporalS *)temp);
+	else 
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Bad temporal type")));	
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_POINTER(result);
+}
+
+
 
 /*****************************************************************************/

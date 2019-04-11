@@ -1,4 +1,6 @@
-﻿SELECT count(inst) FROM tbl_tnpointinst;
+﻿/******************************************************************************/
+
+SELECT count(inst) FROM tbl_tnpointinst;
 SELECT wcount(inst, '1 hour') FROM tbl_tnpointinst;
 
 SELECT count(ti) FROM tbl_tnpointi;

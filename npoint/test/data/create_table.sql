@@ -1,83 +1,92 @@
+﻿DROP FUNCTION IF EXISTS load_test_tables_npoint();
+CREATE OR REPLACE FUNCTION load_test_tables_npoint(path text 
+	DEFAULT '/srv/temporal/MobilityDB/npoint/test/data/') 
+RETURNS text AS $$
+BEGIN
 -------------------------------------------------------------------------------
-
-DROP TABLE IF EXISTS npoint_tbl;
-CREATE TABLE npoint_tbl (
+DROP TABLE IF EXISTS tbl_npoint;
+CREATE TABLE tbl_npoint (
 	k serial,
 	np npoint
 );
 
-COPY npoint_tbl FROM '/srv/temporal/MobilityDB/npoint/test/data/tbl_npoint.data';
+EXECUTE format('COPY tbl_npoint FROM ''%stbl_npoint.data''', path);
 
-DROP TABLE IF EXISTS geompoint_tbl;
-CREATE TABLE geompoint_tbl (
+DROP TABLE IF EXISTS tbl_geompoint;
+CREATE TABLE tbl_geompoint (
 	k serial,
 	g geometry(Point)
 );
 
-COPY geompoint_tbl FROM '/srv/temporal/MobilityDB/npoint/test/data/tbl_geompoint.data';
+EXECUTE format('COPY tbl_geompoint FROM ''%stbl_geompoint.data''', path);
 
-DROP TABLE IF EXISTS timestamptz_tbl;
-CREATE TABLE timestamptz_tbl (
+DROP TABLE IF EXISTS tbl_timestamptz;
+CREATE TABLE tbl_timestamptz (
 	k serial,
 	t timestamptz
 );
 
-COPY timestamptz_tbl FROM '/srv/temporal/MobilityDB/npoint/test/data/tbl_timestamptz.data';
+EXECUTE format('COPY tbl_timestamptz FROM ''%stbl_timestamptz.data''', path);
 
-DROP TABLE IF EXISTS timestampset_tbl;
-CREATE TABLE timestampset_tbl (
+DROP TABLE IF EXISTS tbl_timestampset;
+CREATE TABLE tbl_timestampset (
 	k serial,
 	ts timestampset
 );
 
-COPY timestampset_tbl FROM '/srv/temporal/MobilityDB/npoint/test/data/tbl_timestampset.data';
+EXECUTE format('COPY tbl_timestampset FROM ''%stbl_timestampset.data''', path);
 
-DROP TABLE IF EXISTS period_tbl;
-CREATE TABLE period_tbl (
+DROP TABLE IF EXISTS tbl_period;
+CREATE TABLE tbl_period (
 	k serial,
 	p period
 );
 
-COPY period_tbl FROM '/srv/temporal/MobilityDB/npoint/test/data/tbl_period.data';
+EXECUTE format('COPY tbl_period FROM ''%stbl_period.data''', path);
 
-DROP TABLE IF EXISTS periodset_tbl;
-CREATE TABLE periodset_tbl (
+DROP TABLE IF EXISTS tbl_periodset;
+CREATE TABLE tbl_periodset (
 	k serial,
 	ps periodset
 );
 
-COPY periodset_tbl FROM '/srv/temporal/MobilityDB/npoint/test/data/tbl_periodset.data';
+EXECUTE format('COPY tbl_periodset FROM ''%stbl_periodset.data''', path);
 
 DROP TABLE IF EXISTS tbl_tnpointinst;
 CREATE TABLE tbl_tnpointinst (
 	k serial,
-	inst tnpointinst
+	inst tnpoint
 );
 
-COPY tbl_tnpointinst FROM '/srv/temporal/MobilityDB/npoint/test/data/tbl_tnpointinst.data';
+EXECUTE format('COPY tbl_tnpointinst FROM ''%stbl_tnpointinst.data''', path);
 
 DROP TABLE IF EXISTS tbl_tnpointi;
 CREATE TABLE tbl_tnpointi (
 	k serial,
-	ti tnpointi
+	ti tnpoint
 );
 
-COPY tbl_tnpointi FROM '/srv/temporal/MobilityDB/npoint/test/data/tbl_tnpointi.data';
+EXECUTE format('COPY tbl_tnpointi FROM ''%stbl_tnpointi.data''', path);
 
 DROP TABLE IF EXISTS tbl_tnpointseq;
 CREATE TABLE tbl_tnpointseq (
 	k serial,
-	seq tnpointseq
+	seq tnpoint
 );
 
-COPY tbl_tnpointseq FROM '/srv/temporal/MobilityDB/npoint/test/data/tbl_tnpointseq.data';
+EXECUTE format('COPY tbl_tnpointseq FROM ''%stbl_tnpointseq.data''', path);
 
 DROP TABLE IF EXISTS tbl_tnpoints;
 CREATE TABLE tbl_tnpoints (
 	k serial,
-	ts tnpoints
+	ts tnpoint
 );
 
-COPY tbl_tnpoints FROM '/srv/temporal/MobilityDB/npoint/test/data/tbl_tnpoints2.data';
+EXECUTE format('COPY tbl_tnpoints FROM ''%stbl_tnpoints2.data''', path);
 
 -------------------------------------------------------------------------------
+	RETURN 'The End';
+END;
+$$ LANGUAGE 'plpgsql';
+
+-- select load_test_tables_npoint('/home/mobilitydb/Desktop/src/MobilityDB/npoint/test/data/')

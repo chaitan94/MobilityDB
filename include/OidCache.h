@@ -54,7 +54,6 @@ typedef enum
 	T_TGEOGPOINT,
 	T_NPOINT,
 	T_NSEGMENT,
-	T_NREGION,
 	T_TNPOINT,
 #endif
 } CachedType;
