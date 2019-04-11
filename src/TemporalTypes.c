@@ -98,7 +98,7 @@ type_byval_fast(Oid type)
 #ifdef WITH_POSTGIS
 	if (type == type_oid(T_GEOMETRY) || type == type_oid(T_GEOGRAPHY))
 		return false;
-	if (type == type_oid(T_NPOINT) || type == type_oid(T_NREGION))
+	if (type == type_oid(T_NPOINT) || type == type_oid(T_NSEGMENT))
 		return false;
 #endif
 	ereport(WARNING, (errcode(ERRCODE_WARNING), 
