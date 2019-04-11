@@ -109,8 +109,8 @@ bool
 spatialrel_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, 
 	Datum (*operator)(Datum, Datum))
 {
-	Datum geom1 = tnpoints_trajectory(ts1);
-	Datum geom2 = tnpoints_trajectory(ts2);
+	Datum geom1 = tnpoints_geom(ts1);
+	Datum geom2 = tnpoints_geom(ts2);
 	bool result = DatumGetBool(operator(geom1, geom2));
 	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
 	return result;
@@ -1056,24 +1056,33 @@ relate_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	Temporal *inter1, *inter2;
+	/* Return NULL if the temporal points do not intersect in time */
+	if (!intersection_temporal_temporal(temp1, temp2, &inter1, &inter2))
+	{
+		PG_FREE_IF_COPY(temp1, 0);
+		PG_FREE_IF_COPY(temp2, 1);
+		PG_RETURN_NULL();
+	}
 	
 	text *result = NULL;
-	if (temp1->type == TEMPORALINST)
+	if (inter1->type == TEMPORALINST)
 		result = relate1_tnpointinst_tnpointinst(
-			(TemporalInst *)temp1, (TemporalInst *)temp2);
-	else if (temp1->type == TEMPORALI)
+			(TemporalInst *)inter1, (TemporalInst *)inter2);
+	else if (inter1->type == TEMPORALI)
 		result = relate1_tnpointi_tnpointi(
-			(TemporalI *)temp1, (TemporalI *)temp2);
-	else if (temp1->type == TEMPORALSEQ)
+			(TemporalI *)inter1, (TemporalI *)inter2);
+	else if (inter1->type == TEMPORALSEQ)
 		result = relate1_tnpointseq_tnpointseq(
-			(TemporalSeq *)temp1, (TemporalSeq *)temp2);
-	else if (temp1->type == TEMPORALS)
+			(TemporalSeq *)inter1, (TemporalSeq *)inter2);
+	else if (inter1->type == TEMPORALS)
 		result = relate1_tnpoints_tnpoints(
-			(TemporalS *)temp1, (TemporalS *)temp2);
+			(TemporalS *)inter1, (TemporalS *)inter2);
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Operation not supported")));
 
+ 	pfree(inter1); pfree(inter2); 
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
 	if (result == NULL)

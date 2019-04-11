@@ -12,7 +12,6 @@
 
 CREATE TYPE npoint;
 CREATE TYPE nsegment;
-CREATE TYPE nregion;
 
 /******************************************************************************
  * Input/Output
@@ -76,36 +75,6 @@ CREATE TYPE nsegment (
 	alignment = double
 );
 
-CREATE FUNCTION nregion_in(cstring)
-	RETURNS nregion
- 	AS 'MODULE_PATHNAME'
-	LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION nregion_out(nregion)
-	RETURNS cstring
- 	AS 'MODULE_PATHNAME'
-	LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION nregion_recv(internal)
-	RETURNS nregion
- 	AS 'MODULE_PATHNAME'
-	LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION nregion_send(nregion)
-	RETURNS bytea
- 	AS 'MODULE_PATHNAME'
-	LANGUAGE C IMMUTABLE STRICT;
-
-CREATE TYPE nregion (
-	internallength = variable,
-	input = nregion_in,
-	output = nregion_out,
-	receive = nregion_recv,
-	send = nregion_send,
-	storage = extended,
-	alignment = double
-);
-
 /******************************************************************************
  * Constructors
  ******************************************************************************/
@@ -123,16 +92,6 @@ CREATE FUNCTION nsegment(bigint, double precision DEFAULT 0, double precision DE
 CREATE FUNCTION nsegment(npoint)
 	RETURNS nsegment
 	AS 'MODULE_PATHNAME', 'nsegment_from_npoint'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION nregion(nsegment)
-	RETURNS nregion
-	AS 'MODULE_PATHNAME', 'nregion_from_nsegment'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-	
-CREATE FUNCTION nregion(nsegment[])
-	RETURNS nregion
-	AS 'MODULE_PATHNAME', 'nregion_from_nsegmentarr'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
@@ -165,11 +124,6 @@ CREATE FUNCTION endPosition(nsegment)
 	AS 'MODULE_PATHNAME', 'nsegment_end_position'
 	LANGUAGE C IMMUTABLE STRICT;
 	
-CREATE FUNCTION segments(nregion)
-	RETURNS nsegment[]
-	AS 'MODULE_PATHNAME', 'nregion_segments'
-	LANGUAGE C IMMUTABLE STRICT;
-
 /*****************************************************************************
  * Conversions between network and space
  *****************************************************************************/
@@ -179,11 +133,11 @@ CREATE FUNCTION in_space(npoint)
 	AS 'MODULE_PATHNAME', 'npoint_geom'
 	LANGUAGE C IMMUTABLE STRICT;
 	
-CREATE FUNCTION in_space(nregion)
+CREATE FUNCTION in_space(nsegment)
 	RETURNS geometry
-	AS 'MODULE_PATHNAME', 'nregion_geom'
+	AS 'MODULE_PATHNAME', 'nsegment_geom'
 	LANGUAGE C IMMUTABLE STRICT;
-	
+
 CREATE OR REPLACE FUNCTION point_in_network(p geometry(point))
 RETURNS npoint AS $$
 DECLARE
@@ -200,40 +154,39 @@ BEGIN
 END; 
 $$ LANGUAGE plpgsql;
 
-
-CREATE OR REPLACE FUNCTION geometry_in_network(geo geometry)
-RETURNS nregion AS $$
+CREATE OR REPLACE FUNCTION segment_in_network(geo geometry)
+RETURNS nsegment[] AS $$
 DECLARE
-     nreg nregion;
+     ns nsegment;
+     result nsegment[];
 BEGIN
-     WITH route_intersection_tbl AS (
+     WITH tbl_route_intersection AS (
           -- Find intersections of geo and network
           -- Each intersection is either a point or a linestring
           SELECT gid, the_geom, (ST_Dump(ST_Intersection(the_geom, geo))).geom AS intersection
           FROM ways 
      ),   
-          nregion_tbl AS (
+          tbl_nsegment AS (
 		  -- Linear reference for point
-          SELECT nregion(gid, ST_LineLocatePoint(the_geom, intersection)) AS region
-          FROM route_intersection_tbl
+          SELECT nsegment(gid, ST_LineLocatePoint(the_geom, intersection)) AS ns
+          FROM tbl_route_intersection
           WHERE ST_GeometryType(intersection) = 'ST_Point'
           UNION ALL
 		  -- Linear reference for linestring
-          SELECT nregion(gid, 
-		                 ST_LineLocatePoint(the_geom, ST_StartPoint(intersection)),
-				         ST_LineLocatePoint(the_geom, ST_EndPoint(intersection)))
-				 AS region
-          FROM route_intersection_tbl
+          SELECT nsegment(gid, ST_LineLocatePoint(the_geom, ST_StartPoint(intersection)),
+		ST_LineLocatePoint(the_geom, ST_EndPoint(intersection))) AS ns
+          FROM tbl_route_intersection
           WHERE ST_GeometryType(intersection) = 'ST_LineString' 
      )	  
-     SELECT nregion_agg(region)
-     FROM nregion_tbl
-     INTO nreg;
+     SELECT array_agg(t.ns)
+     FROM tbl_nsegment t
+     INTO result;
 	 
-     RETURN nreg;
+     RETURN result;
 END; 
 $$ LANGUAGE plpgsql;
-	
+
+
 /******************************************************************************
  * Operators
  ******************************************************************************/

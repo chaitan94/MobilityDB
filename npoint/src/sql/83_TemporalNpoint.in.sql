@@ -130,6 +130,16 @@ CREATE FUNCTION getValues(tnpoint)
 	AS 'MODULE_PATHNAME', 'tempdisc_get_values'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION route(tnpoint)
+	RETURNS bigint
+	AS 'MODULE_PATHNAME', 'tnpointinst_route'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION routes(tnpoint)
+	RETURNS bigint[]
+	AS 'MODULE_PATHNAME', 'tnpoint_routes'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 -- time is a reserved word in SQL
 CREATE FUNCTION getTime(tnpoint)
 	RETURNS periodset

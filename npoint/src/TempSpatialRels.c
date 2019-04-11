@@ -1605,7 +1605,7 @@ tcontains_geo_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
 		&geom_contains, true);
 	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tcontains_tnpoint_geo);
@@ -1618,7 +1618,7 @@ tcontains_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
 		&geom_contains, false);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tcontains_tnpoint_tnpoint);
@@ -1660,7 +1660,7 @@ tcovers_geo_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
 		&geom_covers, true);
 	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tcovers_tnpoint_geo);
@@ -1673,7 +1673,7 @@ tcovers_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
 		&geom_covers, false);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tcovers_tnpoint_tnpoint);
@@ -1715,7 +1715,7 @@ tcoveredby_geo_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
 		&geom_coveredby, true);
 	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tcoveredby_tnpoint_geo);
@@ -1728,7 +1728,7 @@ tcoveredby_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
 		&geom_coveredby, false);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tcoveredby_tnpoint_tnpoint);
@@ -1770,7 +1770,7 @@ tdisjoint_geo_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
 		&geom_disjoint, true);
 	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tdisjoint_tnpoint_geo);
@@ -1783,7 +1783,7 @@ tdisjoint_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
 		&geom_disjoint, false);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tdisjoint_tnpoint_tnpoint);
@@ -1825,7 +1825,7 @@ tequals_geo_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
 		&geom_equals, true);
 	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tequals_tnpoint_geo);
@@ -1838,7 +1838,7 @@ tequals_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
 		&geom_equals, false);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tequals_tnpoint_tnpoint);
@@ -1880,7 +1880,7 @@ tintersects_geo_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
 		&geom_intersects2d, true);
 	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tintersects_tnpoint_geo);
@@ -1893,7 +1893,7 @@ tintersects_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
 		&geom_intersects2d, false);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(tintersects_tnpoint_tnpoint);
@@ -1935,7 +1935,7 @@ ttouches_geo_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
 		&geom_touches, true);
 	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(ttouches_tnpoint_geo);
@@ -1948,7 +1948,7 @@ ttouches_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
 		&geom_touches, false);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(ttouches_tnpoint_tnpoint);
@@ -1990,7 +1990,7 @@ twithin_geo_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
 		&geom_within, true);
 	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(twithin_tnpoint_geo);
@@ -2003,7 +2003,7 @@ twithin_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
 		&geom_within, false);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(twithin_tnpoint_tnpoint);
@@ -2104,7 +2104,7 @@ trelate_geo_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
 		&geom_relate, true);
 	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(trelate_tnpoint_geo);
@@ -2117,7 +2117,7 @@ trelate_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
 		&geom_relate, false);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(trelate_tnpoint_tnpoint);
@@ -2160,7 +2160,7 @@ trelate_pattern_geo_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel3_tnpoint_geo(temp, geo, pattern, 
 		&geom_relate_pattern, true);
 	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(trelate_pattern_tnpoint_geo);
@@ -2174,7 +2174,7 @@ trelate_pattern_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel3_tnpoint_geo(temp, geo, pattern, 
 		&geom_relate_pattern, false);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
+	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(trelate_pattern_tnpoint_tnpoint);

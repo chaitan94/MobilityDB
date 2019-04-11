@@ -242,6 +242,10 @@ SELECT COUNT(shift(temp, i)) FROM tbl_tgeogpoint, tbl_interval;
 SELECT COUNT(shift(temp, i)) FROM tbl_tgeompoint3D, tbl_interval;
 SELECT COUNT(shift(temp, i)) FROM tbl_tgeogpoint3D, tbl_interval;
 
+/******************************************************************************
+ * Projection functions
+ ******************************************************************************/
+
 SELECT COUNT(*) FROM tbl_tgeompoint, tbl_geompoint
 WHERE atValue(temp, g) IS NOT NULL;
 SELECT COUNT(*) FROM tbl_tgeogpoint, tbl_geogpoint 

@@ -50,7 +50,6 @@ const char *_type_names[] =
 	"tgeogpoint",
 	"npoint",
 	"nsegment",
-	"nregion",
 	"tnpoint",
 #endif
 };

@@ -4,10 +4,16 @@
 
 SELECT tnpointinst('npoint(1,0)'::npoint, '2012-01-01'::timestamp);
 
+SELECT tnpointinst(t1.np, t2.t) FROM tbl_npoint t1, tbl_timestamptz t2;
+
 SELECT tnpointi(ARRAY['npoint(1,0)@2012-01-01'::tnpoint, 'npoint(2,1)@2012-02-01'::tnpoint]);
+
+SELECT tnpointi(array_agg(t.inst ORDER BY t.inst)) FROM tbl_tnpointinst t GROUP BY k%10;
 
 SELECT tnpointseq(ARRAY['npoint(1,0)@2012-01-01'::tnpoint, 'npoint(1,1)@2012-02-01'::tnpoint], true, false);
 --SELECT tnpointseq(ARRAY['npoint(1,0)@2012-01-01'::tnpoint, 'npoint(2,1)@2012-02-01'::tnpoint], true, false);  ERROR
+
+SELECT tnpointseq(array_agg(t.inst ORDER BY t.inst)) FROM tbl_tnpointinst t GROUP BY route(t.inst);
 
 SELECT tnpoints(ARRAY['[npoint(1,0)@2012-01-01, npoint(1,1)@2012-02-01]'::tnpoint, '[npoint(2,0)@2012-03-01, npoint(2,1)@2012-04-01]'::tnpoint]);
 
@@ -21,16 +27,28 @@ SELECT tnpoints(inst) FROM tbl_tnpointinst;
 SELECT tnpoints(seq) FROM tbl_tnpointseq;
 
 /*****************************************************************************
- * TNpointInst
+ * Accessor Functions
  *****************************************************************************/
 
-SELECT * FROM tbl_tnpointinst;
+SELECT DISTINCT temporalType(temp) FROM tbl_tnpoint;
 
 SELECT MAX(memSize(inst)) FROM tbl_tnpointinst;
 
 SELECT getValue(inst) FROM tbl_tnpointinst;
 
+SELECT MAX(array_length(getValues(temp),1)) FROM tbl_tnpoint;
+
+SELECT MAX(route(inst)) FROM tbl_tnpointinst;
+
+SELECT MAX(array_length(routes(temp),1)) FROM tbl_tnpoint;
+
 SELECT MAX(getTimestamp(inst)) FROM tbl_tnpointinst;
+
+SELECT MAX(duration(getTime(temp))) FROM tbl_tnpoint;
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp &= t2.np;
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp @= t2.np;
 
 SELECT count(*) FROM tbl_tnpointinst WHERE everEquals(inst, npoint 'npoint(1553,0.904924)');
 
@@ -38,300 +56,142 @@ SELECT count(*) FROM tbl_tnpointinst WHERE alwaysEquals(inst, npoint 'npoint(155
 
 SELECT shift(inst, '1 year'::interval) FROM tbl_tnpointinst;
 
-SELECT count(*) FROM tbl_tnpointinst WHERE atValue(inst, npoint 'npoint(1553,0.904924)') IS NOT NULL;
+SELECT MAX(startTimestamp(shift(t1.temp, t2.i))) FROM tbl_tnpoint t1, tbl_interval t2;
 
-SELECT count(*) FROM tbl_tnpointinst WHERE minusValue(inst, npoint 'npoint(1553,0.904924)') IS NOT NULL;
+SELECT MAX(Route(startValue(temp))) FROM tbl_tnpoint;
 
-SELECT count(*) FROM tbl_tnpointinst WHERE atValues(inst, ARRAY[npoint 'npoint(1553,0.904924)', 'npoint(1553,0.904924)']) IS NOT NULL;
+SELECT MAX(Route(endValue(temp))) FROM tbl_tnpoint;
 
-SELECT count(*) FROM tbl_tnpointinst WHERE minusValues(inst, ARRAY[npoint 'npoint(1553,0.904924)', 'npoint(1553,0.904924)']) IS NOT NULL;
+SELECT MAX(duration(timespan(temp))) FROM tbl_tnpoint;
 
-SELECT count(*) FROM tbl_tnpointinst WHERE atTimestamp(inst, timestamp '2012-09-10 02:03:28+02') IS NOT NULL;
+SELECT MAX(numInstants(temp)) FROM tbl_tnpoint;
 
-SELECT count(*) FROM tbl_tnpointinst WHERE minusTimestamp(inst, timestamp '2012-09-10 02:03:28+02') IS NOT NULL;
+SELECT MAX(Route(startInstant(temp))) FROM tbl_tnpoint;
 
-SELECT count(*) FROM tbl_tnpointinst WHERE valueAtTimestamp(inst, timestamp '2012-09-10 02:03:28+02') IS NOT NULL;
+SELECT MAX(Route(endInstant(temp))) FROM tbl_tnpoint;
 
-SELECT count(*) FROM tbl_tnpointinst WHERE atTimestampSet(inst, timestampset '{2012-09-10 02:03:28+02}') IS NOT NULL;
+SELECT MAX(Route(instantN(temp, 1))) FROM tbl_tnpoint;
 
-SELECT count(*) FROM tbl_tnpointinst WHERE minusTimestampSet(inst, timestampset '{2012-09-10 02:03:28+02}') IS NOT NULL;
+SELECT MAX(array_length(instants(temp),1)) FROM tbl_tnpoint;
 
-SELECT atPeriod(inst, period '[2012-03-01, 2012-06-01]') FROM tbl_tnpointinst;
+SELECT MAX(numTimestamps(temp)) FROM tbl_tnpoint;
 
-SELECT atPeriodSet(inst, periodset '{[2012-03-01, 2012-06-01), [2012-06-01, 2012-09-01]}') FROM tbl_tnpointinst;
+SELECT MAX(startTimestamp(temp)) FROM tbl_tnpoint;
 
-SELECT intersectsTimestamp(inst, timestamp '2012-09-10 02:03:28+02') FROM tbl_tnpointinst;
+SELECT MAX(endTimestamp(temp)) FROM tbl_tnpoint;
 
-SELECT intersectsTimestampSet(inst, timestampset '{2012-09-10 02:03:28+02}') FROM tbl_tnpointinst;
+SELECT MAX(timestampN(temp,1)) FROM tbl_tnpoint;
 
-SELECT intersectsPeriod(inst, period '[2012-03-01, 2012-06-01]') FROM tbl_tnpointinst;
+SELECT MAX(array_length(timestamps(temp),1)) FROM tbl_tnpoint;
 
-SELECT intersectsPeriodSet(inst, periodset '{[2012-03-01, 2012-06-01), [2012-06-01, 2012-09-01]}') FROM tbl_tnpointinst;
+SELECT MAX(numSequences(ts)) FROM tbl_tnpoints;
 
-SELECT count(*) FROM tbl_tnpointinst t1, tbl_tnpointinst t2 WHERE t1.inst = t2.inst;
-SELECT count(*) FROM tbl_tnpointinst t1, tbl_tnpointinst t2 WHERE t1.inst <> t2.inst;
-SELECT count(*) FROM tbl_tnpointinst t1, tbl_tnpointinst t2 WHERE t1.inst < t2.inst;
-SELECT count(*) FROM tbl_tnpointinst t1, tbl_tnpointinst t2 WHERE t1.inst <= t2.inst;
-SELECT count(*) FROM tbl_tnpointinst t1, tbl_tnpointinst t2 WHERE t1.inst > t2.inst;
-SELECT count(*) FROM tbl_tnpointinst t1, tbl_tnpointinst t2 WHERE t1.inst >= t2.inst;
+SELECT MAX(NumInstants(startSequence(ts))) FROM tbl_tnpoints;
 
-/*****************************************************************************
- * TNpointI
- *****************************************************************************/
+SELECT MAX(NumInstants(endSequence(ts))) FROM tbl_tnpoints;
 
-SELECT * FROM tbl_tnpointi;
+SELECT MAX(NumInstants(sequenceN(ts, 1))) FROM tbl_tnpoints;
 
-SELECT memSize(ti) FROM tbl_tnpointi;
-
-SELECT getValues(ti) FROM tbl_tnpointi;
-
-SELECT startValue(ti) FROM tbl_tnpointi;
-
-SELECT endValue(ti) FROM tbl_tnpointi;
-
-SELECT getTime(ti) FROM tbl_tnpointi;
-
-SELECT timespan(ti) FROM tbl_tnpointi;
-
-SELECT numInstants(ti) FROM tbl_tnpointi;
-
-SELECT startInstant(ti) FROM tbl_tnpointi;
-
-SELECT endInstant(ti) FROM tbl_tnpointi;
-
-SELECT instantN(ti, 1) FROM tbl_tnpointi;
-
-SELECT instants(ti) FROM tbl_tnpointi;
-
-SELECT numTimestamps(ti) FROM tbl_tnpointi;
-
-SELECT startTimestamp(ti) FROM tbl_tnpointi;
-
-SELECT endTimestamp(ti) FROM tbl_tnpointi;
-
-SELECT timestampN(ti, 1) FROM tbl_tnpointi;
-
-SELECT timestamps(ti) FROM tbl_tnpointi;
-
-SELECT ti &= npoint 'npoint(868,0.900912)' FROM tbl_tnpointi;
-
-SELECT ti @= npoint 'npoint(868,0.900912)' FROM tbl_tnpointi;
-
-SELECT shift(ti, '1 day'::interval) FROM tbl_tnpointi;
-
-SELECT atValue(ti, npoint 'npoint(868,0.900912)') FROM tbl_tnpointi;
-
-SELECT minusValue(ti, npoint 'npoint(868,0.900912)') FROM tbl_tnpointi;
-
-SELECT atValues(ti, ARRAY[npoint 'npoint(868,0.900912)', 'npoint(340,0.457458)']) FROM tbl_tnpointi;
-
-SELECT minusValues(ti, ARRAY[npoint 'npoint(868,0.900912)', 'npoint(340,0.457458)']) FROM tbl_tnpointi;
-
-SELECT count(*) FROM tbl_tnpointi WHERE atTimestamp(ti, timestamp '2012-02-09 05:50:35+01') IS NOT NULL;
-
-SELECT minusTimestamp(ti, timestamp '2012-02-09 05:50:35+01') FROM tbl_tnpointi;
-
-SELECT valueAtTimestamp(ti, timestamp '2012-02-09 05:50:35+01') FROM tbl_tnpointi;
-
-SELECT count(*) FROM tbl_tnpointi WHERE atTimestampSet(ti, timestampset '{2012-02-09 05:50:35+01, 2012-03-08 09:37:40+01}') IS NOT NULL;
-
-SELECT count(*) FROM tbl_tnpointi WHERE minusTimestampSet(ti, timestampset '{2012-02-09 05:50:35+01, 2012-03-08 09:37:40+01}') IS NOT NULL;
-
-SELECT count(*) FROM tbl_tnpointi WHERE atPeriod(ti, period '[2012-02-01, 2012-09-01]') IS NOT NULL;
-
-SELECT count(*) FROM tbl_tnpointi WHERE atPeriodSet(ti, periodset '{[2012-02-01, 2012-06-01), [2012-06-01, 2012-09-01]}') IS NOT NULL;
-
-SELECT intersectsTimestamp(ti, '2012-02-09 05:50:35+01'::timestamp) FROM tbl_tnpointi;
-
-SELECT intersectsTimestampSet(ti, timestampset(ARRAY['2012-02-09 05:50:35+01'::timestamp, '2012-03-08 09:37:40+01'::timestamp])) FROM tbl_tnpointi;
-
-SELECT intersectsPeriod(ti, '[2012-02-01, 2012-09-01]'::period) FROM tbl_tnpointi;
-
-SELECT intersectsPeriodSet(ti, periodset(ARRAY['[2012-02-01, 2012-06-01)'::period, '[2012-06-01, 2012-09-01]'::period])) FROM tbl_tnpointi;
-
-SELECT count(*) FROM tbl_tnpointi t1, tbl_tnpointi t2 WHERE t1.ti = t2.ti;
-SELECT count(*) FROM tbl_tnpointi t1, tbl_tnpointi t2 WHERE t1.ti <> t2.ti;
-SELECT count(*) FROM tbl_tnpointi t1, tbl_tnpointi t2 WHERE t1.ti < t2.ti;
-SELECT count(*) FROM tbl_tnpointi t1, tbl_tnpointi t2 WHERE t1.ti <= t2.ti;
-SELECT count(*) FROM tbl_tnpointi t1, tbl_tnpointi t2 WHERE t1.ti > t2.ti;
-SELECT count(*) FROM tbl_tnpointi t1, tbl_tnpointi t2 WHERE t1.ti >= t2.ti;
+SELECT MAX(array_length(sequences(ts),1)) FROM tbl_tnpoints;
 
 /*****************************************************************************
- * TNpointSeq
+ * Restriction Functions
  *****************************************************************************/
 
-SELECT * FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_npoint
+WHERE atValue(temp, np) IS NOT NULL;
 
-SELECT memSize(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_npoint
+WHERE minusValue(temp, np) IS NOT NULL;
 
-SELECT getValues(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, 
+( SELECT array_agg(np) AS valuearr FROM tbl_npoint) tmp 
+WHERE atValues(temp, valuearr) IS NOT NULL;
 
-SELECT startValue(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM
+( SELECT * FROM tbl_tnpoint limit 10) tbl,
+( SELECT array_agg(np) AS valuearr FROM tbl_npoint LIMIT 10) tmp
+WHERE minusValues(temp, valuearr) IS NOT NULL;
 
-SELECT endValue(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
+WHERE atTimestamp(temp, t) IS NOT NULL;
 
-SELECT getTime(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
+WHERE minusTimestamp(temp, t) IS NOT NULL;
 
-SELECT duration(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
+WHERE valueAtTimestamp(temp, t) IS NOT NULL;
 
-SELECT numInstants(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestampset
+WHERE atTimestampSet(temp, ts) IS NOT NULL;
 
-SELECT startInstant(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestampset
+WHERE minusTimestampSet(temp, ts) IS NOT NULL;
 
-SELECT endInstant(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_period
+WHERE atPeriod(temp, p) IS NOT NULL;
 
-SELECT instantN(seq, 1) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_period
+WHERE minusPeriod(temp, p) IS NOT NULL;
 
-SELECT instants(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_periodset
+WHERE atPeriodSet(temp, ps) IS NOT NULL;
 
-SELECT numTimestamps(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_periodset
+WHERE minusPeriodSet(temp, ps) IS NOT NULL;
 
-SELECT startTimestamp(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
+WHERE intersectsTimestamp(temp, t) IS NOT NULL;
 
-SELECT endTimestamp(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestampset
+WHERE intersectsTimestampSet(temp, ts) IS NOT NULL;
 
-SELECT timestampN(seq, 1) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_period
+WHERE intersectsPeriod(temp, p) IS NOT NULL;
 
-SELECT timestamps(seq) FROM tbl_tnpointseq;
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_periodset
+WHERE intersectsPeriodSet(temp, ps) IS NOT NULL;
 
-SELECT count(*) FROM tbl_tnpointseq WHERE seq &= 'npoint(325,0.5)';
 
-SELECT count(*) FROM tbl_tnpointseq WHERE seq @= 'npoint(325,0.5)';
+SELECT count(*) FROM tbl_tnpoint WHERE atValue(temp, npoint 'npoint(1553,0.904924)') IS NOT NULL;
 
-SELECT shift(seq, '1 day'::interval) FROM tbl_tnpointseq;
+SELECT count(*) FROM tbl_tnpoint WHERE minusValue(temp, npoint 'npoint(1553,0.904924)') IS NOT NULL;
 
-SELECT atValue(seq, npoint 'npoint(325,0.5)') FROM tbl_tnpointseq;
+SELECT count(*) FROM tbl_tnpoint WHERE atValues(temp, ARRAY[npoint 'npoint(1553,0.904924)', 'npoint(1553,0.904924)']) IS NOT NULL;
 
-SELECT minusValue(seq, npoint 'npoint(325,0.5)') FROM tbl_tnpointseq;
+SELECT count(*) FROM tbl_tnpoint WHERE minusValues(temp, ARRAY[npoint 'npoint(1553,0.904924)', 'npoint(1553,0.904924)']) IS NOT NULL;
 
-SELECT atValues(seq, ARRAY[npoint 'npoint(325,0.5)', 'npoint(325,0.4)']) FROM tbl_tnpointseq;
+SELECT count(*) FROM tbl_tnpoint WHERE atTimestamp(temp, timestamp '2012-09-10 02:03:28+02') IS NOT NULL;
 
-SELECT minusValues(seq, ARRAY[npoint 'npoint(325,0.5)', 'npoint(325,0.4)']) FROM tbl_tnpointseq;
+SELECT count(*) FROM tbl_tnpoint WHERE minusTimestamp(temp, timestamp '2012-09-10 02:03:28+02') IS NOT NULL;
 
-SELECT atTimestamp(seq, timestamp '2012-05-01') FROM tbl_tnpointseq;
+SELECT count(*) FROM tbl_tnpoint WHERE valueAtTimestamp(temp, timestamp '2012-09-10 02:03:28+02') IS NOT NULL;
 
-SELECT minusTimestamp(seq, timestamp '2012-05-01') FROM tbl_tnpointseq;
+SELECT count(*) FROM tbl_tnpoint WHERE atTimestampSet(temp, timestampset '{2012-09-10 02:03:28+02}') IS NOT NULL;
 
-SELECT valueAtTimestamp(seq, '2012-05-01'::timestamp) FROM tbl_tnpointseq;
+SELECT count(*) FROM tbl_tnpoint WHERE minusTimestampSet(temp, timestampset '{2012-09-10 02:03:28+02}') IS NOT NULL;
 
-SELECT atTimestampSet(seq, timestampset '{2012-05-01, 2012-09-01}') FROM tbl_tnpointseq;
+SELECT atPeriod(temp, period '[2012-03-01, 2012-06-01]') FROM tbl_tnpoint;
 
-SELECT minusTimestampSet(seq, timestampset '{2012-05-01, 2012-09-01}') FROM tbl_tnpointseq;
+SELECT atPeriodSet(temp, periodset '{[2012-03-01, 2012-06-01), [2012-06-01, 2012-09-01]}') FROM tbl_tnpoint;
 
-SELECT atPeriod(seq, '[2012-02-01, 2012-09-01]'::period) FROM tbl_tnpointseq;
+SELECT intersectsTimestamp(temp, timestamp '2012-09-10 02:03:28+02') FROM tbl_tnpoint;
 
-SELECT atPeriodSet(seq, periodset(ARRAY['[2012-02-01, 2012-06-01)'::period, '[2012-06-01, 2012-09-01]'::period])) FROM tbl_tnpointseq;
+SELECT intersectsTimestampSet(temp, timestampset '{2012-09-10 02:03:28+02}') FROM tbl_tnpoint;
 
-SELECT intersectsTimestamp(seq, '2012-05-01'::timestamp) FROM tbl_tnpointseq;
+SELECT intersectsPeriod(temp, period '[2012-03-01, 2012-06-01]') FROM tbl_tnpoint;
 
-SELECT intersectsTimestampSet(seq, timestampset(ARRAY['2012-05-01'::timestamp, '2012-09-01'::timestamp])) FROM tbl_tnpointseq;
+SELECT intersectsPeriodSet(temp, periodset '{[2012-03-01, 2012-06-01), [2012-06-01, 2012-09-01]}') FROM tbl_tnpoint;
 
-SELECT intersectsPeriod(seq, '[2012-02-01, 2012-09-01]'::period) FROM tbl_tnpointseq;
+/******************************************************************************
+ * Comparison functions and B-tree indexing
+ ******************************************************************************/
 
-SELECT intersectsPeriodSet(seq, periodset(ARRAY['[2012-02-01, 2012-06-01)'::period, '[2012-06-01, 2012-09-01]'::period])) FROM tbl_tnpointseq;
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp = t2.temp;
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp <> t2.temp;
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp < t2.temp;
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp <= t2.temp;
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp > t2.temp;
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp >= t2.temp;
 
-SELECT count(*) FROM tbl_tnpointseq t1, tbl_tnpointseq t2 WHERE t1.seq = t2.seq;
-SELECT count(*) FROM tbl_tnpointseq t1, tbl_tnpointseq t2 WHERE t1.seq <> t2.seq;
-SELECT count(*) FROM tbl_tnpointseq t1, tbl_tnpointseq t2 WHERE t1.seq < t2.seq;
-SELECT count(*) FROM tbl_tnpointseq t1, tbl_tnpointseq t2 WHERE t1.seq <= t2.seq;
-SELECT count(*) FROM tbl_tnpointseq t1, tbl_tnpointseq t2 WHERE t1.seq > t2.seq;
-SELECT count(*) FROM tbl_tnpointseq t1, tbl_tnpointseq t2 WHERE t1.seq >= t2.seq;
-
-/*****************************************************************************
- * TNpointS
- *****************************************************************************/
-
-SELECT * FROM tbl_tnpoints;
-
-SELECT memSize(ts) FROM tbl_tnpoints;
-
-SELECT getValues(ts) FROM tbl_tnpoints;
-
-SELECT startValue(ts) FROM tbl_tnpoints;
-
-SELECT endValue(ts) FROM tbl_tnpoints;
-
-SELECT getTime(ts) FROM tbl_tnpoints;
-
-SELECT timespan(ts) FROM tbl_tnpoints;
-
-SELECT duration(ts) FROM tbl_tnpoints;
-
-SELECT numSequences(ts) FROM tbl_tnpoints;
-
-SELECT startSequence(ts) FROM tbl_tnpoints;
-
-SELECT endSequence(ts) FROM tbl_tnpoints;
-
-SELECT SequenceN(ts, 1) FROM tbl_tnpoints;
-
-SELECT sequences(ts) FROM tbl_tnpoints;
-
-SELECT numInstants(ts) FROM tbl_tnpoints;
-
-SELECT startInstant(ts) FROM tbl_tnpoints;
-
-SELECT endInstant(ts) FROM tbl_tnpoints;
-
-SELECT instantN(ts, 1) FROM tbl_tnpoints;
-
-SELECT instants(ts) FROM tbl_tnpoints;
-
-SELECT numTimestamps(ts) FROM tbl_tnpoints;
-
-SELECT startTimestamp(ts) FROM tbl_tnpoints;
-
-SELECT endTimestamp(ts) FROM tbl_tnpoints;
-
-SELECT timestampN(ts, 1) FROM tbl_tnpoints;
-
-SELECT timestamps(ts) FROM tbl_tnpoints;
-
-SELECT ts &= npoint 'npoint(1038,0.5)' FROM tbl_tnpoints;
-
-SELECT ts @= npoint 'npoint(1038,0.5)' FROM tbl_tnpoints;
-
-SELECT shift(ts, '1 day'::interval) FROM tbl_tnpoints;
-
--- SELECT isValueContinuous(ts) FROM tbl_tnpoints;
-
--- SELECT isTimeContinuous(ts) FROM tbl_tnpoints;
-
-SELECT atValue(ts, npoint 'npoint(1038,0.5)') FROM tbl_tnpoints;
-
-SELECT minusValue(ts, npoint 'npoint(1038,0.5)') FROM tbl_tnpoints;
-
-SELECT atValues(ts, ARRAY[npoint 'npoint(1038,0.5)', 'npoint(1038,0.2)']) FROM tbl_tnpoints;
-
-SELECT minusValues(ts, ARRAY[npoint 'npoint(1038,0.5)', 'npoint(1038,0.2)']) FROM tbl_tnpoints;
-
-SELECT atTimestamp(ts, '2012-05-01'::timestamp) FROM tbl_tnpoints;
-
-SELECT minusTimestamp(ts, '2012-05-01'::timestamp) FROM tbl_tnpoints;
-
-SELECT valueAtTimestamp(ts, '2012-05-01'::timestamp) FROM tbl_tnpoints;
-
-SELECT atTimestampSet(ts, timestampset(ARRAY['2012-05-01'::timestamp, '2012-09-01'::timestamp])) FROM tbl_tnpoints;
-
-SELECT minusTimestampSet(ts, timestampset(ARRAY['2012-05-01'::timestamp, '2012-09-01'::timestamp])) FROM tbl_tnpoints;
-
-SELECT atPeriod(ts, '[2012-02-01, 2012-09-01]'::period) FROM tbl_tnpoints;
-
-SELECT atPeriodSet(ts, periodset(ARRAY['[2012-02-01, 2012-06-01)'::period, '[2012-06-01, 2012-09-01]'::period])) FROM tbl_tnpoints;
-
-SELECT intersectsTimestamp(ts, '2012-05-01'::timestamp) FROM tbl_tnpoints;
-
-SELECT intersectsTimestampSet(ts, timestampset(ARRAY['2012-05-01'::timestamp, '2012-09-01'::timestamp])) FROM tbl_tnpoints;
-
-SELECT intersectsPeriod(ts, '[2012-02-01, 2012-09-01]'::period) FROM tbl_tnpoints;
-
-SELECT intersectsPeriodSet(ts, periodset(ARRAY['[2012-02-01, 2012-06-01)'::period, '[2012-06-01, 2012-09-01]'::period])) FROM tbl_tnpoints;
-
-SELECT count(*) FROM tbl_tnpoints t1, tbl_tnpoints t2 WHERE t1.ts = t2.ts;
-SELECT count(*) FROM tbl_tnpoints t1, tbl_tnpoints t2 WHERE t1.ts <> t2.ts;
-SELECT count(*) FROM tbl_tnpoints t1, tbl_tnpoints t2 WHERE t1.ts < t2.ts;
-SELECT count(*) FROM tbl_tnpoints t1, tbl_tnpoints t2 WHERE t1.ts <= t2.ts;
-SELECT count(*) FROM tbl_tnpoints t1, tbl_tnpoints t2 WHERE t1.ts > t2.ts;
-SELECT count(*) FROM tbl_tnpoints t1, tbl_tnpoints t2 WHERE t1.ts >= t2.ts;
-
-/******************************************************************************/
+/*****************************************************************************/

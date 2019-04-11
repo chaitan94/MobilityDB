@@ -96,6 +96,10 @@ SELECT COUNT(*) FROM tbl_tnpoint, tbl_npoint WHERE temp @= np;
 
 SELECT COUNT(shift(temp, i)) FROM tbl_tnpoint, tbl_interval;
 
+/******************************************************************************
+ * Restriction functions
+ ******************************************************************************/
+
 SELECT COUNT(*) FROM tbl_tnpoint, tbl_npoint 
 WHERE atValue(temp, np) IS NOT NULL;
 

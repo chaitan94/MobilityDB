@@ -96,40 +96,6 @@ nsegment_parse(char **str)
 	return result;
 }
 
-nregion *
-nregion_parse(char **str)
-{
-	if (!p_obrace(str))
-		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-				errmsg("Could not parse network region")));
-
-	//FIXME: parsing twice
-	char *bak = *str;
-	nsegment_parse(str);
-	int count = 1;
-	while (p_comma(str))
-	{
-		nsegment_parse(str);
-		count++;
-	}
-	if (!p_cbrace(str))
-		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-				errmsg("Could not parse network region")));
-
-	*str = bak;
-	nsegment *nsegs = palloc(sizeof(nsegment) * count);
-	for (int i = 0; i < count; i++)
-	{
-		p_comma(str);
-		nsegs[i] = *nsegment_parse(str);
-	}
-	p_cbrace(str);
-
-	nregion *result = nregion_from_nsegmentarr_internal(nsegs, count);
-	pfree(nsegs);
-	return result;
-}
-
 TemporalSeq *
 tnpointseq_parse(char **str, Oid basetype)
 {
