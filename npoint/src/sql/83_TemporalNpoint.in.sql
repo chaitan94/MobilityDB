@@ -77,7 +77,7 @@ CREATE FUNCTION tnpointi(tnpoint[])
 CREATE FUNCTION tnpointseq(tnpoint[], lower_inc boolean DEFAULT true, 
 		upper_inc boolean DEFAULT true)
 	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'tnpoint_make_tnpointseq'
+	AS 'MODULE_PATHNAME', 'temporal_make_temporalseq'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /* Temporal sequence set */
@@ -88,24 +88,44 @@ CREATE FUNCTION tnpoints(tnpoint[])
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 	
 /******************************************************************************
- * Transformations
+ * Cast functions
+ ******************************************************************************/
+
+CREATE FUNCTION tnpoint(tgeompoint)
+	RETURNS tnpoint
+	AS 'MODULE_PATHNAME', 'tgeompoint_as_tnpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeompoint(tnpoint)
+	RETURNS tgeompoint
+	AS 'MODULE_PATHNAME', 'tnpoint_as_tgeompoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE CAST (tgeompoint AS tnpoint) WITH FUNCTION tnpoint(tgeompoint);
+CREATE CAST (tnpoint AS tgeompoint) WITH FUNCTION tgeompoint(tnpoint);
+
+/******************************************************************************
+ * Transformation functions
  ******************************************************************************/
 
 CREATE FUNCTION tnpointinst(tnpoint)
-	RETURNS tnpoint AS 'MODULE_PATHNAME', 'temporal_as_temporalinst'
+	RETURNS tnpoint
+	AS 'MODULE_PATHNAME', 'temporal_as_temporalinst'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tnpointi(tnpoint)
-	RETURNS tnpoint AS 'MODULE_PATHNAME', 'temporal_as_temporali'
+	RETURNS tnpoint
+	AS 'MODULE_PATHNAME', 'temporal_as_temporali'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tnpointseq(tnpoint)
-	RETURNS tnpoint AS 'MODULE_PATHNAME', 'temporal_as_temporalseq'
+	RETURNS tnpoint
+	AS 'MODULE_PATHNAME', 'temporal_as_temporalseq'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tnpoints(tnpoint)
-	RETURNS tnpoint AS 'MODULE_PATHNAME', 'temporal_as_temporals'
+	RETURNS tnpoint
+	AS 'MODULE_PATHNAME', 'temporal_as_temporals'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
- Functions
+ * Accessor functions
  ******************************************************************************/
 
 CREATE FUNCTION temporalType(tnpoint)
@@ -273,6 +293,10 @@ CREATE FUNCTION sequences(tnpoint)
 	RETURNS tnpoint[]
 	AS 'MODULE_PATHNAME', 'temporals_sequences'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************
+ * Restriction functions
+ ******************************************************************************/
 
 CREATE FUNCTION atValue(tnpoint, npoint)
 	RETURNS tnpoint

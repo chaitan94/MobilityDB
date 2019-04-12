@@ -21,7 +21,7 @@
  * The Oid argument is not used but is needed since the second argument of 
  * the functions temporal*_to_string is of type char *(*value_out)(Oid, Datum) 
  */
-static char *
+char *
 wkt_out(Oid type, Datum value)
 {
 	GSERIALIZED *gs = (GSERIALIZED *)DatumGetPointer(value);
