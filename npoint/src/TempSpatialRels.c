@@ -111,8 +111,8 @@ tnpointseq_geom_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 	/* Intersect at lower? */
 	if (lower_inc && (s1 == 0 || s1 == 1) && (s2 == 0 || s2 == 1))
 	{
-		Datum startgeom1 = npoint_geom_internal(startnp1);
-		Datum startgeom2 = npoint_geom_internal(startnp2);
+		Datum startgeom1 = npoint_as_geom_internal(startnp1);
+		Datum startgeom2 = npoint_as_geom_internal(startnp2);
 		if (datum_eq(startgeom1, startgeom2, type_oid(T_GEOMETRY)))
 		{
 			*inter = lower;
@@ -125,8 +125,8 @@ tnpointseq_geom_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 	/* Intersect at upper? */
 	if (upper_inc && (e1 == 0 || e1 == 1) && (e2 == 0 || e2 == 1))
 	{
-		Datum endgeom1 = npoint_geom_internal(endnp1);
-		Datum endgeom2 = npoint_geom_internal(endnp2);
+		Datum endgeom1 = npoint_as_geom_internal(endnp1);
+		Datum endgeom2 = npoint_as_geom_internal(endnp2);
 		if (datum_eq(endgeom1, endgeom2, type_oid(T_GEOMETRY)))
 		{
 			*inter = upper;
@@ -270,8 +270,8 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 	npoint *endnp2 = DatumGetNpoint(temporalinst_value(end2));
 	TemporalInst *instants[2];
 
-	Datum startgeom1 = npoint_geom_internal(startnp1);
-	Datum startgeom2 = npoint_geom_internal(startnp2);
+	Datum startgeom1 = npoint_as_geom_internal(startnp1);
+	Datum startgeom2 = npoint_as_geom_internal(startnp2);
 	Datum startvalue = operator(startgeom1, startgeom2);
 	pfree(DatumGetPointer(startgeom1)); pfree(DatumGetPointer(startgeom2));
 
@@ -309,8 +309,8 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 		return;
 	}
 
-	Datum endgeom1 = npoint_geom_internal(endnp1);
-	Datum endgeom2 = npoint_geom_internal(endnp2);
+	Datum endgeom1 = npoint_as_geom_internal(endnp1);
+	Datum endgeom2 = npoint_as_geom_internal(endnp2);
 	Datum endvalue = operator(endgeom1, endgeom2);
 	pfree(DatumGetPointer(endgeom1)); pfree(DatumGetPointer(endgeom2));
 
@@ -324,9 +324,9 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 
 		/* Compute the operator in the middle time */
 		npoint *intnp1 = npoint_make(startnp1->rid, (startnp1->pos + endnp1->pos) / 2);
-		Datum intgeom1 = npoint_geom_internal(intnp1);
+		Datum intgeom1 = npoint_as_geom_internal(intnp1);
 		npoint *intnp2 = npoint_make(startnp2->rid, (startnp2->pos + endnp2->pos) / 2);
-		Datum intgeom2 = npoint_geom_internal(intnp2);
+		Datum intgeom2 = npoint_as_geom_internal(intnp2);
 		Datum intvalue = operator(intgeom1, intgeom2);
 		instants[0] = temporalinst_make(intvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(intvalue, end1->t, valuetypid);
@@ -395,7 +395,7 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 
 	/* Compute the operator at crosstime */
 	Datum crossnp = temporalseq_value_at_timestamp1(start1, end1, crosstime);
-	Datum crossgeom = npoint_geom_internal(DatumGetNpoint(crossnp));
+	Datum crossgeom = npoint_as_geom_internal(DatumGetNpoint(crossnp));
 	Datum crossvalue = operator(crossgeom, crossgeom);
 	instants[0] = temporalinst_make(crossvalue, crosstime, valuetypid);
 	result[1] = temporalseq_from_temporalinstarr(instants, 1,
@@ -569,8 +569,8 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 	npoint *endnp2 = DatumGetNpoint(temporalinst_value(end2));
 	TemporalInst *instants[2];
 
-	Datum startgeom1 = npoint_geom_internal(startnp1);
-	Datum startgeom2 = npoint_geom_internal(startnp2);
+	Datum startgeom1 = npoint_as_geom_internal(startnp1);
+	Datum startgeom2 = npoint_as_geom_internal(startnp2);
 	Datum startvalue = operator(startgeom1, startgeom2, param);
 	pfree(DatumGetPointer(startgeom1)); pfree(DatumGetPointer(startgeom2));
 
@@ -610,8 +610,8 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 		return;
 	}
 
-	Datum endgeom1 = npoint_geom_internal(endnp1);
-	Datum endgeom2 = npoint_geom_internal(endnp2);
+	Datum endgeom1 = npoint_as_geom_internal(endnp1);
+	Datum endgeom2 = npoint_as_geom_internal(endnp2);
 	Datum endvalue = operator(endgeom1, endgeom2, param);
 	pfree(DatumGetPointer(endgeom1)); pfree(DatumGetPointer(endgeom2));
 
@@ -625,9 +625,9 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 
 		/* Compute the operator in the middle time */
 		npoint *intnp1 = npoint_make(startnp1->rid, (startnp1->pos + endnp1->pos) / 2);
-		Datum intgeom1 = npoint_geom_internal(intnp1);
+		Datum intgeom1 = npoint_as_geom_internal(intnp1);
 		npoint *intnp2 = npoint_make(startnp2->rid, (startnp2->pos + endnp2->pos) / 2);
-		Datum intgeom2 = npoint_geom_internal(intnp2);
+		Datum intgeom2 = npoint_as_geom_internal(intnp2);
 		Datum intvalue = operator(intgeom1, intgeom2, param);
 		instants[0] = temporalinst_make(intvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(intvalue, end1->t, valuetypid);
@@ -695,7 +695,7 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 
 	/* Compute the operator at crosstime */
 	Datum crossnp = temporalseq_value_at_timestamp1(start1, end1, crosstime);
-	Datum crossgeom = npoint_geom_internal(DatumGetNpoint(crossnp));
+	Datum crossgeom = npoint_as_geom_internal(DatumGetNpoint(crossnp));
 	Datum crossvalue = operator(crossgeom, crossgeom, param);
 	instants[0] = temporalinst_make(crossvalue, crosstime, valuetypid);
 	result[1] = temporalseq_from_temporalinstarr(instants, 1,
@@ -867,7 +867,7 @@ tspatialrel_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo,
 	Datum intersections = call_function2(intersection, line, geo);
 	if (np1->pos == np2->pos || DatumGetBool(call_function1(LWGEOM_isempty, intersections)))
 	{
-		Datum geom1 = npoint_geom_internal(np1);
+		Datum geom1 = npoint_as_geom_internal(np1);
 		Datum value = invert ? operator(geo, geom1) : operator(geom1, geo);
 		TemporalInst *instants[2];
 		instants[0] = temporalinst_make(value, inst1->t, valuetypid);
@@ -906,7 +906,7 @@ tspatialrel_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo,
 
 	if (before)
 	{
-		Datum geom1 = npoint_geom_internal(np1);
+		Datum geom1 = npoint_as_geom_internal(np1);
 		Datum value = invert ? operator(geo, geom1) : operator(geom1, geo);
 		instants[0] = temporalinst_make(value, inst1->t, valuetypid);
 		instants[1] = temporalinst_make(value, (interinstants[0])->t, 
@@ -926,7 +926,7 @@ tspatialrel_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo,
 			(upper_inc || interinstants[i]->t != inst2->t))
 		{
 			npoint *intnp = DatumGetNpoint(temporalinst_value(interinstants[i]));
-			Datum intgeom = npoint_geom_internal(intnp);
+			Datum intgeom = npoint_as_geom_internal(intnp);
 			Datum value = invert ? operator(geo, intgeom) : 
 				operator(intgeom, geo);
 			instants[0] = temporalinst_make(value, (interinstants[i])->t,
@@ -947,7 +947,7 @@ tspatialrel_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo,
 			TimestampTz inttime = time1 + (time2 - time1) / 2;
 
 			Datum intnp = temporalseq_value_at_timestamp1(inst1, inst2, inttime);
-			Datum intgeom = npoint_geom_internal(DatumGetNpoint(intnp));
+			Datum intgeom = npoint_as_geom_internal(DatumGetNpoint(intnp));
 			Datum intvalue = invert ? operator(geo, intgeom) :
 				operator(intgeom, geo);
 			instants[0] = temporalinst_make(intvalue, time1, 
@@ -966,7 +966,7 @@ tspatialrel_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo,
 
 	if (after)
 	{
-		Datum geom2 = npoint_geom_internal(np2);
+		Datum geom2 = npoint_as_geom_internal(np2);
 		Datum value = invert ? operator(geo, geom2) : 
 			operator(geom2, geo);
 		instants[0] = temporalinst_make(value, (interinstants[countinst - 1])->t,
@@ -1155,7 +1155,7 @@ tspatialrel3_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo
 	Datum intersections = call_function2(intersection, line, geo);
 	if (np1->pos == np2->pos || DatumGetBool(call_function1(LWGEOM_isempty, intersections)))
 	{
-		Datum geom1 = npoint_geom_internal(np1);
+		Datum geom1 = npoint_as_geom_internal(np1);
 		Datum value = invert ? operator(geo, geom1, param) :
 			operator(geom1, geo, param);
 		TemporalInst *instants[2];
@@ -1194,7 +1194,7 @@ tspatialrel3_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo
 
 	if (before)
 	{
-		Datum geom1 = npoint_geom_internal(np1);
+		Datum geom1 = npoint_as_geom_internal(np1);
 		Datum value = invert ? operator(geo, geom1, param) :
 			operator(geom1, geo, param);
 		instants[0] = temporalinst_make(value, inst1->t, valuetypid);
@@ -1214,7 +1214,7 @@ tspatialrel3_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo
 			(upper_inc || interinstants[i]->t != inst2->t))
 		{
 			npoint *intnp = DatumGetNpoint(temporalinst_value(interinstants[i]));
-			Datum intgeom = npoint_geom_internal(intnp);
+			Datum intgeom = npoint_as_geom_internal(intnp);
 			Datum value = invert ? operator(geo, intgeom, param) :
 				operator(intgeom, geo, param);
 			instants[0] = temporalinst_make(value, (interinstants[i])->t,
@@ -1235,7 +1235,7 @@ tspatialrel3_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo
 			TimestampTz inttime = time1 + (time2 - time1) / 2;
 
 			Datum intnp = temporalseq_value_at_timestamp1(inst1, inst2, inttime);
-			Datum intgeom = npoint_geom_internal(DatumGetNpoint(intnp));
+			Datum intgeom = npoint_as_geom_internal(DatumGetNpoint(intnp));
 			Datum intvalue = invert ? operator(geo, intgeom, param) :
 				operator(intgeom, geo, param);
 			instants[0] = temporalinst_make(intvalue, time1, valuetypid);
@@ -1251,7 +1251,7 @@ tspatialrel3_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo
 
 	if (after)
 	{
-		Datum geom2 = npoint_geom_internal(np2);
+		Datum geom2 = npoint_as_geom_internal(np2);
 		Datum value = invert ? operator(geom2, geo, param) :
 			operator(geom2, geo, param);
 		instants[0] = temporalinst_make(value, (interinstants[countinst - 1])->t,

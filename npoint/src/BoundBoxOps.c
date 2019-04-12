@@ -29,7 +29,7 @@ void
 tnpointinst_make_gbox(GBOX *box, Datum value, TimestampTz t)
 {
 	double infinity = get_float8_infinity();
-    Datum geom = npoint_geom_internal(DatumGetNpoint(value));
+    Datum geom = npoint_as_geom_internal(DatumGetNpoint(value));
 	GBOX gbox;
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 	if (gserialized_get_gbox_p(gs, &gbox) == LW_FAILURE)
@@ -75,7 +75,7 @@ tnpointinstarr_cont_to_gbox(GBOX *box, TemporalInst **instants, int count)
         mmax = Max(mmax, instants[i]->t);
     }
 
-    Datum line = route_geom_with_rid(rid);
+    Datum line = route_geom_from_rid(rid);
     Datum geom;
     if (posmin == 0 && posmax == 1)
         geom = PointerGetDatum(gserialized_copy((GSERIALIZED *)PG_DETOAST_DATUM(line)));

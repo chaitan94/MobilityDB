@@ -26,7 +26,7 @@ distance_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2,
 	/* Constant segment */
 	if (np1->pos == np2->pos)
 	{
-		Datum geom1 = npoint_geom_internal(np1);
+		Datum geom1 = npoint_as_geom_internal(np1);
 		TemporalInst **result = palloc(sizeof(TemporalInst *));
 		result[0] = temporalinst_make(geom_distance2d(geo, geom1), 
 			inst1->t, FLOAT8OID);
@@ -60,7 +60,7 @@ distance_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2,
 		{
 			TimestampTz inttime = (TimestampTz)(time1 + (time2 - time1) * fraction);
 			Datum intnp = temporalseq_value_at_timestamp1(inst1, inst2, inttime);
-			Datum intgeom = npoint_geom_internal(DatumGetNpoint(intnp));
+			Datum intgeom = npoint_as_geom_internal(DatumGetNpoint(intnp));
 			result[k++] = temporalinst_make(geom_distance2d(geo, intgeom), inttime, FLOAT8OID);
 
 			pfree(DatumGetPointer(intgeom));
@@ -149,8 +149,8 @@ distance_tnpointseq_tnpointseq1(TemporalInst *start1, TemporalInst *start2,
 	npoint *startnp2 = DatumGetNpoint(temporalinst_value(start2));
 	npoint *endnp2 = DatumGetNpoint(temporalinst_value(end2));
 
-	Datum startGeom1 = npoint_geom_internal(startnp1);
-	Datum startGeom2 = npoint_geom_internal(startnp2);
+	Datum startGeom1 = npoint_as_geom_internal(startnp1);
+	Datum startGeom2 = npoint_as_geom_internal(startnp2);
 
 	/* Both segments are constant */
 	if (startnp1->pos == endnp1->pos && startnp2->pos == endnp2->pos)
@@ -246,7 +246,7 @@ distance_tnpointseq_tnpointseq1(TemporalInst *start1, TemporalInst *start2,
 		{
 			TimestampTz inttime = (TimestampTz)(start1->t + (end1->t - start1->t) * fraction1);
 			Datum intnp = temporalseq_value_at_timestamp1(start2, end2, inttime);
-			Datum intgeom = npoint_geom_internal(DatumGetNpoint(intnp));
+			Datum intgeom = npoint_as_geom_internal(DatumGetNpoint(intnp));
 			result[k++] = temporalinst_make(geom_distance2d(vertex1, intgeom), inttime, FLOAT8OID);
 
 			pfree(DatumGetPointer(vertex1));
@@ -259,7 +259,7 @@ distance_tnpointseq_tnpointseq1(TemporalInst *start1, TemporalInst *start2,
 		{
 			TimestampTz inttime = (TimestampTz)(start1->t + (end1->t - start1->t) * fraction2);
 			Datum intnp = temporalseq_value_at_timestamp1(start1, end1, inttime);
-			Datum intgeom = npoint_geom_internal(DatumGetNpoint(intnp));
+			Datum intgeom = npoint_as_geom_internal(DatumGetNpoint(intnp));
 			result[k++] = temporalinst_make(geom_distance2d(intgeom, vertex2), inttime, FLOAT8OID);
 
 			pfree(DatumGetPointer(intnp)); pfree(DatumGetPointer(intgeom));
