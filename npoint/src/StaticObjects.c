@@ -589,12 +589,12 @@ nsegment_gt(PG_FUNCTION_ARGS)
  * Conversions between network and Euclidean space
  *****************************************************************************/
 
-/* Access edge table to get the route length with corresponding rid */
+/* Access edge table to get the route length from corresponding rid */
 
 double
-route_length_with_rid(int64 rid)
+route_length_from_rid(int64 rid)
 {
-	char *sql = (char *)palloc(sizeof(char) * 64);
+	char sql[64];
 	bool isNull = true;
 	double result = 0;
 
@@ -608,7 +608,6 @@ route_length_with_rid(int64 rid)
 		result = DatumGetFloat8(SPI_getbinval(tuptable->vals[0], tuptable->tupdesc, 1, &isNull));
 	}
 	SPI_finish();
-	pfree(sql);
 
 	if (isNull)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
@@ -617,13 +616,13 @@ route_length_with_rid(int64 rid)
 	return result;
 }
 
-/* Access edge table to get the route geometry with corresponding rid */
+/* Access edge table to get the route geometry from corresponding rid */
 
 Datum
-route_geom_with_rid(int64 rid)
+route_geom_from_rid(int64 rid)
 {
-	char		*sql = (char *)palloc(sizeof(char) * 64);
-	bool		 isNull = true;
+	char *sql = (char *)palloc(sizeof(char) * 64);
+	bool isNull = true;
 	GSERIALIZED *result = NULL;
 
 	sprintf(sql, "SELECT the_geom FROM ways WHERE gid = %ld", rid);
@@ -652,33 +651,93 @@ route_geom_with_rid(int64 rid)
 	PG_RETURN_POINTER(result);
 }
 
+/* Access edge table to get the rid from corresponding geometry */
+
+int64
+rid_from_geom(Datum value)
+{
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(value);
+	LWGEOM *geom = lwgeom_from_gserialized(gs);
+	size_t len;
+	char *geomstr = lwgeom_to_wkt(geom, WKT_ISO, DBL_DIG, &len);
+	pfree(geom);
+	char *sql = (char *)palloc(sizeof(char) * 128);
+	bool isNull = true;
+	int64 result = 0; /* make compiler quiet */
+	
+	sprintf(sql, "SELECT gid FROM ways WHERE ST_DWithin(the_geom, '%s', 1e-5) \
+		ORDER BY ST_Distance(the_geom, '%s') LIMIT 1", geomstr, geomstr);
+	SPI_connect();
+	int ret = SPI_execute(sql, true, 1);
+	uint64 proc = SPI_processed;
+	if (ret > 0 && proc > 0 && SPI_tuptable != NULL)
+	{
+		SPITupleTable *tuptable = SPI_tuptable;
+		result = DatumGetInt64(SPI_getbinval(tuptable->vals[0], tuptable->tupdesc, 1, &isNull));
+	}
+	SPI_finish();
+	pfree(geomstr);
+	pfree(sql);
+	if (isNull)
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("cannot get route identifier from geometry point")));
+	return result;
+}
+
+/*****************************************************************************/
+
 /* npoint to geometry */
 
 Datum
-npoint_geom_internal(npoint *np)
+npoint_as_geom_internal(npoint *np)
 {
-	Datum line = route_geom_with_rid(np->rid);
+	Datum line = route_geom_from_rid(np->rid);
 	Datum result = call_function2(LWGEOM_line_interpolate_point, line, Float8GetDatum(np->pos));
 	pfree(DatumGetPointer(line));
-	PG_RETURN_DATUM(result);
+	return result;
 }
 
-PG_FUNCTION_INFO_V1(npoint_geom);
+PG_FUNCTION_INFO_V1(npoint_as_geom);
 
 PGDLLEXPORT Datum
-npoint_geom(PG_FUNCTION_ARGS)
+npoint_as_geom(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
-	Datum result = npoint_geom_internal(np);
+	Datum result = npoint_as_geom_internal(np);
 	PG_RETURN_DATUM(result);
 }
+
+/* geometry to npoint */
+
+npoint *
+geom_as_npoint_internal(Datum geom)
+{
+	int64 rid = rid_from_geom(geom);
+	Datum line = route_geom_from_rid(rid);
+	double pos = DatumGetFloat8(call_function2(LWGEOM_line_locate_point, line, geom));
+	npoint *result = npoint_make(rid, pos);
+	pfree(DatumGetPointer(line));
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(geom_as_npoint);
+
+PGDLLEXPORT Datum
+geom_as_npoint(PG_FUNCTION_ARGS)
+{
+	Datum geom = PG_GETARG_DATUM(0);
+	npoint *result = geom_as_npoint_internal(geom);
+	PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************/
 
 /* nsegment to geometry */
 
 Datum
-nsegment_geom_internal(nsegment *ns)
+nsegment_as_geom_internal(nsegment *ns)
 {
-	Datum line = route_geom_with_rid(ns->rid);
+	Datum line = route_geom_from_rid(ns->rid);
 	Datum result;
 	if (ns->pos1 == ns->pos2)
 		result = call_function2(LWGEOM_line_locate_point, line, 
@@ -690,25 +749,25 @@ nsegment_geom_internal(nsegment *ns)
 	PG_RETURN_DATUM(result);
 }
 
-PG_FUNCTION_INFO_V1(nsegment_geom);
+PG_FUNCTION_INFO_V1(nsegment_as_geom);
 
 PGDLLEXPORT Datum
-nsegment_geom(PG_FUNCTION_ARGS)
+nsegment_as_geom(PG_FUNCTION_ARGS)
 {
 	nsegment *ns = PG_GETARG_NSEGMENT(0);
-	Datum result = nsegment_geom_internal(ns);
+	Datum result = nsegment_as_geom_internal(ns);
 	PG_RETURN_DATUM(result);
 }
 
 /* nsegment array to geometry */
 
 Datum
-nsegmentarr_geom_internal(nsegment **segments, int count)
+nsegmentarr_to_geom_internal(nsegment **segments, int count)
 {
 	Datum *sublines = palloc(sizeof(Datum) * count);
 	for (int i = 0; i < count; i++)
 	{
-		Datum line = route_geom_with_rid(segments[i]->rid);
+		Datum line = route_geom_from_rid(segments[i]->rid);
 		if (segments[i]->pos1 == 0 && segments[i]->pos2 == 1)
 			sublines[i] = PointerGetDatum(gserialized_copy((GSERIALIZED *)PG_DETOAST_DATUM(line)));
 		else if (segments[i]->pos1 == segments[i]->pos2)
@@ -727,34 +786,6 @@ nsegmentarr_geom_internal(nsegment **segments, int count)
 		pfree(DatumGetPointer(sublines[i])); 
 	pfree(sublines); 
 	PG_RETURN_DATUM(result);
-}
-
-npoint *
-npoint_from_geompoint(Datum geom)
-{
-	char *geomstr = wkt_out(ANYOID, geom);
-	char *sql = (char *)palloc(sizeof(char) * 128);
-	bool isNull = true;
-	npoint *result = NULL;
-	
-	sprintf(sql, "SELECT npoint(gid, ST_LineLocatePoint(the_geom, geometry '%s')) \
-		FROM ways WHERE ST_DWithin(the_geom, geometry '%s', 1e-5) \
-		ORDER BY ST_Distance(the_geom, geometry '%s') LIMIT 1", geomstr, geomstr, geomstr);
-	SPI_connect();
-	int ret = SPI_execute(sql, true, 1);
-	uint64 proc = SPI_processed;
-	if (ret > 0 && proc > 0 && SPI_tuptable != NULL)
-	{
-		SPITupleTable *tuptable = SPI_tuptable;
-		result = DatumGetNpoint(SPI_getbinval(tuptable->vals[0], tuptable->tupdesc, 1, &isNull));
-	}
-	SPI_finish();
-	pfree(geomstr);
-	pfree(sql);
-	if (isNull)
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("cannot get network point from geometry point")));
-	return result;
 }
 
 /*****************************************************************************/

@@ -21,7 +21,7 @@ tnpointseq_trajectory(TemporalSeq *seq)
 {
 	Datum *trajs = palloc(sizeof(Datum) * (seq->count - 1));
 	npoint *np1 = DatumGetNpoint(temporalinst_value(temporalseq_inst_n(seq, 0)));
-	Datum line = route_geom_with_rid(np1->rid);
+	Datum line = route_geom_from_rid(np1->rid);
 	int k = 0;
 	for (int i = 1; i < seq->count; i++)
 	{
@@ -53,7 +53,7 @@ tnpointseq_trajectory(TemporalSeq *seq)
 	Datum result;
 	if (k == 0)
 	{
-		result = npoint_geom_internal(np1);
+		result = npoint_as_geom_internal(np1);
 	}
 	else if (k == 1)
 	{
@@ -85,9 +85,9 @@ tnpointseq_trajectory1(TemporalInst *inst1, TemporalInst *inst2)
 	if (np1->rid != np2->rid)
 		PG_RETURN_POINTER(NULL);
 	if (np1->pos == np2->pos)
-		return npoint_geom_internal(np1);
+		return npoint_as_geom_internal(np1);
 
-	Datum line = route_geom_with_rid(np1->rid);
+	Datum line = route_geom_from_rid(np1->rid);
 	Datum traj;
 	if (np1->pos < np2->pos)
 	{
@@ -215,7 +215,7 @@ Datum
 tnpointinst_geom(TemporalInst *inst)
 {
 	npoint *np = DatumGetNpoint(temporalinst_value(inst));
-	return npoint_geom_internal(np);
+	return npoint_as_geom_internal(np);
 }
 
 Datum
@@ -230,7 +230,7 @@ tnpointi_geom(TemporalI *ti)
 	for (int i = 0; i < count; i++)
 	{
 		npoint *np = DatumGetNpoint(values[i]);
-		geoms[i] = npoint_geom_internal(np);
+		geoms[i] = npoint_as_geom_internal(np);
 	}
 	ArrayType *array = datumarr_to_array(geoms, count, type_oid(T_GEOMETRY));
 	Datum result = call_function1(LWGEOM_collect_garray, PointerGetDatum(array));
@@ -246,7 +246,7 @@ tnpointseq_geom(TemporalSeq *seq)
 		return tnpointinst_geom(temporalseq_inst_n(seq, 0));
 
 	nsegment *ns = tnpointseq_positions1(seq);
-	return nsegment_geom_internal(ns);
+	return nsegment_as_geom_internal(ns);
 }
 
 Datum
@@ -256,7 +256,7 @@ tnpoints_geom(TemporalS *ts)
 		return tnpointseq_geom(temporals_seq_n(ts, 0));
 
 	nsegment **segments = tnpoints_positions1(ts);
-	return nsegmentarr_geom_internal(segments, ts->count);
+	return nsegmentarr_to_geom_internal(segments, ts->count);
 }
 
 /*****************************************************************************
@@ -272,7 +272,7 @@ tnpointseq_length_internal(TemporalSeq *seq)
 		return 0;
 
 	npoint *np1 = DatumGetNpoint(temporalinst_value(temporalseq_inst_n(seq, 0)));
-	double route_length = route_length_with_rid(np1->rid);
+	double route_length = route_length_from_rid(np1->rid);
 	double fraction = 0;
 	for (int i = 1; i < seq->count; i++)
 	{
@@ -333,7 +333,7 @@ tnpointseq_cumulative_length_internal(TemporalSeq *seq, double prevlength)
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * seq->count);
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
-	double route_length = route_length_with_rid(np1->rid);
+	double route_length = route_length_from_rid(np1->rid);
 	double length = prevlength;
 	instants[0] = temporalinst_make(Float8GetDatum(length), inst1->t, FLOAT8OID);
 	for (int i = 1; i < seq->count; i++)
@@ -407,7 +407,7 @@ tnpointseq_speed_internal(TemporalSeq *seq)
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * seq->count);
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
-	double route_length = route_length_with_rid(np1->rid);
+	double route_length = route_length_from_rid(np1->rid);
 	TemporalInst *inst2 = NULL; /* make the compiler quiet */
 	double speed = 0; /* make the compiler quiet */
 	for (int i = 0; i < seq->count - 1; i++)
@@ -531,7 +531,7 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 	/* Constant sequence */
 	if (np1->pos == np2->pos)
 	{
-		Datum point = npoint_geom_internal(np1);
+		Datum point = npoint_as_geom_internal(np1);
 		bool flag = DatumGetBool(call_function2(intersects, point, geom));
 		pfree(DatumGetPointer(point));
 		if (!flag)

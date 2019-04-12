@@ -113,6 +113,7 @@ extern Datum tpoints_at_values(PG_FUNCTION_ARGS);
  *****************************************************************************/
 
 extern char *wkt_out(Oid type, Datum value);
+extern char *ewkt_out(Oid type, Datum value);
 extern POINT2D gs_get_point2d(GSERIALIZED *gs);
 extern POINT3DZ gs_get_point3dz(GSERIALIZED *gs);
 extern POINT2D datum_get_point2d(Datum value);

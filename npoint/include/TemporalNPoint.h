@@ -66,19 +66,19 @@ extern Datum nsegment_route(PG_FUNCTION_ARGS);
 extern Datum nsegment_start_position(PG_FUNCTION_ARGS);
 extern Datum nsegment_end_position(PG_FUNCTION_ARGS);
 
-extern Datum npoint_geom(PG_FUNCTION_ARGS);
-extern Datum nsegment_geom(PG_FUNCTION_ARGS);
+extern Datum npoint_as_geom(PG_FUNCTION_ARGS);
+extern Datum nsegment_as_geom(PG_FUNCTION_ARGS);
 
-extern Datum nsegmentarr_geom_internal(nsegment **segments, int count);
+extern Datum nsegmentarr_to_geom_internal(nsegment **segments, int count);
 
 extern npoint *npoint_make(int64 rid, double pos);
 extern nsegment *nsegment_make(int64 rid, double pos1, double pos2);
 
-extern double route_length_with_rid(int64 rid);
-extern Datum route_geom_with_rid(int64 rid);
+extern double route_length_from_rid(int64 rid);
+extern Datum route_geom_from_rid(int64 rid);
 
-extern Datum npoint_geom_internal(npoint *np);
-extern Datum nsegment_geom_internal(nsegment *ns);
+extern Datum npoint_as_geom_internal(npoint *np);
+extern Datum nsegment_as_geom_internal(nsegment *ns);
 
 extern ArrayType *int64arr_to_array(int64 *int64arr, int count);
 extern ArrayType *npointarr_to_array(npoint **npointarr, int count);
@@ -114,7 +114,7 @@ extern bool nsegment_ge_internal(nsegment *np1, nsegment *np2);
 
 extern Datum point_in_network(PG_FUNCTION_ARGS);
 
-extern npoint *npoint_from_geompoint(Datum geom);
+extern int64 rid_from_geom(Datum geom);
 
 /*****************************************************************************
  * TemporalNPoint.c
