@@ -130,12 +130,17 @@ CREATE FUNCTION endPosition(nsegment)
 	
 CREATE FUNCTION in_space(npoint)
 	RETURNS geometry
-	AS 'MODULE_PATHNAME', 'npoint_geom'
+	AS 'MODULE_PATHNAME', 'npoint_as_geom'
 	LANGUAGE C IMMUTABLE STRICT;
-	
+
+CREATE FUNCTION in_network(geometry)
+	RETURNS npoint
+	AS 'MODULE_PATHNAME', 'geom_as_npoint'
+	LANGUAGE C IMMUTABLE STRICT;
+
 CREATE FUNCTION in_space(nsegment)
 	RETURNS geometry
-	AS 'MODULE_PATHNAME', 'nsegment_geom'
+	AS 'MODULE_PATHNAME', 'nsegment_as_geom'
 	LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION point_in_network(p geometry(point))

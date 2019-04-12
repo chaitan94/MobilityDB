@@ -22,8 +22,8 @@ TemporalInst *
 tnpointinst_as_tgeompointinst(TemporalInst *inst)
 {
 	npoint *np = DatumGetNpoint(temporalinst_value(inst));
-	Datum geom = npoint_geom_internal(np);
-	TemporalInst *result = temporalinst_make(geom, inst->t, type_oid(T_TGEOMPOINT));
+	Datum geom = npoint_as_geom_internal(np);
+	TemporalInst *result = temporalinst_make(geom, inst->t, type_oid(T_GEOMETRY));
 	pfree(DatumGetPointer(geom));
 	return result;
 }
@@ -108,11 +108,12 @@ TemporalInst *
 tgeompointinst_as_tnpointinst(TemporalInst *inst)
 {
 	Datum geom = temporalinst_value(inst);
-	npoint *np = npoint_from_geompoint(geom);
-	if (np == NULL)
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Cannot convert geometry to network point")));			
-	TemporalInst *result = temporalinst_make(PointerGetDatum(np), inst->t, type_oid(T_TNPOINT));
+	int64 rid = rid_from_geom(geom);
+	Datum line = route_geom_from_rid(rid);
+	double pos = DatumGetFloat8(call_function2(LWGEOM_line_locate_point, line, geom));
+	npoint *np = npoint_make(rid, pos);
+	TemporalInst *result = temporalinst_make(PointerGetDatum(np), inst->t, type_oid(T_NPOINT));
+	pfree(DatumGetPointer(line));
 	pfree(np);
 	return result;
 }
