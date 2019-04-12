@@ -112,13 +112,16 @@ extern bool nsegment_le_internal(nsegment *np1, nsegment *np2);
 extern bool nsegment_gt_internal(nsegment *np1, nsegment *np2);
 extern bool nsegment_ge_internal(nsegment *np1, nsegment *np2);
 
+extern Datum point_in_network(PG_FUNCTION_ARGS);
+
+extern npoint *npoint_from_geompoint(Datum geom);
+
 /*****************************************************************************
  * TemporalNPoint.c
  *****************************************************************************/
 
 extern Datum tnpointseq_in(PG_FUNCTION_ARGS);
 extern Datum tnpoints_in(PG_FUNCTION_ARGS);
-extern Datum tnpoint_make_tnpointseq(PG_FUNCTION_ARGS);
 extern Datum tnpoint_positions(PG_FUNCTION_ARGS);
 extern Datum tnpoint_routes(PG_FUNCTION_ARGS);
 

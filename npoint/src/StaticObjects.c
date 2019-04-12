@@ -594,9 +594,9 @@ nsegment_gt(PG_FUNCTION_ARGS)
 double
 route_length_with_rid(int64 rid)
 {
-	char		*sql = (char *)palloc(64 * sizeof(char));
-	bool		 isNull = true;
-	double	   result = 0;
+	char *sql = (char *)palloc(sizeof(char) * 64);
+	bool isNull = true;
+	double result = 0;
 
 	sprintf(sql, "SELECT length FROM ways WHERE gid = %ld", rid);
 	SPI_connect();
@@ -622,7 +622,7 @@ route_length_with_rid(int64 rid)
 Datum
 route_geom_with_rid(int64 rid)
 {
-	char		*sql = (char *)palloc(64 * sizeof(char));
+	char		*sql = (char *)palloc(sizeof(char) * 64);
 	bool		 isNull = true;
 	GSERIALIZED *result = NULL;
 
@@ -727,6 +727,34 @@ nsegmentarr_geom_internal(nsegment **segments, int count)
 		pfree(DatumGetPointer(sublines[i])); 
 	pfree(sublines); 
 	PG_RETURN_DATUM(result);
+}
+
+npoint *
+npoint_from_geompoint(Datum geom)
+{
+	char *geomstr = wkt_out(ANYOID, geom);
+	char *sql = (char *)palloc(sizeof(char) * 128);
+	bool isNull = true;
+	npoint *result = NULL;
+	
+	sprintf(sql, "SELECT npoint(gid, ST_LineLocatePoint(the_geom, geometry '%s')) \
+		FROM ways WHERE ST_DWithin(the_geom, geometry '%s', 1e-5) \
+		ORDER BY ST_Distance(the_geom, geometry '%s') LIMIT 1", geomstr, geomstr, geomstr);
+	SPI_connect();
+	int ret = SPI_execute(sql, true, 1);
+	uint64 proc = SPI_processed;
+	if (ret > 0 && proc > 0 && SPI_tuptable != NULL)
+	{
+		SPITupleTable *tuptable = SPI_tuptable;
+		result = DatumGetNpoint(SPI_getbinval(tuptable->vals[0], tuptable->tupdesc, 1, &isNull));
+	}
+	SPI_finish();
+	pfree(geomstr);
+	pfree(sql);
+	if (isNull)
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("cannot get network point from geometry point")));
+	return result;
 }
 
 /*****************************************************************************/
