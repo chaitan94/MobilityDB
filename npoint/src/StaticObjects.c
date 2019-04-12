@@ -315,7 +315,8 @@ nsegment_end_position(PG_FUNCTION_ARGS)
 bool
 npoint_eq_internal(npoint *np1, npoint *np2)
 {
-	return np1->rid == np2->rid && np1->pos == np2->pos;
+	return np1->rid == np2->rid && 
+		fabs(np1->pos - np2->pos) < EPSILON;
 }
 
 PG_FUNCTION_INFO_V1(npoint_eq);
