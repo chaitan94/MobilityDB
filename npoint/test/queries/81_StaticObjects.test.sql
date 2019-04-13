@@ -34,14 +34,23 @@ SELECT startPosition(ns) FROM tbl_nsegment;
 SELECT endPosition(ns) FROM tbl_nsegment;
 
 /******************************************************************************
+ * Cast functions
+ ******************************************************************************/
+
+SELECT npoint 'npoint(1,0.2)'::geometry;
+
+SELECT in_space(nsegment 'nsegment(1,0.5,0.7)');
+
+SELECT np::geometry FROM tbl_npoint;
+SELECT ns::geometry FROM tbl_nsegment;
+
+SELECT count(*) FROM tbl_npoint WHERE np <> (np::geometry)::npoint;
+
+/******************************************************************************
  * Conversions between network and space
  ******************************************************************************/
 
-SELECT in_space(npoint 'npoint(1,0.2)');
-SELECT in_space(nsegment 'nsegment(1,0.5,0.7)');
 
-SELECT in_space(np) FROM tbl_npoint;
-SELECT in_space(ns) FROM tbl_nsegment;
 
 SELECT point_in_network(ST_MakePoint(4.3560493, 50.8504975));
 

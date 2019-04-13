@@ -1,8 +1,4 @@
-﻿------------------------------------------------------------------------------
--- Temporal
-------------------------------------------------------------------------------
-
-/******************************************************************************
+﻿/******************************************************************************
  * Transformation functions
  ******************************************************************************/
 
@@ -31,6 +27,12 @@ SELECT DISTINCT temporalType(tnpointinst(ts)) FROM tbl_tnpoints WHERE numInstant
 SELECT DISTINCT temporalType(tnpointi(ts)) FROM tbl_tnpoints WHERE duration(ts) = '00:00:00';
 SELECT DISTINCT temporalType(tnpointseq(ts)) FROM tbl_tnpoints WHERE numSequences(ts) = 1;
 SELECT DISTINCT temporalType(tnpoints(ts)) FROM tbl_tnpoints;
+
+/******************************************************************************
+ * Cast functions
+ ******************************************************************************/
+
+SELECT count(*) FROM tbl_tnpoint WHERE temp <> (temp::tgeompoint)::tnpoint;
 
 /******************************************************************************
  * Accessor functions

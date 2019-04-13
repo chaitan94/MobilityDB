@@ -138,13 +138,16 @@ CREATE FUNCTION npoint(geometry)
 	AS 'MODULE_PATHNAME', 'geom_as_npoint'
 	LANGUAGE C IMMUTABLE STRICT;
 
+CREATE CAST (npoint AS geometry) WITH FUNCTION geometry(npoint);
+CREATE CAST (geometry AS npoint) WITH FUNCTION npoint(geometry);
+
 CREATE FUNCTION geometry(nsegment)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'nsegment_as_geom'
 	LANGUAGE C IMMUTABLE STRICT;
 
-CREATE CAST (geometry AS npoint) WITH FUNCTION npoint(geometry);
-CREATE CAST (npoint AS geometry) WITH FUNCTION geometry(npoint);
+CREATE CAST (nsegment AS geometry) WITH FUNCTION geometry(nsegment);
+-- CREATE CAST (geometry AS nsegment) WITH FUNCTION nsegment(geometry);
 
 CREATE OR REPLACE FUNCTION point_in_network(p geometry(point))
 RETURNS npoint AS $$
