@@ -315,8 +315,7 @@ nsegment_end_position(PG_FUNCTION_ARGS)
 bool
 npoint_eq_internal(npoint *np1, npoint *np2)
 {
-	return np1->rid == np2->rid && 
-		fabs(np1->pos - np2->pos) < EPSILON;
+	return np1->rid == np2->rid && fabs(np1->pos - np2->pos) < EPSILON;
 }
 
 PG_FUNCTION_INFO_V1(npoint_eq);
@@ -451,8 +450,8 @@ npoint_gt(PG_FUNCTION_ARGS)
 bool
 nsegment_eq_internal(nsegment *ns1, nsegment *ns2)
 {
-	return ns1->rid == ns2->rid && ns1->pos1 == ns2->pos1 && 
-        ns1->pos2 == ns2->pos2;
+	return ns1->rid == ns2->rid && fabs(ns1->pos1 - ns2->pos1) < EPSILON &&
+		fabs(ns1->pos2 - ns2->pos2) < EPSILON;
 }
 
 PG_FUNCTION_INFO_V1(nsegment_eq);
@@ -685,6 +684,43 @@ rid_from_geom(Datum value)
 	return result;
 }
 
+Datum
+npoint_from_geom(Datum value)
+{
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(value);
+	LWGEOM *geom = lwgeom_from_gserialized(gs);
+	size_t len;
+	char *geomstr = lwgeom_to_wkt(geom, WKT_ISO, DBL_DIG, &len);
+	pfree(geom);
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(value));
+	char *sql = (char *)palloc(sizeof(char) * 512);
+	bool isNull = true;
+	npoint *result = (npoint *)palloc(sizeof(npoint));
+	
+	sprintf(sql, "SELECT npoint(gid, ST_LineLocatePoint(the_geom, '%s'))\
+		FROM ways WHERE ST_DWithin(the_geom, '%s', 1e-5) \
+		ORDER BY ST_Distance(the_geom, '%s') LIMIT 1", geomstr, geomstr, geomstr);
+	SPI_connect();
+	int ret = SPI_execute(sql, true, 1);
+	uint64 proc = SPI_processed;
+	if (ret > 0 && proc > 0 && SPI_tuptable != NULL)
+	{
+		SPITupleTable *tuptable = SPI_tuptable;
+		Datum value = SPI_getbinval(tuptable->vals[0], tuptable->tupdesc, 1, &isNull);
+		if (!isNull)
+		{
+			/* Must allocate this in upper executor context to keep it alive after SPI_finish() */
+			npoint *np = DatumGetNpoint(value);
+			memcpy(result, np, sizeof(npoint));
+		}
+	}
+	SPI_finish();
+	pfree(geomstr);	pfree(sql);
+	if (isNull)
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("cannot get route identifier from geometry point")));
+	return PointerGetDatum(result);
+}
 /*****************************************************************************/
 
 /* npoint to geometry */
@@ -727,8 +763,9 @@ PGDLLEXPORT Datum
 geom_as_npoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
-	npoint *result = geom_as_npoint_internal(geom);
-	PG_RETURN_POINTER(result);
+	// npoint *result = geom_as_npoint_internal(geom);
+	Datum result = npoint_from_geom(geom);
+	PG_RETURN_DATUM(result);
 }
 
 /*****************************************************************************/

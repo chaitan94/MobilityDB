@@ -1546,14 +1546,15 @@ temporali_eq(TemporalI *ti1, TemporalI *ti2)
 	if (memcmp(box1, box2, bboxsize))
 		return false;
 	
-	/* Since we ensure a unique normal representation of temporal types
-	   we can use memory comparison which is faster than comparing one by
-	   one all composing sequences */
-	/* Total size minus size of the bounding box */
-	size_t sz1 = VARSIZE(ti1) - bboxsize;
-	if (!memcmp(ti1, ti2, sz1))
-		return true;
-	return false;
+	/* We need to compare the composing instants */
+	for (int i = 0; i < ti1->count; i++)
+	{
+		TemporalInst *inst1 = temporali_inst_n(ti1, i);
+		TemporalInst *inst2 = temporali_inst_n(ti2, i);
+		if (!temporalinst_eq(inst1, inst2))
+			return false;
+	}
+	return true;
 }
 
 /* 

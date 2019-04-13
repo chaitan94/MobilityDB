@@ -3567,9 +3567,11 @@ temporalseq_cmp(TemporalSeq *seq1, TemporalSeq *seq2)
 bool
 temporalseq_eq(TemporalSeq *seq1, TemporalSeq *seq2)
 {
-	/* If number of sequences are not equal */
-	if (seq1->count != seq2->count)
+	/* If number of sequences or the periods are not equal */
+	if (seq1->count != seq2->count || 
+			!period_eq_internal(&seq1->period, &seq2->period)) 
 		return false;
+
 	/* If bounding boxes are not equal */
 	size_t bboxsize = double_pad(temporal_bbox_size(seq1->valuetypid));
 	void *box1 = temporalseq_bbox_ptr(seq1);
@@ -3577,24 +3579,15 @@ temporalseq_eq(TemporalSeq *seq1, TemporalSeq *seq2)
 	if (memcmp(box1, box2, bboxsize))
 		return false;
 	
-	/* Since we ensure a unique normal representation of temporal types
-	   we can use memory comparison which is faster than comparing one by
-	   one all composing sequences */
-	/* Pointer to the offset array */
-	size_t *offsets = temporalseq_offsets_ptr(seq1);
-	/* Size of precomputed trajectory (if any) */
-	size_t trajsize = 0;
-	if (offsets[seq1->count+1] != 0)
+	/* We need to compare the composing instants */
+	for (int i = 0; i < seq1->count; i++)
 	{
-		/* Get the size of the precomputed trajectory */
-		void *traj = temporalseq_data_ptr(seq1) + offsets[seq1->count+1];
-		trajsize = VARSIZE(traj);
+		TemporalInst *inst1 = temporalseq_inst_n(seq1, i);
+		TemporalInst *inst2 = temporalseq_inst_n(seq2, i);
+		if (!temporalinst_eq(inst1, inst2))
+			return false;
 	}
-	/* Total size minus size of the bounding box and size of the trajectory */
-	size_t sz1 = VARSIZE(seq1) - bboxsize - trajsize;
-	if (!memcmp(seq1, seq2, sz1))
-		return true;
-	return false;
+	return true;
 }
 
 /* 

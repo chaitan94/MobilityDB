@@ -128,20 +128,23 @@ CREATE FUNCTION endPosition(nsegment)
  * Conversions between network and space
  *****************************************************************************/
 	
-CREATE FUNCTION in_space(npoint)
+CREATE FUNCTION geometry(npoint)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'npoint_as_geom'
 	LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION in_network(geometry)
+CREATE FUNCTION npoint(geometry)
 	RETURNS npoint
 	AS 'MODULE_PATHNAME', 'geom_as_npoint'
 	LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION in_space(nsegment)
+CREATE FUNCTION geometry(nsegment)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'nsegment_as_geom'
 	LANGUAGE C IMMUTABLE STRICT;
+
+CREATE CAST (geometry AS npoint) WITH FUNCTION npoint(geometry);
+CREATE CAST (npoint AS geometry) WITH FUNCTION geometry(npoint);
 
 CREATE OR REPLACE FUNCTION point_in_network(p geometry(point))
 RETURNS npoint AS $$
@@ -190,7 +193,6 @@ BEGIN
      RETURN result;
 END; 
 $$ LANGUAGE plpgsql;
-
 
 /******************************************************************************
  * Operators
