@@ -13,6 +13,79 @@
 #include "TemporalNPoint.h"
 
 /*****************************************************************************
+ * Input/output functions
+ *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(tnpointseq_in);
+
+PGDLLEXPORT Datum
+tnpointseq_in(PG_FUNCTION_ARGS)
+{
+	char *input = PG_GETARG_CSTRING(0);
+	Oid temptypid = PG_GETARG_OID(1);
+	Oid valuetypid;
+	temporal_typinfo(temptypid, &valuetypid);
+	TemporalSeq *result = tnpointseq_parse(&input, valuetypid);
+	if (result == 0)
+		PG_RETURN_NULL();
+	PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(tnpoints_in);
+
+PGDLLEXPORT Datum
+tnpoints_in(PG_FUNCTION_ARGS)
+{
+	char *input = PG_GETARG_CSTRING(0);
+	Oid temptypid = PG_GETARG_OID(1);
+	Oid valuetypid;
+	temporal_typinfo(temptypid, &valuetypid);
+	TemporalS *result = tnpoints_parse(&input, valuetypid);
+	if (result == 0)
+		PG_RETURN_NULL();
+	PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************
+ * Constructor functions
+ *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(tnpoint_make_tnpointseq);
+
+PGDLLEXPORT Datum
+tnpoint_make_tnpointseq(PG_FUNCTION_ARGS)
+{
+	ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
+	bool lower_inc = PG_GETARG_BOOL(1);
+	bool upper_inc = PG_GETARG_BOOL(2);
+	int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
+	if (count < 1)
+	{
+		PG_FREE_IF_COPY(array, 0);
+		ereport(ERROR, (errcode(ERRCODE_ARRAY_ELEMENT_ERROR),
+			errmsg("A temporal value must have at least one instant")));
+	}
+
+	TemporalInst **instants = (TemporalInst **)temporalarr_extract(array, &count);
+	npoint *np = DatumGetNpoint(temporalinst_value(instants[0]));
+	int64 rid = np->rid;
+	for (int i = 1; i < count; i++)
+	{
+		np = DatumGetNpoint(temporalinst_value(instants[i]));
+		if (np->rid != rid)
+			ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION),
+				errmsg("Temporal sequence must have same rid")));
+	}
+
+	TemporalSeq *result = temporalseq_from_temporalinstarr(instants,
+		count, lower_inc, upper_inc, true);
+
+	pfree(instants);
+	PG_FREE_IF_COPY(array, 0);
+	PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************
  * Cast functions
  *****************************************************************************/
 
@@ -108,13 +181,16 @@ TemporalInst *
 tgeompointinst_as_tnpointinst(TemporalInst *inst)
 {
 	Datum geom = temporalinst_value(inst);
-	int64 rid = rid_from_geom(geom);
-	Datum line = route_geom_from_rid(rid);
-	double pos = DatumGetFloat8(call_function2(LWGEOM_line_locate_point, line, geom));
-	npoint *np = npoint_make(rid, pos);
-	TemporalInst *result = temporalinst_make(PointerGetDatum(np), inst->t, type_oid(T_NPOINT));
-	pfree(DatumGetPointer(line));
-	pfree(np);
+	// Datum geom1 = PointerGetDatum(gserialized_copy((GSERIALIZED *)PG_DETOAST_DATUM(geom)));
+	// int64 rid = rid_from_geom(geom);
+	// Datum line = route_geom_from_rid(rid);
+	// double pos = DatumGetFloat8(call_function2(LWGEOM_line_locate_point, line, geom));
+	// npoint *np = npoint_make(rid, pos);
+	Datum np = npoint_from_geom(geom);
+	TemporalInst *result = temporalinst_make(np, inst->t, type_oid(T_NPOINT));
+	// pfree(DatumGetPointer(line));
+	// pfree(DatumGetPointer(geom1));
+	// pfree(DatumGetPointer(np));
 	return result;
 }
 

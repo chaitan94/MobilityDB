@@ -77,7 +77,7 @@ CREATE FUNCTION tnpointi(tnpoint[])
 CREATE FUNCTION tnpointseq(tnpoint[], lower_inc boolean DEFAULT true, 
 		upper_inc boolean DEFAULT true)
 	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'temporal_make_temporalseq'
+	AS 'MODULE_PATHNAME', 'tnpoint_make_tnpointseq'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /* Temporal sequence set */

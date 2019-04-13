@@ -1440,20 +1440,16 @@ temporalinst_le(TemporalInst *inst1, TemporalInst *inst2)
 bool
 temporalinst_eq(TemporalInst *inst1, TemporalInst *inst2)
 {
-	/* Since we ensure a unique normal representation of temporal types
-	   we can use memory comparison which is faster than comparing the
-	   individual components */
-	/* Total size */
-	size_t sz1 = VARSIZE(inst1); 
-	if (!memcmp(inst1, inst2, sz1))
-		return true;
-	return false;
+	Datum value1 = temporalinst_value(inst1);
+	Datum value2 = temporalinst_value(inst2);
+	return datum_eq(value1, value2, inst1->valuetypid) && 
+		timestamp_cmp_internal(inst1->t, inst2->t) == 0;
 }
 
 bool
 temporalinst_ne(TemporalInst *inst1, TemporalInst *inst2)
 {
-	return (temporalinst_cmp(inst1, inst2) != 0);
+	return ! temporalinst_eq(inst1, inst2);
 }
 
 bool
