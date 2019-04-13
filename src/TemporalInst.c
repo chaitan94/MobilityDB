@@ -1445,32 +1445,6 @@ temporalinst_cmp(TemporalInst *inst1, TemporalInst *inst2)
 	return 0;
 }
 
-/* Comparison operators using the internal B-tree comparator */
-
-bool
-temporalinst_lt(TemporalInst *inst1, TemporalInst *inst2)
-{
-	return (temporalinst_cmp(inst1, inst2) < 0);
-}
-
-bool
-temporalinst_le(TemporalInst *inst1, TemporalInst *inst2)
-{
-	return (temporalinst_cmp(inst1, inst2) <= 0);
-}
-
-bool
-temporalinst_ge(TemporalInst *inst1, TemporalInst *inst2)
-{
-	return (temporalinst_cmp(inst1, inst2) > 0);
-}
-
-bool
-temporalinst_gt(TemporalInst *inst1, TemporalInst *inst2)
-{
-	return (temporalinst_cmp(inst1, inst2) > 0);
-}
-
 /*****************************************************************************
  * Function for defining hash index
  * The function reuses the approach for range types for combining the hash of  
