@@ -721,6 +721,7 @@ npoint_from_geom(Datum value)
 			errmsg("cannot get route identifier from geometry point")));
 	return PointerGetDatum(result);
 }
+
 /*****************************************************************************/
 
 /* npoint to geometry */
@@ -762,9 +763,15 @@ PG_FUNCTION_INFO_V1(geom_as_npoint);
 PGDLLEXPORT Datum
 geom_as_npoint(PG_FUNCTION_ARGS)
 {
-	Datum geom = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+	if (gserialized_get_type(gs) != POINTTYPE)
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), 
+			errmsg("Only point geometries accepted")));
+	}
 	// npoint *result = geom_as_npoint_internal(geom);
-	Datum result = npoint_from_geom(geom);
+	Datum result = npoint_from_geom(PointerGetDatum(gs));
 	PG_RETURN_DATUM(result);
 }
 
@@ -777,7 +784,7 @@ nsegment_as_geom_internal(nsegment *ns)
 {
 	Datum line = route_geom_from_rid(ns->rid);
 	Datum result;
-	if (ns->pos1 == ns->pos2)
+	if (fabs(ns->pos1 - ns->pos2) < EPSILON)
 		result = call_function2(LWGEOM_line_locate_point, line, 
 			Float8GetDatum(ns->pos1));
 	else
