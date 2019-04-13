@@ -3534,32 +3534,6 @@ tfloatseq_twavg(TemporalSeq *seq)
  * The functions assume that the arguments are of the same temptypid
  *****************************************************************************/
 
-/*
- * B-tree comparator
- */
-
-int
-temporalseq_cmp(TemporalSeq *seq1, TemporalSeq *seq2)
-{
-	int count = Min(seq1->count, seq2->count);
-	int result;
-	for (int i = 0; i < count; i++)
-	{
-		TemporalInst *inst1 = temporalseq_inst_n(seq1, i);
-		TemporalInst *inst2 = temporalseq_inst_n(seq2, i);
-		result = temporalinst_cmp(inst1, inst2);
-		if (result) 
-			return result;
-	}
-	/* The first count instants of both TemporalSeq values are equal */
-	if (seq1->count < seq2->count) /* seq1 has less instants than seq2 */
-		return -1;
-	else if (seq2->count < seq1->count) /* seq2 has less instants than seq1 */
-		return 1;
-	else /* compare the time spans of seq1 and seq2 */
-		return period_cmp_internal(&seq1->period, &seq2->period);
-}
-
 /* 
  * Equality operator
  * The internal B-tree comparator is not used to increase efficiency
@@ -3598,6 +3572,32 @@ bool
 temporalseq_ne(TemporalSeq *seq1, TemporalSeq *seq2)
 {
 	return !temporalseq_eq(seq1, seq2);
+}
+
+/*
+ * B-tree comparator
+ */
+
+int
+temporalseq_cmp(TemporalSeq *seq1, TemporalSeq *seq2)
+{
+	int count = Min(seq1->count, seq2->count);
+	int result;
+	for (int i = 0; i < count; i++)
+	{
+		TemporalInst *inst1 = temporalseq_inst_n(seq1, i);
+		TemporalInst *inst2 = temporalseq_inst_n(seq2, i);
+		result = temporalinst_cmp(inst1, inst2);
+		if (result) 
+			return result;
+	}
+	/* The first count instants of both TemporalSeq values are equal */
+	if (seq1->count < seq2->count) /* seq1 has less instants than seq2 */
+		return -1;
+	else if (seq2->count < seq1->count) /* seq2 has less instants than seq1 */
+		return 1;
+	else /* compare the time spans of seq1 and seq2 */
+		return period_cmp_internal(&seq1->period, &seq2->period);
 }
 
 /*****************************************************************************

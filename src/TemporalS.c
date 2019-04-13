@@ -2266,32 +2266,6 @@ tfloats_twavg(TemporalS *ts)
  *****************************************************************************/
 
 /* 
- * B-tree comparator
- */
-
-int
-temporals_cmp(TemporalS *ts1, TemporalS *ts2)
-{
-	int count = Min(ts1->count, ts2->count);
-	int result;
-	for (int i = 0; i < count; i++)
-	{
-		TemporalSeq *seq1 = temporals_seq_n(ts1, i);
-		TemporalSeq *seq2 = temporals_seq_n(ts2, i);
-		result = temporalseq_cmp(seq1, seq2);
-		if (result) 
-			return result;
-	}
-	/* The first count sequences of both temporals are equal */
-	if (ts1->count < ts2->count) /* ts1 has less sequences than ts2 */
-		return -1;
-	else if (ts2->count < ts1->count) /* ts2 has less sequences than ts1 */
-		return 1;
-	else
-		return 0;
-}
-
-/* 
  * Equality operator
  * The internal B-tree comparator is not used to increase efficiency
  */
@@ -2328,6 +2302,32 @@ bool
 temporals_ne(TemporalS *ts1, TemporalS *ts2)
 {
 	return !temporals_eq(ts1, ts2);
+}
+
+/* 
+ * B-tree comparator
+ */
+
+int
+temporals_cmp(TemporalS *ts1, TemporalS *ts2)
+{
+	int count = Min(ts1->count, ts2->count);
+	int result;
+	for (int i = 0; i < count; i++)
+	{
+		TemporalSeq *seq1 = temporals_seq_n(ts1, i);
+		TemporalSeq *seq2 = temporals_seq_n(ts2, i);
+		result = temporalseq_cmp(seq1, seq2);
+		if (result) 
+			return result;
+	}
+	/* The first count sequences of both temporals are equal */
+	if (ts1->count < ts2->count) /* ts1 has less sequences than ts2 */
+		return -1;
+	else if (ts2->count < ts1->count) /* ts2 has less sequences than ts1 */
+		return 1;
+	else
+		return 0;
 }
 
 /*****************************************************************************

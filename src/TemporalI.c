@@ -1504,32 +1504,6 @@ temporali_lavg(TemporalI *ti)
  *****************************************************************************/
 
 /* 
- * B-tree comparator
- */
-
-int
-temporali_cmp(TemporalI *ti1, TemporalI *ti2)
-{
-	int count = Min(ti1->count, ti2->count);
-	int result;
-	for (int i = 0; i < count; i++)
-	{
-		TemporalInst *inst1 = temporali_inst_n(ti1, i);
-		TemporalInst *inst2 = temporali_inst_n(ti2, i);
-		result = temporalinst_cmp(inst1, inst2);
-		if (result) 
-			return result;
-	}
-	/* The first count instants of both TemporalI values are equal */
-	if (ti1->count < ti2->count) /* ti1 has less instants than ti2 */
-		return -1;
-	else if (ti2->count < ti1->count) /* ti2 has less instants than ti1 */
-		return 1;
-	else
-		return 0;
-}
-
-/* 
  * Equality operator
  * The internal B-tree comparator is not used to increase efficiency
  */
@@ -1564,6 +1538,32 @@ bool
 temporali_ne(TemporalI *ti1, TemporalI *ti2)
 {
 	return !temporali_eq(ti1, ti2);
+}
+
+/* 
+ * B-tree comparator
+ */
+
+int
+temporali_cmp(TemporalI *ti1, TemporalI *ti2)
+{
+	int count = Min(ti1->count, ti2->count);
+	int result;
+	for (int i = 0; i < count; i++)
+	{
+		TemporalInst *inst1 = temporali_inst_n(ti1, i);
+		TemporalInst *inst2 = temporali_inst_n(ti2, i);
+		result = temporalinst_cmp(inst1, inst2);
+		if (result) 
+			return result;
+	}
+	/* The first count instants of both TemporalI values are equal */
+	if (ti1->count < ti2->count) /* ti1 has less instants than ti2 */
+		return -1;
+	else if (ti2->count < ti1->count) /* ti2 has less instants than ti1 */
+		return 1;
+	else
+		return 0;
 }
 
 /*****************************************************************************

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * IndexGistTPoint.c
- *	  R-tree GiST index for temporal network-constrained points.
+ * IndexTPoint.c
+ *	  R-tree GiST and SP-GiST indexes for temporal network-constrained points.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li
  * 		Universite Libre de Bruxelles
@@ -13,7 +13,7 @@
 #include "TemporalNPoint.h"
 
 /*****************************************************************************
- * GiST Compress methods for tnpoint
+ * GiST compress function
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(gist_tnpoint_compress);
@@ -49,6 +49,22 @@ gist_tnpoint_compress(PG_FUNCTION_ARGS)
 		PG_RETURN_POINTER(retval);
 	}
 	PG_RETURN_POINTER(entry);
+}
+
+/*****************************************************************************
+ * SP-GiST compress function
+ *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(spgist_tnpoint_compress);
+
+PGDLLEXPORT Datum
+spgist_tnpoint_compress(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	GBOX *result = palloc0(sizeof(GBOX));
+	temporal_bbox(result, temp);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_GBOX_P(result);
 }
 
 /*****************************************************************************/
