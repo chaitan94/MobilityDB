@@ -186,8 +186,8 @@ tgeompointinst_as_tnpointinst(TemporalInst *inst)
 	// Datum line = route_geom_from_rid(rid);
 	// double pos = DatumGetFloat8(call_function2(LWGEOM_line_locate_point, line, geom));
 	// npoint *np = npoint_make(rid, pos);
-	Datum np = npoint_from_geom(geom);
-	TemporalInst *result = temporalinst_make(np, inst->t, type_oid(T_NPOINT));
+	npoint *np = geom_as_npoint_internal(geom);
+	TemporalInst *result = temporalinst_make(PointerGetDatum(np), inst->t, type_oid(T_NPOINT));
 	// pfree(DatumGetPointer(line));
 	// pfree(DatumGetPointer(geom1));
 	// pfree(DatumGetPointer(np));
