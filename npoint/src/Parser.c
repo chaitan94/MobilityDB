@@ -37,7 +37,7 @@ npoint_parse(char **str)
 
 	int64 rid;
 	double pos;
-	if (sscanf(*str, "(%ld,%lf)", &rid, &pos) != 2)
+	if (sscanf(*str, "( %ld , %lf )", &rid, &pos) != 2)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
 						errmsg("Could not parse network point")));
@@ -75,10 +75,10 @@ nsegment_parse(char **str)
 				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
 						errmsg("Could not parse network segment")));
 
-	int64		rid;
-	double	  pos1;
-	double	  pos2;
-	if (sscanf(*str, "(%ld,%lf,%lf)", &rid, &pos1, &pos2) != 3)
+	int64 rid;
+	double pos1;
+	double pos2;
+	if (sscanf(*str, "( %ld , %lf , %lf )", &rid, &pos1, &pos2) != 3)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
 						errmsg("Could not parse network segment")));

@@ -115,7 +115,7 @@ extern bool nsegment_ge_internal(nsegment *np1, nsegment *np2);
 extern Datum point_in_network(PG_FUNCTION_ARGS);
 
 extern int64 rid_from_geom(Datum geom);
-extern Datum npoint_from_geom(Datum value);
+extern npoint * geom_as_npoint_internal(Datum value);
 
 /*****************************************************************************
  * TemporalNPoint.c
