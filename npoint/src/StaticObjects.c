@@ -585,10 +585,9 @@ double
 route_length_from_rid(int64 rid)
 {
 	char sql[64];
+	sprintf(sql, "SELECT length FROM ways WHERE gid = %ld", rid);
 	bool isNull = true;
 	double result = 0;
-
-	sprintf(sql, "SELECT length FROM ways WHERE gid = %ld", rid);
 	SPI_connect();
 	int ret = SPI_execute(sql, true, 1);
 	uint64 proc = SPI_processed;
@@ -613,10 +612,9 @@ Datum
 route_geom_from_rid(int64 rid)
 {
 	char sql[64];
+	sprintf(sql, "SELECT the_geom FROM ways WHERE gid = %ld", rid);
 	bool isNull = true;
 	GSERIALIZED *result = NULL;
-
-	sprintf(sql, "SELECT the_geom FROM ways WHERE gid = %ld", rid);
 	SPI_connect();
 	int ret = SPI_execute(sql, true, 1);
 	uint64 proc = SPI_processed;
@@ -644,19 +642,15 @@ route_geom_from_rid(int64 rid)
 /* Access edge table to get the rid from corresponding geometry */
 
 int64
-rid_from_geom(Datum value)
+rid_from_geom(Datum geom)
 {
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(value);
-	LWGEOM *geom = lwgeom_from_gserialized(gs);
-	size_t len;
-	char *geomstr = lwgeom_to_wkt(geom, WKT_ISO, DBL_DIG, &len);
-	pfree(gs); pfree(geom);
+	char *geomstr = ewkt_out(ANYOID, geom);
 	char sql[128];
-	bool isNull = true;
-	int64 result = 0; /* make compiler quiet */
-	
 	sprintf(sql, "SELECT gid FROM ways WHERE ST_DWithin(the_geom, '%s', 1e-5) \
 		ORDER BY ST_Distance(the_geom, '%s') LIMIT 1", geomstr, geomstr);
+	pfree(geomstr);
+	bool isNull = true;
+	int64 result = 0; /* make compiler quiet */
 	SPI_connect();
 	int ret = SPI_execute(sql, true, 1);
 	uint64 proc = SPI_processed;
@@ -666,8 +660,6 @@ rid_from_geom(Datum value)
 		result = DatumGetInt64(SPI_getbinval(tuptable->vals[0], tuptable->tupdesc, 1, &isNull));
 	}
 	SPI_finish();
-	pfree(geomstr);
-
 	if (isNull)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
 			errmsg("cannot get route identifier from geometry point")));
@@ -701,21 +693,16 @@ npoint_as_geom(PG_FUNCTION_ARGS)
 /* geometry as npoint */
 
 npoint *
-geom_as_npoint_internal(Datum value)
+geom_as_npoint_internal(Datum geom)
 {
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(value);
-	LWGEOM *geom = lwgeom_from_gserialized(gs);
-	size_t len;
-	char *geomstr = lwgeom_to_wkt(geom, WKT_ISO, DBL_DIG, &len);
-	pfree(gs); pfree(geom);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(value));
+	char *geomstr = ewkt_out(ANYOID, geom);
 	char sql[512];
-	bool isNull = true;
-	npoint *result = (npoint *)palloc(sizeof(npoint));
-	
 	sprintf(sql, "SELECT npoint(gid, ST_LineLocatePoint(the_geom, '%s'))\
 		FROM ways WHERE ST_DWithin(the_geom, '%s', 1e-5) \
 		ORDER BY ST_Distance(the_geom, '%s') LIMIT 1", geomstr, geomstr, geomstr);
+	pfree(geomstr);
+	npoint *result = (npoint *)palloc(sizeof(npoint));
+	bool isNull = true;
 	SPI_connect();
 	int ret = SPI_execute(sql, true, 1);
 	uint64 proc = SPI_processed;
@@ -731,7 +718,6 @@ geom_as_npoint_internal(Datum value)
 		}
 	}
 	SPI_finish();
-	pfree(geomstr);
 	if (isNull)
 	{
 		pfree(result);

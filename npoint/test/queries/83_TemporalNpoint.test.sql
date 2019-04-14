@@ -15,16 +15,24 @@ SELECT tnpointseq(ARRAY['npoint(1,0)@2012-01-01'::tnpoint, 'npoint(1,1)@2012-02-
 
 SELECT tnpointseq(array_agg(t.inst ORDER BY t.inst)) FROM tbl_tnpointinst t GROUP BY route(t.inst);
 
-SELECT tnpoints(ARRAY['[npoint(1,0)@2012-01-01, npoint(1,1)@2012-02-01]'::tnpoint, '[npoint(2,0)@2012-03-01, npoint(2,1)@2012-04-01]'::tnpoint]);
+SELECT tnpoints(ARRAY[tnpoint '[npoint(1,0)@2012-01-01, npoint(1,1)@2012-02-01]', '[npoint(2,0)@2012-03-01, npoint(2,1)@2012-04-01]']);
 
 /*****************************************************************************
- * Cast functions
+ * Transformation functions
  *****************************************************************************/
 
 SELECT tnpointi(inst) FROM tbl_tnpointinst;
 SELECT tnpointseq(inst) FROM tbl_tnpointinst;
 SELECT tnpoints(inst) FROM tbl_tnpointinst;
 SELECT tnpoints(seq) FROM tbl_tnpointseq;
+
+/******************************************************************************
+ * Cast functions
+ ******************************************************************************/
+
+SELECT astext(temp::tgeompoint) FROM tbl_tnpoint;
+
+SELECT count(*) FROM tbl_tnpoint WHERE temp = (temp::tgeompoint)::tnpoint;
 
 /*****************************************************************************
  * Accessor Functions
@@ -37,6 +45,8 @@ SELECT MAX(memSize(inst)) FROM tbl_tnpointinst;
 SELECT getValue(inst) FROM tbl_tnpointinst;
 
 SELECT MAX(array_length(getValues(temp),1)) FROM tbl_tnpoint;
+
+SELECT MAX(array_length(positions(temp),1)) FROM tbl_tnpoint;
 
 SELECT MAX(route(inst)) FROM tbl_tnpointinst;
 
