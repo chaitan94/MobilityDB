@@ -1,19 +1,31 @@
 ﻿/*****************************************************************************
+ * Input
+ *****************************************************************************/
+
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '  Npoint (  1  ,   0.5  )  @  2000-01-01  ';
+SELECT tnpoint '  {  Npoint( 1 , 0.3 ) @ 2000-01-01  , Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5) @  2000-01-03   }   ';
+SELECT tnpoint '  [  Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '  {  [  Npoint(1, 0.2)@2000-01-01 ,  Npoint ( 1 , 0.4 ) @2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+-- Normalization
+SELECT tnpoint '[Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint'{[Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05, Npoint(1, 0.6)@2000-01-06]}';
+
+/*****************************************************************************
  * Constructors
  *****************************************************************************/
 
 SELECT tnpointinst('npoint(1,0)'::npoint, '2012-01-01'::timestamp);
 
-SELECT tnpointinst(t1.np, t2.t) FROM tbl_npoint t1, tbl_timestamptz t2;
-
 SELECT tnpointi(ARRAY['npoint(1,0)@2012-01-01'::tnpoint, 'npoint(2,1)@2012-02-01'::tnpoint]);
-
-SELECT tnpointi(array_agg(t.inst ORDER BY t.inst)) FROM tbl_tnpointinst t GROUP BY k%10;
 
 SELECT tnpointseq(ARRAY['npoint(1,0)@2012-01-01'::tnpoint, 'npoint(1,1)@2012-02-01'::tnpoint], true, false);
 --SELECT tnpointseq(ARRAY['npoint(1,0)@2012-01-01'::tnpoint, 'npoint(2,1)@2012-02-01'::tnpoint], true, false);  ERROR
-
-SELECT tnpointseq(array_agg(t.inst ORDER BY t.inst)) FROM tbl_tnpointinst t GROUP BY route(t.inst);
 
 SELECT tnpoints(ARRAY[tnpoint '[npoint(1,0)@2012-01-01, npoint(1,1)@2012-02-01]', '[npoint(2,0)@2012-03-01, npoint(2,1)@2012-04-01]']);
 
@@ -21,187 +33,398 @@ SELECT tnpoints(ARRAY[tnpoint '[npoint(1,0)@2012-01-01, npoint(1,1)@2012-02-01]'
  * Transformation functions
  *****************************************************************************/
 
-SELECT tnpointi(inst) FROM tbl_tnpointinst;
-SELECT tnpointseq(inst) FROM tbl_tnpointinst;
-SELECT tnpoints(inst) FROM tbl_tnpointinst;
-SELECT tnpoints(seq) FROM tbl_tnpointseq;
+SELECT tnpointinst(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT tnpointi(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT tnpointseq(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT tnpoints(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+
+SELECT tnpointinst(tnpoint '{Npoint(1, 0.3)@2000-01-01}');
+SELECT tnpointi(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT tnpointseq(tnpoint '{Npoint(1, 0.3)@2000-01-01}');
+SELECT tnpoints(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+
+SELECT tnpointinst(tnpoint '[Npoint(1, 0.3)@2000-01-01]');
+SELECT tnpointi(tnpoint '[Npoint(1, 0.3)@2000-01-01]');
+SELECT tnpointseq(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT tnpoints(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+
+SELECT tnpointinst(tnpoint '{[Npoint(1, 0.3)@2000-01-01]}');
+SELECT tnpointi(tnpoint '{[Npoint(1, 0.3)@2000-01-01], [Npoint(2, 0.6)@2000-01-04]}');
+SELECT tnpointseq(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]}');
+SELECT tnpoints(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
 /******************************************************************************
  * Cast functions
  ******************************************************************************/
 
-SELECT astext(temp::tgeompoint) FROM tbl_tnpoint;
+SELECT astext(tnpoint 'Npoint(1, 0.5)@2000-01-01'::tgeompoint);
+SELECT astext(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}'::tgeompoint);
+SELECT astext(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]'::tgeompoint);
+SELECT astext(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05] }'::tgeompoint);
 
-SELECT count(*) FROM tbl_tnpoint WHERE temp = (temp::tgeompoint)::tnpoint;
+SELECT (tnpoint 'Npoint(1, 0.5)@2000-01-01'::tgeompoint)::tnpoint;
+SELECT (tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}'::tgeompoint)::tnpoint;
+SELECT (tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]'::tgeompoint)::tnpoint;
+SELECT (tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05] }'::tgeompoint)::tnpoint;
 
 /*****************************************************************************
  * Accessor Functions
  *****************************************************************************/
 
-SELECT DISTINCT temporalType(temp) FROM tbl_tnpoint;
+SELECT temporalType(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT temporalType(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT temporalType(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT temporalType(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(memSize(inst)) FROM tbl_tnpointinst;
+SELECT memSize(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT memSize(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT memSize(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT memSize(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT getValue(inst) FROM tbl_tnpointinst;
+SELECT getValue(tnpoint 'Npoint(1, 0.5)@2000-01-01');
 
-SELECT MAX(array_length(getValues(temp),1)) FROM tbl_tnpoint;
+SELECT getValues(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT getValues(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT getValues(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT getValues(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(array_length(positions(temp),1)) FROM tbl_tnpoint;
+SELECT positions(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT positions(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT positions(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT positions(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(route(inst)) FROM tbl_tnpointinst;
+SELECT route(tnpoint 'Npoint(1, 0.5)@2000-01-01');
 
-SELECT MAX(array_length(routes(temp),1)) FROM tbl_tnpoint;
+SELECT routes(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT routes(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT routes(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT routes(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(getTimestamp(inst)) FROM tbl_tnpointinst;
+SELECT getTime(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT getTime(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT getTime(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT getTime(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(duration(getTime(temp))) FROM tbl_tnpoint;
+SELECT getTimestamp(tnpoint 'Npoint(1, 0.5)@2000-01-01');
 
-SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp &= t2.np;
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' &= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' &= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' &= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' &= 'Npoint(1, 0.5)@2000-01-01';
 
-SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp @= t2.np;
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' @= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' @= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' @= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' @= 'Npoint(1, 0.5)@2000-01-01';
 
-SELECT count(*) FROM tbl_tnpointinst WHERE everEquals(inst, npoint 'npoint(1553,0.904924)');
+SELECT shift(tnpoint 'Npoint(1, 0.5)@2000-01-01', '1 year'::interval);
+SELECT shift(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '1 year'::interval);
+SELECT shift(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '1 year'::interval);
+SELECT shift(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '1 year'::interval);
 
-SELECT count(*) FROM tbl_tnpointinst WHERE alwaysEquals(inst, npoint 'npoint(1553,0.904924)');
+SELECT startValue(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT startValue(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT startValue(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT startValue(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT shift(inst, '1 year'::interval) FROM tbl_tnpointinst;
+SELECT endValue(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT endValue(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT endValue(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT endValue(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(startTimestamp(shift(t1.temp, t2.i))) FROM tbl_tnpoint t1, tbl_interval t2;
+SELECT timespan(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT timespan(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT timespan(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT timespan(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(Route(startValue(temp))) FROM tbl_tnpoint;
+SELECT numInstants(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT numInstants(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT numInstants(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT numInstants(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(Route(endValue(temp))) FROM tbl_tnpoint;
+SELECT startInstant(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT startInstant(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT startInstant(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT startInstant(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(duration(timespan(temp))) FROM tbl_tnpoint;
+SELECT endInstant(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT endInstant(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT endInstant(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT endInstant(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(numInstants(temp)) FROM tbl_tnpoint;
+SELECT instantN(tnpoint 'Npoint(1, 0.5)@2000-01-01', 1);
+SELECT instantN(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', 1);
+SELECT instantN(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', 1);
+SELECT instantN(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', 1);
 
-SELECT MAX(Route(startInstant(temp))) FROM tbl_tnpoint;
+SELECT instants(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT instants(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT instants(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT instants(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(Route(endInstant(temp))) FROM tbl_tnpoint;
+SELECT numTimestamps(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT numTimestamps(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT numTimestamps(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT numTimestamps(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(Route(instantN(temp, 1))) FROM tbl_tnpoint;
+SELECT startTimestamp(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT startTimestamp(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT startTimestamp(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT startTimestamp(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(array_length(instants(temp),1)) FROM tbl_tnpoint;
+SELECT endTimestamp(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT endTimestamp(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT endTimestamp(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT endTimestamp(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(numTimestamps(temp)) FROM tbl_tnpoint;
+SELECT timestampN(tnpoint 'Npoint(1, 0.5)@2000-01-01', 1);
+SELECT timestampN(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', 1);
+SELECT timestampN(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', 1);
+SELECT timestampN(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', 1);
 
-SELECT MAX(startTimestamp(temp)) FROM tbl_tnpoint;
+SELECT timestamps(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT timestamps(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT timestamps(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT timestamps(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(endTimestamp(temp)) FROM tbl_tnpoint;
+SELECT numSequences(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
+SELECT startSequence(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
+SELECT endSequence(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
+SELECT sequenceN(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', 1);
+SELECT sequences(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(timestampN(temp,1)) FROM tbl_tnpoint;
+SELECT startTimestamp(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT startTimestamp(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT startTimestamp(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT startTimestamp(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(array_length(timestamps(temp),1)) FROM tbl_tnpoint;
+SELECT endTimestamp(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT endTimestamp(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT endTimestamp(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT endTimestamp(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
-SELECT MAX(numSequences(ts)) FROM tbl_tnpoints;
+SELECT timestampN(tnpoint 'Npoint(1, 0.5)@2000-01-01', 1);
+SELECT timestampN(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', 1);
+SELECT timestampN(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', 1);
+SELECT timestampN(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', 1);
 
-SELECT MAX(NumInstants(startSequence(ts))) FROM tbl_tnpoints;
-
-SELECT MAX(NumInstants(endSequence(ts))) FROM tbl_tnpoints;
-
-SELECT MAX(NumInstants(sequenceN(ts, 1))) FROM tbl_tnpoints;
-
-SELECT MAX(array_length(sequences(ts),1)) FROM tbl_tnpoints;
+SELECT timestamps(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT timestamps(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT timestamps(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT timestamps(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}');
 
 /*****************************************************************************
  * Restriction Functions
  *****************************************************************************/
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_npoint
-WHERE atValue(temp, np) IS NOT NULL;
+SELECT atValue(tnpoint 'Npoint(1, 0.5)@2000-01-01', 'Npoint(1, 0.5)');
+SELECT atValue(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', 'Npoint(1, 0.5)');
+SELECT atValue(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', 'Npoint(1, 0.5)');
+SELECT atValue(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', 'Npoint(1, 0.5)');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_npoint
-WHERE minusValue(temp, np) IS NOT NULL;
+SELECT minusValue(tnpoint 'Npoint(1, 0.5)@2000-01-01', 'Npoint(1, 0.5)');
+SELECT minusValue(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', 'Npoint(1, 0.5)');
+SELECT minusValue(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', 'Npoint(1, 0.5)');
+SELECT minusValue(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', 'Npoint(1, 0.5)');
 
-SELECT COUNT(*) FROM tbl_tnpoint, 
-( SELECT array_agg(np) AS valuearr FROM tbl_npoint) tmp 
-WHERE atValues(temp, valuearr) IS NOT NULL;
+SELECT atValues(tnpoint 'Npoint(1, 0.5)@2000-01-01', ARRAY[npoint 'Npoint(1, 0.5)']);
+SELECT atValues(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', ARRAY[npoint 'Npoint(1, 0.5)']);
+SELECT atValues(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', ARRAY[npoint 'Npoint(1, 0.5)']);
+SELECT atValues(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', ARRAY[npoint 'Npoint(1, 0.5)']);
 
-SELECT COUNT(*) FROM
-( SELECT * FROM tbl_tnpoint limit 10) tbl,
-( SELECT array_agg(np) AS valuearr FROM tbl_npoint LIMIT 10) tmp
-WHERE minusValues(temp, valuearr) IS NOT NULL;
+SELECT minusValues(tnpoint 'Npoint(1, 0.5)@2000-01-01', ARRAY[npoint 'Npoint(1, 0.5)']);
+SELECT minusValues(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', ARRAY[npoint 'Npoint(1, 0.5)']);
+SELECT minusValues(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', ARRAY[npoint 'Npoint(1, 0.5)']);
+SELECT minusValues(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', ARRAY[npoint 'Npoint(1, 0.5)']);
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
-WHERE atTimestamp(temp, t) IS NOT NULL;
+SELECT atTimestamp(tnpoint 'Npoint(1, 0.5)@2000-01-01', '2000-01-01');
+SELECT atTimestamp(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '2000-01-01');
+SELECT atTimestamp(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '2000-01-01');
+SELECT atTimestamp(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '2000-01-01');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
-WHERE minusTimestamp(temp, t) IS NOT NULL;
+SELECT valueAtTimestamp(tnpoint 'Npoint(1, 0.5)@2000-01-01', '2000-01-01');
+SELECT valueAtTimestamp(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '2000-01-01');
+SELECT valueAtTimestamp(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '2000-01-01');
+SELECT valueAtTimestamp(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '2000-01-01');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
-WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT minusTimestamp(tnpoint 'Npoint(1, 0.5)@2000-01-01', '2000-01-01');
+SELECT minusTimestamp(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '2000-01-01');
+SELECT minusTimestamp(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '2000-01-01');
+SELECT minusTimestamp(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '2000-01-01');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestampset
-WHERE atTimestampSet(temp, ts) IS NOT NULL;
+SELECT atTimestampSet(tnpoint 'Npoint(1, 0.5)@2000-01-01', '{2000-01-01}');
+SELECT atTimestampSet(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '{2000-01-01}');
+SELECT atTimestampSet(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '{2000-01-01}');
+SELECT atTimestampSet(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '{2000-01-01}');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestampset
-WHERE minusTimestampSet(temp, ts) IS NOT NULL;
+SELECT minusTimestampSet(tnpoint 'Npoint(1, 0.5)@2000-01-01', '{2000-01-01}');
+SELECT minusTimestampSet(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '{2000-01-01}');
+SELECT minusTimestampSet(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '{2000-01-01}');
+SELECT minusTimestampSet(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '{2000-01-01}');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_period
-WHERE atPeriod(temp, p) IS NOT NULL;
+SELECT atPeriod(tnpoint 'Npoint(1, 0.5)@2000-01-01', '[2000-01-01, 2000-01-02]');
+SELECT atPeriod(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '[2000-01-01, 2000-01-02]');
+SELECT atPeriod(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '[2000-01-01, 2000-01-02]');
+SELECT atPeriod(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '[2000-01-01, 2000-01-02]');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_period
-WHERE minusPeriod(temp, p) IS NOT NULL;
+SELECT minusPeriod(tnpoint 'Npoint(1, 0.5)@2000-01-01', '[2000-01-01, 2000-01-02]');
+SELECT minusPeriod(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '[2000-01-01, 2000-01-02]');
+SELECT minusPeriod(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '[2000-01-01, 2000-01-02]');
+SELECT minusPeriod(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '[2000-01-01, 2000-01-02]');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_periodset
-WHERE atPeriodSet(temp, ps) IS NOT NULL;
+SELECT atPeriodSet(tnpoint 'Npoint(1, 0.5)@2000-01-01', '{[2000-01-01, 2000-01-02]}');
+SELECT atPeriodSet(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '{[2000-01-01, 2000-01-02]}');
+SELECT atPeriodSet(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '{[2000-01-01, 2000-01-02]}');
+SELECT atPeriodSet(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '{[2000-01-01, 2000-01-02]}');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_periodset
-WHERE minusPeriodSet(temp, ps) IS NOT NULL;
+SELECT minusPeriodSet(tnpoint 'Npoint(1, 0.5)@2000-01-01', '{[2000-01-01, 2000-01-02]}');
+SELECT minusPeriodSet(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '{[2000-01-01, 2000-01-02]}');
+SELECT minusPeriodSet(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '{[2000-01-01, 2000-01-02]}');
+SELECT minusPeriodSet(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '{[2000-01-01, 2000-01-02]}');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
-WHERE intersectsTimestamp(temp, t) IS NOT NULL;
+SELECT intersectsTimestamp(tnpoint 'Npoint(1, 0.5)@2000-01-01', '2000-01-01');
+SELECT intersectsTimestamp(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '2000-01-01');
+SELECT intersectsTimestamp(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '2000-01-01');
+SELECT intersectsTimestamp(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '2000-01-01');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestampset
-WHERE intersectsTimestampSet(temp, ts) IS NOT NULL;
+SELECT intersectsTimestampSet(tnpoint 'Npoint(1, 0.5)@2000-01-01', '{2000-01-01}');
+SELECT intersectsTimestampSet(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '{2000-01-01}');
+SELECT intersectsTimestampSet(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '{2000-01-01}');
+SELECT intersectsTimestampSet(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '{2000-01-01}');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_period
-WHERE intersectsPeriod(temp, p) IS NOT NULL;
+SELECT intersectsPeriod(tnpoint 'Npoint(1, 0.5)@2000-01-01', '[2000-01-01, 2000-01-02]');
+SELECT intersectsPeriod(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '[2000-01-01, 2000-01-02]');
+SELECT intersectsPeriod(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '[2000-01-01, 2000-01-02]');
+SELECT intersectsPeriod(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '[2000-01-01, 2000-01-02]');
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_periodset
-WHERE intersectsPeriodSet(temp, ps) IS NOT NULL;
-
-
-SELECT count(*) FROM tbl_tnpoint WHERE atValue(temp, npoint 'npoint(1553,0.904924)') IS NOT NULL;
-
-SELECT count(*) FROM tbl_tnpoint WHERE minusValue(temp, npoint 'npoint(1553,0.904924)') IS NOT NULL;
-
-SELECT count(*) FROM tbl_tnpoint WHERE atValues(temp, ARRAY[npoint 'npoint(1553,0.904924)', 'npoint(1553,0.904924)']) IS NOT NULL;
-
-SELECT count(*) FROM tbl_tnpoint WHERE minusValues(temp, ARRAY[npoint 'npoint(1553,0.904924)', 'npoint(1553,0.904924)']) IS NOT NULL;
-
-SELECT count(*) FROM tbl_tnpoint WHERE atTimestamp(temp, timestamp '2012-09-10 02:03:28+02') IS NOT NULL;
-
-SELECT count(*) FROM tbl_tnpoint WHERE minusTimestamp(temp, timestamp '2012-09-10 02:03:28+02') IS NOT NULL;
-
-SELECT count(*) FROM tbl_tnpoint WHERE valueAtTimestamp(temp, timestamp '2012-09-10 02:03:28+02') IS NOT NULL;
-
-SELECT count(*) FROM tbl_tnpoint WHERE atTimestampSet(temp, timestampset '{2012-09-10 02:03:28+02}') IS NOT NULL;
-
-SELECT count(*) FROM tbl_tnpoint WHERE minusTimestampSet(temp, timestampset '{2012-09-10 02:03:28+02}') IS NOT NULL;
-
-SELECT atPeriod(temp, period '[2012-03-01, 2012-06-01]') FROM tbl_tnpoint;
-
-SELECT atPeriodSet(temp, periodset '{[2012-03-01, 2012-06-01), [2012-06-01, 2012-09-01]}') FROM tbl_tnpoint;
-
-SELECT intersectsTimestamp(temp, timestamp '2012-09-10 02:03:28+02') FROM tbl_tnpoint;
-
-SELECT intersectsTimestampSet(temp, timestampset '{2012-09-10 02:03:28+02}') FROM tbl_tnpoint;
-
-SELECT intersectsPeriod(temp, period '[2012-03-01, 2012-06-01]') FROM tbl_tnpoint;
-
-SELECT intersectsPeriodSet(temp, periodset '{[2012-03-01, 2012-06-01), [2012-06-01, 2012-09-01]}') FROM tbl_tnpoint;
+SELECT intersectsPeriodSet(tnpoint 'Npoint(1, 0.5)@2000-01-01', '{[2000-01-01, 2000-01-02]}');
+SELECT intersectsPeriodSet(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '{[2000-01-01, 2000-01-02]}');
+SELECT intersectsPeriodSet(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', '{[2000-01-01, 2000-01-02]}');
+SELECT intersectsPeriodSet(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}', '{[2000-01-01, 2000-01-02]}');
 
 /******************************************************************************
  * Comparison functions and B-tree indexing
  ******************************************************************************/
 
-SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp = t2.temp;
-SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp <> t2.temp;
-SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp < t2.temp;
-SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp <= t2.temp;
-SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp > t2.temp;
-SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp >= t2.temp;
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' = tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' = tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' = tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' = tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' = tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' = tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' = tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' = tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' = tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' = tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' = tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' = tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' = tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' = tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' = tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' = tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' != tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' != tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' != tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' != tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' != tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' != tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' != tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' != tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' != tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' != tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' != tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' != tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' != tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' != tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' != tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' != tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' < tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' < tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' < tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' < tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' < tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' < tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' < tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' < tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' < tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' < tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' < tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' < tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' < tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' < tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' < tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' < tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' <= tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' <= tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' <= tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' <= tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' <= tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' <= tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' <= tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' <= tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' <= tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' <= tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' <= tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' <= tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' <= tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' <= tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' <= tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' <= tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' > tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' > tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' > tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' > tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' > tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' > tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' > tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' > tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' > tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' > tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' > tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' > tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' > tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' > tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' > tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' > tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' >= tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' >= tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' >= tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' >= tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' >= tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' >= tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' >= tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' >= tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' >= tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' >= tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' >= tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' >= tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' >= tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' >= tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' >= tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}' >= tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(1, 0.6)@2000-01-05]}';
+
 
 /*****************************************************************************/

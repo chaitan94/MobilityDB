@@ -1,4 +1,16 @@
-﻿/******************************************************************************
+﻿/*****************************************************************************
+ * Constructors
+ *****************************************************************************/
+
+SELECT tnpointinst(t1.np, t2.t) FROM tbl_npoint t1, tbl_timestamptz t2;
+
+SELECT tnpointi(array_agg(t.inst ORDER BY t.inst)) FROM tbl_tnpointinst t GROUP BY k%10;
+
+SELECT tnpointseq(array_agg(t.inst ORDER BY t.inst)) FROM tbl_tnpointinst t GROUP BY route(t.inst);
+
+SELECT tnpoints(array_agg(t.seq ORDER BY startTimestamp(t.seq))) FROM tbl_tnpointseq t GROUP BY k%10;
+
+/******************************************************************************
  * Transformation functions
  ******************************************************************************/
 
@@ -32,7 +44,9 @@ SELECT DISTINCT temporalType(tnpoints(ts)) FROM tbl_tnpoints;
  * Cast functions
  ******************************************************************************/
 
-SELECT count(*) FROM tbl_tnpoint WHERE temp <> (temp::tgeompoint)::tnpoint;
+SELECT astext(temp::tgeompoint) FROM tbl_tnpoint;
+
+SELECT count(*) FROM tbl_tnpoint WHERE temp = (temp::tgeompoint)::tnpoint;
 
 /******************************************************************************
  * Accessor functions
@@ -46,21 +60,57 @@ SELECT MAX(memSize(temp)) FROM tbl_tnpoint;
 SELECT gbox(temp) FROM tbl_tnpoint;
 */
 
-SELECT DISTINCT getValue(inst) FROM tbl_tnpointinst;
+SELECT getValue(inst) FROM tbl_tnpointinst ORDER BY getValue(inst) LIMIT 1;
 
 SELECT MAX(array_length(getValues(temp), 1)) FROM tbl_tnpoint;
+
+SELECT MAX(array_length(positions(temp), 1)) FROM tbl_tnpoint;
+
+SELECT MAX(route(inst)) FROM tbl_tnpointinst;
+
+SELECT MAX(array_length(routes(temp), 1)) FROM tbl_tnpoint;
+
+SELECT MAX(duration(getTime(temp))) FROM tbl_tnpoint;
+
+SELECT MAX(getTimestamp(inst)) FROM tbl_tnpointinst;
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp &= t2.np;
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp @= t2.np;
+
+SELECT count(*) FROM tbl_tnpointinst t1, tbl_npoint t2 WHERE everEquals(t1.inst, t2.np);
+
+SELECT count(*) FROM tbl_tnpointinst t1, tbl_npoint t2 WHERE alwaysEquals(t1.inst, t2.np);
+
+SELECT MAX(startTimestamp(shift(t1.temp, t2.i))) FROM tbl_tnpoint t1, tbl_interval t2;
 
 SELECT DISTINCT startValue(temp) FROM tbl_tnpoint;
 
 SELECT DISTINCT endValue(temp) FROM tbl_tnpoint;
 
-SELECT MAX(getTimestamp(inst)) FROM tbl_tnpointinst;
-
-SELECT MAX(duration(getTime(temp))) FROM tbl_tnpoint;
-
 SELECT MAX(duration(timespan(temp))) FROM tbl_tnpoint;
 
 SELECT MAX(duration(temp)) FROM tbl_tnpoint;
+
+SELECT MAX(numInstants(temp)) FROM tbl_tnpoint;
+
+SELECT MAX(Route(startInstant(temp))) FROM tbl_tnpoint;
+
+SELECT MAX(Route(endInstant(temp))) FROM tbl_tnpoint;
+
+SELECT MAX(Route(instantN(temp, 1))) FROM tbl_tnpoint;
+
+SELECT MAX(array_length(instants(temp),1)) FROM tbl_tnpoint;
+
+SELECT MAX(numTimestamps(temp)) FROM tbl_tnpoint;
+
+SELECT MAX(startTimestamp(temp)) FROM tbl_tnpoint;
+
+SELECT MAX(endTimestamp(temp)) FROM tbl_tnpoint;
+
+SELECT MAX(timestampN(temp,1)) FROM tbl_tnpoint;
+
+SELECT MAX(array_length(timestamps(temp),1)) FROM tbl_tnpoint;
 
 SELECT MAX(numSequences(ts)) FROM tbl_tnpoints;
 
@@ -71,32 +121,6 @@ SELECT MAX(duration(endSequence(ts))) FROM tbl_tnpoints;
 SELECT MAX(duration(sequenceN(ts, numSequences(ts)))) FROM tbl_tnpoints;
 
 SELECT MAX(array_length(sequences(ts),1)) FROM tbl_tnpoints;
-
-SELECT MAX(numInstants(temp)) FROM tbl_tnpoint;
-
-SELECT COUNT(startInstant(temp)) FROM tbl_tnpoint;
-
-SELECT COUNT(endInstant(temp)) FROM tbl_tnpoint;
-
-SELECT COUNT(instantN(temp, numInstants(temp))) FROM tbl_tnpoint;
-
-SELECT MAX(array_length(instants(temp),1)) FROM tbl_tnpoint;
-
-SELECT MAX(numTimestamps(temp)) FROM tbl_tnpoint;
-
-SELECT MAX(startTimestamp(temp)) FROM tbl_tnpoint;
-
-SELECT MAX(endTimestamp(temp)) FROM tbl_tnpoint;
-
-SELECT MAX(timestampN(temp, numTimestamps(temp))) FROM tbl_tnpoint;
-
-SELECT MAX(array_length(timestamps(temp),1)) FROM tbl_tnpoint;
-
-SELECT COUNT(*) FROM tbl_tnpoint WHERE temp &= startValue(temp);
-
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_npoint WHERE temp @= np;
-
-SELECT COUNT(shift(temp, i)) FROM tbl_tnpoint, tbl_interval;
 
 /******************************************************************************
  * Restriction functions
