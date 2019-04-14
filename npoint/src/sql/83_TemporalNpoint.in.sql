@@ -150,6 +150,11 @@ CREATE FUNCTION getValues(tnpoint)
 	AS 'MODULE_PATHNAME', 'tempdisc_get_values'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION positions(tnpoint)
+	RETURNS nsegment[]
+	AS 'MODULE_PATHNAME', 'tnpoint_positions'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION route(tnpoint)
 	RETURNS bigint
 	AS 'MODULE_PATHNAME', 'tnpointinst_route'
