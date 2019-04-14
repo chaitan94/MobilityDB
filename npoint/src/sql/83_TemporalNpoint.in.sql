@@ -91,17 +91,17 @@ CREATE FUNCTION tnpoints(tnpoint[])
  * Cast functions
  ******************************************************************************/
 
-CREATE FUNCTION tnpoint(tgeompoint)
-	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'tgeompoint_as_tnpoint'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeompoint(tnpoint)
 	RETURNS tgeompoint
 	AS 'MODULE_PATHNAME', 'tnpoint_as_tgeompoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tnpoint(tgeompoint)
+	RETURNS tnpoint
+	AS 'MODULE_PATHNAME', 'tgeompoint_as_tnpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE CAST (tgeompoint AS tnpoint) WITH FUNCTION tnpoint(tgeompoint);
 CREATE CAST (tnpoint AS tgeompoint) WITH FUNCTION tgeompoint(tnpoint);
+CREATE CAST (tgeompoint AS tnpoint) WITH FUNCTION tnpoint(tgeompoint);
 
 /******************************************************************************
  * Transformation functions
