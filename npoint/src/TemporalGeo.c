@@ -654,9 +654,9 @@ TemporalInst *
 tnpointinst_at_geometry(TemporalInst *inst, Datum geom)
 {
 	Datum point = tnpointinst_geom(inst);
-	bool flag = DatumGetBool(call_function2(intersects, point, geom));
+	bool inter = DatumGetBool(call_function2(intersects, point, geom));
 	pfree(DatumGetPointer(point));
-	if (!flag)
+	if (!inter)
 		return NULL;
 	return temporalinst_make(temporalinst_value(inst), inst->t, 
 		inst->valuetypid);
@@ -699,9 +699,9 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 	if (np1->pos == np2->pos)
 	{
 		Datum point = npoint_as_geom_internal(np1);
-		bool flag = DatumGetBool(call_function2(intersects, point, geom));
+		bool inter = DatumGetBool(call_function2(intersects, point, geom));
 		pfree(DatumGetPointer(point));
-		if (!flag)
+		if (!inter)
 		{
 			*count = 0;
 			return NULL;
@@ -729,7 +729,7 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 	}
 
 	int countinter = DatumGetInt32(call_function1(
-			LWGEOM_numgeometries_collection, intersections));
+		LWGEOM_numgeometries_collection, intersections));
 	TemporalInst *instants[2];
 	TemporalSeq **result = palloc(sizeof(TemporalSeq *) * countinter);
 	int k = 0;
@@ -751,8 +751,7 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 			TimestampTz time = (TimestampTz)(lower + (upper - lower) * fraction);
 
 			/* If the intersection is not at the exclusive bound */
-			if ((lower_inc || time > lower) &&
-				(upper_inc || time < upper))
+			if ((lower_inc || time > lower) && (upper_inc || time < upper))
 			{
 				double pos = np1->pos + (np2->pos * fraction - np1->pos * fraction);
 				npoint *intnp = npoint_make(np1->rid, pos);
@@ -820,9 +819,9 @@ tnpointseq_at_geometry2(TemporalSeq *seq, Datum geom, int *count)
 	{
 		TemporalInst *inst = temporalseq_inst_n(seq, 0);
 		Datum point = tnpointinst_geom(inst);
-		bool flag = DatumGetBool(call_function2(intersects, point, geom));
+		bool inter = DatumGetBool(call_function2(intersects, point, geom));
 		pfree(DatumGetPointer(point));
-		if (!flag)
+		if (!inter)
 		{
 			*count = 0;
 			return NULL;
@@ -834,10 +833,10 @@ tnpointseq_at_geometry2(TemporalSeq *seq, Datum geom, int *count)
 		return result;
 	}
 
-	/* temporal sequence has at least 2 instants */
+	/* Temporal sequence has at least 2 instants */
 	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * (seq->count - 1));
 	int *countseqs = palloc0(sizeof(int) * (seq->count - 1));
-	int totalseqs = 0, countseq;
+	int totalseqs = 0;
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
 	bool lower_inc = seq->period.lower_inc;
 	for (int i = 0; i < seq->count - 1; i++)
@@ -845,9 +844,8 @@ tnpointseq_at_geometry2(TemporalSeq *seq, Datum geom, int *count)
 		TemporalInst *inst2 = temporalseq_inst_n(seq, i + 1);
 		bool upper_inc = (i == seq->count - 2)? seq->period.upper_inc: false;
 		sequences[i] = tnpointseq_at_geometry1(inst1, inst2, 
-			lower_inc, upper_inc, geom, &countseq);
-		countseqs[i] = countseq;
-		totalseqs += countseq;
+			lower_inc, upper_inc, geom, &countseqs[i]);
+		totalseqs += countseqs[i];
 		inst1 = inst2;
 		lower_inc = true;
 	}

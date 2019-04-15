@@ -5,97 +5,97 @@
 SELECT DISTINCT temporalType(tboolinst(inst)) FROM tbl_tboolinst;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tbooli(inst)) FROM tbl_tboolinst;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tboolseq(inst)) FROM tbl_tboolinst;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tbools(inst)) FROM tbl_tboolinst;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tintinst(inst)) FROM tbl_tintinst;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tinti(inst)) FROM tbl_tintinst;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tintseq(inst)) FROM tbl_tintinst;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tints(inst)) FROM tbl_tintinst;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tfloatinst(inst)) FROM tbl_tfloatinst;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tfloati(inst)) FROM tbl_tfloatinst;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tfloatseq(inst)) FROM tbl_tfloatinst;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tfloats(inst)) FROM tbl_tfloatinst;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(ttextinst(inst)) FROM tbl_ttextinst;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(ttexti(inst)) FROM tbl_ttextinst;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(ttextseq(inst)) FROM tbl_ttextinst;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(ttexts(inst)) FROM tbl_ttextinst;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 /******************************************************************************/
@@ -103,97 +103,97 @@ SELECT DISTINCT temporalType(ttexts(inst)) FROM tbl_ttextinst;
 SELECT DISTINCT temporalType(tboolinst(ti)) FROM tbl_tbooli WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tbooli(ti)) FROM tbl_tbooli;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tboolseq(ti)) FROM tbl_tbooli WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tbools(ti)) FROM tbl_tbooli;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tintinst(ti)) FROM tbl_tinti WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tinti(ti)) FROM tbl_tinti;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tintseq(ti)) FROM tbl_tinti WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tints(ti)) FROM tbl_tinti;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tfloatinst(ti)) FROM tbl_tfloati WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tfloati(ti)) FROM tbl_tfloati;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tfloatseq(ti)) FROM tbl_tfloati WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tfloats(ti)) FROM tbl_tfloati;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(ttextinst(ti)) FROM tbl_ttexti WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(ttexti(ti)) FROM tbl_ttexti;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(ttextseq(ti)) FROM tbl_ttexti WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(ttexts(ti)) FROM tbl_ttexti;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 /******************************************************************************/
@@ -201,97 +201,97 @@ SELECT DISTINCT temporalType(ttexts(ti)) FROM tbl_ttexti;
 SELECT DISTINCT temporalType(tboolinst(seq)) FROM tbl_tboolseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tbooli(seq)) FROM tbl_tboolseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tboolseq(seq)) FROM tbl_tboolseq;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tbools(seq)) FROM tbl_tboolseq;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tintinst(seq)) FROM tbl_tintseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tinti(seq)) FROM tbl_tintseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tintseq(seq)) FROM tbl_tintseq;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tints(seq)) FROM tbl_tintseq;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tfloatinst(seq)) FROM tbl_tfloatseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tfloati(seq)) FROM tbl_tfloatseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tfloatseq(seq)) FROM tbl_tfloatseq;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tfloats(seq)) FROM tbl_tfloatseq;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(ttextinst(seq)) FROM tbl_ttextseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(ttexti(seq)) FROM tbl_ttextseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(ttextseq(seq)) FROM tbl_ttextseq;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(ttexts(seq)) FROM tbl_ttextseq;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 /******************************************************************************/
@@ -299,49 +299,49 @@ SELECT DISTINCT temporalType(ttexts(seq)) FROM tbl_ttextseq;
 SELECT DISTINCT temporalType(tboolinst(ts)) FROM tbl_tbools WHERE numInstants(ts) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tbooli(ts)) FROM tbl_tbools WHERE duration(ts) = '00:00:00';
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tboolseq(ts)) FROM tbl_tbools WHERE numSequences(ts) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tbools(ts)) FROM tbl_tbools;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tintinst(ts)) FROM tbl_tints WHERE numInstants(ts) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tinti(ts)) FROM tbl_tints WHERE duration(ts) = '00:00:00';
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tintseq(ts)) FROM tbl_tints WHERE numSequences(ts) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tints(ts)) FROM tbl_tints;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tfloatinst(ts)) FROM tbl_tfloats WHERE numInstants(ts) = 1;
@@ -357,37 +357,37 @@ SELECT DISTINCT temporalType(tfloati(ts)) FROM tbl_tfloats WHERE duration(ts) = 
 SELECT DISTINCT temporalType(tfloatseq(ts)) FROM tbl_tfloats WHERE numSequences(ts) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tfloats(ts)) FROM tbl_tfloats;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(ttextinst(ts)) FROM tbl_ttexts WHERE numInstants(ts) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(ttexti(ts)) FROM tbl_ttexts WHERE duration(ts) = '00:00:00';
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(ttextseq(ts)) FROM tbl_ttexts WHERE numSequences(ts) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(ttexts(ts)) FROM tbl_ttexts;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 /******************************************************************************
@@ -425,37 +425,37 @@ SELECT COUNT(*) FROM tbl_tints WHERE tfloat(ts) IS NOT NULL;
 SELECT DISTINCT temporalType(temp) FROM tbl_tbool;
  temporaltype 
 --------------
- Sequence
- SequenceSet
- InstantSet
- Instant
+ PeriodSet
+ Period
+ TimestampSet
+ TimestampTz
 (4 rows)
 
 SELECT DISTINCT temporalType(temp) FROM tbl_tint;
  temporaltype 
 --------------
- Sequence
- SequenceSet
- InstantSet
- Instant
+ PeriodSet
+ Period
+ TimestampSet
+ TimestampTz
 (4 rows)
 
 SELECT DISTINCT temporalType(temp) FROM tbl_tfloat;
  temporaltype 
 --------------
- Sequence
- SequenceSet
- InstantSet
- Instant
+ PeriodSet
+ Period
+ TimestampSet
+ TimestampTz
 (4 rows)
 
 SELECT DISTINCT temporalType(temp) FROM tbl_ttext;
  temporaltype 
 --------------
- Sequence
- SequenceSet
- InstantSet
- Instant
+ PeriodSet
+ Period
+ TimestampSet
+ TimestampTz
 (4 rows)
 
 SELECT MAX(memSize(temp)) FROM tbl_tbool;

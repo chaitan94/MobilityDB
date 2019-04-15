@@ -33,7 +33,6 @@ datum_add(Datum l, Datum r, Oid typel, Oid typer)
 		errmsg("Operation not supported")));
 }
 
-
 /* Subtraction */
 
 static Datum

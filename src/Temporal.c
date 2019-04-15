@@ -34,19 +34,19 @@ char dump_toupper(int in)
 static char *temporalTypeName[] =
 {
 	"Unknown",
-	"Instant",
-	"InstantSet",
-	"Sequence",
-	"SequenceSet"
+	"TimestampTz",
+	"TimestampSet",
+	"Period",
+	"PeriodSet"
 };
 
 struct temporaltype_struct temporaltype_struct_array[] =
 {
 	{"UNKNOWN", TEMPORAL},
-	{"INSTANT", TEMPORALINST},
-	{"INSTANTSET", TEMPORALI},
-	{"SEQUENCE", TEMPORALSEQ},
-	{"SEQUENCESET", TEMPORALS},
+	{"TIMESTAMPTZ", TEMPORALINST},
+	{"TIMESTAMPSET", TEMPORALI},
+	{"PERIOD", TEMPORALSEQ},
+	{"PERIODSET", TEMPORALS},
 };
 
 const char *
@@ -782,13 +782,13 @@ Datum temporal_type(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	char str[12];
 	if (temp->type == TEMPORALINST) 
-		strcpy(str, "Instant");
+		strcpy(str, "TimestampTz");
 	else if (temp->type == TEMPORALI) 
-		strcpy(str, "InstantSet");
+		strcpy(str, "TimestampSet");
 	else if (temp->type == TEMPORALSEQ) 
-		strcpy(str, "Sequence");
+		strcpy(str, "Period");
 	else if (temp->type == TEMPORALS) 
-		strcpy(str, "SequenceSet");
+		strcpy(str, "PeriodSet");
     else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Bad temporal type")));

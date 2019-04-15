@@ -178,10 +178,11 @@ temporal_bbox_size(Oid valuetypid)
 		return sizeof(BOX);
 #ifdef WITH_POSTGIS
 	if (valuetypid == type_oid(T_GEOGRAPHY) || 
-		valuetypid == type_oid(T_GEOMETRY)) 
+		valuetypid == type_oid(T_GEOMETRY) || 
+		valuetypid == type_oid(T_NPOINT)) 
 		return sizeof(GBOX);
 #endif
-	/* Types without bounding box, for example, tdoubleN */
+	/* Types without bounding box, for example, doubleN */
 	return 0;
 } 
 
@@ -270,10 +271,15 @@ temporali_make_bbox(void *box, TemporalInst **instants, int count)
 		return true;
 	}
 #ifdef WITH_POSTGIS
-	if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
-		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
+	if (instants[0]->valuetypid == type_oid(T_GEOMETRY) || 
+		instants[0]->valuetypid == type_oid(T_GEOGRAPHY)) 
 	{
 		tpointinstarr_to_gbox((GBOX *)box, instants, count);
+		return true;
+	}
+	if (instants[0]->valuetypid == type_oid(T_NPOINT)) 
+	{
+		tnpointinstarr_disc_to_gbox((GBOX *)box, instants, count);
 		return true;
 	}
 #endif
@@ -298,10 +304,15 @@ temporalseq_make_bbox(void *box, TemporalInst **instants, int count,
 		return true;
 	}
 #ifdef WITH_POSTGIS
-	if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
-		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
+	if (instants[0]->valuetypid == type_oid(T_GEOMETRY) || 
+		instants[0]->valuetypid == type_oid(T_GEOGRAPHY))
 	{
 		tpointinstarr_to_gbox((GBOX *)box, instants, count);
+		return true;
+	}
+	if (instants[0]->valuetypid == type_oid(T_NPOINT)) 
+	{
+		tnpointinstarr_cont_to_gbox((GBOX *)box, instants, count);
 		return true;
 	}
 #endif

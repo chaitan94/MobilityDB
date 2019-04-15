@@ -160,7 +160,7 @@ timestamp_parse(char **str)
 	Datum result = call_input(TIMESTAMPTZOID, *str);
 	(*str)[delim] = bak;
 	*str += delim;
-	return result;
+	return DatumGetTimestamp(result);
 }
 
 Period *

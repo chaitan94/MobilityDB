@@ -1937,7 +1937,6 @@ tpointseq_at_geometry2(TemporalSeq *seq, Datum geom, int *count)
 	return result;
 }
 
-
 static TemporalS *
 tpointseq_at_geometry(TemporalSeq *seq, Datum geom)
 {
