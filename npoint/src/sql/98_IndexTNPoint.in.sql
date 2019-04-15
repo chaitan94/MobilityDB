@@ -110,28 +110,28 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	OPERATOR	25		<-> (tnpoint, geometry) FOR ORDER BY pg_catalog.float_ops,
 --	OPERATOR	25		<-> (tnpoint, gbox) FOR ORDER BY pg_catalog.float_ops,
 --	OPERATOR	25		<-> (tnpoint, tnpoint) FOR ORDER BY pg_catalog.float_ops,
-	-- overlaps or front
+	-- overlaps or before
 	OPERATOR	28		&<# (tnpoint, timestamptz),
 	OPERATOR	28		&<# (tnpoint, timestampset),
 	OPERATOR	28		&<# (tnpoint, period),
 	OPERATOR	28		&<# (tnpoint, periodset),
 	OPERATOR	28		&<# (tnpoint, gbox),
 	OPERATOR	28		&<# (tnpoint, tnpoint),
-	-- strictly front
+	-- strictly before
 	OPERATOR	29		<<# (tnpoint, timestamptz),
 	OPERATOR	29		<<# (tnpoint, timestampset),
 	OPERATOR	29		<<# (tnpoint, period),
 	OPERATOR	29		<<# (tnpoint, periodset),
 	OPERATOR	29		<<# (tnpoint, gbox),
 	OPERATOR	29		<<# (tnpoint, tnpoint),
-	-- strictly back
+	-- strictly after
 	OPERATOR	30		#>> (tnpoint, timestamptz),
 	OPERATOR	30		#>> (tnpoint, timestampset),
 	OPERATOR	30		#>> (tnpoint, period),
 	OPERATOR	30		#>> (tnpoint, periodset),
 	OPERATOR	30		#>> (tnpoint, gbox),
 	OPERATOR	30		#>> (tnpoint, tnpoint),
-	-- overlaps or back
+	-- overlaps or after
 	OPERATOR	31		#&> (tnpoint, timestamptz),
 	OPERATOR	31		#&> (tnpoint, timestampset),
 	OPERATOR	31		#&> (tnpoint, period),
@@ -220,28 +220,28 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	OPERATOR	12		|&> (tnpoint, geometry),  
 	OPERATOR	12		|&> (tnpoint, gbox),  
 	OPERATOR	12		|&> (tnpoint, tnpoint),  
-	-- overlaps or front
+	-- overlaps or before
 	OPERATOR	28		&<# (tnpoint, timestamptz),
 	OPERATOR	28		&<# (tnpoint, timestampset),
 	OPERATOR	28		&<# (tnpoint, period),
 	OPERATOR	28		&<# (tnpoint, periodset),
 	OPERATOR	28		&<# (tnpoint, gbox),
 	OPERATOR	28		&<# (tnpoint, tnpoint),
-	-- strictly front
+	-- strictly before
 	OPERATOR	29		<<# (tnpoint, timestamptz),
 	OPERATOR	29		<<# (tnpoint, timestampset),
 	OPERATOR	29		<<# (tnpoint, period),
 	OPERATOR	29		<<# (tnpoint, periodset),
 	OPERATOR	29		<<# (tnpoint, gbox),
 	OPERATOR	29		<<# (tnpoint, tnpoint),
-	-- strictly back
+	-- strictly after
 	OPERATOR	30		#>> (tnpoint, timestamptz),
 	OPERATOR	30		#>> (tnpoint, timestampset),
 	OPERATOR	30		#>> (tnpoint, period),
 	OPERATOR	30		#>> (tnpoint, periodset),
 	OPERATOR	30		#>> (tnpoint, gbox),
 	OPERATOR	30		#>> (tnpoint, tnpoint),
-	-- overlaps or back
+	-- overlaps or after
 	OPERATOR	31		#&> (tnpoint, timestamptz),
 	OPERATOR	31		#&> (tnpoint, timestampset),
 	OPERATOR	31		#&> (tnpoint, period),

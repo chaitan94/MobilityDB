@@ -18,22 +18,6 @@
 
 PG_FUNCTION_INFO_V1(gist_tnpoint_compress);
 
-/*
-PGDLLEXPORT Datum
-gist_tnpoint_compress(PG_FUNCTION_ARGS)
-{
-    GISTENTRY* entry = (GISTENTRY *) PG_GETARG_POINTER(0);
-    if (entry->leafkey)
-    {
-        GISTENTRY	*retval = palloc(sizeof(GISTENTRY));
-        gistentryinit(*retval, call_function1(tnpoint_to_gbox, entry->key),
-                      entry->rel, entry->page, entry->offset, false);
-        PG_RETURN_POINTER(retval);
-    }
-    PG_RETURN_POINTER(entry);
-}
-*/
-
 PGDLLEXPORT Datum
 gist_tnpoint_compress(PG_FUNCTION_ARGS)
 {
