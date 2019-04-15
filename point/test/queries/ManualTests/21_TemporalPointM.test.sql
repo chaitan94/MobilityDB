@@ -2,99 +2,99 @@
  * typmod
  *****************************************************************************/
  
-select tgeompoint(Instant, Point) 'Point(0 1)@2000-01-01';
-select tgeompoint(Instant, PointZ) 'Point(0 1 0)@2000-01-01';
-select tgeompoint(InstantSet, Point) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
-select tgeompoint(InstantSet, PointZ) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
-select tgeompoint(Sequence, Point) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
-select tgeompoint(Sequence, PointZ) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
-select tgeompoint(SequenceSet, Point) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
+select tgeompoint(TimestampTz, Point) 'Point(0 1)@2000-01-01';
+select tgeompoint(TimestampTz, PointZ) 'Point(0 1 0)@2000-01-01';
+select tgeompoint(TimestampSet, Point) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
+select tgeompoint(TimestampSet, PointZ) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
+select tgeompoint(Period, Point) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
+select tgeompoint(Period, PointZ) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
+select tgeompoint(PeriodSet, Point) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
 	[Point(0 1)@2000-01-03, Point(1 1)@2000-01-04]}';
-select tgeompoint(SequenceSet, PointZ) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
+select tgeompoint(PeriodSet, PointZ) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
 	[Point(0 1 0)@2000-01-03, Point(1 1 1)@2000-01-04]}';
 
 /*
-select tgeompoint(Instant, PointZ) 'Point(0 1)@2000-01-01';
-select tgeompoint(InstantSet, Point) 'Point(0 1)@2000-01-01';
-select tgeompoint(InstantSet, PointZ) 'Point(0 1)@2000-01-01';
-select tgeompoint(Sequence, Point) 'Point(0 1)@2000-01-01';
-select tgeompoint(Sequence, PointZ) 'Point(0 1)@2000-01-01';
-select tgeompoint(SequenceSet, Point) 'Point(0 1)@2000-01-01';
-select tgeompoint(SequenceSet, PointZ) 'Point(0 1)@2000-01-01';
+select tgeompoint(TimestampTz, PointZ) 'Point(0 1)@2000-01-01';
+select tgeompoint(TimestampSet, Point) 'Point(0 1)@2000-01-01';
+select tgeompoint(TimestampSet, PointZ) 'Point(0 1)@2000-01-01';
+select tgeompoint(Period, Point) 'Point(0 1)@2000-01-01';
+select tgeompoint(Period, PointZ) 'Point(0 1)@2000-01-01';
+select tgeompoint(PeriodSet, Point) 'Point(0 1)@2000-01-01';
+select tgeompoint(PeriodSet, PointZ) 'Point(0 1)@2000-01-01';
 
-select tgeompoint(Instant, Point) 'Point(0 1 0)@2000-01-01';
-select tgeompoint(InstantSet, Point) 'Point(0 1 0)@2000-01-01';
-select tgeompoint(InstantSet, PointZ) 'Point(0 1 0)@2000-01-01';
-select tgeompoint(Sequence, Point) 'Point(0 1 0)@2000-01-01';
-select tgeompoint(Sequence, PointZ) 'Point(0 1 0)@2000-01-01';
-select tgeompoint(SequenceSet, Point) 'Point(0 1 0)@2000-01-01';
-select tgeompoint(SequenceSet, PointZ) 'Point(0 1 0)@2000-01-01';
+select tgeompoint(TimestampTz, Point) 'Point(0 1 0)@2000-01-01';
+select tgeompoint(TimestampSet, Point) 'Point(0 1 0)@2000-01-01';
+select tgeompoint(TimestampSet, PointZ) 'Point(0 1 0)@2000-01-01';
+select tgeompoint(Period, Point) 'Point(0 1 0)@2000-01-01';
+select tgeompoint(Period, PointZ) 'Point(0 1 0)@2000-01-01';
+select tgeompoint(PeriodSet, Point) 'Point(0 1 0)@2000-01-01';
+select tgeompoint(PeriodSet, PointZ) 'Point(0 1 0)@2000-01-01';
 
-select tgeompoint(Instant, Point) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
-select tgeompoint(Instant, PointZ) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
-select tgeompoint(InstantSet, PointZ) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
-select tgeompoint(Sequence, Point) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
-select tgeompoint(Sequence, PointZ) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
-select tgeompoint(SequenceSet, Point) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
-select tgeompoint(SequenceSet, PointZ) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
+select tgeompoint(TimestampTz, Point) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
+select tgeompoint(TimestampTz, PointZ) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
+select tgeompoint(TimestampSet, PointZ) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
+select tgeompoint(Period, Point) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
+select tgeompoint(Period, PointZ) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
+select tgeompoint(PeriodSet, Point) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
+select tgeompoint(PeriodSet, PointZ) '{Point(0 1)@2000-01-01, Point(1 1)@2000-01-02}';
 
-select tgeompoint(Instant, Point) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
-select tgeompoint(Instant, PointZ) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
-select tgeompoint(InstantSet, Point) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
-select tgeompoint(Sequence, Point) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
-select tgeompoint(Sequence, PointZ) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
-select tgeompoint(SequenceSet, Point) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
-select tgeompoint(SequenceSet, PointZ) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
+select tgeompoint(TimestampTz, Point) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
+select tgeompoint(TimestampTz, PointZ) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
+select tgeompoint(TimestampSet, Point) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
+select tgeompoint(Period, Point) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
+select tgeompoint(Period, PointZ) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
+select tgeompoint(PeriodSet, Point) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
+select tgeompoint(PeriodSet, PointZ) '{Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02}';
 
-select tgeompoint(Instant, Point) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
-select tgeompoint(Instant, PointZ) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
-select tgeompoint(InstantSet, Point) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
-select tgeompoint(InstantSet, PointZ) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
-select tgeompoint(Sequence, PointZ) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
-select tgeompoint(SequenceSet, Point) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
-select tgeompoint(SequenceSet, PointZ) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
+select tgeompoint(TimestampTz, Point) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
+select tgeompoint(TimestampTz, PointZ) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
+select tgeompoint(TimestampSet, Point) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
+select tgeompoint(TimestampSet, PointZ) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
+select tgeompoint(Period, PointZ) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
+select tgeompoint(PeriodSet, Point) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
+select tgeompoint(PeriodSet, PointZ) '[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02]';
 
-select tgeompoint(Instant, Point) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
-select tgeompoint(Instant, PointZ) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
-select tgeompoint(InstantSet, Point) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
-select tgeompoint(InstantSet, PointZ) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
-select tgeompoint(Sequence, Point) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
-select tgeompoint(SequenceSet, Point) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
-select tgeompoint(SequenceSet, PointZ) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
+select tgeompoint(TimestampTz, Point) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
+select tgeompoint(TimestampTz, PointZ) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
+select tgeompoint(TimestampSet, Point) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
+select tgeompoint(TimestampSet, PointZ) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
+select tgeompoint(Period, Point) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
+select tgeompoint(PeriodSet, Point) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
+select tgeompoint(PeriodSet, PointZ) '[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02]';
 
-select tgeompoint(Instant, Point) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
+select tgeompoint(TimestampTz, Point) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
 	[Point(0 1)@2000-01-03, Point(1 1)@2000-01-04]}';
-select tgeompoint(Instant, PointZ) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
+select tgeompoint(TimestampTz, PointZ) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
 	[Point(0 1)@2000-01-03, Point(1 1)@2000-01-04]}';
-select tgeompoint(InstantSet, Point) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
+select tgeompoint(TimestampSet, Point) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
 	[Point(0 1)@2000-01-03, Point(1 1)@2000-01-04]}';
-select tgeompoint(InstantSet, PointZ) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
+select tgeompoint(TimestampSet, PointZ) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
 	[Point(0 1)@2000-01-03, Point(1 1)@2000-01-04]}';
-select tgeompoint(Sequence, Point) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
+select tgeompoint(Period, Point) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
 	[Point(0 1)@2000-01-03, Point(1 1)@2000-01-04]}';
-select tgeompoint(Sequence, PointZ) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
+select tgeompoint(Period, PointZ) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
 	[Point(0 1)@2000-01-03, Point(1 1)@2000-01-04]}';
-select tgeompoint(SequenceSet, PointZ) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
+select tgeompoint(PeriodSet, PointZ) '{[Point(0 1)@2000-01-01, Point(1 1)@2000-01-02],
 	[Point(0 1)@2000-01-03, Point(1 1)@2000-01-04]}';
 
-select tgeompoint(Instant, Point) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
+select tgeompoint(TimestampTz, Point) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
 	[Point(0 1 0)@2000-01-03, Point(1 1 1)@2000-01-04]}';
-select tgeompoint(Instant, PointZ) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
+select tgeompoint(TimestampTz, PointZ) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
 	[Point(0 1 0)@2000-01-03, Point(1 1 1)@2000-01-04]}';
-select tgeompoint(InstantSet, Point) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
+select tgeompoint(TimestampSet, Point) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
 	[Point(0 1 0)@2000-01-03, Point(1 1 1)@2000-01-04]}';
-select tgeompoint(InstantSet, PointZ) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
+select tgeompoint(TimestampSet, PointZ) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
 	[Point(0 1 0)@2000-01-03, Point(1 1 1)@2000-01-04]}';
-select tgeompoint(Sequence, Point) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
+select tgeompoint(Period, Point) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
 	[Point(0 1 0)@2000-01-03, Point(1 1 1)@2000-01-04]}';
-select tgeompoint(Sequence, PointZ) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
+select tgeompoint(Period, PointZ) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
 	[Point(0 1 0)@2000-01-03, Point(1 1 1)@2000-01-04]}';
-select tgeompoint(SequenceSet, Point) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
+select tgeompoint(PeriodSet, Point) '{[Point(0 1 0)@2000-01-01, Point(1 1 1)@2000-01-02],
 	[Point(0 1 0)@2000-01-03, Point(1 1 1)@2000-01-04]}';
 */
 
 /*****************************************************************************
- * Instant
+ * TimestampTz
  *****************************************************************************/
  
 select tgeompoint 'Point(0 0)@2012-01-01 08:00:00';

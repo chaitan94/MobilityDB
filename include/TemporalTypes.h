@@ -150,7 +150,7 @@ typedef struct
     /* variable-length data follows */
 } TemporalInst;
 
-/* Temporal Set Instant */
+/* Temporal Instant Set */
 
 typedef struct 
 {

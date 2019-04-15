@@ -40,10 +40,10 @@ SELECT transform_gk(tgeompoint('Point(13.43593 52.41721)@2018-12-20'));
 SELECT astext(transform_gk(tgeompoint 'Point(13.43593 52.41721)@2018-12-20'));
 SELECT astext(transform_gk(tgeompoint('Point(13.43593 52.41721)@2018-12-20')));
 
-SELECT transform_gk(tgeompoint(Instant) 'Point(13.43593 52.41721)@2018-12-20');
-SELECT transform_gk(tgeompoint(InstantSet) '{Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00}');
-SELECT transform_gk(tgeompoint(Sequence) '[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00]');
-SELECT transform_gk(tgeompoint(SequenceSet) '{[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00],[Point(13.43705 52.41724)@2018-12-20 10:02:00,Point(13.43805 52.41730)@2018-12-20 10:03:00]}');
+SELECT transform_gk(tgeompoint(TimestampTz) 'Point(13.43593 52.41721)@2018-12-20');
+SELECT transform_gk(tgeompoint(TimestampSet) '{Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00}');
+SELECT transform_gk(tgeompoint(Period) '[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00]');
+SELECT transform_gk(tgeompoint(PeriodSet) '{[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00],[Point(13.43705 52.41724)@2018-12-20 10:02:00,Point(13.43805 52.41730)@2018-12-20 10:03:00]}');
 
 
 -- PostGIS geometry

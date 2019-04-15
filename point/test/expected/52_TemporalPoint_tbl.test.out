@@ -4,388 +4,388 @@
 SELECT DISTINCT temporalType(tgeompointinst(inst)) FROM tbl_tgeompointinst;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointi(inst)) FROM tbl_tgeompointinst;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointseq(inst)) FROM tbl_tgeompointinst;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompoints(inst)) FROM tbl_tgeompointinst;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointinst(inst)) FROM tbl_tgeompoint3Dinst;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointi(inst)) FROM tbl_tgeompoint3Dinst;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointseq(inst)) FROM tbl_tgeompoint3Dinst;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompoints(inst)) FROM tbl_tgeompoint3Dinst;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointinst(inst)) FROM tbl_tgeogpointinst;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointi(inst)) FROM tbl_tgeogpointinst;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointseq(inst)) FROM tbl_tgeogpointinst;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpoints(inst)) FROM tbl_tgeogpointinst;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointinst(inst)) FROM tbl_tgeogpoint3Dinst;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointi(inst)) FROM tbl_tgeogpoint3Dinst;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointseq(inst)) FROM tbl_tgeogpoint3Dinst;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpoints(inst)) FROM tbl_tgeogpoint3Dinst;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 /******************************************************************************/
 SELECT DISTINCT temporalType(tgeompointinst(ti)) FROM tbl_tgeompointi WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointi(ti)) FROM tbl_tgeompointi;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointseq(ti)) FROM tbl_tgeompointi WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompoints(ti)) FROM tbl_tgeompointi;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointinst(ti)) FROM tbl_tgeompoint3Di WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointi(ti)) FROM tbl_tgeompoint3Di;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointseq(ti)) FROM tbl_tgeompoint3Di WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompoints(ti)) FROM tbl_tgeompoint3Di;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointinst(ti)) FROM tbl_tgeogpointi WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointi(ti)) FROM tbl_tgeogpointi;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointseq(ti)) FROM tbl_tgeogpointi WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpoints(ti)) FROM tbl_tgeogpointi;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointinst(ti)) FROM tbl_tgeogpoint3Di WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointi(ti)) FROM tbl_tgeogpoint3Di;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointseq(ti)) FROM tbl_tgeogpoint3Di WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpoints(ti)) FROM tbl_tgeogpoint3Di;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 /******************************************************************************/
 SELECT DISTINCT temporalType(tgeompointinst(seq)) FROM tbl_tgeompointseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointi(seq)) FROM tbl_tgeompointseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointseq(seq)) FROM tbl_tgeompointseq;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompoints(seq)) FROM tbl_tgeompointseq;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointinst(seq)) FROM tbl_tgeompoint3Dseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointi(seq)) FROM tbl_tgeompoint3Dseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointseq(seq)) FROM tbl_tgeompoint3Dseq;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompoints(seq)) FROM tbl_tgeompoint3Dseq;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointinst(seq)) FROM tbl_tgeogpointseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointi(seq)) FROM tbl_tgeogpointseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointseq(seq)) FROM tbl_tgeogpointseq;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpoints(seq)) FROM tbl_tgeogpointseq;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointinst(seq)) FROM tbl_tgeogpoint3Dseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointi(seq)) FROM tbl_tgeogpoint3Dseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointseq(seq)) FROM tbl_tgeogpoint3Dseq;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpoints(seq)) FROM tbl_tgeogpoint3Dseq;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 /******************************************************************************/
 SELECT DISTINCT temporalType(tgeompointinst(ts)) FROM tbl_tgeompoints WHERE numInstants(ts) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointi(ts)) FROM tbl_tgeompoints WHERE duration(ts) = '00:00:00';
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointseq(ts)) FROM tbl_tgeompoints WHERE numSequences(ts) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompoints(ts)) FROM tbl_tgeompoints;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointinst(ts)) FROM tbl_tgeompoint3Ds WHERE numInstants(ts) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointi(ts)) FROM tbl_tgeompoint3Ds WHERE duration(ts) = '00:00:00';
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompointseq(ts)) FROM tbl_tgeompoint3Ds WHERE numSequences(ts) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeompoints(ts)) FROM tbl_tgeompoint3Ds;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointinst(ts)) FROM tbl_tgeogpoints WHERE numInstants(ts) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointi(ts)) FROM tbl_tgeogpoints WHERE duration(ts) = '00:00:00';
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointseq(ts)) FROM tbl_tgeogpoints WHERE numSequences(ts) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpoints(ts)) FROM tbl_tgeogpoints;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointinst(ts)) FROM tbl_tgeogpoint3Ds WHERE numInstants(ts) = 1;
  temporaltype 
 --------------
- Instant
+ TimestampTz
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointi(ts)) FROM tbl_tgeogpoint3Ds WHERE duration(ts) = '00:00:00';
  temporaltype 
 --------------
- InstantSet
+ TimestampSet
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpointseq(ts)) FROM tbl_tgeogpoint3Ds WHERE numSequences(ts) = 1;
  temporaltype 
 --------------
- Sequence
+ Period
 (1 row)
 
 SELECT DISTINCT temporalType(tgeogpoints(ts)) FROM tbl_tgeogpoint3Ds;
  temporaltype 
 --------------
- SequenceSet
+ PeriodSet
 (1 row)
 
 /******************************************************************************
@@ -394,37 +394,37 @@ SELECT DISTINCT temporalType(tgeogpoints(ts)) FROM tbl_tgeogpoint3Ds;
 SELECT DISTINCT temporalType(temp) FROM tbl_tgeompoint ORDER BY 1;
  temporaltype 
 --------------
- Instant
- InstantSet
- Sequence
- SequenceSet
+ Period
+ PeriodSet
+ TimestampSet
+ TimestampTz
 (4 rows)
 
 SELECT DISTINCT temporalType(temp) FROM tbl_tgeogpoint ORDER BY 1;
  temporaltype 
 --------------
- Instant
- InstantSet
- Sequence
- SequenceSet
+ Period
+ PeriodSet
+ TimestampSet
+ TimestampTz
 (4 rows)
 
 SELECT DISTINCT temporalType(temp) FROM tbl_tgeompoint3D ORDER BY 1;
  temporaltype 
 --------------
- Instant
- InstantSet
- Sequence
- SequenceSet
+ Period
+ PeriodSet
+ TimestampSet
+ TimestampTz
 (4 rows)
 
 SELECT DISTINCT temporalType(temp) FROM tbl_tgeogpoint3D ORDER BY 1;
  temporaltype 
 --------------
- Instant
- InstantSet
- Sequence
- SequenceSet
+ Period
+ PeriodSet
+ TimestampSet
+ TimestampTz
 (4 rows)
 
 SELECT MAX(memSize(temp)) FROM tbl_tgeompoint;
@@ -1100,6 +1100,9 @@ SELECT COUNT(shift(temp, i)) FROM tbl_tgeogpoint3D, tbl_interval;
  10000
 (1 row)
 
+/******************************************************************************
+ * Projection functions
+ ******************************************************************************/
 SELECT COUNT(*) FROM tbl_tgeompoint, tbl_geompoint
 WHERE atValue(temp, g) IS NOT NULL;
  count 

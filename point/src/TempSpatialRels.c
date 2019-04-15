@@ -2933,6 +2933,7 @@ trelate_pattern_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************/
+<<<<<<< HEAD
 /*****************************************************************************
  *
  * TempSpatialRels.c
@@ -5868,3 +5869,5 @@ trelate_pattern_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************/
+=======
+>>>>>>> Integration of npoint with MobilityDB: Part 3

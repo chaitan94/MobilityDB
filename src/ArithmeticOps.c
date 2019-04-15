@@ -33,7 +33,10 @@ datum_add(Datum l, Datum r, Oid typel, Oid typer)
 		errmsg("Operation not supported")));
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> Integration of npoint with MobilityDB: Part 3
 /* Subtraction */
 
 static Datum

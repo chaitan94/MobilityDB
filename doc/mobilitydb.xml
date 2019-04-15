@@ -614,13 +614,13 @@ SELECT tfloat '{[17@2018-01-01 08:00:00, 17.5@2018-01-01 08:05:00],
 
     <para>Temporal types support type modifiers (or <varname>typmod</varname> in PostgreSQL terminology), which specify additional nformation for a column definition. For example, in the following table definition:
       <programlisting>
-CREATE TABLE Department(DeptNo integer, DeptName varchar(25), NoEmps tint(Sequence));
+CREATE TABLE Department(DeptNo integer, DeptName varchar(25), NoEmps tint(Period));
       </programlisting>
-    the type modifier for the type <varname>varchar</varname> is the value 25, which indicates the maximum length of the values of the column, while the type modifier for the type <varname>tint</varname> is the string <varname>Sequence</varname>, which restricts the duration of the values of the column to be sequences. In the case of temporal alphanumeric types (that is, <varname>tbool</varname>, <varname>tint</varname>, <varname>tfloat</varname>, and <varname>ttext</varname>), the possible values for the type modifier are <varname>Instant</varname>, <varname>InstantSet</varname>, <varname>Sequence</varname>, and <varname>SequenceSet</varname>. If no type modifier is specified for a column, values of any duration are allowed.</para>
+    the type modifier for the type <varname>varchar</varname> is the value 25, which indicates the maximum length of the values of the column, while the type modifier for the type <varname>tint</varname> is the string <varname>Period</varname>, which restricts the duration of the values of the column to be sequences. In the case of temporal alphanumeric types (that is, <varname>tbool</varname>, <varname>tint</varname>, <varname>tfloat</varname>, and <varname>ttext</varname>), the possible values for the type modifier are <varname>TimestampTz</varname>, <varname>TimestampSet</varname>, <varname>Period</varname>, and <varname>PeriodSet</varname>. If no type modifier is specified for a column, values of any duration are allowed.</para>
 
     <para>On the other hand, in the case of temporal point types (that is, <varname>tgeompoint</varname> or <varname>tgeogpoint</varname>) the type modifier may be used to specify specify the duration, the dimensionality, and/or the spatial reference identifier (SRID). For example, in the following table definition:
       <programlisting>
-CREATE TABLE Fligth(FlightNo integer, Route tgeogpoint(Sequence,PointZ,4326));
+CREATE TABLE Fligth(FlightNo integer, Route tgeogpoint(Period,PointZ,4326));
       </programlisting>
     the type modifier for the type <varname>tgeogpoint</varname> is composed of three values, the first one indicating the duration as above, the second one the spatial type of the geographies composing the temporal point, and the last one the SRID of the composing geographies. For temporal points, the possible values for the first argument of the type modifier are as above, those for the second argument are either <varname>Point</varname> or <varname>PointZ</varname>, and those for the third argument are valid SRIDs. All the three arguments are optional and if any of them is not specified for a column, values of any duration, dimensionality, and/or SRID are allowed.</para>
 
@@ -1190,10 +1190,10 @@ SELECT tfloats(tfloat '{2.5@2001-01-01, 1.5@2001-01-02, 3.5@2001-01-02}');
         <itemizedlist>
           <listitem>
             <para><varname>getType</varname>: Type</para>
-            <para>Signature: <varname>getType(ttype): {'Instant', 'InstantSet', 'Sequence', 'SequenceSet'}</varname></para>
+            <para>Signature: <varname>getType(ttype): {'TimestampTz', 'TimestampSet', 'Period', 'PeriodSet'}</varname></para>
             <programlisting>
 SELECT getType(tint '[1@2012-01-01, 2@2012-01-02, 3@2012-01-03]');
--- "Sequence"
+-- "Period"
             </programlisting>
           </listitem>
 

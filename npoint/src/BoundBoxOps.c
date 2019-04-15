@@ -34,12 +34,13 @@ tnpointinst_make_gbox(GBOX *box, Datum value, TimestampTz t)
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 	if (gserialized_get_gbox_p(gs, &gbox) == LW_FAILURE)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("Error while computing the bounding box of the temporal point")));
+			errmsg("Error while computing the bounding box of the temporal network point")));
 
     memcpy(box, &gbox, sizeof(GBOX));
     box->zmin = -infinity;
     box->zmax = infinity;
     box->mmin = box->mmax = t;
+	FLAGS_SET_M(box->flags, true);
     POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
     pfree(DatumGetPointer(geom));
     return;
@@ -63,6 +64,7 @@ tnpointinstarr_disc_to_gbox(GBOX *box, TemporalInst **instants, int count)
 void
 tnpointinstarr_cont_to_gbox(GBOX *box, TemporalInst **instants, int count)
 {
+	double infinity = get_float8_infinity();
     npoint *np = DatumGetNpoint(temporalinst_value(instants[0]));
     int64 rid = np->rid;
     double posmin = np->pos, posmax = np->pos, mmin = instants[0]->t, mmax = instants[0]->t;
@@ -92,7 +94,9 @@ tnpointinstarr_cont_to_gbox(GBOX *box, TemporalInst **instants, int count)
 	memcpy(box, &gbox, sizeof(GBOX));
     box->mmin = mmin;
     box->mmax = mmax;
-
+    box->zmin = -infinity;
+    box->zmax = infinity;
+	FLAGS_SET_M(box->flags, true);
     pfree(DatumGetPointer(line));
     pfree(DatumGetPointer(geom));
     return;

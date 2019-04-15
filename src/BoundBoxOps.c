@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Integration of npoint with MobilityDB: Part 3
 /*****************************************************************************
  *
  * BoundingBoxOps.c
@@ -24,6 +27,10 @@
 #include "TemporalTypes.h"
 #ifdef WITH_POSTGIS
 #include "TemporalPoint.h"
+<<<<<<< HEAD
+=======
+#include "TemporalNPoint.h"
+>>>>>>> Integration of npoint with MobilityDB: Part 3
 #endif
 
 /*****************************************************************************
@@ -178,10 +185,18 @@ temporal_bbox_size(Oid valuetypid)
 		return sizeof(BOX);
 #ifdef WITH_POSTGIS
 	if (valuetypid == type_oid(T_GEOGRAPHY) || 
+<<<<<<< HEAD
 		valuetypid == type_oid(T_GEOMETRY)) 
 		return sizeof(GBOX);
 #endif
 	/* Types without bounding box, for example, tdoubleN */
+=======
+		valuetypid == type_oid(T_GEOMETRY) || 
+		valuetypid == type_oid(T_NPOINT)) 
+		return sizeof(GBOX);
+#endif
+	/* Types without bounding box, for example, doubleN */
+>>>>>>> Integration of npoint with MobilityDB: Part 3
 	return 0;
 } 
 
@@ -215,6 +230,14 @@ temporalinst_make_bbox(void *box, Datum value, TimestampTz t, Oid valuetypid)
 		tpointinst_make_gbox((GBOX *)box, value, t);
 		return true;
 	}
+<<<<<<< HEAD
+=======
+	else if (valuetypid == type_oid(T_NPOINT))
+	{
+		tnpointinst_make_gbox((GBOX *)box, value, t);
+		return true;
+	}
+>>>>>>> Integration of npoint with MobilityDB: Part 3
 #endif
 	/* Types without bounding box, for example, tdoubleN* */
 	return false;
@@ -265,12 +288,25 @@ temporali_make_bbox(void *box, TemporalInst **instants, int count)
 		return true;
 	}
 #ifdef WITH_POSTGIS
+<<<<<<< HEAD
 	if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
 		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
+=======
+	if (instants[0]->valuetypid == type_oid(T_GEOMETRY) || 
+		instants[0]->valuetypid == type_oid(T_GEOGRAPHY)) 
+>>>>>>> Integration of npoint with MobilityDB: Part 3
 	{
 		tpointinstarr_to_gbox((GBOX *)box, instants, count);
 		return true;
 	}
+<<<<<<< HEAD
+=======
+	if (instants[0]->valuetypid == type_oid(T_NPOINT)) 
+	{
+		tnpointinstarr_disc_to_gbox((GBOX *)box, instants, count);
+		return true;
+	}
+>>>>>>> Integration of npoint with MobilityDB: Part 3
 #endif
 	return false;
 }
@@ -293,12 +329,25 @@ temporalseq_make_bbox(void *box, TemporalInst **instants, int count,
 		return true;
 	}
 #ifdef WITH_POSTGIS
+<<<<<<< HEAD
 	if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
 		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
+=======
+	if (instants[0]->valuetypid == type_oid(T_GEOMETRY) || 
+		instants[0]->valuetypid == type_oid(T_GEOGRAPHY))
+>>>>>>> Integration of npoint with MobilityDB: Part 3
 	{
 		tpointinstarr_to_gbox((GBOX *)box, instants, count);
 		return true;
 	}
+<<<<<<< HEAD
+=======
+	if (instants[0]->valuetypid == type_oid(T_NPOINT)) 
+	{
+		tnpointinstarr_cont_to_gbox((GBOX *)box, instants, count);
+		return true;
+	}
+>>>>>>> Integration of npoint with MobilityDB: Part 3
 #endif
 	return false;
 }
@@ -1665,6 +1714,7 @@ same_bbox_tnumber_tnumber(PG_FUNCTION_ARGS)
 }
 	
 /*****************************************************************************/
+<<<<<<< HEAD
 =======
 /*****************************************************************************
  *
@@ -3339,3 +3389,5 @@ same_bbox_tnumber_tnumber(PG_FUNCTION_ARGS)
 	
 /*****************************************************************************/
 >>>>>>> Integration of npoint with MobilityDB: Part1
+=======
+>>>>>>> Integration of npoint with MobilityDB: Part 3

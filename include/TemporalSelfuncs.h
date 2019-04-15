@@ -32,7 +32,7 @@ typedef enum {
     DNCONST_DTCONST, /* Double Numeric Constant and Double Temporal Constant*/
 } BBoxBounds;
 
-/* Temporal Unit Instant */
+/* Temporal Instant */
 typedef struct
 {
     BBoxBounds bBoxBounds;
