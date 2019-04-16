@@ -10,7 +10,7 @@
  *
  *****************************************************************************/
 
-#include "TemporalPoint.h"
+#include "TemporalNPoint.h"
 
 /* Minimum accepted ratio of split */
 #define LIMIT_RATIO 0.3
@@ -256,6 +256,13 @@ gist_tpoint_consistent(PG_FUNCTION_ARGS)
 			PG_RETURN_BOOL(false);
 		if (!geo_to_gbox_internal(&query, PG_GETARG_GSERIALIZED_P(1)))
 			PG_RETURN_BOOL(false);										  
+	}
+	else if (subtype == type_oid(T_NPOINT))
+	{
+		npoint *np = PG_GETARG_NPOINT(1);
+		if (np == NULL)
+			PG_RETURN_BOOL(false);
+		npoint_to_gbox(&query, np);
 	}
 	else if (subtype == TIMESTAMPTZOID)
 	{
