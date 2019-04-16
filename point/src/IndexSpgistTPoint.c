@@ -584,9 +584,6 @@ spgist_tpoint_inner_consistent(PG_FUNCTION_ARGS)
 			geo_to_gbox_internal(&queries[i], 
 				(GSERIALIZED*)PG_DETOAST_DATUM(in->scankeys[i].sk_argument));
 		else if (subtype == type_oid(T_NPOINT))
-			/* We do not test the return value of the next function since
-			   if the result is false all dimensions of the box have been 
-			   initialized to +-infinity */
 			npoint_to_gbox(&queries[i], 
 				DatumGetNpoint(in->scankeys[i].sk_argument));
 		else if (subtype == TIMESTAMPTZOID)
