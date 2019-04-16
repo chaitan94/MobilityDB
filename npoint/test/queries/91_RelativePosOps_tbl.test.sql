@@ -34,6 +34,23 @@ INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
 SELECT '|&>', 'geomcollection', 'tnpoint', count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g |&> temp;
 
 INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '<<', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np << temp;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '>>', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np >> temp;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '&<', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &< temp;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '&>', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &> temp;
+
+SELECT '<<|', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np <<| temp;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '|>>', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np |>> temp;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '&<|', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &<| temp;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '|&>', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np |&> temp;
+
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
 SELECT '<<#', 'timestamptz', 'tnpoint', count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t <<# temp;
 INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
 SELECT '#>>', 'timestamptz', 'tnpoint', count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t #>> temp;
@@ -87,6 +104,23 @@ INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
 SELECT '&<|', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp &<| g;
 INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
 SELECT '|&>', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp |&> g;
+
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '<<', 'tnpoint', 'npoint', count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp << np;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '>>', 'tnpoint', 'npoint', count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp >> np;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '&<', 'tnpoint', 'npoint', count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp &< np;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '&>', 'tnpoint', 'npoint', count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp &> np;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '<<|', 'tnpoint', 'npoint', count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp <<| np;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '|>>', 'tnpoint', 'npoint', count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp |>> np;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '&<|', 'tnpoint', 'npoint', count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp &<| np;
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
+SELECT '|&>', 'tnpoint', 'npoint', count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp |&> np;
 
 INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
 SELECT '<<#', 'tnpoint', 'timestamptz', count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp <<# t;
@@ -171,6 +205,19 @@ SET gistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g &> 
 WHERE op = '&>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
 
 UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np << temp )
+WHERE op = '<<' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np >> temp )
+WHERE op = '>>' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &< temp )
+WHERE op = '&<' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &> temp )
+WHERE op = '&>' and leftarg = 'npoint' and rightarg = 'tnpoint';
+
+UPDATE test_georelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g <<| temp )
 WHERE op = '<<|' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
 UPDATE test_georelativeposops
@@ -182,6 +229,19 @@ WHERE op = '&<|' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
 UPDATE test_georelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g |&> temp )
 WHERE op = '|&>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np <<| temp )
+WHERE op = '<<|' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np |>> temp )
+WHERE op = '|>>' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &<| temp )
+WHERE op = '&<|' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np |&> temp )
+WHERE op = '|&>' and leftarg = 'npoint' and rightarg = 'tnpoint';
 
 UPDATE test_georelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t <<# temp )
@@ -262,6 +322,32 @@ WHERE op = '&<|' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
 UPDATE test_georelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp |&> g )
 WHERE op = '|&>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp << np )
+WHERE op = '<<' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp >> np )
+WHERE op = '>>' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp &< np )
+WHERE op = '&<' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp &> np )
+WHERE op = '&>' and leftarg = 'tnpoint' and rightarg = 'npoint';
+
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp <<| np )
+WHERE op = '<<|' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp |>> np )
+WHERE op = '|>>' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp &<| np )
+WHERE op = '&<|' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp |&> np )
+WHERE op = '|&>' and leftarg = 'tnpoint' and rightarg = 'npoint';
 
 UPDATE test_georelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp <<# t )
@@ -376,6 +462,19 @@ SET spgistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g &
 WHERE op = '&>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
 
 UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np << temp )
+WHERE op = '<<' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np >> temp )
+WHERE op = '>>' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &< temp )
+WHERE op = '&<' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &> temp )
+WHERE op = '&>' and leftarg = 'npoint' and rightarg = 'tnpoint';
+
+UPDATE test_georelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g <<| temp )
 WHERE op = '<<|' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
 UPDATE test_georelativeposops
@@ -388,6 +487,18 @@ UPDATE test_georelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g |&> temp )
 WHERE op = '|&>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
 
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np <<| temp )
+WHERE op = '<<|' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np |>> temp )
+WHERE op = '|>>' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &<| temp )
+WHERE op = '&<|' and leftarg = 'npoint' and rightarg = 'tnpoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np |&> temp )
+WHERE op = '|&>' and leftarg = 'npoint' and rightarg = 'tnpoint';
 
 UPDATE test_georelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t <<# temp )
@@ -468,6 +579,32 @@ WHERE op = '&<|' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
 UPDATE test_georelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp |&> g )
 WHERE op = '|&>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp << np )
+WHERE op = '<<' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp >> np )
+WHERE op = '>>' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp &< np )
+WHERE op = '&<' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp &> np )
+WHERE op = '&>' and leftarg = 'tnpoint' and rightarg = 'npoint';
+
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp <<| np )
+WHERE op = '<<|' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp |>> np )
+WHERE op = '|>>' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp &<| np )
+WHERE op = '&<|' and leftarg = 'tnpoint' and rightarg = 'npoint';
+UPDATE test_georelativeposops
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp |&> np )
+WHERE op = '|&>' and leftarg = 'tnpoint' and rightarg = 'npoint';
 
 UPDATE test_georelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp <<# t )

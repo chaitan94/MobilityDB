@@ -45,10 +45,12 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	-- strictly left
 	OPERATOR	1		<< (tnpoint, geometry),  
 	OPERATOR	1		<< (tnpoint, gbox),  
+	OPERATOR	1		<< (tnpoint, npoint),  
 	OPERATOR	1		<< (tnpoint, tnpoint),  
 	-- overlaps or left
 	OPERATOR	2		&< (tnpoint, geometry),  
 	OPERATOR	2		&< (tnpoint, gbox),  
+	OPERATOR	2		&< (tnpoint, npoint),  
 	OPERATOR	2		&< (tnpoint, tnpoint),  
 	-- overlaps	
 	OPERATOR	3		&& (tnpoint, timestamptz),  
@@ -57,14 +59,17 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	OPERATOR	3		&& (tnpoint, periodset),
 	OPERATOR	3		&& (tnpoint, geometry),  
 	OPERATOR	3		&& (tnpoint, gbox),  
+	OPERATOR	3		&& (tnpoint, npoint),  
 	OPERATOR	3		&& (tnpoint, tnpoint),  
 	-- overlaps or right
 	OPERATOR	4		&> (tnpoint, geometry),  
 	OPERATOR	4		&> (tnpoint, gbox),  
+	OPERATOR	4		&> (tnpoint, npoint),  
 	OPERATOR	4		&> (tnpoint, tnpoint),  
   	-- strictly right
 	OPERATOR	5		>> (tnpoint, geometry),  
 	OPERATOR	5		>> (tnpoint, gbox),  
+	OPERATOR	5		>> (tnpoint, npoint),  
 	OPERATOR	5		>> (tnpoint, tnpoint),  
   	-- same
 	OPERATOR	6		~= (tnpoint, timestamptz),  
@@ -73,6 +78,7 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	OPERATOR	6		~= (tnpoint, periodset),
 	OPERATOR	6		~= (tnpoint, geometry),  
 	OPERATOR	6		~= (tnpoint, gbox),  
+	OPERATOR	6		~= (tnpoint, npoint),  
 	OPERATOR	6		~= (tnpoint, tnpoint),  
 	-- contains
 	OPERATOR	7		@> (tnpoint, timestamptz),  
@@ -81,6 +87,7 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	OPERATOR	7		@> (tnpoint, periodset),
 	OPERATOR	7		@> (tnpoint, geometry),  
 	OPERATOR	7		@> (tnpoint, gbox),  
+	OPERATOR	7		@> (tnpoint, npoint),  
 	OPERATOR	7		@> (tnpoint, tnpoint),  
 	-- contained by
 	OPERATOR	8		<@ (tnpoint, timestamptz),  
@@ -89,26 +96,32 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	OPERATOR	8		<@ (tnpoint, periodset),
 	OPERATOR	8		<@ (tnpoint, geometry),  
 	OPERATOR	8		<@ (tnpoint, gbox),  
+	OPERATOR	8		<@ (tnpoint, npoint),  
 	OPERATOR	8		<@ (tnpoint, tnpoint),  
 	-- overlaps or below
 	OPERATOR	9		&<| (tnpoint, geometry),  
 	OPERATOR	9		&<| (tnpoint, gbox),  
+	OPERATOR	9		&<| (tnpoint, npoint),  
 	OPERATOR	9		&<| (tnpoint, tnpoint),  
 	-- strictly below
 	OPERATOR	10		<<| (tnpoint, geometry),  
 	OPERATOR	10		<<| (tnpoint, gbox),  
+	OPERATOR	10		<<| (tnpoint, npoint),  
 	OPERATOR	10		<<| (tnpoint, tnpoint),  
 	-- strictly above
 	OPERATOR	11		|>> (tnpoint, geometry),  
 	OPERATOR	11		|>> (tnpoint, gbox),  
+	OPERATOR	11		|>> (tnpoint, npoint),  
 	OPERATOR	11		|>> (tnpoint, tnpoint),  
 	-- overlaps or above
 	OPERATOR	12		|&> (tnpoint, geometry),  
 	OPERATOR	12		|&> (tnpoint, gbox),  
+	OPERATOR	12		|&> (tnpoint, npoint),  
 	OPERATOR	12		|&> (tnpoint, tnpoint),  
 	-- distance
 	OPERATOR	25		<-> (tnpoint, geometry) FOR ORDER BY pg_catalog.float_ops,
 --	OPERATOR	25		<-> (tnpoint, gbox) FOR ORDER BY pg_catalog.float_ops,
+--	OPERATOR	25		<-> (tnpoint, npoint) FOR ORDER BY pg_catalog.float_ops,
 --	OPERATOR	25		<-> (tnpoint, tnpoint) FOR ORDER BY pg_catalog.float_ops,
 	-- overlaps or before
 	OPERATOR	28		&<# (tnpoint, timestamptz),
@@ -116,6 +129,7 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	OPERATOR	28		&<# (tnpoint, period),
 	OPERATOR	28		&<# (tnpoint, periodset),
 	OPERATOR	28		&<# (tnpoint, gbox),
+	OPERATOR	28		&<# (tnpoint, npoint),
 	OPERATOR	28		&<# (tnpoint, tnpoint),
 	-- strictly before
 	OPERATOR	29		<<# (tnpoint, timestamptz),
@@ -123,6 +137,7 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	OPERATOR	29		<<# (tnpoint, period),
 	OPERATOR	29		<<# (tnpoint, periodset),
 	OPERATOR	29		<<# (tnpoint, gbox),
+	OPERATOR	29		<<# (tnpoint, npoint),
 	OPERATOR	29		<<# (tnpoint, tnpoint),
 	-- strictly after
 	OPERATOR	30		#>> (tnpoint, timestamptz),
@@ -130,6 +145,7 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	OPERATOR	30		#>> (tnpoint, period),
 	OPERATOR	30		#>> (tnpoint, periodset),
 	OPERATOR	30		#>> (tnpoint, gbox),
+	OPERATOR	30		#>> (tnpoint, npoint),
 	OPERATOR	30		#>> (tnpoint, tnpoint),
 	-- overlaps or after
 	OPERATOR	31		#&> (tnpoint, timestamptz),
@@ -137,6 +153,7 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	OPERATOR	31		#&> (tnpoint, period),
 	OPERATOR	31		#&> (tnpoint, periodset),
 	OPERATOR	31		#&> (tnpoint, gbox),
+	OPERATOR	31		#&> (tnpoint, npoint),
 	OPERATOR	31		#&> (tnpoint, tnpoint),
 	-- functions
 	FUNCTION	1	gist_tnpoint_consistent(internal, tnpoint, smallint, oid, internal),
@@ -159,10 +176,12 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	-- strictly left
 	OPERATOR	1		<< (tnpoint, geometry),  
 	OPERATOR	1		<< (tnpoint, gbox),  
+	OPERATOR	1		<< (tnpoint, npoint),  
 	OPERATOR	1		<< (tnpoint, tnpoint),  
 	-- overlaps or left
 	OPERATOR	2		&< (tnpoint, geometry),  
 	OPERATOR	2		&< (tnpoint, gbox),  
+	OPERATOR	2		&< (tnpoint, npoint),  
 	OPERATOR	2		&< (tnpoint, tnpoint),  
 	-- overlaps	
 	OPERATOR	3		&& (tnpoint, timestamptz),  
@@ -171,14 +190,17 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	OPERATOR	3		&& (tnpoint, periodset),
 	OPERATOR	3		&& (tnpoint, geometry),  
 	OPERATOR	3		&& (tnpoint, gbox),  
+	OPERATOR	3		&& (tnpoint, npoint),  
 	OPERATOR	3		&& (tnpoint, tnpoint),  
 	-- overlaps or right
 	OPERATOR	4		&> (tnpoint, geometry),  
 	OPERATOR	4		&> (tnpoint, gbox),  
+	OPERATOR	4		&> (tnpoint, npoint),  
 	OPERATOR	4		&> (tnpoint, tnpoint),  
   	-- strictly right
 	OPERATOR	5		>> (tnpoint, geometry),  
 	OPERATOR	5		>> (tnpoint, gbox),  
+	OPERATOR	5		>> (tnpoint, npoint),  
 	OPERATOR	5		>> (tnpoint, tnpoint),  
   	-- same
 	OPERATOR	6		~= (tnpoint, timestamptz),  
@@ -187,6 +209,7 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	OPERATOR	6		~= (tnpoint, periodset),
 	OPERATOR	6		~= (tnpoint, geometry),  
 	OPERATOR	6		~= (tnpoint, gbox),  
+	OPERATOR	6		~= (tnpoint, npoint),  
 	OPERATOR	6		~= (tnpoint, tnpoint),  
 	-- contains
 	OPERATOR	7		@> (tnpoint, timestamptz),  
@@ -195,6 +218,7 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	OPERATOR	7		@> (tnpoint, periodset),
 	OPERATOR	7		@> (tnpoint, geometry),  
 	OPERATOR	7		@> (tnpoint, gbox),  
+	OPERATOR	7		@> (tnpoint, npoint),  
 	OPERATOR	7		@> (tnpoint, tnpoint),  
 	-- contained by
 	OPERATOR	8		<@ (tnpoint, timestamptz),  
@@ -203,22 +227,27 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	OPERATOR	8		<@ (tnpoint, periodset),
 	OPERATOR	8		<@ (tnpoint, geometry),  
 	OPERATOR	8		<@ (tnpoint, gbox),  
+	OPERATOR	8		<@ (tnpoint, npoint),  
 	OPERATOR	8		<@ (tnpoint, tnpoint),  
 	-- overlaps or below
 	OPERATOR	9		&<| (tnpoint, geometry),  
 	OPERATOR	9		&<| (tnpoint, gbox),  
+	OPERATOR	9		&<| (tnpoint, npoint),  
 	OPERATOR	9		&<| (tnpoint, tnpoint),  
 	-- strictly below
 	OPERATOR	10		<<| (tnpoint, geometry),  
 	OPERATOR	10		<<| (tnpoint, gbox),  
+	OPERATOR	10		<<| (tnpoint, npoint),  
 	OPERATOR	10		<<| (tnpoint, tnpoint),  
 	-- strictly above
 	OPERATOR	11		|>> (tnpoint, geometry),  
 	OPERATOR	11		|>> (tnpoint, gbox),  
+	OPERATOR	11		|>> (tnpoint, npoint),  
 	OPERATOR	11		|>> (tnpoint, tnpoint),  
 	-- overlaps or above
 	OPERATOR	12		|&> (tnpoint, geometry),  
 	OPERATOR	12		|&> (tnpoint, gbox),  
+	OPERATOR	12		|&> (tnpoint, npoint),  
 	OPERATOR	12		|&> (tnpoint, tnpoint),  
 	-- overlaps or before
 	OPERATOR	28		&<# (tnpoint, timestamptz),
@@ -226,6 +255,7 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	OPERATOR	28		&<# (tnpoint, period),
 	OPERATOR	28		&<# (tnpoint, periodset),
 	OPERATOR	28		&<# (tnpoint, gbox),
+	OPERATOR	28		&<# (tnpoint, npoint),
 	OPERATOR	28		&<# (tnpoint, tnpoint),
 	-- strictly before
 	OPERATOR	29		<<# (tnpoint, timestamptz),
@@ -233,6 +263,7 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	OPERATOR	29		<<# (tnpoint, period),
 	OPERATOR	29		<<# (tnpoint, periodset),
 	OPERATOR	29		<<# (tnpoint, gbox),
+	OPERATOR	29		<<# (tnpoint, npoint),
 	OPERATOR	29		<<# (tnpoint, tnpoint),
 	-- strictly after
 	OPERATOR	30		#>> (tnpoint, timestamptz),
@@ -240,6 +271,7 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	OPERATOR	30		#>> (tnpoint, period),
 	OPERATOR	30		#>> (tnpoint, periodset),
 	OPERATOR	30		#>> (tnpoint, gbox),
+	OPERATOR	30		#>> (tnpoint, npoint),
 	OPERATOR	30		#>> (tnpoint, tnpoint),
 	-- overlaps or after
 	OPERATOR	31		#&> (tnpoint, timestamptz),
@@ -247,6 +279,7 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	OPERATOR	31		#&> (tnpoint, period),
 	OPERATOR	31		#&> (tnpoint, periodset),
 	OPERATOR	31		#&> (tnpoint, gbox),
+	OPERATOR	31		#&> (tnpoint, npoint),
 	OPERATOR	31		#&> (tnpoint, tnpoint),
 	-- functions
 	FUNCTION	1	spgist_tpoint_config(internal, internal),

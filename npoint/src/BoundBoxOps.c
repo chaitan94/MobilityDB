@@ -26,6 +26,25 @@
  *****************************************************************************/
 
 void
+npoint_to_gbox(GBOX *box, npoint *np)
+{
+	double infinity = get_float8_infinity();
+    Datum geom = npoint_as_geom_internal(DatumGetNpoint(np));
+	GBOX gbox;
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	if (gserialized_get_gbox_p(gs, &gbox) == LW_FAILURE)
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("Error while computing the bounding box of the temporal network point")));
+
+    memcpy(box, &gbox, sizeof(GBOX));
+    box->zmin = box->mmin = -infinity;
+    box->zmax = box->mmax = infinity;
+    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+    pfree(DatumGetPointer(geom));
+    return;
+}
+
+void
 tnpointinst_make_gbox(GBOX *box, Datum value, TimestampTz t)
 {
 	double infinity = get_float8_infinity();
@@ -127,6 +146,218 @@ tnpoint_to_gbox(PG_FUNCTION_ARGS)
 	temporal_bbox(result, temp);
     PG_FREE_IF_COPY(temp, 0);
     PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************
+ * overlaps
+ *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(overlaps_bbox_npoint_tnpoint);
+
+PGDLLEXPORT Datum
+overlaps_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+    Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	GBOX box1, box2;
+	if (!geo_to_gbox_internal(&box1, gs))
+	{
+		POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+		pfree(DatumGetPointer(geom));
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();		
+	}
+	temporal_bbox(&box2, temp);
+	bool result = overlaps_gbox_gbox_internal(&box1, &box2);
+    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+    pfree(DatumGetPointer(geom));
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(overlaps_bbox_tnpoint_npoint);
+
+PGDLLEXPORT Datum
+overlaps_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	npoint *np = PG_GETARG_NPOINT(1);
+    Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	GBOX box1, box2;
+	temporal_bbox(&box1, temp);
+	if (!geo_to_gbox_internal(&box2, gs))
+	{
+		POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+		pfree(DatumGetPointer(geom));
+		PG_FREE_IF_COPY(temp, 0);
+		PG_RETURN_NULL();		
+	}
+	bool result = overlaps_gbox_gbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************
+ * contains
+ *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(contains_bbox_npoint_tnpoint);
+
+PGDLLEXPORT Datum
+contains_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+    Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	GBOX box1, box2;
+	if (!geo_to_gbox_internal(&box1, gs))
+	{
+		POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+		pfree(DatumGetPointer(geom));
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();		
+	}
+	temporal_bbox(&box2, temp);
+	bool result = contains_gbox_gbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(contains_bbox_tnpoint_npoint);
+
+PGDLLEXPORT Datum
+contains_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	npoint *np = PG_GETARG_NPOINT(1);
+    Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	GBOX box1, box2;
+	if (!geo_to_gbox_internal(&box2, gs))
+	{
+		POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+		pfree(DatumGetPointer(geom));
+		PG_FREE_IF_COPY(temp, 0);
+		PG_RETURN_NULL();		
+	}
+	temporal_bbox(&box1, temp);
+	bool result = contains_gbox_gbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************
+ * contained
+ *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(contained_bbox_npoint_tnpoint);
+
+PGDLLEXPORT Datum
+contained_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+    Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	GBOX box1, box2;
+	if (!geo_to_gbox_internal(&box1, gs))
+	{
+		POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+		pfree(DatumGetPointer(geom));
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();		
+	}
+	temporal_bbox(&box2, temp);
+	bool result = contained_gbox_gbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(contained_bbox_tnpoint_npoint);
+
+PGDLLEXPORT Datum
+contained_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	npoint *np = PG_GETARG_NPOINT(1);
+    Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	GBOX box1, box2;
+	if (!geo_to_gbox_internal(&box2, gs))
+	{
+		POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+		pfree(DatumGetPointer(geom));
+		PG_FREE_IF_COPY(temp, 0);
+		PG_RETURN_NULL();		
+	}
+	temporal_bbox(&box1, temp);
+	bool result = contained_gbox_gbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************
+ * same
+ *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(same_bbox_npoint_tnpoint);
+
+PGDLLEXPORT Datum
+same_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+    Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	GBOX box1, box2;
+	if (!geo_to_gbox_internal(&box1, gs))
+	{
+		POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+		pfree(DatumGetPointer(geom));
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();		
+	}
+	temporal_bbox(&box2, temp);
+	bool result = same_gbox_gbox_internal(&box1, &box2);
+    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+    pfree(DatumGetPointer(geom));
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(same_bbox_tnpoint_npoint);
+
+PGDLLEXPORT Datum
+same_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	npoint *np = PG_GETARG_NPOINT(1);
+    Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	GBOX box1, box2;
+	if (!geo_to_gbox_internal(&box2, gs))
+	{
+		POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+		pfree(DatumGetPointer(geom));
+		PG_FREE_IF_COPY(temp, 0);
+		PG_RETURN_NULL();		
+	}
+	temporal_bbox(&box1, temp);
+	bool result = same_gbox_gbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_BOOL(result);
 }
 
 /*****************************************************************************/
