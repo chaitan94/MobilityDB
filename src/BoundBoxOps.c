@@ -366,6 +366,11 @@ temporals_make_bbox(void *box, TemporalSeq **sequences, int count)
 		tpointseqarr_to_gbox((GBOX *)box, sequences, count);
 		return true;
 	}
+	if (sequences[0]->valuetypid == type_oid(T_NPOINT)) 
+	{
+		tnpointseqarr_to_gbox((GBOX *)box, sequences, count);
+		return true;
+	}
 #endif
 	return false;
 }
