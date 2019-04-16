@@ -1,505 +1,317 @@
-﻿/*****************************************************************************/
+﻿-------------------------------------------------------------------------------
 
-DROP INDEX IF EXISTS tbl_tnpoint_gist_idx;
-DROP INDEX IF EXISTS tbl_tnpoint_spgist_idx;
+SELECT geometry 'Point(1 1)' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT geometry 'Point(1 1)' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT geometry 'Point(1 1)' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT geometry 'Point(1 1)' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-/*****************************************************************************/
+SELECT timestamp '2000-01-01' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestamp '2000-01-01' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestamp '2000-01-01' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestamp '2000-01-01' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-DROP TABLE if exists test_geoboundboxops;
-CREATE TABLE test_geoboundboxops(
-	op char(3), 
-	leftarg text, 
-	rightarg text, 
-	noidx bigint,
-	gistidx bigint,
-	spgistidx bigint );
+SELECT timestampset '{2000-01-01, 2000-01-03}' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestampset '{2000-01-01, 2000-01-03}' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestampset '{2000-01-01, 2000-01-03}' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestampset '{2000-01-01, 2000-01-03}' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-/*****************************************************************************/
--- <type> op tnpoint
+SELECT period '[2000-01-01,2000-01-02]' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT period '[2000-01-01,2000-01-02]' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT period '[2000-01-01,2000-01-02]' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT period '[2000-01-01,2000-01-02]' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'geomcollection', 'tnpoint', count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g && temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'geomcollection', 'tnpoint', count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g @> temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'geomcollection', 'tnpoint', count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g <@ temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'geomcollection', 'tnpoint', count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g ~= temp;
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'timestamptz', 'tnpoint', count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t && temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'timestamptz', 'tnpoint', count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t @> temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'timestamptz', 'tnpoint', count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t <@ temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'timestamptz', 'tnpoint', count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t ~= temp;
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'timestampset', 'tnpoint', count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts && temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'timestampset', 'tnpoint', count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts @> temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'timestampset', 'tnpoint', count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts <@ temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'timestampset', 'tnpoint', count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts ~= temp;
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && geometry 'Point(1 1)';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && geometry 'Point(1 1)';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && geometry 'Point(1 1)';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && geometry 'Point(1 1)';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'period', 'tnpoint', count(*) FROM tbl_period, tbl_tnpoint WHERE p && temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'period', 'tnpoint', count(*) FROM tbl_period, tbl_tnpoint WHERE p @> temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'period', 'tnpoint', count(*) FROM tbl_period, tbl_tnpoint WHERE p <@ temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'period', 'tnpoint', count(*) FROM tbl_period, tbl_tnpoint WHERE p ~= temp;
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && timestamp '2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && timestamp '2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && timestamp '2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && timestamp '2000-01-01';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'periodset', 'tnpoint', count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps && temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'periodset', 'tnpoint', count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps @> temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'periodset', 'tnpoint', count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps <@ temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'periodset', 'tnpoint', count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps ~= temp;
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && timestampset '{2000-01-01, 2000-01-03}';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'gbox', 'tnpoint', count(*) FROM tbl_gbox, tbl_tnpoint WHERE b && temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'gbox', 'tnpoint', count(*) FROM tbl_gbox, tbl_tnpoint WHERE b @> temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'gbox', 'tnpoint', count(*) FROM tbl_gbox, tbl_tnpoint WHERE b <@ temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'gbox', 'tnpoint', count(*) FROM tbl_gbox, tbl_tnpoint WHERE b ~= temp;
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && period '[2000-01-01,2000-01-02]';
 
-/*****************************************************************************/
---  tnpoint op <type>
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp && g;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp @> g;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp <@ g;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp ~= g;
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'tnpoint', 'timestamptz', count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp && t;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'tnpoint', 'timestamptz', count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp @> t;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'tnpoint', 'timestamptz', count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp <@ t;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'tnpoint', 'timestamptz', count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp ~= t;
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'tnpoint', 'timestampset', count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp && ts;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'tnpoint', 'timestampset', count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp @> ts;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'tnpoint', 'timestampset', count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp <@ ts;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'tnpoint', 'timestampset', count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp ~= ts;
+-------------------------------------------------------------------------------
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'tnpoint', 'period', count(*) FROM tbl_tnpoint, tbl_period WHERE temp && p;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'tnpoint', 'period', count(*) FROM tbl_tnpoint, tbl_period WHERE temp @> p;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'tnpoint', 'period', count(*) FROM tbl_tnpoint, tbl_period WHERE temp <@ p;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'tnpoint', 'period', count(*) FROM tbl_tnpoint, tbl_period WHERE temp ~= p;
+SELECT geometry 'Point(1 1)' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT geometry 'Point(1 1)' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT geometry 'Point(1 1)' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT geometry 'Point(1 1)' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'tnpoint', 'periodset', count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp && ps;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'tnpoint', 'periodset', count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp @> ps;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'tnpoint', 'periodset', count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp <@ ps;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'tnpoint', 'periodset', count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp ~= ps;
+SELECT timestamp '2000-01-01' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestamp '2000-01-01' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestamp '2000-01-01' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestamp '2000-01-01' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'tnpoint', 'gbox', count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp && b;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'tnpoint', 'gbox', count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp @> b;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'tnpoint', 'gbox', count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp <@ b;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'tnpoint', 'gbox', count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp ~= b;
+SELECT timestampset '{2000-01-01, 2000-01-03}' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestampset '{2000-01-01, 2000-01-03}' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestampset '{2000-01-01, 2000-01-03}' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestampset '{2000-01-01, 2000-01-03}' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'tnpoint', 'tnpoint', count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp && t2.temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'tnpoint', 'tnpoint', count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp @> t2.temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'tnpoint', 'tnpoint', count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp <@ t2.temp;
-INSERT INTO test_geoboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'tnpoint', 'tnpoint', count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp ~= t2.temp;
+SELECT period '[2000-01-01,2000-01-02]' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT period '[2000-01-01,2000-01-02]' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT period '[2000-01-01,2000-01-02]' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT period '[2000-01-01,2000-01-02]' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-/*****************************************************************************/
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-CREATE INDEX tbl_tnpoint_gist_idx ON tbl_tnpoint USING GIST(temp);
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-/*****************************************************************************/
--- <type> op tnpoint
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> geometry 'Point(1 1)';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> geometry 'Point(1 1)';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> geometry 'Point(1 1)';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> geometry 'Point(1 1)';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g && temp )
-WHERE op = '&&' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g @> temp )
-WHERE op = '@>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g <@ temp )
-WHERE op = '<@' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g ~= temp )
-WHERE op = '~=' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> timestamp '2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> timestamp '2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> timestamp '2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> timestamp '2000-01-01';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t && temp )
-WHERE op = '&&' and leftarg = 'timestamptz' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t @> temp )
-WHERE op = '@>' and leftarg = 'timestamptz' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t <@ temp )
-WHERE op = '<@' and leftarg = 'timestamptz' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t ~= temp )
-WHERE op = '~=' and leftarg = 'timestamptz' and rightarg = 'tnpoint';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> timestampset '{2000-01-01, 2000-01-03}';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts && temp )
-WHERE op = '&&' and leftarg = 'timestampset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts @> temp )
-WHERE op = '@>' and leftarg = 'timestampset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts <@ temp )
-WHERE op = '<@' and leftarg = 'timestampset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts ~= temp )
-WHERE op = '~=' and leftarg = 'timestampset' and rightarg = 'tnpoint';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> period '[2000-01-01,2000-01-02]';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_period, tbl_tnpoint WHERE p && temp )
-WHERE op = '&&' and leftarg = 'period' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_period, tbl_tnpoint WHERE p @> temp )
-WHERE op = '@>' and leftarg = 'period' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_period, tbl_tnpoint WHERE p <@ temp )
-WHERE op = '<@' and leftarg = 'period' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_period, tbl_tnpoint WHERE p ~= temp )
-WHERE op = '~=' and leftarg = 'period' and rightarg = 'tnpoint';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps && temp )
-WHERE op = '&&' and leftarg = 'periodset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps @> temp )
-WHERE op = '@>' and leftarg = 'periodset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps <@ temp )
-WHERE op = '<@' and leftarg = 'periodset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps ~= temp )
-WHERE op = '~=' and leftarg = 'periodset' and rightarg = 'tnpoint';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b && temp )
-WHERE op = '&&' and leftarg = 'gbox' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b @> temp )
-WHERE op = '@>' and leftarg = 'gbox' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b <@ temp )
-WHERE op = '<@' and leftarg = 'gbox' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b ~= temp )
-WHERE op = '~=' and leftarg = 'gbox' and rightarg = 'tnpoint';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-/*****************************************************************************/
--- tnpoint op <type>
+-------------------------------------------------------------------------------
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp && g )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp @> g )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp <@ g )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp ~= g )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+SELECT geometry 'Point(1 1)' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT geometry 'Point(1 1)' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT geometry 'Point(1 1)' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT geometry 'Point(1 1)' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp && t )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'timestamptz';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp @> t )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'timestamptz';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp <@ t )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'timestamptz';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp ~= t )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'timestamptz';
+SELECT timestamp '2000-01-01' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestamp '2000-01-01' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestamp '2000-01-01' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestamp '2000-01-01' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp && ts )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'timestampset';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp @> ts )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'timestampset';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp <@ ts )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'timestampset';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp ~= ts )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'timestampset';
+SELECT timestampset '{2000-01-01, 2000-01-03}' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestampset '{2000-01-01, 2000-01-03}' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestampset '{2000-01-01, 2000-01-03}' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestampset '{2000-01-01, 2000-01-03}' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_period WHERE temp && p )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'period';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_period WHERE temp @> p )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'period';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_period WHERE temp <@ p )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'period';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_period WHERE temp ~= p )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'period';
+SELECT period '[2000-01-01,2000-01-02]' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT period '[2000-01-01,2000-01-02]' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT period '[2000-01-01,2000-01-02]' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT period '[2000-01-01,2000-01-02]' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp && ps )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'periodset';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp @> ps )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'periodset';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp <@ ps )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'periodset';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp ~= ps )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'periodset';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp && b )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'gbox';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp @> b )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'gbox';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp <@ b )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'gbox';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp ~= b )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'gbox';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp && t2.temp )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp @> t2.temp )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp <@ t2.temp )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp ~= t2.temp )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ geometry 'Point(1 1)';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ geometry 'Point(1 1)';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ geometry 'Point(1 1)';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ geometry 'Point(1 1)';
 
-/*****************************************************************************/
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ timestamp '2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ timestamp '2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ timestamp '2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ timestamp '2000-01-01';
 
-DROP INDEX IF EXISTS tbl_tnpoint_gist_idx;
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ timestampset '{2000-01-01, 2000-01-03}';
 
-CREATE INDEX tbl_tnpoint_spgist_idx ON tbl_tnpoint USING SPGIST(temp);
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ period '[2000-01-01,2000-01-02]';
 
-/*****************************************************************************/
--- <type> op tnpoint
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g && temp )
-WHERE op = '&&' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g @> temp )
-WHERE op = '@>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g <@ temp )
-WHERE op = '<@' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g ~= temp )
-WHERE op = '~=' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t && temp )
-WHERE op = '&&' and leftarg = 'timestamptz' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t @> temp )
-WHERE op = '@>' and leftarg = 'timestamptz' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t <@ temp )
-WHERE op = '<@' and leftarg = 'timestamptz' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t ~= temp )
-WHERE op = '~=' and leftarg = 'timestamptz' and rightarg = 'tnpoint';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts && temp )
-WHERE op = '&&' and leftarg = 'timestampset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts @> temp )
-WHERE op = '@>' and leftarg = 'timestampset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts <@ temp )
-WHERE op = '<@' and leftarg = 'timestampset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_timestampset, tbl_tnpoint WHERE ts ~= temp )
-WHERE op = '~=' and leftarg = 'timestampset' and rightarg = 'tnpoint';
+-------------------------------------------------------------------------------
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_period, tbl_tnpoint WHERE p && temp )
-WHERE op = '&&' and leftarg = 'period' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_period, tbl_tnpoint WHERE p @> temp )
-WHERE op = '@>' and leftarg = 'period' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_period, tbl_tnpoint WHERE p <@ temp )
-WHERE op = '<@' and leftarg = 'period' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_period, tbl_tnpoint WHERE p ~= temp )
-WHERE op = '~=' and leftarg = 'period' and rightarg = 'tnpoint';
+SELECT geometry 'Point(1 1)' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT geometry 'Point(1 1)' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT geometry 'Point(1 1)' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT geometry 'Point(1 1)' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps && temp )
-WHERE op = '&&' and leftarg = 'periodset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps @> temp )
-WHERE op = '@>' and leftarg = 'periodset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps <@ temp )
-WHERE op = '<@' and leftarg = 'periodset' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps ~= temp )
-WHERE op = '~=' and leftarg = 'periodset' and rightarg = 'tnpoint';
+SELECT timestamp '2000-01-01' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestamp '2000-01-01' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestamp '2000-01-01' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestamp '2000-01-01' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b && temp )
-WHERE op = '&&' and leftarg = 'gbox' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b @> temp )
-WHERE op = '@>' and leftarg = 'gbox' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b <@ temp )
-WHERE op = '<@' and leftarg = 'gbox' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b ~= temp )
-WHERE op = '~=' and leftarg = 'gbox' and rightarg = 'tnpoint';
+SELECT timestampset '{2000-01-01, 2000-01-03}' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestampset '{2000-01-01, 2000-01-03}' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestampset '{2000-01-01, 2000-01-03}' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestampset '{2000-01-01, 2000-01-03}' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-/*****************************************************************************/
--- tnpoint op <type>
+SELECT period '[2000-01-01,2000-01-02]' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT period '[2000-01-01,2000-01-02]' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT period '[2000-01-01,2000-01-02]' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT period '[2000-01-01,2000-01-02]' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp && g )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp @> g )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp <@ g )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp ~= g )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp && t )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'timestamptz';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp @> t )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'timestamptz';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp <@ t )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'timestamptz';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp ~= t )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'timestamptz';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT gbox 'GBOX((1.0, 2.0), (1.0, 2.0))' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp && ts )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'timestampset';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp @> ts )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'timestampset';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp <@ ts )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'timestampset';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestampset WHERE temp ~= ts )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'timestampset';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= geometry 'Point(1 1)';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= geometry 'Point(1 1)';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= geometry 'Point(1 1)';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= geometry 'Point(1 1)';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_period WHERE temp && p )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'period';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_period WHERE temp @> p )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'period';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_period WHERE temp <@ p )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'period';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_period WHERE temp ~= p )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'period';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= timestamp '2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= timestamp '2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= timestamp '2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= timestamp '2000-01-01';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp && ps )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'periodset';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp @> ps )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'periodset';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp <@ ps )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'periodset';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp ~= ps )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'periodset';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= timestampset '{2000-01-01, 2000-01-03}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= timestampset '{2000-01-01, 2000-01-03}';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp && b )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'gbox';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp @> b )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'gbox';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp <@ b )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'gbox';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp ~= b )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'gbox';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= period '[2000-01-01,2000-01-02]';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= period '[2000-01-01,2000-01-02]';
 
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp && t2.temp )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp @> t2.temp )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp <@ t2.temp )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
-UPDATE test_geoboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp ~= t2.temp )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}';
 
-/*****************************************************************************/
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= gbox 'GBOX((1.0, 2.0), (1.0, 2.0))';
 
-SELECT * FROM test_geoboundboxops
-WHERE noidx <> gistidx or noidx <> spgistidx or gistidx <> spgistidx; 
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------

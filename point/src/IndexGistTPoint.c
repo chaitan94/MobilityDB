@@ -98,14 +98,16 @@ index_leaf_consistent_gbox(GBOX *key, GBOX *query, StrategyNumber strategy)
 				(key->mmax <= query->mmin);
 			break;
 		case RTOverBeforeStrategyNumber:
-			retval = overbefore_gbox_gbox_internal(key, query); 
+			retval = overbefore_gbox_gbox_internal(key, query);
+				/* (key->mmax < query->mmax); */
 			break;
 		case RTAfterStrategyNumber:
 			retval = /* after_gbox_gbox_internal(key, query)*/
 				(key->mmin >= query->mmax); 
 			break;
 		case RTOverAfterStrategyNumber:
-			retval = overafter_gbox_gbox_internal(key, query); 
+			retval = overafter_gbox_gbox_internal(key, query);
+				/* (key->mmin >= query->mmin); */
 			break;			
 		default:
 			elog(ERROR, "unrecognized strategy number: %d", strategy);
@@ -178,13 +180,13 @@ gist_internal_consistent_gbox(GBOX *key, GBOX *query, StrategyNumber strategy)
 			retval = !overafter_gbox_gbox_internal(key, query);
 			break;
 		case RTOverBeforeStrategyNumber:
-			retval = !after_gbox_gbox_internal(key, query);
+			retval =  !after_gbox_gbox_internal(key, query);
 			break;
 		case RTAfterStrategyNumber:
 			retval = !overbefore_gbox_gbox_internal(key, query);
 			break;
 		case RTOverAfterStrategyNumber:
-			retval = !before_gbox_gbox_internal(key, query);
+			retval =  !before_gbox_gbox_internal(key, query);
 			break;
 		default:
 			elog(ERROR, "unrecognized strategy number: %d", strategy);
