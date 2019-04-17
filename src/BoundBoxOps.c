@@ -1,7 +1,10 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 /*****************************************************************************
  *
  * BoundingBoxOps.c
@@ -28,9 +31,13 @@
 #ifdef WITH_POSTGIS
 #include "TemporalPoint.h"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 #include "TemporalNPoint.h"
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+#include "TemporalNPoint.h"
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 #endif
 
 /*****************************************************************************
@@ -186,17 +193,23 @@ temporal_bbox_size(Oid valuetypid)
 #ifdef WITH_POSTGIS
 	if (valuetypid == type_oid(T_GEOGRAPHY) || 
 <<<<<<< HEAD
+<<<<<<< HEAD
 		valuetypid == type_oid(T_GEOMETRY)) 
 		return sizeof(GBOX);
 #endif
 	/* Types without bounding box, for example, tdoubleN */
 =======
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 		valuetypid == type_oid(T_GEOMETRY) || 
 		valuetypid == type_oid(T_NPOINT)) 
 		return sizeof(GBOX);
 #endif
 	/* Types without bounding box, for example, doubleN */
+<<<<<<< HEAD
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 	return 0;
 } 
 
@@ -231,13 +244,19 @@ temporalinst_make_bbox(void *box, Datum value, TimestampTz t, Oid valuetypid)
 		return true;
 	}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 	else if (valuetypid == type_oid(T_NPOINT))
 	{
 		tnpointinst_make_gbox((GBOX *)box, value, t);
 		return true;
 	}
+<<<<<<< HEAD
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 #endif
 	/* Types without bounding box, for example, tdoubleN* */
 	return false;
@@ -289,24 +308,35 @@ temporali_make_bbox(void *box, TemporalInst **instants, int count)
 	}
 #ifdef WITH_POSTGIS
 <<<<<<< HEAD
+<<<<<<< HEAD
 	if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
 		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
 =======
 	if (instants[0]->valuetypid == type_oid(T_GEOMETRY) || 
 		instants[0]->valuetypid == type_oid(T_GEOGRAPHY)) 
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+	if (instants[0]->valuetypid == type_oid(T_GEOMETRY) || 
+		instants[0]->valuetypid == type_oid(T_GEOGRAPHY)) 
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 	{
 		tpointinstarr_to_gbox((GBOX *)box, instants, count);
 		return true;
 	}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 	if (instants[0]->valuetypid == type_oid(T_NPOINT)) 
 	{
 		tnpointinstarr_disc_to_gbox((GBOX *)box, instants, count);
 		return true;
 	}
+<<<<<<< HEAD
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 #endif
 	return false;
 }
@@ -330,24 +360,35 @@ temporalseq_make_bbox(void *box, TemporalInst **instants, int count,
 	}
 #ifdef WITH_POSTGIS
 <<<<<<< HEAD
+<<<<<<< HEAD
 	if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
 		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
 =======
 	if (instants[0]->valuetypid == type_oid(T_GEOMETRY) || 
 		instants[0]->valuetypid == type_oid(T_GEOGRAPHY))
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+	if (instants[0]->valuetypid == type_oid(T_GEOMETRY) || 
+		instants[0]->valuetypid == type_oid(T_GEOGRAPHY))
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 	{
 		tpointinstarr_to_gbox((GBOX *)box, instants, count);
 		return true;
 	}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 	if (instants[0]->valuetypid == type_oid(T_NPOINT)) 
 	{
 		tnpointinstarr_cont_to_gbox((GBOX *)box, instants, count);
 		return true;
 	}
+<<<<<<< HEAD
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 #endif
 	return false;
 }
@@ -1719,6 +1760,7 @@ same_bbox_tnumber_tnumber(PG_FUNCTION_ARGS)
 }
 	
 /*****************************************************************************/
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 /*****************************************************************************
@@ -3396,3 +3438,5 @@ same_bbox_tnumber_tnumber(PG_FUNCTION_ARGS)
 >>>>>>> Integration of npoint with MobilityDB: Part1
 =======
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31

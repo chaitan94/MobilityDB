@@ -1,4 +1,4 @@
-﻿﻿-- CREATE FUNCTION testSpatialRelsM() RETURNS void AS $$
+-- CREATE FUNCTION testSpatialRelsM() RETURNS void AS $$
 -- BEGIN
 -------------------------------------------------------------------------------
 -- contains
@@ -200,4 +200,3 @@ SELECT count(*) FROM tbl_tgeompoint, tbl_geompoint
 -- SELECT count(*)pg_afterend_pid()
 
 -- SELECT count(*)testTopologicalOps() 
-

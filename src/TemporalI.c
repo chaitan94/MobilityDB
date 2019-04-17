@@ -1,7 +1,10 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> Integration of npoint with MobilityDB: Part 4
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 /*****************************************************************************
  *
  * TemporalI.c
@@ -1590,6 +1593,7 @@ temporali_hash(TemporalI *ti)
 }
 
 /*****************************************************************************/
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 /*****************************************************************************
@@ -3183,3 +3187,5 @@ temporali_hash(TemporalI *ti)
 >>>>>>> Cast between geometry points to/from network points: Part 2
 =======
 >>>>>>> Integration of npoint with MobilityDB: Part 4
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31

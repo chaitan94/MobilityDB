@@ -1,7 +1,10 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 /*****************************************************************************
  *
  * TemporalSeq.c
@@ -19,9 +22,13 @@
 #ifdef WITH_POSTGIS
 #include "TemporalPoint.h"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 #include "TemporalNPoint.h"
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+#include "TemporalNPoint.h"
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 #endif
 
 /*****************************************************************************
@@ -265,7 +272,10 @@ double4_collinear(double4 *x1, double4 *x2, double4 *x3,
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 static bool
 npoint_collinear(Datum value1, Datum value2, Datum value3,
 	TimestampTz t1, TimestampTz t2, TimestampTz t3)
@@ -275,7 +285,10 @@ npoint_collinear(Datum value1, Datum value2, Datum value3,
 	npoint *np3 = DatumGetNpoint(value3);
 	return float_collinear(np1->pos, np2->pos, np3->pos, t1, t2, t3);
 }
+<<<<<<< HEAD
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 #endif
 
 static bool
@@ -302,10 +315,15 @@ datum_collinear(Oid valuetypid, Datum value1, Datum value2, Datum value3,
 		return double4_collinear(DatumGetDouble4P(value1), DatumGetDouble4P(value2), 
 			DatumGetDouble4P(value3), t1, t2, t3);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 	if (valuetypid == type_oid(T_NPOINT))
 		return npoint_collinear(value1, value2, value3, t1, t2, t3);
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+	if (valuetypid == type_oid(T_NPOINT))
+		return npoint_collinear(value1, value2, value3, t1, t2, t3);
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 #endif
 	return false;
 }
@@ -353,7 +371,10 @@ temporalinst_collinear(TemporalInst *inst1, TemporalInst *inst2,
 		return double4_collinear(x1, x2, x3, inst1->t, inst2->t, inst3->t);
 	}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 	if (valuetypid == type_oid(T_NPOINT))
 	{
 		npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
@@ -362,7 +383,10 @@ temporalinst_collinear(TemporalInst *inst1, TemporalInst *inst2,
 		return float_collinear(np1->pos, np2->pos, np3->pos, 
 			inst1->t, inst2->t, inst3->t);
 	}
+<<<<<<< HEAD
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 #endif
 	return false;
 }
@@ -1184,10 +1208,15 @@ temporalseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 		return result;
 	}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 	if (start1->valuetypid == type_oid(T_NPOINT))
 		return tnpointseq_intersect_at_timestamp(start1, end1, start2, end2, false, false, inter);
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+	if (start1->valuetypid == type_oid(T_NPOINT))
+		return tnpointseq_intersect_at_timestamp(start1, end1, start2, end2, false, false, inter);
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 #endif
 	ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 		errmsg("Operation not supported")));
@@ -1840,7 +1869,10 @@ tempcontseq_timestamp_at_value(TemporalInst *inst1, TemporalInst *inst2,
 		pfree(DatumGetPointer(value2));
 	}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 	else if (inst1->valuetypid == type_oid(T_NPOINT))
 	{
 		npoint *np1 = DatumGetNpoint(value1);
@@ -1853,7 +1885,10 @@ tempcontseq_timestamp_at_value(TemporalInst *inst1, TemporalInst *inst2,
 
 		fraction = (np->pos - np1->pos) / (np2->pos - np1->pos);
 	}
+<<<<<<< HEAD
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 #endif
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
@@ -2870,7 +2905,10 @@ temporalseq_value_at_timestamp1(TemporalInst *inst1, TemporalInst *inst2,
 		return result;
 	}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 	if (valuetypid == type_oid(T_NPOINT))
 	{
 		npoint *np1 = DatumGetNpoint(value1);
@@ -2879,7 +2917,10 @@ temporalseq_value_at_timestamp1(TemporalInst *inst1, TemporalInst *inst2,
 		npoint *result = npoint_make(np1->rid, pos);
 		return PointerGetDatum(result);
 	}
+<<<<<<< HEAD
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 #endif
 	ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 		errmsg("Operation not supported")));
@@ -3655,6 +3696,7 @@ temporalseq_hash(TemporalSeq *seq)
 	return result;
 }
 /*****************************************************************************/
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 /*****************************************************************************
@@ -7292,3 +7334,5 @@ temporalseq_hash(TemporalSeq *seq)
 >>>>>>> Integration of npoint with MobilityDB: Part1
 =======
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31

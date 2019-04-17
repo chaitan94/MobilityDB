@@ -1,7 +1,10 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 /*****************************************************************************
  *
  * Temporal.c
@@ -39,32 +42,44 @@ static char *temporalTypeName[] =
 {
 	"Unknown",
 <<<<<<< HEAD
+<<<<<<< HEAD
 	"Instant",
 	"InstantSet",
 	"Sequence",
 	"SequenceSet"
 =======
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 	"TimestampTz",
 	"TimestampSet",
 	"Period",
 	"PeriodSet"
+<<<<<<< HEAD
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 };
 
 struct temporaltype_struct temporaltype_struct_array[] =
 {
 	{"UNKNOWN", TEMPORAL},
 <<<<<<< HEAD
+<<<<<<< HEAD
 	{"INSTANT", TEMPORALINST},
 	{"INSTANTSET", TEMPORALI},
 	{"SEQUENCE", TEMPORALSEQ},
 	{"SEQUENCESET", TEMPORALS},
 =======
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 	{"TIMESTAMPTZ", TEMPORALINST},
 	{"TIMESTAMPSET", TEMPORALI},
 	{"PERIOD", TEMPORALSEQ},
 	{"PERIODSET", TEMPORALS},
+<<<<<<< HEAD
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 };
 
 const char *
@@ -801,6 +816,7 @@ Datum temporal_type(PG_FUNCTION_ARGS)
 	char str[12];
 	if (temp->type == TEMPORALINST) 
 <<<<<<< HEAD
+<<<<<<< HEAD
 		strcpy(str, "Instant");
 	else if (temp->type == TEMPORALI) 
 		strcpy(str, "InstantSet");
@@ -809,6 +825,8 @@ Datum temporal_type(PG_FUNCTION_ARGS)
 	else if (temp->type == TEMPORALS) 
 		strcpy(str, "SequenceSet");
 =======
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 		strcpy(str, "TimestampTz");
 	else if (temp->type == TEMPORALI) 
 		strcpy(str, "TimestampSet");
@@ -816,7 +834,10 @@ Datum temporal_type(PG_FUNCTION_ARGS)
 		strcpy(str, "Period");
 	else if (temp->type == TEMPORALS) 
 		strcpy(str, "PeriodSet");
+<<<<<<< HEAD
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
     else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Bad temporal type")));
@@ -2626,10 +2647,14 @@ tfloat_twavg(PG_FUNCTION_ARGS)
 	else if (temp->type == TEMPORALS)
 		result = tfloats_twavg((TemporalS *)temp);
 <<<<<<< HEAD
+<<<<<<< HEAD
     else
 =======
   else
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+  else
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Bad temporal type")));
 	PG_FREE_IF_COPY(temp, 0);
@@ -2939,6 +2964,7 @@ temporal_hash(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************/
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 /*****************************************************************************
@@ -5853,3 +5879,5 @@ temporal_hash(PG_FUNCTION_ARGS)
 >>>>>>> Integration of npoint with MobilityDB: Part1
 =======
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31

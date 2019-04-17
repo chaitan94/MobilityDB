@@ -34,9 +34,12 @@ datum_add(Datum l, Datum r, Oid typel, Oid typer)
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> Integration of npoint with MobilityDB: Part 3
+=======
+>>>>>>> 20ca64e20e6278cb102cb13ceec8cb970525eb31
 /* Subtraction */
 
 static Datum
