@@ -1,5 +1,12 @@
 ﻿-------------------------------------------------------------------------------
 
+SELECT gbox(tnpoint 'NPoint(1,0.5)@2000-01-01');
+SELECT gbox(tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}');
+SELECT gbox(tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]');
+SELECT gbox(tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}');
+
+-------------------------------------------------------------------------------
+
 SELECT geometry 'Point(1 1)' && tnpoint 'NPoint(1,0.5)@2000-01-01';
 SELECT geometry 'Point(1 1)' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
 SELECT geometry 'Point(1 1)' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';

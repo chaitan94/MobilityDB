@@ -13,7 +13,7 @@
 #include <TemporalTypes.h>
 
 #ifdef WITH_POSTGIS
-#include "TemporalPoint.h"
+#include "TemporalNPoint.h"
 #endif
 
 /*****************************************************************************
@@ -1798,6 +1798,18 @@ tempcontseq_timestamp_at_value(TemporalInst *inst1, TemporalInst *inst2,
 		pfree(DatumGetPointer(line2)); pfree(DatumGetPointer(value1)); 
 		pfree(DatumGetPointer(value2));
 	}
+	else if (inst1->valuetypid == type_oid(T_NPOINT))
+	{
+		npoint *np1 = DatumGetNpoint(value1);
+		npoint *np2 = DatumGetNpoint(value2);
+		npoint *np = DatumGetNpoint(value);
+		if ((np->rid != np1->rid) ||
+		   (np->pos < np1->pos && np->pos < np2->pos) ||
+		   (np->pos > np1->pos && np->pos > np2->pos))
+			return false;
+
+		fraction = (np->pos - np1->pos) / (np2->pos - np1->pos);
+	}
 #endif
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
@@ -2812,6 +2824,14 @@ temporalseq_value_at_timestamp1(TemporalInst *inst1, TemporalInst *inst2,
 		pfree(DatumGetPointer(line2)); pfree(DatumGetPointer(point)); 
 		/* Cannot pfree(DatumGetPointer(point1)); */
 		return result;
+	}
+	if (valuetypid == type_oid(T_NPOINT))
+	{
+		npoint *np1 = DatumGetNpoint(value1);
+		npoint *np2 = DatumGetNpoint(value2);
+		double pos = np1->pos + (np2->pos - np1->pos) * ratio;
+		npoint *result = npoint_make(np1->rid, pos);
+		return PointerGetDatum(result);
 	}
 #endif
 	ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
