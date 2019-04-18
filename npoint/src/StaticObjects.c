@@ -754,7 +754,7 @@ nsegment_as_geom_internal(nsegment *ns)
 	Datum line = route_geom_from_rid(ns->rid);
 	Datum result;
 	if (fabs(ns->pos1 - ns->pos2) < EPSILON)
-		result = call_function2(LWGEOM_line_locate_point, line, 
+		result = call_function2(LWGEOM_line_interpolate_point, line, 
 			Float8GetDatum(ns->pos1));
 	else
 		result = call_function3(LWGEOM_line_substring, line, 
