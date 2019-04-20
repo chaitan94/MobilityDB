@@ -89,7 +89,7 @@ periodset_from_periodarr_internal(Period **periods, int count, bool normalize)
 	int newcount = count;
 	if (normalize && count > 1)
 		newperiods = periodarr_normalize(periods, count, &newcount);
-	size_t memsize = double_pad(int4_pad(sizeof(Period)) * (newcount+1));
+	size_t memsize = double_pad(sizeof(Period)) * (newcount+1);
 	/* Array of pointers containing the pointers to the component Period,
 	   and a pointer to the bbox */
 	size_t pdata = double_pad(sizeof(PeriodSet) + (newcount+1) * sizeof(size_t));
@@ -103,14 +103,14 @@ periodset_from_periodarr_internal(Period **periods, int count, bool normalize)
 	{
 		memcpy(((char *) result) + pdata + pos, newperiods[i], sizeof(Period));
 		offsets[i] = pos;
-		pos += int4_pad(sizeof(Period));
+		pos += double_pad(sizeof(Period));
 	}
 	/* Precompute the bounding box */
 	period_set(&bbox, newperiods[0]->lower, newperiods[newcount-1]->upper,
 		newperiods[0]->lower_inc, newperiods[newcount-1]->upper_inc);
 	offsets[newcount] = pos;
 	memcpy(((char *) result) + pdata + pos, &bbox, sizeof(Period));
-	pos += int4_pad(sizeof(Period));
+	pos += double_pad(sizeof(Period));
 	/* Normalize */
 	if (normalize && count > 1)
 	{
@@ -135,7 +135,7 @@ periodset_copy(PeriodSet *ps)
  * Otherwise, return a number encoding whether it is before, between two 
  * periods or after. For example, given 3 periods, the result of the 
  * function if the value is not found will be as follows: 
- *			    0			1			2
+ *				0			1			2
  *			|------|	|------|	|------|   
  * 1)	t^ 											=> result = 0
  * 2)				 t^ 							=> result = 1

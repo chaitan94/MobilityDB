@@ -15,52 +15,52 @@
  *****************************************************************************/
 
 /* 1) There are 3 families of functions accounting for 
- *    - binary operators, such as spatial relationships functions (e.g. 
- *      intersects). 
- *    - ternary operators, such as spatial relationships functions (e.g. 
- *      tdwithin) that need an additional parameter. 
- *    - quaternary operators which apply binary operators (e.g. + or <) to
- *      temporal numeric types that can be of different base type (that is,
- *      integer and float), and thus the third and fourth arguments are the
- *      Oids of the first two arguments.
+ *	- binary operators, such as spatial relationships functions (e.g. 
+ *	  intersects). 
+ *	- ternary operators, such as spatial relationships functions (e.g. 
+ *	  tdwithin) that need an additional parameter. 
+ *	- quaternary operators which apply binary operators (e.g. + or <) to
+ *	  temporal numeric types that can be of different base type (that is,
+ *	  integer and float), and thus the third and fourth arguments are the
+ *	  Oids of the first two arguments.
  *  2) For each of the previous families, there are two set of functions
- *     depending on whether the resulting temporal type is discrete (e.g., 
- *     = for temporal floats that results in a temporal Boolean) or 
- *     continuous (e.g., distance for temporal points that results in a 
- *     temporal float).
+ *	 depending on whether the resulting temporal type is discrete (e.g., 
+ *	 = for temporal floats that results in a temporal Boolean) or 
+ *	 continuous (e.g., distance for temporal points that results in a 
+ *	 temporal float).
  *  3) For each of the previous cases there are two set of functions
- *     depending on whether the arguments are 
- *     - a temporal type and a base type. In this case the operand is applied 
- *       to each instant of the temporal type.
- *     - two temporal types. In this case the operands must be synchronized 
- *       and the operator is applied to each pair of synchronized instants. 
- *       Furthermore, some operators require in addition to add intermediate
- *       points between synchronized instants to take into account the crossings
- *       or the turning points (or local minimum/maximum) of the function 
- *       defined by the operator. For example, tfloat + tfloat only needs to 
- *       synchronize the arguments while tfloat * tfloat requires in addition 
- *       to add the turning point, which is defined at the middle between the
- *       two instants in which the linear functions defined by the arguments
- *       take the value 0.
+ *	 depending on whether the arguments are 
+ *	 - a temporal type and a base type. In this case the operand is applied 
+ *	   to each instant of the temporal type.
+ *	 - two temporal types. In this case the operands must be synchronized 
+ *	   and the operator is applied to each pair of synchronized instants. 
+ *	   Furthermore, some operators require in addition to add intermediate
+ *	   points between synchronized instants to take into account the crossings
+ *	   or the turning points (or local minimum/maximum) of the function 
+ *	   defined by the operator. For example, tfloat + tfloat only needs to 
+ *	   synchronize the arguments while tfloat * tfloat requires in addition 
+ *	   to add the turning point, which is defined at the middle between the
+ *	   two instants in which the linear functions defined by the arguments
+ *	   take the value 0.
  * 
  * Examples
  *   - tfloatseq * base => oper4_temporalseq_base
- *     applies the * operator to each instant.
+ *	 applies the * operator to each instant.
  *   - tfloatseq < base => oper4_temporalseq_base_crossdisc
- *     synchronizes the sequences, applies the < operator to each instant, 
- *     and if the tfloatseq is equal to base in the middle of two subsequent
- *     instants add an instant sequence at the crossing. The result is a 
- *     tfloats.
+ *	 synchronizes the sequences, applies the < operator to each instant, 
+ *	 and if the tfloatseq is equal to base in the middle of two subsequent
+ *	 instants add an instant sequence at the crossing. The result is a 
+ *	 tfloats.
  *   - tfloatseq + tfloatseq => oper4_temporalseq_temporalseq
- *     synchronizes the sequences and applies the + operator to each instant.
+ *	 synchronizes the sequences and applies the + operator to each instant.
  *   - tfloatseq * tfloatseq => oper4_temporalseq_temporalseq_crosscont
- *     synchronizes the sequences adding the turning points and applies the *
- *     operator to each instant. The result is a tfloatseq.
+ *	 synchronizes the sequences adding the turning points and applies the *
+ *	 operator to each instant. The result is a tfloatseq.
  *   - tfloatseq < tfloatseq => oper4_temporalseq_temporalseq_crossdisc
- *     synchronizes the sequences, applies the < operator to each instant, 
- *     and if there is a crossing in the middle of two subsequent pairs of 
- *     instants add an instant sequence and the crossing. The result is a 
- *     tfloats.
+ *	 synchronizes the sequences, applies the < operator to each instant, 
+ *	 and if there is a crossing in the middle of two subsequent pairs of 
+ *	 instants add an instant sequence and the crossing. The result is a 
+ *	 tfloats.
  */
 
 
@@ -98,10 +98,10 @@ oper2_temporali_base(TemporalI *ti, Datum value,
 			valuetypid, invert);
 	}
 	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
-    for (int i = 0; i < ti->count; i++)
-        pfree(instants[i]);
-    pfree(instants);
-    return result;
+	for (int i = 0; i < ti->count; i++)
+		pfree(instants[i]);
+	pfree(instants);
+	return result;
 }
 
 TemporalSeq *
@@ -117,10 +117,10 @@ oper2_temporalseq_base(TemporalSeq *seq, Datum value,
 	}
 	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, 
 		seq->count, seq->period.lower_inc, seq->period.upper_inc, true);
-    for (int i = 0; i < seq->count; i++)
-        pfree(instants[i]);
-    pfree(instants);
-    return result;
+	for (int i = 0; i < seq->count; i++)
+		pfree(instants[i]);
+	pfree(instants);
+	return result;
 }
 
 TemporalS *
@@ -136,11 +136,11 @@ oper2_temporals_base(TemporalS *ts, Datum value,
 	}
 	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, true);
 	
-    for (int i = 0; i < ts->count; i++)
-        pfree(sequences[i]);
-    pfree(sequences);
+	for (int i = 0; i < ts->count; i++)
+		pfree(sequences[i]);
+	pfree(sequences);
 	
-    return result;
+	return result;
 }
 
 /*****************************************************************************/
@@ -163,7 +163,7 @@ oper2_temporal_base(Temporal *temp, Datum d,
 	else if (temp->type == TEMPORALS)
 		result = (Temporal *)oper2_temporals_base((TemporalS *)temp, d,
 			operator, valuetypid, invert);
-    else
+	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Operation not supported")));
 	return result;
@@ -199,10 +199,10 @@ oper3_temporali_base(TemporalI *ti, Datum value, Datum param,
 			valuetypid, invert);
 	}
 	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
-    for (int i = 0; i < ti->count; i++)
-        pfree(instants[i]);
-    pfree(instants);
-    return result;
+	for (int i = 0; i < ti->count; i++)
+		pfree(instants[i]);
+	pfree(instants);
+	return result;
 }
 
 TemporalSeq *
@@ -218,10 +218,10 @@ oper3_temporalseq_base(TemporalSeq *seq, Datum value, Datum param,
 	}
 	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, 
 		seq->count, seq->period.lower_inc, seq->period.upper_inc, true);
-    for (int i = 0; i < seq->count; i++)
-        pfree(instants[i]);
-    pfree(instants);
-    return result;
+	for (int i = 0; i < seq->count; i++)
+		pfree(instants[i]);
+	pfree(instants);
+	return result;
 }
  
 TemporalS *
@@ -236,10 +236,10 @@ oper3_temporals_base(TemporalS *ts, Datum value, Datum param,
 			valuetypid, invert);
 	}
 	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, true);
-    for (int i = 0; i < ts->count; i++)
-        pfree(sequences[i]);
-    pfree(sequences);
-    return result;
+	for (int i = 0; i < ts->count; i++)
+		pfree(sequences[i]);
+	pfree(sequences);
+	return result;
 }
 
 /*****************************************************************************
@@ -276,10 +276,10 @@ oper4_temporali_base(TemporalI *ti, Datum value,
 			datumtypid, valuetypid, invert);
 	}
 	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
-    for (int i = 0; i < ti->count; i++)
-        pfree(instants[i]);
-    pfree(instants);
-    return result;
+	for (int i = 0; i < ti->count; i++)
+		pfree(instants[i]);
+	pfree(instants);
+	return result;
 }
 
 TemporalSeq *
@@ -296,10 +296,10 @@ oper4_temporalseq_base(TemporalSeq *seq, Datum value,
 	}
 	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, 
 		seq->count, seq->period.lower_inc, seq->period.upper_inc, true);
-    for (int i = 0; i < seq->count; i++)
-        pfree(instants[i]);
-    pfree(instants);
-    return result;
+	for (int i = 0; i < seq->count; i++)
+		pfree(instants[i]);
+	pfree(instants);
+	return result;
 }
 
 TemporalS *
@@ -316,11 +316,11 @@ oper4_temporals_base(TemporalS *ts, Datum value,
 	}
 	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, true);
 	
-    for (int i = 0; i < ts->count; i++)
-        pfree(sequences[i]);
-    pfree(sequences);
+	for (int i = 0; i < ts->count; i++)
+		pfree(sequences[i]);
+	pfree(sequences);
 	
-    return result;
+	return result;
 }
 
 /*****************************************************************************/
@@ -508,15 +508,14 @@ oper4_temporalseq_base_crossdisc1(TemporalSeq **result,
 	return 3;
 }
 
-static TemporalSeq **
-oper4_temporalseq_base_crossdisc2(TemporalSeq *seq, Datum value, 
+static int
+oper4_temporalseq_base_crossdisc2(TemporalSeq **result, TemporalSeq *seq, Datum value, 
 	Datum (*operator)(Datum, Datum, Oid, Oid), Oid datumtypid, 
-	Oid valuetypid, int *count, bool invert)
+	Oid valuetypid, bool invert)
 {
 	if (seq->count == 1)
 	{
 		TemporalInst *inst = temporalseq_inst_n(seq, 0);
-		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
 		Datum value1 = invert ?
 			operator(value, temporalinst_value(inst), datumtypid, inst->valuetypid) :
 			operator(temporalinst_value(inst), value, inst->valuetypid, datumtypid);
@@ -524,27 +523,16 @@ oper4_temporalseq_base_crossdisc2(TemporalSeq *seq, Datum value,
 		result[0] = temporalseq_from_temporalinstarr(&inst1, 1, 
 			true, true, false);
 		FREE_DATUM(value1, valuetypid);
-		*count = 1;
-		return result;
-	}
-
-	TemporalSeq **result = palloc(sizeof(TemporalSeq *) * seq->count * 3);
-	int k = 0;
-	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
-	bool lower_inc = seq->period.lower_inc;
-	for (int i = 1; i < seq->count; i++)
 	{
 		TemporalInst *inst2 = temporalseq_inst_n(seq, i);
 		bool upper_inc = (i == seq->count - 1) ? seq->period.upper_inc : false;
-		int countseq = oper4_temporalseq_base_crossdisc1(&result[k], inst1, inst2, lower_inc, 
 			upper_inc, value, operator, datumtypid, valuetypid, invert);
 		/* The previous step has added between one and three sequences */
 		k += countseq;
 		inst1 = inst2;
 		lower_inc = true;
 	}	
-	*count = k;
-    return result;
+	return k;
 }
 
 TemporalS *
@@ -552,16 +540,10 @@ oper4_temporalseq_base_crossdisc(TemporalSeq *seq, Datum value,
 	Datum (*operator)(Datum, Datum, Oid, Oid), Oid datumtypid, 
 	Oid valuetypid, bool invert)
 {
-	int count;
-	TemporalSeq **sequences = oper4_temporalseq_base_crossdisc2(seq, value, 
-		operator, datumtypid, valuetypid, &count, invert);
-	TemporalS *result = temporals_from_temporalseqarr(sequences, count, true);
-
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
 	pfree(sequences);
-	
-    return result;
+	return result;
 }
 
 /*****************************************************************************/
@@ -571,34 +553,22 @@ oper4_temporals_base_crossdisc(TemporalS *ts, Datum value,
 	Datum (*operator)(Datum, Datum, Oid, Oid), Oid datumtypid, 
 	Oid valuetypid, bool invert)
 {
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
-	int *countseqs = palloc0(sizeof(int) * ts->count);
-	int totalseqs = 0, count;
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * ts->totalcount * 3);
+	int k = 0, countstep;
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
-		sequences[i] = oper4_temporalseq_base_crossdisc2(seq, value, operator,
-			datumtypid, valuetypid, &count, invert);
-		countseqs[i] = count;
-		totalseqs += count;
+		countstep = oper4_temporalseq_base_crossdisc2(&sequences[k], seq, value,
+			operator, datumtypid, valuetypid, invert);
+		k += countstep;
 	}
-	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
-	int k = 0;
-	for (int i = 0; i < ts->count; i++)
-	{
-		for (int j = 0; j < countseqs[i]; j++)
-			allsequences[k++] = sequences[i][j];
-		if (sequences[i] != NULL)
-			pfree(sequences[i]);
-	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, k, true);
+	TemporalS *result = temporals_from_temporalseqarr(sequences, k, true);
 
-	pfree(sequences); pfree(countseqs);
-	for (int i = 0; i < totalseqs; i++)
-		pfree(allsequences[i]);
-	pfree(allsequences); 
+	for (int i = 0; i < k; i++)
+		pfree(sequences[i]);
+	pfree(sequences); 
 	
-    return result;
+	return result;
 }
 
 /*****************************************************************************
@@ -2445,23 +2415,19 @@ sync_oper2_temporalseq_temporalseq_crossdisc1(TemporalSeq **result,
 	return 3;
 }
 
-TemporalSeq **
-sync_oper2_temporalseq_temporalseq_crossdisc2(TemporalSeq *seq1, TemporalSeq *seq2,
-	Datum (*operator)(Datum, Datum), Datum valuetypid, int *count)
+int 
+sync_oper2_temporalseq_temporalseq_crossdisc2(TemporalSeq **result, TemporalSeq *seq1, 
+	TemporalSeq *seq2, Datum (*operator)(Datum, Datum), Datum valuetypid)
 {
 	/* Test whether the bounding timespan of the two temporal values overlap */
 	Period *inter = intersection_period_period_internal(&seq1->period, 
 		&seq2->period);
 	if (inter == NULL)
-	{
-		*count = 0;
-		return NULL;
-	}
+		return 0;
 	
 	/* If the two sequences intersect at an instant */
 	if (timestamp_cmp_internal(inter->lower, inter->upper) == 0)
 	{
-		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
 		Datum startresult, value2;
 		temporalseq_value_at_timestamp(seq1, inter->lower, &startresult);
 		temporalseq_value_at_timestamp(seq2, inter->lower, &value2);
@@ -2470,13 +2436,11 @@ sync_oper2_temporalseq_temporalseq_crossdisc2(TemporalSeq *seq1, TemporalSeq *se
 		result[0] = temporalseq_from_temporalinstarr(&inst, 1, true, true, false);
 		FREE_DATUM(startresult, seq1->valuetypid); FREE_DATUM(value2, seq2->valuetypid);
 		FREE_DATUM(value, valuetypid); pfree(inst);
-		*count = 1;
-		return result;
+		return 1;
 	}
 
 	/* General case */
 	int count1 = (seq1->count + seq2->count);
-	TemporalSeq **result = palloc(sizeof(TemporalSeq *) * count1 * 3);
 	TemporalInst **tofree = palloc(sizeof(TemporalInst *) * count1 * 2);
 	TemporalInst *start1 = temporalseq_inst_n(seq1, 0);
 	TemporalInst *start2 = temporalseq_inst_n(seq2, 0);
@@ -2528,17 +2492,17 @@ sync_oper2_temporalseq_temporalseq_crossdisc2(TemporalSeq *seq1, TemporalSeq *se
 		start2 = end2;
 		lower_inc = true;
 	}
-	*count = k;
-	return result;
+	return k;
 }
 
 TemporalS *
 sync_oper2_temporalseq_temporalseq_crossdisc(TemporalSeq *seq1, TemporalSeq *seq2, 
 	Datum (*operator)(Datum, Datum), Oid valuetypid)
 {
-	int count;
-	TemporalSeq **sequences = sync_oper2_temporalseq_temporalseq_crossdisc2(
-		seq1, seq2, operator, valuetypid, &count); 
+	int count1 = (seq1->count + seq2->count);
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * count1 * 3);
+	int count = sync_oper2_temporalseq_temporalseq_crossdisc2(sequences,
+		seq1, seq2, operator, valuetypid); 
 	if (count == 0)
 		return NULL;
 
@@ -2559,38 +2523,26 @@ TemporalS *
 sync_oper2_temporals_temporalseq_crossdisc(TemporalS *ts, TemporalSeq *seq, 
 	Datum (*operator)(Datum, Datum), Oid valuetypid)
 {
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
-	int *countseqs = palloc0(sizeof(int) * ts->count);
-	int totalseqs = 0;
+	int count1 = (ts->totalcount + seq->count);
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * count1 * 3);
+	int k = 0, countstep;
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq1 = temporals_seq_n(ts, i);
-		sequences[i] = sync_oper2_temporalseq_temporalseq_crossdisc2(seq1, seq, operator, 
-			valuetypid, &countseqs[i]);
-		totalseqs += countseqs[i];
+		countstep = sync_oper2_temporalseq_temporalseq_crossdisc2(&sequences[k], 
+			seq1, seq, operator, valuetypid);
+		k += countstep;
 	}
-	if (totalseqs == 0)
+	if (k == 0)
 	{
-		pfree(sequences); pfree(countseqs);
+		pfree(sequences);
 		return NULL;
 	}
+	TemporalS *result = temporals_from_temporalseqarr(sequences, k, true);
 
-	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
-	int k = 0;
-	for (int i = 0; i < ts->count; i++)
-	{
-		for (int j = 0; j < countseqs[i]; j++)
-			allsequences[k++] = sequences[i][j];
-		if (sequences[i] != NULL)
-			pfree(sequences[i]);
-	}
-		
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, k, true);
-
-	pfree(sequences); pfree(countseqs);
-	for (int i = 0; i < totalseqs; i++)
-		pfree(allsequences[i]);
-	pfree(allsequences); 
+	for (int i = 0; i < k; i++)
+		pfree(sequences[i]);
+	pfree(sequences); 
 	
 	return result;
 }
@@ -2606,18 +2558,16 @@ TemporalS *
 sync_oper2_temporals_temporals_crossdisc(TemporalS *ts1, TemporalS *ts2, 
 	Datum (*operator)(Datum, Datum), Oid valuetypid)
 {
-	int count = Max(ts1->count, ts2->count);
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * count);
-	int *countseqs = palloc0(sizeof(int) * count);
-	int totalseqs = 0;
-	int i = 0, j = 0, k = 0;
+	int count1 = (ts1->totalcount + ts2->totalcount);
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * count1 * 3);
+	int i = 0, j = 0, k = 0, countstep;
 	while (i < ts1->count && j < ts2->count)
 	{
 		TemporalSeq *seq1 = temporals_seq_n(ts1, i);
 		TemporalSeq *seq2 = temporals_seq_n(ts2, j);
-		sequences[k] = sync_oper2_temporalseq_temporalseq_crossdisc2(seq1, seq2, operator, 
-			valuetypid, &countseqs[k]);
-		totalseqs += countseqs[k++];
+		countstep = sync_oper2_temporalseq_temporalseq_crossdisc2(&sequences[k], 
+			seq1, seq2, operator, valuetypid);
+		k += countstep;
 		if (period_eq_internal(&seq1->period, &seq2->period))
 		{
 			i++; j++;
@@ -2627,27 +2577,16 @@ sync_oper2_temporals_temporals_crossdisc(TemporalS *ts1, TemporalS *ts2,
 		else 
 			j++;
 	}
-	if (totalseqs == 0)
+	if (k == 0)
 	{
-		pfree(sequences); pfree(countseqs);
+		pfree(sequences);
 		return NULL;
 	}
-	
-	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
-	int l = 0;
-	for (int i = 0; i < k; i++)
-	{
-		for (int j = 0; j < countseqs[i]; j++)
-			allsequences[l++] = sequences[i][j];
-		if (sequences[i] != NULL)
-			pfree(sequences[i]);
-	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, l, true);
+	TemporalS *result = temporals_from_temporalseqarr(sequences, k, true);
 
-	pfree(sequences); pfree(countseqs);
-	for (int i = 0; i < totalseqs; i++)
-		pfree(allsequences[i]);
-	pfree(allsequences); 
+	for (int i = 0; i < k; i++)
+		pfree(sequences[i]);
+	pfree(sequences); 
 	
 	return result;
 }
@@ -2740,7 +2679,7 @@ static int
 sync_oper3_temporalseq_temporalseq_crossdisc1(TemporalSeq **result,
 	TemporalInst *start1, TemporalInst *end1, 
 	TemporalInst *start2, TemporalInst *end2, 
-    bool lower_inc, bool upper_inc, Datum param,
+	bool lower_inc, bool upper_inc, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), Oid valuetypid)
 {
 	Datum startvalue1 = temporalinst_value(start1);
@@ -2896,23 +2835,20 @@ sync_oper3_temporalseq_temporalseq_crossdisc1(TemporalSeq **result,
 	return 3;
 }
 
-TemporalSeq **
-sync_oper3_temporalseq_temporalseq_crossdisc2(TemporalSeq *seq1, TemporalSeq *seq2,
-	Datum param, Datum (*operator)(Datum, Datum, Datum), Datum valuetypid, int *count)
+int 
+sync_oper3_temporalseq_temporalseq_crossdisc2(TemporalSeq **result, 
+	TemporalSeq *seq1, TemporalSeq *seq2,
+	Datum param, Datum (*operator)(Datum, Datum, Datum), Datum valuetypid)
 {
 	/* Test whether the bounding timespan of the two temporal values overlap */
 	Period *inter = intersection_period_period_internal(&seq1->period, 
 		&seq2->period);
 	if (inter == NULL)
-	{
-		*count = 0;
-		return NULL;
-	}
+		return 0;
 	
 	/* If the two sequences intersect at an instant */
 	if (timestamp_cmp_internal(inter->lower, inter->upper) == 0)
 	{
-		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
 		Datum value1, value2;
 		temporalseq_value_at_timestamp(seq1, inter->lower, &value1);
 		temporalseq_value_at_timestamp(seq2, inter->lower, &value2);
@@ -2921,13 +2857,11 @@ sync_oper3_temporalseq_temporalseq_crossdisc2(TemporalSeq *seq1, TemporalSeq *se
 		result[0] = temporalseq_from_temporalinstarr(&inst, 1, true, true, false);
 		FREE_DATUM(value1, seq1->valuetypid); FREE_DATUM(value2, seq2->valuetypid);
 		FREE_DATUM(value, valuetypid); pfree(inst);
-		*count = 1;
-		return result;
+		return 1;
 	}
 
 	/* General case */
 	int count1 = (seq1->count + seq2->count);
-	TemporalSeq **result = palloc(sizeof(TemporalSeq *) * count1 * 3);
 	TemporalInst **tofree = palloc(sizeof(TemporalInst *) * count1 * 2);
 	TemporalInst *start1 = temporalseq_inst_n(seq1, 0);
 	TemporalInst *start2 = temporalseq_inst_n(seq2, 0);
@@ -2979,17 +2913,18 @@ sync_oper3_temporalseq_temporalseq_crossdisc2(TemporalSeq *seq1, TemporalSeq *se
 		start2 = end2;
 		lower_inc = true;
 	}
-	*count = k;
-	return result;
+	return k;
 }
 
 TemporalS *
 sync_oper3_temporalseq_temporalseq_crossdisc(TemporalSeq *seq1, TemporalSeq *seq2, 
 	Datum param, Datum (*operator)(Datum, Datum, Datum), Oid valuetypid)
 {
-	int count;
-	TemporalSeq **sequences = sync_oper3_temporalseq_temporalseq_crossdisc2(
-		seq1, seq2, param, operator, valuetypid, &count); 
+	int count1 = (seq1->count + seq2->count);
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * count1 * 3);
+
+	int count = sync_oper3_temporalseq_temporalseq_crossdisc2(sequences,
+		seq1, seq2, param, operator, valuetypid); 
 	if (count == 0)
 		return NULL;
 
@@ -3010,37 +2945,27 @@ TemporalS *
 sync_oper3_temporals_temporalseq_crossdisc(TemporalS *ts, TemporalSeq *seq, 
 	Datum param, Datum (*operator)(Datum, Datum, Datum), Oid valuetypid)
 {
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
-	int *countseqs = palloc0(sizeof(int) * ts->count);
-	int totalseqs = 0;
+	int count1 = (ts->totalcount + seq->count);
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * count1 * 3);
+	int k = 0, countstep;
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq1 = temporals_seq_n(ts, i);
-		sequences[i] = sync_oper3_temporalseq_temporalseq_crossdisc2(seq1, seq, 
-			param, operator, valuetypid, &countseqs[i]);
-		totalseqs += countseqs[i];
+		countstep = sync_oper3_temporalseq_temporalseq_crossdisc2(&sequences[k], 
+			seq1, seq, param, operator, valuetypid);
+		k += countstep;
 	}
-	if (totalseqs == 0)
+	if (k == 0)
 	{
-		pfree(sequences); pfree(countseqs);
+		pfree(sequences);
 		return NULL;
 	}
 
-	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
-	int k = 0;
-	for (int i = 0; i < ts->count; i++)
-	{
-		for (int j = 0; j < countseqs[i]; j++)
-			allsequences[k++] = sequences[i][j];
-		if (sequences[i] != NULL)
-			pfree(sequences[i]);
-	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, k, true);
+	TemporalS *result = temporals_from_temporalseqarr(sequences, k, true);
 
-	pfree(sequences); pfree(countseqs);
-	for (int i = 0; i < totalseqs; i++)
-		pfree(allsequences[i]);
-	pfree(allsequences); 
+	for (int i = 0; i < k; i++)
+		pfree(sequences[i]);
+	pfree(sequences); 
 	
 	return result;
 }
@@ -3064,19 +2989,17 @@ sync_oper3_temporals_temporals_crossdisc(TemporalS *ts1, TemporalS *ts2,
 	if (!overlaps_period_period_internal(&p1, &p2))
 		return NULL;
 	
-	/* Previously it was Max(ts1->count, ts2->count) and was not correct ????*/
-	int count = ts1->count + ts2->count;
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * count);
-	int *countseqs = palloc0(sizeof(int) * count);
-	int totalseqs = 0;
-	int i = 0, j = 0, k = 0;
+	/* General case */
+	int count = ts1->totalcount + ts2->totalcount;
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * count * 3);
+	int i = 0, j = 0, k = 0, countstep;
 	while (i < ts1->count && j < ts2->count)
 	{
 		TemporalSeq *seq1 = temporals_seq_n(ts1, i);
 		TemporalSeq *seq2 = temporals_seq_n(ts2, j);
-		sequences[k] = sync_oper3_temporalseq_temporalseq_crossdisc2(seq1, seq2, 
-			param, operator, valuetypid, &countseqs[k]);
-		totalseqs += countseqs[k++];
+		countstep = sync_oper3_temporalseq_temporalseq_crossdisc2(&sequences[k],
+			seq1, seq2, param, operator, valuetypid);
+		k += countstep;
 		if (period_eq_internal(&seq1->period, &seq2->period))
 		{
 			i++; j++;
@@ -3086,27 +3009,17 @@ sync_oper3_temporals_temporals_crossdisc(TemporalS *ts1, TemporalS *ts2,
 		else 
 			j++;
 	}
-	if (totalseqs == 0)
+	if (k == 0)
 	{
-		pfree(sequences); pfree(countseqs);
+		pfree(sequences);
 		return NULL;
 	}
 
-	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
-	int l = 0;
-	for (int i = 0; i < k; i++)
-	{
-		for (int j = 0; j < countseqs[i]; j++)
-			allsequences[l++] = sequences[i][j];
-		if (sequences[i] != NULL)
-			pfree(sequences[i]);
-	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, l, true);
+	TemporalS *result = temporals_from_temporalseqarr(sequences, k, true);
 
-	pfree(sequences); pfree(countseqs);
-	for (int i = 0; i < totalseqs; i++)
-		pfree(allsequences[i]);
-	pfree(allsequences); 
+	for (int i = 0; i < k; i++)
+		pfree(sequences[i]);
+	pfree(sequences); 
 	
 	return result;
 }
@@ -3361,23 +3274,20 @@ sync_oper4_temporalseq_temporalseq_crossdisc1(TemporalSeq **result,
 	return 3;
 }
 
-TemporalSeq **
-sync_oper4_temporalseq_temporalseq_crossdisc2(TemporalSeq *seq1, TemporalSeq *seq2,
-	Datum (*operator)(Datum, Datum, Oid, Oid), Datum valuetypid, int *count)
+int
+sync_oper4_temporalseq_temporalseq_crossdisc2(TemporalSeq **result,
+	TemporalSeq *seq1, TemporalSeq *seq2,
+	Datum (*operator)(Datum, Datum, Oid, Oid), Datum valuetypid)
 {
 	/* Test whether the bounding timespan of the two temporal values overlap */
 	Period *inter = intersection_period_period_internal(&seq1->period, 
 		&seq2->period);
 	if (inter == NULL)
-	{
-		*count = 0;
-		return NULL;
-	}
+		return 0;
 	
 	/* If the two sequences intersect at an instant */
 	if (timestamp_cmp_internal(inter->lower, inter->upper) == 0)
 	{
-		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
 		Datum value1, value2;
 		temporalseq_value_at_timestamp(seq1, inter->lower, &value1);
 		temporalseq_value_at_timestamp(seq2, inter->lower, &value2);
@@ -3386,13 +3296,11 @@ sync_oper4_temporalseq_temporalseq_crossdisc2(TemporalSeq *seq1, TemporalSeq *se
 		result[0] = temporalseq_from_temporalinstarr(&inst, 1, true, true, false);
 		FREE_DATUM(value1, seq1->valuetypid); FREE_DATUM(value2, seq2->valuetypid);
 		FREE_DATUM(value, valuetypid); pfree(inst);
-		*count = 1;
-		return result;
+		return 1;
 	}
 
 	/* General case */
 	int count1 = (seq1->count + seq2->count);
-	TemporalSeq **result = palloc(sizeof(TemporalSeq *) * count1 * 3);
 	TemporalInst **tofree = palloc(sizeof(TemporalInst *) * count1 * 2);
 	TemporalInst *start1 = temporalseq_inst_n(seq1, 0);
 	TemporalInst *start2 = temporalseq_inst_n(seq2, 0);
@@ -3444,17 +3352,17 @@ sync_oper4_temporalseq_temporalseq_crossdisc2(TemporalSeq *seq1, TemporalSeq *se
 		start2 = end2;
 		lower_inc = true;
 	}
-	*count = k;
-	return result;
+	return k;
 }
 
 TemporalS *
 sync_oper4_temporalseq_temporalseq_crossdisc(TemporalSeq *seq1, TemporalSeq *seq2, 
 	Datum (*operator)(Datum, Datum, Oid, Oid), Oid valuetypid)
 {
-	int count;
-	TemporalSeq **sequences = sync_oper4_temporalseq_temporalseq_crossdisc2(
-		seq1, seq2, operator, valuetypid, &count);
+	int count1 = (seq1->count + seq2->count);
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * count1 * 3);
+	int count = sync_oper4_temporalseq_temporalseq_crossdisc2(sequences,
+		seq1, seq2, operator, valuetypid);
 	if (count == 0)
 		return NULL;
 
@@ -3475,36 +3383,26 @@ TemporalS *
 sync_oper4_temporals_temporalseq_crossdisc(TemporalS *ts, TemporalSeq *seq, 
 	Datum (*operator)(Datum, Datum, Oid, Oid), Oid valuetypid)
 {
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
-	int *countseqs = palloc0(sizeof(int) * ts->count);
-	int totalseqs = 0;
+	int count = (ts->totalcount + seq->count);
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * count * 3);
+	int k = 0, countstep;
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq1 = temporals_seq_n(ts, i);
-		sequences[i] = sync_oper4_temporalseq_temporalseq_crossdisc2(seq1, seq, operator, 
-			valuetypid, &countseqs[i]);
-		totalseqs += countseqs[i];
+		countstep = sync_oper4_temporalseq_temporalseq_crossdisc2(&sequences[k],
+			seq1, seq, operator, valuetypid);
+		k += countstep;
 	}
-	if (totalseqs == 0)
+	if (k == 0)
 	{
-		pfree(sequences); pfree(countseqs);
+		pfree(sequences);
 		return NULL;
 	}
-	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
-	int k = 0;
-	for (int i = 0; i < ts->count; i++)
-	{
-		for (int j = 0; j < countseqs[i]; j++)
-			allsequences[k++] = sequences[i][j];
-		if (sequences[i] != NULL)
-			pfree(sequences[i]);
-	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, k, true);
+	TemporalS *result = temporals_from_temporalseqarr(sequences, k, true);
 
-	pfree(sequences); pfree(countseqs);
-	for (int i = 0; i < totalseqs; i++)
-		pfree(allsequences[i]);
-	pfree(allsequences); 
+	for (int i = 0; i < k; i++)
+		pfree(sequences[i]);
+	pfree(sequences); 
 	
 	return result;
 }
@@ -3527,19 +3425,17 @@ sync_oper4_temporals_temporals_crossdisc(TemporalS *ts1, TemporalS *ts2,
 	if (!overlaps_period_period_internal(&p1, &p2))
 		return NULL;
 	
-	/* Previously it was Max(ts1->count, ts2->count) and was not correct ????*/
-	int count = ts1->count + ts2->count;
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * count);
-	int *countseqs = palloc0(sizeof(int) * count);
-	int totalseqs = 0;
-	int i = 0, j = 0, k = 0;
+	/* General case */
+	int count = ts1->totalcount + ts2->totalcount;
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * count * 3);
+	int i = 0, j = 0, k = 0, countstep;
 	while (i < ts1->count && j < ts2->count)
 	{
 		TemporalSeq *seq1 = temporals_seq_n(ts1, i);
 		TemporalSeq *seq2 = temporals_seq_n(ts2, j);
-		sequences[k] = sync_oper4_temporalseq_temporalseq_crossdisc2(seq1, seq2, operator, 
-			valuetypid, &countseqs[k]);
-		totalseqs += countseqs[k++];
+		countstep = sync_oper4_temporalseq_temporalseq_crossdisc2(&sequences[k],
+			seq1, seq2, operator, valuetypid);
+		k += countstep;
 		if (period_eq_internal(&seq1->period, &seq2->period))
 		{
 			i++; j++;
@@ -3549,27 +3445,17 @@ sync_oper4_temporals_temporals_crossdisc(TemporalS *ts1, TemporalS *ts2,
 		else 
 			j++;
 	}
-	if (totalseqs == 0)
+	if (k == 0)
 	{
-		pfree(sequences); pfree(countseqs);
+		pfree(sequences);
 		return NULL;
 	}
 
-	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
-	int l = 0;
-	for (int i = 0; i < k; i++)
-	{
-		for (int j = 0; j < countseqs[i]; j++)
-			allsequences[l++] = sequences[i][j];
-		if (sequences[i] != NULL)
-			pfree(sequences[i]);
-	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, l, true);
+	TemporalS *result = temporals_from_temporalseqarr(sequences, k, true);
 
-	pfree(sequences); pfree(countseqs);
-	for (int i = 0; i < totalseqs; i++)
-		pfree(allsequences[i]);
-	pfree(allsequences); 
+	for (int i = 0; i < k; i++)
+		pfree(sequences[i]);
+	pfree(sequences); 
 	
 	return result;
 }

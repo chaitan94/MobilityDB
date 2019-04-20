@@ -22,7 +22,6 @@
 
 #include "TemporalTypes.h"
 #ifdef WITH_POSTGIS
-#include "TemporalPoint.h"
 #include "TemporalNPoint.h"
 #endif
 
@@ -216,11 +215,6 @@ temporalinst_make_bbox(void *box, Datum value, TimestampTz t, Oid valuetypid)
 		tpointinst_make_gbox((GBOX *)box, value, t);
 		return true;
 	}
-	else if (valuetypid == type_oid(T_NPOINT))
-	{
-		tnpointinst_make_gbox((GBOX *)box, value, t);
-		return true;
-	}
 #endif
 	/* Types without bounding box, for example, tdoubleN* */
 	return false;
@@ -271,8 +265,8 @@ temporali_make_bbox(void *box, TemporalInst **instants, int count)
 		return true;
 	}
 #ifdef WITH_POSTGIS
-	if (instants[0]->valuetypid == type_oid(T_GEOMETRY) || 
-		instants[0]->valuetypid == type_oid(T_GEOGRAPHY)) 
+	if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
+		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
 	{
 		tpointinstarr_to_gbox((GBOX *)box, instants, count);
 		return true;
@@ -304,8 +298,8 @@ temporalseq_make_bbox(void *box, TemporalInst **instants, int count,
 		return true;
 	}
 #ifdef WITH_POSTGIS
-	if (instants[0]->valuetypid == type_oid(T_GEOMETRY) || 
-		instants[0]->valuetypid == type_oid(T_GEOGRAPHY))
+	if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
+		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
 	{
 		tpointinstarr_to_gbox((GBOX *)box, instants, count);
 		return true;
