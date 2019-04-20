@@ -77,6 +77,7 @@ SELECT tbool 'true@2000-01-01';
 SELECT tbool '{true@2000-01-01, false@2000-01-02}';
 SELECT tbool '[true@2000-01-01, false@2000-01-02]';
 SELECT tbool '{[true@2000-01-01, false@2000-01-02], [true@2000-01-03, false@2000-01-04]}';
+<<<<<<< HEAD
 SELECT tbool(Instant) 'true@2000-01-01';
 SELECT tbool(InstantSet) '{true@2000-01-01, false@2000-01-02}';
 SELECT tbool(Sequence) '[true@2000-01-01, false@2000-01-02]';
@@ -94,11 +95,31 @@ SELECT tbool(SequenceSet) '[true@2000-01-01, false@2000-01-02]';
 SELECT tbool(Instant) '{[true@2000-01-01, false@2000-01-02], [true@2000-01-03, false@2000-01-04]}';
 SELECT tbool(InstantSet) '{[true@2000-01-01, false@2000-01-02], [true@2000-01-03, false@2000-01-04]}';
 SELECT tbool(Sequence) '{[true@2000-01-01, false@2000-01-02], [true@2000-01-03, false@2000-01-04]}';
+=======
+SELECT tbool(TimestampTz) 'true@2000-01-01';
+SELECT tbool(TimestampSet) '{true@2000-01-01, false@2000-01-02}';
+SELECT tbool(Period) '[true@2000-01-01, false@2000-01-02]';
+SELECT tbool(PeriodSet) '{[true@2000-01-01, false@2000-01-02], [true@2000-01-03, false@2000-01-04]}';
+/* Errors */
+SELECT tbool(TimestampSet) 'true@2000-01-01';
+SELECT tbool(Period) 'true@2000-01-01';
+SELECT tbool(PeriodSet) 'true@2000-01-01';
+SELECT tbool(TimestampTz) '{true@2000-01-01, false@2000-01-02}';
+SELECT tbool(Period) '{true@2000-01-01, false@2000-01-02}';
+SELECT tbool(PeriodSet) '{true@2000-01-01, false@2000-01-02}';
+SELECT tbool(TimestampTz) '[true@2000-01-01, false@2000-01-02]';
+SELECT tbool(TimestampSet) '[true@2000-01-01, false@2000-01-02]';
+SELECT tbool(PeriodSet) '[true@2000-01-01, false@2000-01-02]';
+SELECT tbool(TimestampTz) '{[true@2000-01-01, false@2000-01-02], [true@2000-01-03, false@2000-01-04]}';
+SELECT tbool(TimestampSet) '{[true@2000-01-01, false@2000-01-02], [true@2000-01-03, false@2000-01-04]}';
+SELECT tbool(Period) '{[true@2000-01-01, false@2000-01-02], [true@2000-01-03, false@2000-01-04]}';
+>>>>>>> d82bc62d0b2aaa167e930f36d5811816b9ff6103
 
 SELECT tint '1@2000-01-01';
 SELECT tint '{1@2000-01-01, 2@2000-01-02}';
 SELECT tint '[1@2000-01-01, 2@2000-01-02]';
 SELECT tint '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+<<<<<<< HEAD
 SELECT tint(Instant) '1@2000-01-01';
 SELECT tint(InstantSet) '{1@2000-01-01, 2@2000-01-02}';
 SELECT tint(Sequence) '[1@2000-01-01, 2@2000-01-02]';
@@ -116,11 +137,31 @@ SELECT tint(SequenceSet) '[1@2000-01-01, 2@2000-01-02]';
 SELECT tint(Instant) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
 SELECT tint(InstantSet) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
 SELECT tint(Sequence) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+=======
+SELECT tint(TimestampTz) '1@2000-01-01';
+SELECT tint(TimestampSet) '{1@2000-01-01, 2@2000-01-02}';
+SELECT tint(Period) '[1@2000-01-01, 2@2000-01-02]';
+SELECT tint(PeriodSet) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+/* Errors */
+SELECT tint(TimestampSet) '1@2000-01-01';
+SELECT tint(Period) '1@2000-01-01';
+SELECT tint(PeriodSet) '1@2000-01-01';
+SELECT tint(TimestampTz) '{1@2000-01-01, 2@2000-01-02}';
+SELECT tint(Period) '{1@2000-01-01, 2@2000-01-02}';
+SELECT tint(PeriodSet) '{1@2000-01-01, 2@2000-01-02}';
+SELECT tint(TimestampTz) '[1@2000-01-01, 2@2000-01-02]';
+SELECT tint(TimestampSet) '[1@2000-01-01, 2@2000-01-02]';
+SELECT tint(PeriodSet) '[1@2000-01-01, 2@2000-01-02]';
+SELECT tint(TimestampTz) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+SELECT tint(TimestampSet) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+SELECT tint(Period) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+>>>>>>> d82bc62d0b2aaa167e930f36d5811816b9ff6103
 
 SELECT tfloat '1@2000-01-01';
 SELECT tfloat '{1@2000-01-01, 2@2000-01-02}';
 SELECT tfloat '[1@2000-01-01, 2@2000-01-02]';
 SELECT tfloat '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+<<<<<<< HEAD
 SELECT tfloat(Instant) '1@2000-01-01';
 SELECT tfloat(InstantSet) '{1@2000-01-01, 2@2000-01-02}';
 SELECT tfloat(Sequence) '[1@2000-01-01, 2@2000-01-02]';
@@ -138,11 +179,31 @@ SELECT tfloat(SequenceSet) '[1@2000-01-01, 2@2000-01-02]';
 SELECT tfloat(Instant) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
 SELECT tfloat(InstantSet) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
 SELECT tfloat(Sequence) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+=======
+SELECT tfloat(TimestampTz) '1@2000-01-01';
+SELECT tfloat(TimestampSet) '{1@2000-01-01, 2@2000-01-02}';
+SELECT tfloat(Period) '[1@2000-01-01, 2@2000-01-02]';
+SELECT tfloat(PeriodSet) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+/* Errors */
+SELECT tfloat(TimestampSet) '1@2000-01-01';
+SELECT tfloat(Period) '1@2000-01-01';
+SELECT tfloat(PeriodSet) '1@2000-01-01';
+SELECT tfloat(TimestampTz) '{1@2000-01-01, 2@2000-01-02}';
+SELECT tfloat(Period) '{1@2000-01-01, 2@2000-01-02}';
+SELECT tfloat(PeriodSet) '{1@2000-01-01, 2@2000-01-02}';
+SELECT tfloat(TimestampTz) '[1@2000-01-01, 2@2000-01-02]';
+SELECT tfloat(TimestampSet) '[1@2000-01-01, 2@2000-01-02]';
+SELECT tfloat(PeriodSet) '[1@2000-01-01, 2@2000-01-02]';
+SELECT tfloat(TimestampTz) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+SELECT tfloat(TimestampSet) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+SELECT tfloat(Period) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+>>>>>>> d82bc62d0b2aaa167e930f36d5811816b9ff6103
 
 SELECT ttext '1@2000-01-01';
 SELECT ttext '{1@2000-01-01, 2@2000-01-02}';
 SELECT ttext '[1@2000-01-01, 2@2000-01-02]';
 SELECT ttext '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+<<<<<<< HEAD
 SELECT ttext(Instant) '1@2000-01-01';
 SELECT ttext(InstantSet) '{1@2000-01-01, 2@2000-01-02}';
 SELECT ttext(Sequence) '[1@2000-01-01, 2@2000-01-02]';
@@ -160,6 +221,25 @@ SELECT ttext(SequenceSet) '[1@2000-01-01, 2@2000-01-02]';
 SELECT ttext(Instant) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
 SELECT ttext(InstantSet) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
 SELECT ttext(Sequence) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+=======
+SELECT ttext(TimestampTz) '1@2000-01-01';
+SELECT ttext(TimestampSet) '{1@2000-01-01, 2@2000-01-02}';
+SELECT ttext(Period) '[1@2000-01-01, 2@2000-01-02]';
+SELECT ttext(PeriodSet) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+/* Errors */
+SELECT ttext(TimestampSet) '1@2000-01-01';
+SELECT ttext(Period) '1@2000-01-01';
+SELECT ttext(PeriodSet) '1@2000-01-01';
+SELECT ttext(TimestampTz) '{1@2000-01-01, 2@2000-01-02}';
+SELECT ttext(Period) '{1@2000-01-01, 2@2000-01-02}';
+SELECT ttext(PeriodSet) '{1@2000-01-01, 2@2000-01-02}';
+SELECT ttext(TimestampTz) '[1@2000-01-01, 2@2000-01-02]';
+SELECT ttext(TimestampSet) '[1@2000-01-01, 2@2000-01-02]';
+SELECT ttext(PeriodSet) '[1@2000-01-01, 2@2000-01-02]';
+SELECT ttext(TimestampTz) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+SELECT ttext(TimestampSet) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+SELECT ttext(Period) '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03, 2@2000-01-04]}';
+>>>>>>> d82bc62d0b2aaa167e930f36d5811816b9ff6103
 -------------------------------------------------------------------------------
 -- Constructor functions
 -------------------------------------------------------------------------------

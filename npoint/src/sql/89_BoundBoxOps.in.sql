@@ -67,6 +67,11 @@ CREATE FUNCTION contains_bbox(gbox, tnpoint)
 	AS 'MODULE_PATHNAME', 'contains_bbox_gbox_tpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION contains_bbox(npoint, tnpoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'contains_bbox_npoint_tnpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE OPERATOR @> (
 	PROCEDURE = contains_bbox,
 	LEFTARG = geometry, RIGHTARG = tnpoint,
@@ -109,6 +114,13 @@ CREATE OPERATOR @> (
 	RESTRICT = contains_point_sel, JOIN = positionjoinseltemp
 );
 
+CREATE OPERATOR @> (
+	PROCEDURE = contains_bbox,
+	LEFTARG = npoint, RIGHTARG = tnpoint,
+	COMMUTATOR = <@,
+	RESTRICT = contains_point_sel, JOIN = positionjoinseltemp
+);
+
 CREATE FUNCTION contains_bbox(tnpoint, geometry)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'contains_bbox_tpoint_geom'
@@ -132,6 +144,10 @@ CREATE FUNCTION contains_bbox(tnpoint, periodset)
 CREATE FUNCTION contains_bbox(tnpoint, gbox)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'contains_bbox_tpoint_gbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION contains_bbox(tnpoint, npoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'contains_bbox_tnpoint_npoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION contains_bbox(tnpoint, tnpoint)
 	RETURNS boolean
@@ -176,6 +192,12 @@ CREATE OPERATOR @> (
 );
 CREATE OPERATOR @> (
 	PROCEDURE = contains_bbox,
+	LEFTARG = tnpoint, RIGHTARG = npoint,
+	COMMUTATOR = <@,
+	RESTRICT = contains_point_sel, JOIN = positionjoinseltemp
+);
+CREATE OPERATOR @> (
+	PROCEDURE = contains_bbox,
 	LEFTARG = tnpoint, RIGHTARG = tnpoint,
 	COMMUTATOR = <@,
 	RESTRICT = contains_point_sel, JOIN = positionjoinseltemp
@@ -213,6 +235,11 @@ CREATE FUNCTION contained_bbox(periodset, tnpoint)
 CREATE FUNCTION contained_bbox(gbox, tnpoint)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'contained_bbox_gbox_tpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contained_bbox(npoint, tnpoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'contained_bbox_npoint_tnpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR <@ (
@@ -257,6 +284,13 @@ CREATE OPERATOR <@ (
 	RESTRICT = contained_point_sel, JOIN = positionjoinseltemp
 );
 
+CREATE OPERATOR <@ (
+	PROCEDURE = contained_bbox,
+	LEFTARG = npoint, RIGHTARG = tnpoint,
+	COMMUTATOR = @>,
+	RESTRICT = contained_point_sel, JOIN = positionjoinseltemp
+);
+
 CREATE FUNCTION contained_bbox(tnpoint, geometry)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'contained_bbox_tpoint_geom'
@@ -280,6 +314,10 @@ CREATE FUNCTION contained_bbox(tnpoint, periodset)
 CREATE FUNCTION contained_bbox(tnpoint, gbox)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'contained_bbox_tpoint_gbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION contained_bbox(tnpoint, npoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'contained_bbox_tnpoint_npoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION contained_bbox(tnpoint, tnpoint)
 	RETURNS boolean
@@ -324,6 +362,12 @@ CREATE OPERATOR <@ (
 );
 CREATE OPERATOR <@ (
 	PROCEDURE = contained_bbox,
+	LEFTARG = tnpoint, RIGHTARG = npoint,
+	COMMUTATOR = @>,
+	RESTRICT = contained_point_sel, JOIN = positionjoinseltemp
+);
+CREATE OPERATOR <@ (
+	PROCEDURE = contained_bbox,
 	LEFTARG = tnpoint, RIGHTARG = tnpoint,
 	COMMUTATOR = @>,
 	RESTRICT = contained_point_sel, JOIN = positionjoinseltemp
@@ -361,6 +405,11 @@ CREATE FUNCTION overlaps_bbox(periodset, tnpoint)
 CREATE FUNCTION overlaps_bbox(gbox, tnpoint)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'overlaps_bbox_gbox_tpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overlaps_bbox(npoint, tnpoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'overlaps_bbox_npoint_tnpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR && (
@@ -405,6 +454,13 @@ CREATE OPERATOR && (
 	RESTRICT = overlaps_point_sel, JOIN = positionjoinseltemp
 );
 
+CREATE OPERATOR && (
+	PROCEDURE = overlaps_bbox,
+	LEFTARG = npoint, RIGHTARG = tnpoint,
+	COMMUTATOR = &&,
+	RESTRICT = overlaps_point_sel, JOIN = positionjoinseltemp
+);
+
 CREATE FUNCTION overlaps_bbox(tnpoint, geometry)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'overlaps_bbox_tpoint_geom'
@@ -428,6 +484,10 @@ CREATE FUNCTION overlaps_bbox(tnpoint, periodset)
 CREATE FUNCTION overlaps_bbox(tnpoint, gbox)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'overlaps_bbox_tpoint_gbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION overlaps_bbox(tnpoint, npoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'overlaps_bbox_tnpoint_npoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION overlaps_bbox(tnpoint, tnpoint)
 	RETURNS boolean
@@ -472,6 +532,12 @@ CREATE OPERATOR && (
 );
 CREATE OPERATOR && (
 	PROCEDURE = overlaps_bbox,
+	LEFTARG = tnpoint, RIGHTARG = npoint,
+	COMMUTATOR = &&,
+	RESTRICT = overlaps_point_sel, JOIN = positionjoinseltemp
+);
+CREATE OPERATOR && (
+	PROCEDURE = overlaps_bbox,
 	LEFTARG = tnpoint, RIGHTARG = tnpoint,
 	COMMUTATOR = &&,
 	RESTRICT = overlaps_point_sel, JOIN = positionjoinseltemp
@@ -509,6 +575,11 @@ CREATE FUNCTION same_bbox(periodset, tnpoint)
 CREATE FUNCTION same_bbox(gbox, tnpoint)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'same_bbox_gbox_tpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION same_bbox(npoint, tnpoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'same_bbox_npoint_tnpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
@@ -553,6 +624,13 @@ CREATE OPERATOR ~= (
 	RESTRICT = same_point_sel, JOIN = positionjoinseltemp
 );
 
+CREATE OPERATOR ~= (
+	PROCEDURE = same_bbox,
+	LEFTARG = npoint, RIGHTARG = tnpoint,
+	COMMUTATOR = ~=,
+	RESTRICT = same_point_sel, JOIN = positionjoinseltemp
+);
+
 CREATE FUNCTION same_bbox(tnpoint, geometry)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'same_bbox_tpoint_geom'
@@ -576,6 +654,10 @@ CREATE FUNCTION same_bbox(tnpoint, periodset)
 CREATE FUNCTION same_bbox(tnpoint, gbox)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'same_bbox_tpoint_gbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION same_bbox(tnpoint, npoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'same_bbox_tnpoint_npoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION same_bbox(tnpoint, tnpoint)
 	RETURNS boolean
@@ -615,6 +697,12 @@ CREATE OPERATOR ~= (
 CREATE OPERATOR ~= (
 	PROCEDURE = same_bbox,
 	LEFTARG = tnpoint, RIGHTARG = gbox,
+	COMMUTATOR = ~=,
+	RESTRICT = same_point_sel, JOIN = positionjoinseltemp
+);
+CREATE OPERATOR ~= (
+	PROCEDURE = same_bbox,
+	LEFTARG = tnpoint, RIGHTARG = npoint,
 	COMMUTATOR = ~=,
 	RESTRICT = same_point_sel, JOIN = positionjoinseltemp
 );

@@ -1,24 +1,30 @@
 ﻿/*****************************************************************************/
 
-SELECT max(st_npoints(st_astext(trajectory(temp)))) FROM tbl_tnpoint;
+SELECT st_astext(trajectory(tnpoint 'Npoint(1, 0.5)@2000-01-01'));
+SELECT st_astext(trajectory(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}'));
+SELECT st_astext(trajectory(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]'));
+SELECT st_astext(trajectory(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}'));
 
-SELECT count(*) FROM tbl_tnpoint t1, tbl_geomcollection t2 WHERE atGeometry(t1.temp, t2.g) IS NOT NULL;
+SELECT atGeometry(tnpoint 'Npoint(1, 0.5)@2000-01-01', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))');
+SELECT atGeometry(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', geometry 'Polygon((50 50,100 50,100 100,100 50,50 50))');
+SELECT atGeometry(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))');
+SELECT atGeometry(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))');
 
-SELECT length(seq) FROM tbl_tnpointseq;
-SELECT length(ts) FROM tbl_tnpoints;
+SELECT minusGeometry(tnpoint 'Npoint(1, 0.5)@2000-01-01', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))');
+SELECT minusGeometry(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', geometry 'Polygon((50 50,100 50,100 100,100 50,50 50))');
+SELECT minusGeometry(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))');
+SELECT minusGeometry(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))');
 
-SELECT cumulativeLength(seq) FROM tbl_tnpointseq;
-SELECT cumulativeLength(ts) FROM tbl_tnpoints;
+SELECT length(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT length(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
 
-SELECT speed(seq) FROM tbl_tnpointseq;
-SELECT speed(ts) FROM tbl_tnpoints;
+SELECT cumulativeLength(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT cumulativeLength(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
 
-SELECT azimuth(seq) FROM tbl_tnpointseq;
-SELECT azimuth(ts) FROM tbl_tnpoints;
+SELECT speed(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT speed(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
 
-select length(tnpoint '{[NPoint(126,0.252341)@2001-11-21 03:37:00+01]}');
-select cumulativelength(tnpoint '{[NPoint(126,0.252341)@2001-11-21 03:37:00+01]}');
-select speed(tnpoint '{[NPoint(126,0.252341)@2001-11-21 03:37:00+01]}');
-select azimuth(tnpoint '{[NPoint(126,0.252341)@2001-11-21 03:37:00+01]}');
+SELECT azimuth(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT azimuth(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
 
 /*****************************************************************************/

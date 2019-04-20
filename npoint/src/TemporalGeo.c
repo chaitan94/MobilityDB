@@ -339,7 +339,7 @@ tnpointseq_cumulative_length_internal(TemporalSeq *seq, double prevlength)
 	for (int i = 1; i < seq->count; i++)
 	{
 		TemporalInst *inst2 = temporalseq_inst_n(seq, i);
-		npoint *np2 = DatumGetNpoint(temporalinst_value(inst1));
+		npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
 		length += fabs(np2->pos - np1->pos) * route_length;
 		instants[i] = temporalinst_make(Float8GetDatum(length), inst2->t,
 			FLOAT8OID);
@@ -955,4 +955,191 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
+/* Restrict a temporal point to the complement of a geometry */
+
+static TemporalInst *
+tnpointinst_minus_geometry(TemporalInst *inst, Datum geom)
+{
+    Datum value = npoint_as_geom_internal(DatumGetNpoint(temporalinst_value(inst)));
+	if (DatumGetBool(call_function2(intersects, value, geom)))
+		return NULL;
+	return temporalinst_copy(inst);
+}
+
+static TemporalI *
+tnpointi_minus_geometry(TemporalI *ti, Datum geom)
+{
+	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
+	int k = 0;
+	for (int i = 0; i < ti->count; i++)
+	{
+		TemporalInst *inst = temporali_inst_n(ti, i);
+		Datum value = npoint_as_geom_internal(DatumGetNpoint(temporalinst_value(inst)));
+		if (!DatumGetBool(call_function2(intersects, value, geom)))
+			instants[k++] = inst;
+	}
+	TemporalI *result = NULL;
+	if (k != 0)
+		result = temporali_from_temporalinstarr(instants, k);
+	pfree(instants);
+	return result;
+}
+
+/* 
+ * It is not possible to use a similar approach as for tnpointseq_at_geometry1
+ * where instead of computing the intersections we compute the difference since
+ * in PostGIS the following query
+ *  	select st_astext(st_difference(geometry 'Linestring(0 0,3 3)',
+ *  		geometry 'MultiPoint((1 1),(2 2),(3 3))'))
+ * returns "LINESTRING(0 0,3 3)". Therefore we compute tnpointseq_at_geometry1
+ * and then compute the complement of the value obtained.
+ */
+static TemporalSeq **
+tnpointseq_minus_geometry1(TemporalSeq *seq, Datum geom, int *count)
+{
+	int countinter;
+	TemporalSeq **sequences = tnpointseq_at_geometry2(seq, geom, &countinter);
+	if (countinter == 0)
+	{
+		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
+		result[0] = temporalseq_copy(seq);
+		*count = 1;
+		return result;
+	}
+		
+	Period **periods = palloc(sizeof(Period) * countinter);
+	for (int i = 0; i < countinter; i++)
+		periods[i] = &sequences[i]->period;
+	PeriodSet *ps1 = periodset_from_periodarr_internal(periods, countinter, false);
+	PeriodSet *ps2 = minus_period_periodset_internal(&seq->period, ps1);
+	pfree(ps1); pfree(periods);
+	if (ps2 == NULL)
+	{
+		*count = 0;
+		return NULL;
+	}
+	TemporalSeq **result = temporalseq_at_periodset2(seq, ps2, count);
+	pfree(ps2);
+	return result;
+}
+
+static TemporalS *
+tnpointseq_minus_geometry(TemporalSeq *seq, Datum geom)
+{
+	int count;
+	TemporalSeq **sequences = tnpointseq_minus_geometry1(seq, geom, &count);
+	if (sequences == NULL)
+		return NULL;
+
+	TemporalS *result = temporals_from_temporalseqarr(sequences, count, true);
+
+	for (int i = 0; i < count; i++)
+		pfree(sequences[i]);
+	pfree(sequences);
+
+	return result;
+}
+
+static TemporalS *
+tnpoints_minus_geometry(TemporalS *ts, GSERIALIZED *gs, GBOX *box2)
+{
+	/* Singleton sequence set */
+	if (ts->count == 1)
+		return tnpointseq_minus_geometry(temporals_seq_n(ts, 0), 
+			PointerGetDatum(gs));
+
+	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
+	int *countseqs = palloc0(sizeof(int) * ts->count);
+	int totalseqs = 0;
+	for (int i = 0; i < ts->count; i++)
+	{
+		TemporalSeq *seq = temporals_seq_n(ts, i);
+		/* Bounding box test */
+		GBOX *box1 = temporalseq_bbox_ptr(seq);
+		if (!overlaps_gbox_gbox_internal(box1, box2))
+		{
+			sequences[i] = palloc(sizeof(TemporalSeq *));
+			sequences[i][0] = temporalseq_copy(seq);
+			countseqs[i] = 1;
+			totalseqs ++;
+		}
+		else
+		{
+			sequences[i] = tnpointseq_minus_geometry1(seq, PointerGetDatum(gs), 
+				&countseqs[i]);
+			totalseqs += countseqs[i];
+		}
+	}
+	if (totalseqs == 0)
+	{
+		pfree(sequences); pfree(countseqs);
+		return NULL;
+	}
+
+	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
+	int k = 0;
+	for (int i = 0; i < ts->count; i++)
+	{
+		for (int j = 0; j < countseqs[i]; j++)
+			allsequences[k++] = sequences[i][j];
+		if (countseqs[i] != 0)
+			pfree(sequences[i]);
+	}
+	TemporalS *result = temporals_from_temporalseqarr(allsequences, totalseqs, true);
+
+	for (int i = 0; i < totalseqs; i++)
+		pfree(allsequences[i]);
+	pfree(allsequences); pfree(sequences); pfree(countseqs);
+
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(tnpoint_minus_geometry);
+
+PGDLLEXPORT Datum
+tnpoint_minus_geometry(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+
+	/* Bounding box test */
+	GBOX box1, box2;
+	if (!geo_to_gbox_internal(&box2, gs))
+	{
+		Temporal* copy = temporal_copy(temp) ;
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_POINTER(copy);
+	}
+	temporal_bbox(&box1, temp);
+	if (!overlaps_gbox_gbox_internal(&box1, &box2))
+	{
+		Temporal* copy = temporal_copy(temp) ;
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_POINTER(copy);
+	}
+
+	Temporal *result;
+	if (temp->type == TEMPORALINST) 
+		result = (Temporal *)tnpointinst_minus_geometry((TemporalInst *)temp, 
+			PointerGetDatum(gs));
+	else if (temp->type == TEMPORALI) 
+		result = (Temporal *)tnpointi_minus_geometry((TemporalI *)temp, 
+			PointerGetDatum(gs));
+	else if (temp->type == TEMPORALSEQ) 
+		result = (Temporal *)tnpointseq_minus_geometry((TemporalSeq *)temp, 
+			PointerGetDatum(gs));
+	else if (temp->type == TEMPORALS) 
+		result = (Temporal *)tnpoints_minus_geometry((TemporalS *)temp, gs, &box2);
+	else
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Operation not supported")));
+
+	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
+	if (result == NULL)
+		PG_RETURN_NULL();
+	PG_RETURN_POINTER(result);
+}
 /*****************************************************************************/

@@ -70,7 +70,7 @@
  *
  *****************************************************************************/
 
-#include "TemporalPoint.h"
+#include "TemporalNPoint.h"
 
 /*****************************************************************************/
 
@@ -583,6 +583,9 @@ spgist_tpoint_inner_consistent(PG_FUNCTION_ARGS)
 			   initialized to +-infinity */
 			geo_to_gbox_internal(&queries[i], 
 				(GSERIALIZED*)PG_DETOAST_DATUM(in->scankeys[i].sk_argument));
+		else if (subtype == type_oid(T_NPOINT))
+			npoint_to_gbox(&queries[i], 
+				DatumGetNpoint(in->scankeys[i].sk_argument));
 		else if (subtype == TIMESTAMPTZOID)
 			timestamp_to_gbox_internal(&queries[i],
 				DatumGetTimestamp(in->scankeys[i].sk_argument));
@@ -752,6 +755,12 @@ spgist_tpoint_leaf_consistent(PG_FUNCTION_ARGS)
 				res = false;
 			else
 				res = index_leaf_consistent_gbox(key, &query, strategy);
+		}
+		else if (subtype == type_oid(T_NPOINT))
+		{
+			npoint *np = DatumGetNpoint(in->scankeys[i].sk_argument);
+			npoint_to_gbox(&query, np);
+			res = index_leaf_consistent_gbox(key, &query, strategy);
 		}
 		else if (subtype == TIMESTAMPTZOID)
 		{

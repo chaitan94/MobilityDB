@@ -1,4 +1,4 @@
-﻿-- CREATE FUNCTION testSpatialRelsM() RETURNS void AS $$
+-- CREATE FUNCTION testSpatialRelsM() RETURNS void AS $$
 -- BEGIN
 -------------------------------------------------------------------------------
 -- contains
@@ -172,6 +172,7 @@ SELECT count(*) FROM tbl_tgeogpoint t1, tbl_tgeogpoint t2
 -------------------------------------------------------------------------------
 
 SELECT count(*) FROM tbl_geompoint, tbl_tgeompoint
+<<<<<<< HEAD
 	WHERE temporalType(temp) <> 'SequenceSet' AND 
 	relate(g, temp) IS NOT NULL;
 SELECT count(*) FROM tbl_tgeompoint, tbl_geompoint
@@ -180,6 +181,16 @@ SELECT count(*) FROM tbl_tgeompoint, tbl_geompoint
 SELECT count(*) FROM tbl_tgeompoint t1, tbl_tgeompoint t2
 	WHERE temporalType(t1.temp) <> 'SequenceSet' AND 
 	temporalType(t2.temp) <> 'SequenceSet' AND 
+=======
+	WHERE temporalType(temp) <> 'PeriodSet' AND 
+	relate(g, temp) IS NOT NULL;
+SELECT count(*) FROM tbl_tgeompoint, tbl_geompoint
+	WHERE temporalType(temp) <> 'PeriodSet' AND 
+	relate(temp, g) IS NOT NULL;
+SELECT count(*) FROM tbl_tgeompoint t1, tbl_tgeompoint t2
+	WHERE temporalType(t1.temp) <> 'PeriodSet' AND 
+	temporalType(t2.temp) <> 'PeriodSet' AND 
+>>>>>>> d82bc62d0b2aaa167e930f36d5811816b9ff6103
 	relate(t1.temp, t2.temp) IS NOT NULL;
 
 -------------------------------------------------------------------------------

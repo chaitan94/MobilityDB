@@ -10,7 +10,7 @@
  *
  *****************************************************************************/
 
-#include "TemporalPoint.h"
+#include "TemporalNPoint.h"
 
 /* Minimum accepted ratio of split */
 #define LIMIT_RATIO 0.3
@@ -98,14 +98,16 @@ index_leaf_consistent_gbox(GBOX *key, GBOX *query, StrategyNumber strategy)
 				(key->mmax <= query->mmin);
 			break;
 		case RTOverBeforeStrategyNumber:
-			retval = overbefore_gbox_gbox_internal(key, query); 
+			retval = overbefore_gbox_gbox_internal(key, query);
+				/* (key->mmax < query->mmax); */
 			break;
 		case RTAfterStrategyNumber:
 			retval = /* after_gbox_gbox_internal(key, query)*/
 				(key->mmin >= query->mmax); 
 			break;
 		case RTOverAfterStrategyNumber:
-			retval = overafter_gbox_gbox_internal(key, query); 
+			retval = overafter_gbox_gbox_internal(key, query);
+				/* (key->mmin >= query->mmin); */
 			break;			
 		default:
 			elog(ERROR, "unrecognized strategy number: %d", strategy);
@@ -178,13 +180,13 @@ gist_internal_consistent_gbox(GBOX *key, GBOX *query, StrategyNumber strategy)
 			retval = !overafter_gbox_gbox_internal(key, query);
 			break;
 		case RTOverBeforeStrategyNumber:
-			retval = !after_gbox_gbox_internal(key, query);
+			retval =  !after_gbox_gbox_internal(key, query);
 			break;
 		case RTAfterStrategyNumber:
 			retval = !overbefore_gbox_gbox_internal(key, query);
 			break;
 		case RTOverAfterStrategyNumber:
-			retval = !before_gbox_gbox_internal(key, query);
+			retval =  !before_gbox_gbox_internal(key, query);
 			break;
 		default:
 			elog(ERROR, "unrecognized strategy number: %d", strategy);
@@ -254,6 +256,13 @@ gist_tpoint_consistent(PG_FUNCTION_ARGS)
 			PG_RETURN_BOOL(false);
 		if (!geo_to_gbox_internal(&query, PG_GETARG_GSERIALIZED_P(1)))
 			PG_RETURN_BOOL(false);										  
+	}
+	else if (subtype == type_oid(T_NPOINT))
+	{
+		npoint *np = PG_GETARG_NPOINT(1);
+		if (np == NULL)
+			PG_RETURN_BOOL(false);
+		npoint_to_gbox(&query, np);
 	}
 	else if (subtype == TIMESTAMPTZOID)
 	{

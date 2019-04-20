@@ -168,6 +168,7 @@ extern TemporalS *distance_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2);
  * BoundBoxOps.c
  *****************************************************************************/
 
+extern void npoint_to_gbox(GBOX *box, npoint *np);
 extern Datum tnpoint_to_gbox(PG_FUNCTION_ARGS);
 
 extern void tnpointinst_make_gbox(GBOX *box, Datum value, TimestampTz t);

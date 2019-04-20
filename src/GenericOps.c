@@ -532,7 +532,12 @@ oper4_temporalseq_base_crossdisc2(TemporalSeq **result, TemporalSeq *seq, Datum 
 		inst1 = inst2;
 		lower_inc = true;
 	}	
+<<<<<<< HEAD
 	return k;
+=======
+	*count = k;
+	return result;
+>>>>>>> d82bc62d0b2aaa167e930f36d5811816b9ff6103
 }
 
 TemporalS *
@@ -543,6 +548,10 @@ oper4_temporalseq_base_crossdisc(TemporalSeq *seq, Datum value,
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
 	pfree(sequences);
+<<<<<<< HEAD
+=======
+	
+>>>>>>> d82bc62d0b2aaa167e930f36d5811816b9ff6103
 	return result;
 }
 
