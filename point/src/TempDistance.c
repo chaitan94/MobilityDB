@@ -35,11 +35,7 @@ geom_distance3d(Datum geom1, Datum geom2)
 Datum
 geog_distance(Datum geog1, Datum geog2)
 {
-<<<<<<< HEAD
     return call_function4(geography_distance, geog1, geog2, 0.0, true);
-=======
-	return call_function4(geography_distance, geog1, geog2, 0.0, true);
->>>>>>> d82bc62d0b2aaa167e930f36d5811816b9ff6103
 }
 
 /*****************************************************************************/
