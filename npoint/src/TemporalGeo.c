@@ -577,8 +577,8 @@ tnpointseq_azimuth(TemporalSeq *seq)
 	TemporalSeq **allsequences = tnpointseq_azimuth2(seq, &countseqs);
 	if (countseqs == 0)
 		return NULL;
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, countseqs, true);
 
+	TemporalS *result = temporals_from_temporalseqarr(allsequences, countseqs, true);
 	for (int i = 0; i < countseqs; i++)
 		pfree(allsequences[i]);
 	pfree(allsequences);
@@ -588,6 +588,9 @@ tnpointseq_azimuth(TemporalSeq *seq)
 static TemporalS *
 tnpoints_azimuth(TemporalS *ts)
 {
+	if (ts->count == 1)
+		return tpointseq_azimuth(temporals_seq_n(ts, 0));
+		
 	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
 	int *countseqs = palloc0(sizeof(int) * ts->count);
 	int totalseqs = 0;
