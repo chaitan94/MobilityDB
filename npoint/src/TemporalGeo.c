@@ -589,7 +589,7 @@ static TemporalS *
 tnpoints_azimuth(TemporalS *ts)
 {
 	if (ts->count == 1)
-		return tpointseq_azimuth(temporals_seq_n(ts, 0));
+		return tnpointseq_azimuth(temporals_seq_n(ts, 0));
 		
 	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
 	int *countseqs = palloc0(sizeof(int) * ts->count);
