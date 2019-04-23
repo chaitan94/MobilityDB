@@ -177,8 +177,6 @@ overlaps_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(result);
 }
 
-/*****************************************************************************/
-
 PG_FUNCTION_INFO_V1(overlaps_bbox_tnpoint_npoint);
 
 PGDLLEXPORT Datum
@@ -229,8 +227,6 @@ contains_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(result);
 }
 
-/*****************************************************************************/
-
 PG_FUNCTION_INFO_V1(contains_bbox_tnpoint_npoint);
 
 PGDLLEXPORT Datum
@@ -280,8 +276,6 @@ contained_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
-
-/*****************************************************************************/
 
 PG_FUNCTION_INFO_V1(contained_bbox_tnpoint_npoint);
 
@@ -334,8 +328,6 @@ same_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
-
-/*****************************************************************************/
 
 PG_FUNCTION_INFO_V1(same_bbox_tnpoint_npoint);
 

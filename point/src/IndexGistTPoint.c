@@ -10,7 +10,7 @@
  *
  *****************************************************************************/
 
-#include ""
+#include "TNPoint.h"
 
 /* Minimum accepted ratio of split */
 #define LIMIT_RATIO 0.3
