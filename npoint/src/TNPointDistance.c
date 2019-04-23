@@ -10,7 +10,7 @@
  *
  *****************************************************************************/
 
-#include "TemporalNPoint.h"
+#include "TNPoint.h"
 
 /*****************************************************************************
  * Generic distance functions when temporal npoints are moving
@@ -423,23 +423,15 @@ distance_tnpoint_geo(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
-PG_FUNCTION_INFO_V1(distance_tnpoint_tnpoint);
-
-PGDLLEXPORT Datum
-distance_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+Temporal *
+distance_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2)
 {
-	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
-	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
 	Temporal *sync1, *sync2;
 	/* Return NULL if the temporal points do not intersect in time */
 	if (!synchronize_temporal_temporal(temp1, temp2, &sync1, &sync2, true))
-	{
-		PG_FREE_IF_COPY(temp1, 0);
-		PG_FREE_IF_COPY(temp2, 1);
-		PG_RETURN_NULL();
-	}
+		return NULL;
 	
-	Temporal *result = NULL;
+	Temporal *result;
 	if (sync1->type == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_tnpointinst(
 			(TemporalInst *)sync1, (TemporalInst *)sync2, 
@@ -459,6 +451,17 @@ distance_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 			errmsg("Operation not supported")));
 
 	pfree(sync1); pfree(sync2);
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(distance_tnpoint_tnpoint);
+
+PGDLLEXPORT Datum
+distance_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	Temporal *result = distance_tnpoint_tnpoint_internal(temp1, temp2);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
 	if (result == NULL)

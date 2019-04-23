@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * TemporalGeo.c
- *	  Geospatial functions for temporal network-constrained points.
+ * TNPointGeo.c
+ *	  Geospatial functions for temporal network points.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li
  *		Universite Libre de Bruxelles
@@ -10,7 +10,7 @@
  *
  *****************************************************************************/
 
-#include "TemporalNPoint.h"
+#include "TNPoint.h"
 
 /*****************************************************************************
  * Trajectory functions
@@ -268,6 +268,25 @@ tnpoints_geom(TemporalS *ts)
 	pfree(segments);
 	return result;
 }
+
+Datum
+tnpoint_geom(Temporal *temp)
+{
+	Datum result;
+	if (temp->type == TEMPORALINST) 
+		result = tnpointinst_geom((TemporalInst *)temp);
+	else if (temp->type == TEMPORALI) 
+		result = tnpointi_geom((TemporalI *)temp);
+	else if (temp->type == TEMPORALSEQ) 
+		result = tnpointseq_geom((TemporalSeq *)temp);
+	else if (temp->type == TEMPORALS) 
+		result = tnpoints_geom((TemporalS *)temp);
+	else
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Operation not supported")));
+	return result;
+}
+
 
 /*****************************************************************************
  * Length and speed functions
@@ -1231,8 +1250,7 @@ NAI_tnpointseq_geometry(TemporalSeq *seq, Datum geom)
 static TemporalInst *
 NAI_tnpoints_geometry(TemporalS *ts, Datum geom)
 {
-	Datum minpoint = 0; /* keep compiler quiet */
-	TimestampTz t = 0; /* keep compiler quiet */
+	TemporalInst *result = NULL;
 	double mindist = DBL_MAX;
 	for (int i = 0; i < ts->count; i++)
 	{
@@ -1242,16 +1260,13 @@ NAI_tnpoints_geometry(TemporalS *ts, Datum geom)
 		double dist = DatumGetFloat8(call_function2(distance, value, geom));
 		if (dist < mindist)
 		{
-			if (mindist != DBL_MAX)
-				pfree(DatumGetPointer(minpoint));
-			mindist = dist;
-			minpoint = temporalinst_value_copy(inst);
-			t = inst->t;
+			if (result != NULL)
+				pfree(result);
+			result = inst;
 		}
-		pfree(inst);
+		else
+			pfree(inst);
 	}
-	TemporalInst *result = temporalinst_make(minpoint, t, 
-		ts->valuetypid);
 	return result;
 }
 
@@ -1322,39 +1337,15 @@ NAI_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
-	Temporal *sync1, *sync2;
-	/* Return NULL if the temporal points do not intersect in time */
-	if (!synchronize_temporal_temporal(temp1, temp2, &sync1, &sync2, true))
+	TemporalInst *result = NULL;
+	Temporal *dist = distance_tpoint_tpoint_internal(temp1, temp2);
+	if (dist != NULL)
 	{
-		PG_FREE_IF_COPY(temp1, 0);
-		PG_FREE_IF_COPY(temp2, 1);
-		PG_RETURN_NULL();
+		Temporal *mindist = temporal_at_min_internal(dist);
+		TimestampTz t = temporal_start_timestamp_internal(mindist);
+		result = temporal_at_timestamp_internal(temp1, t);
+		pfree(dist); pfree(mindist);
 	}
-
-	Temporal *dist = NULL;
-	if (sync1->type == TEMPORALINST)
-		dist = (Temporal *)tspatialrel_tnpointinst_tnpointinst(
-			(TemporalInst *)sync1, (TemporalInst *)sync2, 
-			&geom_distance2d, FLOAT8OID);
-	else if (sync1->type == TEMPORALI)
-		dist = (Temporal *)tspatialrel_tnpointi_tnpointi(
-			(TemporalI *)sync1, (TemporalI *)sync2, 
-			&geom_distance2d, FLOAT8OID);
-	else if (sync1->type == TEMPORALSEQ)
-		dist = (Temporal *)distance_tnpointseq_tnpointseq(
-			(TemporalSeq *)sync1, (TemporalSeq *)sync2);
-	else if (sync1->type == TEMPORALS)
-		dist = (Temporal *)distance_tnpoints_tnpoints(
-			(TemporalS *)sync1, (TemporalS *)sync2);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
-
-	Temporal *mindist = temporal_at_min_internal(dist);
-	TimestampTz t = temporal_start_timestamp_internal(mindist);
-	TemporalInst *result = temporal_at_timestamp_internal(temp1, t);
-	pfree(sync1); pfree(sync2);
-	pfree(dist); pfree(mindist);		
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
 	if (result == NULL)
@@ -1366,40 +1357,6 @@ NAI_tnpoint_tnpoint(PG_FUNCTION_ARGS)
  * Nearest approach distance
  *****************************************************************************/
 
-static double
-NAD_tnpointinst_geometry(TemporalInst *inst, Datum geom)
-{
-	Datum value = temporalinst_value(inst);
-	Datum result = DatumGetFloat8(call_function2(distance, value, geom));
-	return result;
-}
-
-static double
-NAD_tnpointi_geometry(TemporalI *ti, Datum geom)
-{
-	Datum traj = tpointi_values(ti);
-	double result = DatumGetFloat8(call_function2(distance, traj, geom));
-	pfree(DatumGetPointer(traj));
-	return result;
-}
-
-static double
-NAD_tnpointseq_geometry(TemporalSeq *seq, Datum geom)
-{
-	Datum traj = tnpointseq_geom(seq);
-	double result = DatumGetFloat8(call_function2(distance, traj, geom));
-	return result;
-}
-
-static double
-NAD_tnpoints_geometry(TemporalS *ts, Datum geom)
-{
-	Datum traj = tnpoints_geom(ts);
-	double result = DatumGetFloat8(call_function2(distance, traj, geom));
-	pfree(DatumGetPointer(traj));
-	return result;
-}
-
 PG_FUNCTION_INFO_V1(NAD_geometry_tnpoint);
 
 PGDLLEXPORT Datum
@@ -1407,24 +1364,9 @@ NAD_geometry_tnpoint(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-
-	Datum result;
-	if (temp->type == TEMPORALINST) 
-		result = NAD_tnpointinst_geometry((TemporalInst *)temp,
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALI) 
-		result = NAD_tnpointi_geometry((TemporalI *)temp,
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALSEQ) 
-		result = NAD_tnpointseq_geometry((TemporalSeq *)temp,
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALS) 
-		result = NAD_tnpoints_geometry((TemporalS *)temp,
-			PointerGetDatum(gs));
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
-
+	Datum traj = tnpoint_geom(temp);
+	Datum result = call_function2(distance, traj, PointerGetDatum(gs));
+	pfree(DatumGetPointer(traj));
 	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
@@ -1437,30 +1379,13 @@ NAD_tnpoint_geometry(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-
-	Datum result;
-	if (temp->type == TEMPORALINST) 
-		result = NAD_tnpointinst_geometry((TemporalInst *)temp,
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALI) 
-		result = NAD_tnpointi_geometry((TemporalI *)temp,
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALSEQ) 
-		result = NAD_tnpointseq_geometry((TemporalSeq *)temp,
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALS) 
-		result = NAD_tnpoints_geometry((TemporalS *)temp,
-			PointerGetDatum(gs));
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
-
+	Datum traj = tnpoint_geom(temp);
+	Datum result = call_function2(distance, traj, PointerGetDatum(gs));
+	pfree(DatumGetPointer(traj));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
-	PG_RETURN_FLOAT8(result);
+	PG_RETURN_DATUM(result);
 }
-
-/*****************************************************************************/
 
 PG_FUNCTION_INFO_V1(NAD_tnpoint_tnpoint);
 
@@ -1469,79 +1394,24 @@ NAD_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
-	Temporal *sync1, *sync2;
-	/* Return NULL if the temporal points do not intersect in time */
-	if (!synchronize_temporal_temporal(temp1, temp2, &sync1, &sync2, true))
+	Temporal *dist = distance_tpoint_tpoint_internal(temp1, temp2);
+	if (dist == NULL)
 	{
 		PG_FREE_IF_COPY(temp1, 0);
 		PG_FREE_IF_COPY(temp2, 1);
 		PG_RETURN_NULL();
 	}
 
-	Temporal *dist = NULL;
-	if (sync1->type == TEMPORALINST)
-		dist = (Temporal *)tspatialrel_tnpointinst_tnpointinst(
-			(TemporalInst *)sync1, (TemporalInst *)sync2, 
-			&geom_distance2d, FLOAT8OID);
-	else if (sync1->type == TEMPORALI)
-		dist = (Temporal *)tspatialrel_tnpointi_tnpointi(
-			(TemporalI *)sync1, (TemporalI *)sync2, 
-			&geom_distance2d, FLOAT8OID);
-	else if (sync1->type == TEMPORALSEQ)
-		dist = (Temporal *)distance_tnpointseq_tnpointseq(
-			(TemporalSeq *)sync1, (TemporalSeq *)sync2);
-	else if (sync1->type == TEMPORALS)
-		dist = (Temporal *)distance_tnpoints_tnpoints(
-			(TemporalS *)sync1, (TemporalS *)sync2);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
-
-	double result = DatumGetFloat8(temporal_min_value_internal(dist));
-	pfree(sync1); pfree(sync2);
+	Datum result = temporal_min_value_internal(dist);
 	pfree(dist);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
-	PG_RETURN_FLOAT8(result);
+	PG_RETURN_DATUM(result);
 }
 
 /*****************************************************************************
  * ShortestLine
  *****************************************************************************/
-
-static Datum
-shortestline_tnpointinst_geometry(TemporalInst *inst, Datum geom)
-{
-	Datum value = temporalinst_value(inst);
-	Datum result = call_function2(LWGEOM_shortestline2d, value, geom);
-	return result;
-}
-
-static Datum
-shortestline_tnpointi_geometry(TemporalI *ti, Datum geom)
-{
-	Datum traj = tpointi_values(ti);
-	Datum result = call_function2(LWGEOM_shortestline2d, traj, geom);
-	pfree(DatumGetPointer(traj));
-	return result;
-}
-
-static Datum
-shortestline_tnpointseq_geometry(TemporalSeq *seq, Datum geom)
-{
-	Datum traj = tnpointseq_geom(seq);
-	Datum result = call_function2(LWGEOM_shortestline2d, traj, geom);
-	return result;
-}
-
-static Datum
-shortestline_tnpoints_geometry(TemporalS *ts, Datum geom)
-{
-	Datum traj = tnpoints_geom(ts);
-	Datum result = call_function2(LWGEOM_shortestline2d, traj, geom);
-	pfree(DatumGetPointer(traj));
-	return result;
-}
 
 PG_FUNCTION_INFO_V1(shortestline_geometry_tnpoint);
 
@@ -1550,24 +1420,9 @@ shortestline_geometry_tnpoint(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	
-	Datum result;
-	if (temp->type == TEMPORALINST) 
-		result = shortestline_tnpointinst_geometry((TemporalInst *)temp, 
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALI) 
-		result = shortestline_tnpointi_geometry((TemporalI *)temp, 
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALSEQ) 
-		result = shortestline_tnpointseq_geometry((TemporalSeq *)temp, 
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALS) 
-		result = shortestline_tnpoints_geometry((TemporalS *)temp, 
-			PointerGetDatum(gs));
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
-
+	Datum traj = tnpoint_geom(temp);
+	Datum result = call_function2(LWGEOM_shortestline2d, traj, PointerGetDatum(gs));
+	pfree(DatumGetPointer(traj));
 	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
@@ -1580,24 +1435,9 @@ shortestline_tnpoint_geometry(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-
-	Datum result;
-	if (temp->type == TEMPORALINST) 
-		result = shortestline_tnpointinst_geometry((TemporalInst *)temp, 
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALI) 
-		result = shortestline_tnpointi_geometry((TemporalI *)temp, 
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALSEQ) 
-		result = shortestline_tnpointseq_geometry((TemporalSeq *)temp, 
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALS) 
-		result = shortestline_tnpoints_geometry((TemporalS *)temp, 
-			PointerGetDatum(gs));
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
-
+	Datum traj = tnpoint_geom(temp);
+	Datum result = call_function2(LWGEOM_shortestline2d, traj, PointerGetDatum(gs));
+	pfree(DatumGetPointer(traj));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_DATUM(result);
@@ -1609,8 +1449,11 @@ shortestline_tnpoint_geometry(PG_FUNCTION_ARGS)
 static Datum
 shortestline_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2)
 {
-	return call_function2(LWGEOM_makeline, temporalinst_value(inst1), 
-		temporalinst_value(inst2));
+	Datum value1 = tnpointinst_geom(inst1);
+	Datum value2 = tnpointinst_geom(inst2);
+	Datum result = call_function2(LWGEOM_makeline, value1, value2);
+	pfree(DatumGetPointer(value1)); pfree(DatumGetPointer(value2));
+	return result;
 }
 
 static Datum
@@ -1618,15 +1461,16 @@ shortestline_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2)
 {
 	/* Compute the distance */
 	TemporalI *dist = tspatialrel_tnpointi_tnpointi(ti1, ti2, 
-			&geom_distance2d, FLOAT8OID);
-	Datum minvalue = temporali_min_value(dist);
-	TemporalI *mindistance = temporali_at_value(dist, minvalue);
-	TimestampTz t = temporali_start_timestamp(mindistance);
+		&geom_distance2d, FLOAT8OID);
+	TemporalI *mindist = temporali_at_min(dist);
+	TimestampTz t = temporali_start_timestamp(mindist);
 	TemporalInst *inst1 = temporali_at_timestamp(ti1, t);
 	TemporalInst *inst2 = temporali_at_timestamp(ti2, t);
-	Datum result = call_function2(LWGEOM_makeline, temporalinst_value(inst1), 
-		temporalinst_value(inst2));
-	pfree(dist); pfree(mindistance); pfree(inst1); pfree(inst2);
+	Datum value1 = tnpointinst_geom(inst1);
+	Datum value2 = tnpointinst_geom(inst2);
+	Datum result = call_function2(LWGEOM_makeline, value1, value2);
+	pfree(dist); pfree(mindist); pfree(inst1); pfree(inst2);
+	pfree(DatumGetPointer(value1)); pfree(DatumGetPointer(value2));
 	return result;
 }
 
@@ -1639,17 +1483,17 @@ shortestline_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
 	TimestampTz t = temporals_start_timestamp(mindist);
 	/* Make a copy of the sequences with inclusive bounds */
 	TemporalSeq *newseq1 = temporalseq_copy(seq1);
-	newseq1->period.lower_inc = true;
-	newseq1->period.upper_inc = true;
+	newseq1->period.lower_inc = newseq1->period.upper_inc = true;
 	TemporalSeq *newseq2 = temporalseq_copy(seq2);
-	newseq2->period.lower_inc = true;
-	newseq2->period.upper_inc = true;
+	newseq2->period.lower_inc = newseq2->period.upper_inc = true;
 	TemporalInst *inst1 = temporalseq_at_timestamp(newseq1, t);
 	TemporalInst *inst2 = temporalseq_at_timestamp(newseq2, t);
-	Datum result = call_function2(LWGEOM_makeline, temporalinst_value(inst1), 
-		temporalinst_value(inst2));
-	pfree(dist); pfree(mindist); pfree(inst1); pfree(inst2);
-	pfree(newseq1); pfree(newseq2);
+	Datum value1 = tnpointinst_geom(inst1);
+	Datum value2 = tnpointinst_geom(inst2);
+	Datum result = call_function2(LWGEOM_makeline, value1, value2);
+	pfree(dist); pfree(mindist); pfree(newseq1); pfree(newseq2);
+	pfree(inst1); pfree(inst2);
+	pfree(DatumGetPointer(value1)); pfree(DatumGetPointer(value2));
 	return result;
 }
 
@@ -1716,14 +1560,15 @@ shortestline_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
 				inst2 = temporalseq_inst_n(seq2, 0);
 			}		
 	}
-	
-	Datum result = call_function2(LWGEOM_makeline, temporalinst_value(inst1), 
-		temporalinst_value(inst2));
+	Datum value1 = tnpointinst_geom(inst1);
+	Datum value2 = tnpointinst_geom(inst2);
+	Datum result = call_function2(LWGEOM_makeline, value1, value2);
 	pfree(dist); pfree(mindist); 
 	if (freeinst1)
 		pfree(inst1); 
 	if (freeinst2)
 		pfree(inst2);
+	pfree(DatumGetPointer(value1)); pfree(DatumGetPointer(value2));
 	return result;
 }
 
