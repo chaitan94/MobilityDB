@@ -16,7 +16,7 @@
 #include <liblwgeom.h>
 #include "TemporalTypes.h"
 #include "TemporalPoint.h"
-#include "TemporalNPoint.h"
+#include ""
 
 GBOX 
 get_gbox(Node *node)

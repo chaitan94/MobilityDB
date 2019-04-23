@@ -13,7 +13,7 @@
 #include <TemporalTypes.h>
 
 #ifdef WITH_POSTGIS
-#include "TemporalNPoint.h"
+#include ""
 #endif
 
 /*****************************************************************************

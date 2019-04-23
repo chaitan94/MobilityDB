@@ -13,7 +13,7 @@
 #include "TemporalTypes.h"
 #ifdef WITH_POSTGIS
 #include "TemporalPoint.h"
-#include "TemporalNPoint.h"
+#include ""
 #endif
 
 #ifdef PG_MODULE_MAGIC
