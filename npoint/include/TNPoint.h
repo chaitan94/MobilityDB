@@ -163,6 +163,7 @@ extern TemporalS *distance_tnpointseq_tnpoints(TemporalSeq *seq, TemporalS *ts);
 extern TemporalS *distance_tnpoints_geo(TemporalS *ts, Datum geo);
 extern TemporalS *distance_tnpoints_tnpointseq(TemporalS *ts, TemporalSeq *seq);
 extern TemporalS *distance_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2);
+extern Temporal *distance_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2);
 
 /*****************************************************************************
  * BoundBoxOps.c
