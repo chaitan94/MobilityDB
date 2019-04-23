@@ -248,9 +248,9 @@ PGDLLEXPORT Datum
 npoint_route(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
-	int64 rid = np->rid;
+	int64 result = np->rid;
 	PG_FREE_IF_COPY(np, 0);
-	PG_RETURN_INT64(rid);
+	PG_RETURN_INT64(result);
 }
 
 PG_FUNCTION_INFO_V1(npoint_position);
@@ -259,9 +259,9 @@ PGDLLEXPORT Datum
 npoint_position(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
-	double pos = np->pos;
+	double result = np->pos;
 	PG_FREE_IF_COPY(np, 0);
-	PG_RETURN_FLOAT8(pos);
+	PG_RETURN_FLOAT8(result);
 }
 
 PG_FUNCTION_INFO_V1(nsegment_route);
@@ -270,9 +270,9 @@ PGDLLEXPORT Datum
 nsegment_route(PG_FUNCTION_ARGS)
 {
 	nsegment *ns = PG_GETARG_NSEGMENT(0);
-	int64 rid = ns->rid;
+	int64 result = ns->rid;
 	PG_FREE_IF_COPY(ns, 0);
-	PG_RETURN_INT64(rid);
+	PG_RETURN_INT64(result);
 }
 
 PG_FUNCTION_INFO_V1(nsegment_start_position);
@@ -281,9 +281,9 @@ PGDLLEXPORT Datum
 nsegment_start_position(PG_FUNCTION_ARGS)
 {
 	nsegment *ns = PG_GETARG_NSEGMENT(0);
-	double pos1 = ns->pos1;
+	double result = ns->pos1;
 	PG_FREE_IF_COPY(ns, 0);
-	PG_RETURN_FLOAT8(pos1);
+	PG_RETURN_FLOAT8(result);
 }
 
 PG_FUNCTION_INFO_V1(nsegment_end_position);
@@ -292,9 +292,9 @@ PGDLLEXPORT Datum
 nsegment_end_position(PG_FUNCTION_ARGS)
 {
 	nsegment *ns = PG_GETARG_NSEGMENT(0);
-	double pos2 = ns->pos2;
+	double result = ns->pos2;
 	PG_FREE_IF_COPY(ns, 0);
-	PG_RETURN_FLOAT8(pos2);
+	PG_RETURN_FLOAT8(result);
 }
 
 /*****************************************************************************
