@@ -1395,7 +1395,7 @@ tdwithin_tnpointseq_geo_internal(TemporalSeq *seq, Datum geo, Datum dist,
 	bool invert)
 {
 	TemporalSeq *distSeq = distance_tnpointseq_geo(seq, geo);
-	TemporalS *result = oper4_temporalseq_base_crossdisc(distSeq, dist, 
+	TemporalS *result = tfunc4_temporalseq_base_crossdisc(distSeq, dist, 
 		&datum2_le2, FLOAT8OID, BOOLOID, invert);
 	pfree(distSeq);
 	return result;
@@ -1406,7 +1406,7 @@ tdwithin_tnpoints_geo_internal(TemporalS *ts, Datum geo, Datum dist,
 	bool invert)
 {
 	TemporalS *distS = distance_tnpoints_geo(ts, geo);
-	TemporalS *result = oper4_temporals_base_crossdisc(distS, dist, 
+	TemporalS *result = tfunc4_temporals_base_crossdisc(distS, dist, 
 		&datum2_le2, FLOAT8OID, BOOLOID, invert);
 	pfree(distS);
 	return result;
@@ -1417,7 +1417,7 @@ tdwithin_tnpointseq_tnpointseq_internal(TemporalSeq *seq1, TemporalSeq *seq2,
 	Datum dist)
 {
 	TemporalSeq *distSeq = distance_tnpointseq_tnpointseq(seq1, seq2);
-	TemporalS *result = oper4_temporalseq_base_crossdisc(distSeq, dist, 
+	TemporalS *result = tfunc4_temporalseq_base_crossdisc(distSeq, dist, 
 		&datum2_le2, FLOAT8OID, BOOLOID, true);
 	pfree(distSeq);
 	return result;
@@ -1429,7 +1429,7 @@ tdwithin_tnpoints_tnpoints_internal(TemporalS *ts1, TemporalS *ts2, Datum dist)
 	TemporalS *distS = distance_tnpoints_tnpoints(ts1, ts2);
 	if (distS == NULL)
 		return NULL;
-	TemporalS *result = oper4_temporals_base_crossdisc(distS, dist, 
+	TemporalS *result = tfunc4_temporals_base_crossdisc(distS, dist, 
 		&datum2_le2, FLOAT8OID, BOOLOID, true);
 	pfree(distS);
 	return result;
