@@ -121,12 +121,12 @@ add_base_temporal(PG_FUNCTION_ARGS)
 	Temporal *result;
 	if (temp->valuetypid == datumtypid || temp->type == TEMPORALINST || 
 		temp->type == TEMPORALI)
- 		result = oper4_temporal_base(temp, value, 
+ 		result = tfunc4_temporal_base(temp, value, 
 		 	&datum_add, datumtypid, valuetypid, true);
 	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_as_tfloat_internal(temp);
-		result = oper4_temporal_base(ftemp, value, 
+		result = tfunc4_temporal_base(ftemp, value, 
 		 	&datum_add, FLOAT8OID, FLOAT8OID, true);
 		pfree(ftemp);
 	}
@@ -152,12 +152,12 @@ add_temporal_base(PG_FUNCTION_ARGS)
 	Temporal *result;
 	if (temp->valuetypid == datumtypid || temp->type == TEMPORALINST || 
 		temp->type == TEMPORALI)
- 		result = oper4_temporal_base(temp, value,
+ 		result = tfunc4_temporal_base(temp, value,
 		 	&datum_add, datumtypid, valuetypid, true);
 	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_as_tfloat_internal(temp);
-		result = oper4_temporal_base(ftemp, value,
+		result = tfunc4_temporal_base(ftemp, value,
 		 	&datum_add, FLOAT8OID, FLOAT8OID, true);
 		pfree(ftemp);
 	}
@@ -183,20 +183,20 @@ add_temporal_temporal(PG_FUNCTION_ARGS)
 	{
 		Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
 		Oid valuetypid = base_oid_from_temporal(temptypid);
- 		result = sync_oper4_temporal_temporal(temp1, temp2, 
+ 		result = sync_tfunc4_temporal_temporal(temp1, temp2, 
 		 	&datum_add, valuetypid, NULL);
 	}
 	else if (temp1->valuetypid == INT4OID && temp2->valuetypid == FLOAT8OID)
 	{
 		Temporal *ftemp1 = tint_as_tfloat_internal(temp1);
-		result = sync_oper4_temporal_temporal(ftemp1, temp2, 
+		result = sync_tfunc4_temporal_temporal(ftemp1, temp2, 
 		 	&datum_add, FLOAT8OID, NULL);
 		pfree(ftemp1);
 	}
 	else if (temp1->valuetypid == FLOAT8OID && temp2->valuetypid == INT4OID)
 	{
 		Temporal *ftemp2 = tint_as_tfloat_internal(temp2);
-		result = sync_oper4_temporal_temporal(temp1, ftemp2, 
+		result = sync_tfunc4_temporal_temporal(temp1, ftemp2, 
 		 	&datum_add, FLOAT8OID, NULL);
 		pfree(ftemp2);
 	}
@@ -228,12 +228,12 @@ sub_base_temporal(PG_FUNCTION_ARGS)
 	Temporal *result;
 	if (temp->valuetypid == datumtypid || temp->type == TEMPORALINST || 
 		temp->type == TEMPORALI)
- 		result = oper4_temporal_base(temp, value,
+ 		result = tfunc4_temporal_base(temp, value,
 		 	&datum_sub, datumtypid, valuetypid, true);
 	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_as_tfloat_internal(temp);
-		result = oper4_temporal_base(ftemp, value,
+		result = tfunc4_temporal_base(ftemp, value,
 		 	&datum_sub, FLOAT8OID, FLOAT8OID, true);
 		pfree(ftemp);
 	}
@@ -258,12 +258,12 @@ sub_temporal_base(PG_FUNCTION_ARGS)
 	Temporal *result;
 	if (temp->valuetypid == datumtypid || temp->type == TEMPORALINST || 
 		temp->type == TEMPORALI)
- 		result = oper4_temporal_base(temp, value,
+ 		result = tfunc4_temporal_base(temp, value,
 		 	&datum_sub, datumtypid, valuetypid, true);
 	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_as_tfloat_internal(temp);
-		result = oper4_temporal_base(ftemp, value,
+		result = tfunc4_temporal_base(ftemp, value,
 		 	&datum_add, FLOAT8OID, FLOAT8OID, true);
 		pfree(ftemp);
 	}
@@ -289,20 +289,20 @@ sub_temporal_temporal(PG_FUNCTION_ARGS)
 	{
 		Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
 		Oid valuetypid = base_oid_from_temporal(temptypid);
- 		result = sync_oper4_temporal_temporal(temp1, temp2, 
+ 		result = sync_tfunc4_temporal_temporal(temp1, temp2, 
 		 	&datum_sub, valuetypid, NULL);
 	}
 	else if (temp1->valuetypid == INT4OID && temp2->valuetypid == FLOAT8OID)
 	{
 		Temporal *ftemp1 = tint_as_tfloat_internal(temp1);
-		result = sync_oper4_temporal_temporal(ftemp1, temp2, 
+		result = sync_tfunc4_temporal_temporal(ftemp1, temp2, 
 		 	&datum_sub, FLOAT8OID, NULL);
 		pfree(ftemp1);
 	}
 	else if (temp1->valuetypid == FLOAT8OID && temp2->valuetypid == INT4OID)
 	{
 		Temporal *ftemp2 = tint_as_tfloat_internal(temp2);
-		result = sync_oper4_temporal_temporal(temp1, ftemp2, 
+		result = sync_tfunc4_temporal_temporal(temp1, ftemp2, 
 		 	&datum_sub, FLOAT8OID, NULL);
 		pfree(ftemp2);
 	}
@@ -334,12 +334,12 @@ mult_base_temporal(PG_FUNCTION_ARGS)
 	Temporal *result;
 	if (temp->valuetypid == datumtypid || temp->type == TEMPORALINST || 
 		temp->type == TEMPORALI)
- 		result = oper4_temporal_base(temp, value,
+ 		result = tfunc4_temporal_base(temp, value,
 		 	&datum_mult, datumtypid, valuetypid, true);
 	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_as_tfloat_internal(temp);
-		result = oper4_temporal_base(ftemp, value,
+		result = tfunc4_temporal_base(ftemp, value,
 		 	&datum_mult, FLOAT8OID, FLOAT8OID, true);
 		pfree(ftemp);
 	}
@@ -364,12 +364,12 @@ mult_temporal_base(PG_FUNCTION_ARGS)
 	Temporal *result;
 	if (temp->valuetypid == datumtypid || temp->type == TEMPORALINST || 
 		temp->type == TEMPORALI)
- 		result = oper4_temporal_base(temp, value,
+ 		result = tfunc4_temporal_base(temp, value,
 		 	&datum_mult, datumtypid, valuetypid, true);
 	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_as_tfloat_internal(temp);
-		result = oper4_temporal_base(ftemp, value,
+		result = tfunc4_temporal_base(ftemp, value,
 		 	&datum_mult, FLOAT8OID, FLOAT8OID, true);
 		pfree(ftemp);
 	}
@@ -398,18 +398,18 @@ mult_temporal_temporal(PG_FUNCTION_ARGS)
 		Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
 		Oid valuetypid = base_oid_from_temporal(temptypid);
  		result = crossings ?
-			sync_oper4_temporal_temporal(temp1, temp2, 
+			sync_tfunc4_temporal_temporal(temp1, temp2, 
 		 		&datum_mult, valuetypid, &tnumberseq_mult_maxmin_at_timestamp) :
-			sync_oper4_temporal_temporal(temp1, temp2, 
+			sync_tfunc4_temporal_temporal(temp1, temp2, 
 		 		&datum_mult, valuetypid, NULL);
 	}
 	else if (temp1->valuetypid == INT4OID && temp2->valuetypid == FLOAT8OID)
 	{
 		Temporal *ftemp1 = tint_as_tfloat_internal(temp1);
 		result =  crossings ?
-			sync_oper4_temporal_temporal(ftemp1, temp2, 
+			sync_tfunc4_temporal_temporal(ftemp1, temp2, 
 		 		&datum_mult, FLOAT8OID, &tnumberseq_mult_maxmin_at_timestamp) :
-			sync_oper4_temporal_temporal(ftemp1, temp2, 
+			sync_tfunc4_temporal_temporal(ftemp1, temp2, 
 		 		&datum_mult, FLOAT8OID, NULL);
 		pfree(ftemp1);
 	}
@@ -417,9 +417,9 @@ mult_temporal_temporal(PG_FUNCTION_ARGS)
 	{
 		Temporal *ftemp2 = tint_as_tfloat_internal(temp2);
 		result =  crossings ?
-			sync_oper4_temporal_temporal(temp1, ftemp2, 
+			sync_tfunc4_temporal_temporal(temp1, ftemp2, 
 		 		&datum_mult, FLOAT8OID, &tnumberseq_mult_maxmin_at_timestamp) :
-			sync_oper4_temporal_temporal(temp1, ftemp2, 
+			sync_tfunc4_temporal_temporal(temp1, ftemp2, 
 		 		&datum_mult, FLOAT8OID, NULL);
 		pfree(ftemp2);
 	}
@@ -456,12 +456,12 @@ div_base_temporal(PG_FUNCTION_ARGS)
 	Temporal *result;
 	if (temp->valuetypid == datumtypid || temp->type == TEMPORALINST || 
 		temp->type == TEMPORALI)
- 		result = oper4_temporal_base(temp, value,
+ 		result = tfunc4_temporal_base(temp, value,
 		 	&datum_div, datumtypid, valuetypid, true);
 	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_as_tfloat_internal(temp);
-		result = oper4_temporal_base(ftemp, value,
+		result = tfunc4_temporal_base(ftemp, value,
 		 	&datum_div, FLOAT8OID, FLOAT8OID, true);
 		pfree(ftemp);
 	}
@@ -491,12 +491,12 @@ div_temporal_base(PG_FUNCTION_ARGS)
 	Temporal *result;
 	if (temp->valuetypid == datumtypid || temp->type == TEMPORALINST || 
 		temp->type == TEMPORALI)
- 		result = oper4_temporal_base(temp, value,
+ 		result = tfunc4_temporal_base(temp, value,
 		 	&datum_div, datumtypid, valuetypid, true);
 	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_as_tfloat_internal(temp);
-		result = oper4_temporal_base(ftemp, value,
+		result = tfunc4_temporal_base(ftemp, value,
 		 	&datum_div, FLOAT8OID, FLOAT8OID, true);
 		pfree(ftemp);
 	}
@@ -525,18 +525,18 @@ div_temporal_temporal(PG_FUNCTION_ARGS)
 		Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
 		Oid valuetypid = base_oid_from_temporal(temptypid);
  		result = crossings ?
-			sync_oper4_temporal_temporal(temp1, temp2, 
+			sync_tfunc4_temporal_temporal(temp1, temp2, 
 		 		&datum_div, valuetypid, &tnumberseq_mult_maxmin_at_timestamp) :
-			sync_oper4_temporal_temporal(temp1, temp2, 
+			sync_tfunc4_temporal_temporal(temp1, temp2, 
 		 		&datum_div, valuetypid, NULL);
 	}
 	else if (temp1->valuetypid == INT4OID && temp2->valuetypid == FLOAT8OID)
 	{
 		Temporal *ftemp1 = tint_as_tfloat_internal(temp1);
 		result =  crossings ?
-			sync_oper4_temporal_temporal(ftemp1, temp2, 
+			sync_tfunc4_temporal_temporal(ftemp1, temp2, 
 		 		&datum_div, FLOAT8OID, &tnumberseq_mult_maxmin_at_timestamp) :
-			sync_oper4_temporal_temporal(ftemp1, temp2, 
+			sync_tfunc4_temporal_temporal(ftemp1, temp2, 
 		 		&datum_div, FLOAT8OID, NULL);
 		pfree(ftemp1);
 	}
@@ -544,9 +544,9 @@ div_temporal_temporal(PG_FUNCTION_ARGS)
 	{
 		Temporal *ftemp2 = tint_as_tfloat_internal(temp2);
 		result =  crossings ?
-			sync_oper4_temporal_temporal(temp1, ftemp2, 
+			sync_tfunc4_temporal_temporal(temp1, ftemp2, 
 		 		&datum_div, FLOAT8OID, &tnumberseq_mult_maxmin_at_timestamp) :
-			sync_oper4_temporal_temporal(temp1, ftemp2, 
+			sync_tfunc4_temporal_temporal(temp1, ftemp2, 
 		 		&datum_div, FLOAT8OID, NULL);
 		pfree(ftemp2);
 	}
@@ -569,7 +569,7 @@ temporal_round(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum digits = PG_GETARG_DATUM(1);
-	Temporal *result = oper1_temporal(temp, digits, &datum_round, FLOAT8OID);
+	Temporal *result = tfunc2_temporal(temp, digits, &datum_round, FLOAT8OID);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
@@ -580,7 +580,7 @@ PGDLLEXPORT Datum
 temporal_degrees(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Temporal *result = oper_temporal(temp, &datum_degrees, FLOAT8OID);
+	Temporal *result = tfunc1_temporal(temp, &datum_degrees, FLOAT8OID);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
