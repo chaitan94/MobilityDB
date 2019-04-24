@@ -1600,10 +1600,18 @@ PG_FUNCTION_INFO_V1(tcontains_geo_tnpoint);
 PGDLLEXPORT Datum
 tcontains_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	Datum geo = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_contains, true);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -1614,10 +1622,18 @@ PGDLLEXPORT Datum
 tcontains_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geo = PG_GETARG_DATUM(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_contains, false);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -1655,10 +1671,18 @@ PG_FUNCTION_INFO_V1(tcovers_geo_tnpoint);
 PGDLLEXPORT Datum
 tcovers_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	Datum geo = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_covers, true);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -1669,10 +1693,18 @@ PGDLLEXPORT Datum
 tcovers_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geo = PG_GETARG_DATUM(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_covers, false);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -1710,10 +1742,18 @@ PG_FUNCTION_INFO_V1(tcoveredby_geo_tnpoint);
 PGDLLEXPORT Datum
 tcoveredby_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	Datum geo = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_coveredby, true);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -1724,10 +1764,18 @@ PGDLLEXPORT Datum
 tcoveredby_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geo = PG_GETARG_DATUM(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_coveredby, false);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -1765,10 +1813,18 @@ PG_FUNCTION_INFO_V1(tdisjoint_geo_tnpoint);
 PGDLLEXPORT Datum
 tdisjoint_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	Datum geo = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_disjoint, true);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -1779,10 +1835,18 @@ PGDLLEXPORT Datum
 tdisjoint_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geo = PG_GETARG_DATUM(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs), 
 		&geom_disjoint, false);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -1820,10 +1884,18 @@ PG_FUNCTION_INFO_V1(tequals_geo_tnpoint);
 PGDLLEXPORT Datum
 tequals_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	Datum geo = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_equals, true);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -1834,10 +1906,18 @@ PGDLLEXPORT Datum
 tequals_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geo = PG_GETARG_DATUM(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs), 
 		&geom_equals, false);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -1875,10 +1955,18 @@ PG_FUNCTION_INFO_V1(tintersects_geo_tnpoint);
 PGDLLEXPORT Datum
 tintersects_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	Datum geo = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_intersects2d, true);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -1889,10 +1977,18 @@ PGDLLEXPORT Datum
 tintersects_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geo = PG_GETARG_DATUM(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs), 
 		&geom_intersects2d, false);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -1930,10 +2026,18 @@ PG_FUNCTION_INFO_V1(ttouches_geo_tnpoint);
 PGDLLEXPORT Datum
 ttouches_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	Datum geo = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_touches, true);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -1944,10 +2048,18 @@ PGDLLEXPORT Datum
 ttouches_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geo = PG_GETARG_DATUM(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs), 
 		&geom_touches, false);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -1985,10 +2097,18 @@ PG_FUNCTION_INFO_V1(twithin_geo_tnpoint);
 PGDLLEXPORT Datum
 twithin_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	Datum geo = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_within, true);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -1999,10 +2119,18 @@ PGDLLEXPORT Datum
 twithin_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geo = PG_GETARG_DATUM(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs), 
 		&geom_within, false);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -2040,11 +2168,19 @@ PG_FUNCTION_INFO_V1(tdwithin_geo_tnpoint);
 PGDLLEXPORT Datum
 tdwithin_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	Datum geo = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum dist = PG_GETARG_DATUM(2);
-	Temporal *result = tdwithin_tnpoint_geo_internal(temp, geo, dist, 
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tdwithin_tnpoint_geo_internal(temp, PointerGetDatum(gs), dist, 
 		&geom_dwithin2d, true);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -2055,11 +2191,19 @@ PGDLLEXPORT Datum
 tdwithin_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geo = PG_GETARG_DATUM(1);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
 	Datum dist = PG_GETARG_DATUM(2);
-	Temporal *result = tdwithin_tnpoint_geo_internal(temp, geo, dist, 
+	Temporal *result = tdwithin_tnpoint_geo_internal(temp, PointerGetDatum(gs), dist, 
 		&geom_dwithin2d, false);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -2099,10 +2243,18 @@ PG_FUNCTION_INFO_V1(trelate_geo_tnpoint);
 PGDLLEXPORT Datum
 trelate_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	Datum geo = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo,
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs),
 		&geom_relate, true);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -2113,10 +2265,18 @@ PGDLLEXPORT Datum
 trelate_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geo = PG_GETARG_DATUM(1);
-	Temporal *result = tspatialrel_tnpoint_geo(temp, geo, 
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel_tnpoint_geo(temp, PointerGetDatum(gs), 
 		&geom_relate, false);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -2154,11 +2314,19 @@ PG_FUNCTION_INFO_V1(trelate_pattern_geo_tnpoint);
 PGDLLEXPORT Datum
 trelate_pattern_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	Datum geo = PG_GETARG_DATUM(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum pattern = PG_GETARG_DATUM(2);
-	Temporal *result = tspatialrel3_tnpoint_geo(temp, geo, pattern, 
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel3_tnpoint_geo(temp, PointerGetDatum(gs), pattern, 
 		&geom_relate_pattern, true);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -2169,11 +2337,19 @@ PGDLLEXPORT Datum
 trelate_pattern_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geo = PG_GETARG_DATUM(1);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
 	Datum pattern = PG_GETARG_DATUM(2);
-	Temporal *result = tspatialrel3_tnpoint_geo(temp, geo, pattern, 
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
+	Temporal *result = tspatialrel3_tnpoint_geo(temp, PointerGetDatum(gs), pattern, 
 		&geom_relate_pattern, false);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 

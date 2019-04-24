@@ -350,74 +350,82 @@ PG_FUNCTION_INFO_V1(distance_geo_tnpoint);
 PGDLLEXPORT Datum
 distance_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-	GSERIALIZED *gspoint = PG_GETARG_GSERIALIZED_P(0);
-	if (gserialized_get_type(gspoint) != POINTTYPE)
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+	if (gserialized_get_type(gs) != POINTTYPE)
 	{
-		PG_FREE_IF_COPY(gspoint, 0);
+		PG_FREE_IF_COPY(gs, 0);
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 			errmsg("Input must be a point")));
+	}
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_RETURN_NULL();
 	}
 
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Temporal *result = NULL; 
 	if (temp->type == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
-			PointerGetDatum(gspoint), &geom_distance2d, 
+			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, true);
 	else if (temp->type == TEMPORALI)
 		result = (Temporal *)tspatialrel_tnpointi_geo((TemporalI *)temp,
-			PointerGetDatum(gspoint), &geom_distance2d, 
+			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, true);
 	else if (temp->type == TEMPORALSEQ)
 		result = (Temporal *)distance_tnpointseq_geo((TemporalSeq *)temp, 
-			PointerGetDatum(gspoint));
+			PointerGetDatum(gs));
 	else if (temp->type == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
-			PointerGetDatum(gspoint));
+			PointerGetDatum(gs));
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Operation not supported")));
-	PG_FREE_IF_COPY(gspoint, 0);
+	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
-
-/*****************************************************************************/
 
 PG_FUNCTION_INFO_V1(distance_tnpoint_geo);
 
 PGDLLEXPORT Datum
 distance_tnpoint_geo(PG_FUNCTION_ARGS)
 {
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	GSERIALIZED *gspoint = PG_GETARG_GSERIALIZED_P(1);
-	if (gserialized_get_type(gspoint) != POINTTYPE)
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_get_type(gs) != POINTTYPE)
 	{
-		PG_FREE_IF_COPY(gspoint, 1);
+		PG_FREE_IF_COPY(gs, 1);
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 			errmsg("Input must be a point")));
 	}
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
 
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result = NULL; 
 	if (temp->type == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp, 
-			PointerGetDatum(gspoint), &geom_distance2d, 
+			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, false);
 	else if (temp->type == TEMPORALI)
 		result = (Temporal *)tspatialrel_tnpointi_geo((TemporalI *)temp, 
-			PointerGetDatum(gspoint), &geom_distance2d, 
+			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, false);
 	else if (temp->type == TEMPORALSEQ)
 		result = (Temporal *)distance_tnpointseq_geo((TemporalSeq *)temp, 
-			PointerGetDatum(gspoint));
+			PointerGetDatum(gs));
 	else if (temp->type == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
-			PointerGetDatum(gspoint));
+			PointerGetDatum(gs));
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Operation not supported")));
 	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(gspoint, 1);
+	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
 }
 

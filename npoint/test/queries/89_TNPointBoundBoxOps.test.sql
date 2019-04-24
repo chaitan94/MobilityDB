@@ -12,6 +12,11 @@ SELECT geometry 'Point(1 1)' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5
 SELECT geometry 'Point(1 1)' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
 SELECT geometry 'Point(1 1)' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
+SELECT geometry 'Point empty' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT geometry 'Point empty' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT geometry 'Point empty' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT geometry 'Point empty' && tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+
 SELECT npoint 'NPoint(1,0.5)' && tnpoint 'NPoint(1,0.5)@2000-01-01';
 SELECT npoint 'NPoint(1,0.5)' && tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
 SELECT npoint 'NPoint(1,0.5)' && tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
@@ -46,6 +51,11 @@ SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && geometry 'Point(1 1)';
 SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && geometry 'Point(1 1)';
 SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && geometry 'Point(1 1)';
 SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && geometry 'Point(1 1)';
+
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && geometry 'Point empty';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && geometry 'Point empty';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' && geometry 'Point empty';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' && geometry 'Point empty';
 
 SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' && npoint 'NPoint(1,0.5)';
 SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' && npoint 'NPoint(1,0.5)';
@@ -101,6 +111,11 @@ SELECT geometry 'Point(1 1)' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5
 SELECT geometry 'Point(1 1)' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
 SELECT geometry 'Point(1 1)' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
+SELECT geometry 'Point empty' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT geometry 'Point empty' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT geometry 'Point empty' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT geometry 'Point empty' @> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+
 SELECT npoint 'NPoint(1,0.5)' @> tnpoint 'NPoint(1,0.5)@2000-01-01';
 SELECT npoint 'NPoint(1,0.5)' @> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
 SELECT npoint 'NPoint(1,0.5)' @> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
@@ -135,6 +150,11 @@ SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> geometry 'Point(1 1)';
 SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> geometry 'Point(1 1)';
 SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> geometry 'Point(1 1)';
 SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> geometry 'Point(1 1)';
+
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> geometry 'Point empty';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> geometry 'Point empty';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' @> geometry 'Point empty';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' @> geometry 'Point empty';
 
 SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' @> npoint 'NPoint(1,0.5)';
 SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' @> npoint 'NPoint(1,0.5)';
@@ -190,6 +210,11 @@ SELECT geometry 'Point(1 1)' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5
 SELECT geometry 'Point(1 1)' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
 SELECT geometry 'Point(1 1)' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
+SELECT geometry 'Point empty' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT geometry 'Point empty' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT geometry 'Point empty' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT geometry 'Point empty' <@ tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+
 SELECT npoint 'NPoint(1,0.5)' <@ tnpoint 'NPoint(1,0.5)@2000-01-01';
 SELECT npoint 'NPoint(1,0.5)' <@ tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
 SELECT npoint 'NPoint(1,0.5)' <@ tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
@@ -224,6 +249,11 @@ SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ geometry 'Point(1 1)';
 SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ geometry 'Point(1 1)';
 SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ geometry 'Point(1 1)';
 SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ geometry 'Point(1 1)';
+
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ geometry 'Point empty';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ geometry 'Point empty';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <@ geometry 'Point empty';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <@ geometry 'Point empty';
 
 SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <@ npoint 'NPoint(1,0.5)';
 SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <@ npoint 'NPoint(1,0.5)';
@@ -279,6 +309,11 @@ SELECT geometry 'Point(1 1)' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5
 SELECT geometry 'Point(1 1)' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
 SELECT geometry 'Point(1 1)' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
+SELECT geometry 'Point empty' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT geometry 'Point empty' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT geometry 'Point empty' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT geometry 'Point empty' ~= tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+
 SELECT npoint 'NPoint(1,0.5)' ~= tnpoint 'NPoint(1,0.5)@2000-01-01';
 SELECT npoint 'NPoint(1,0.5)' ~= tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
 SELECT npoint 'NPoint(1,0.5)' ~= tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
@@ -313,6 +348,11 @@ SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= geometry 'Point(1 1)';
 SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= geometry 'Point(1 1)';
 SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= geometry 'Point(1 1)';
 SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= geometry 'Point(1 1)';
+
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= geometry 'Point empty';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= geometry 'Point empty';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' ~= geometry 'Point empty';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' ~= geometry 'Point empty';
 
 SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' ~= npoint 'NPoint(1,0.5)';
 SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' ~= npoint 'NPoint(1,0.5)';

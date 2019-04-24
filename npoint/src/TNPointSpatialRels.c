@@ -217,7 +217,7 @@ spatialrel3_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, Datum param,
  *****************************************************************************/
 
 text *
-relate1_tnpointinst_geo(TemporalInst *inst, Datum geo, bool invert)
+relate_tnpointinst_geo(TemporalInst *inst, Datum geo, bool invert)
 {
 	Datum geom = tnpointinst_geom(inst);
 	text *result = invert ? DatumGetTextP(geom_relate(geo, geom)) :
@@ -227,7 +227,7 @@ relate1_tnpointinst_geo(TemporalInst *inst, Datum geo, bool invert)
 }
 
 text *
-relate1_tnpointi_geo(TemporalI *ti, Datum geo, bool invert)
+relate_tnpointi_geo(TemporalI *ti, Datum geo, bool invert)
 {
 	Datum geom = tnpointi_geom(ti);
 	text *result = invert ? DatumGetTextP(geom_relate(geo, geom)) :
@@ -237,7 +237,7 @@ relate1_tnpointi_geo(TemporalI *ti, Datum geo, bool invert)
 }
 
 text *
-relate1_tnpointseq_geo(TemporalSeq *seq, Datum geo, bool invert)
+relate_tnpointseq_geo(TemporalSeq *seq, Datum geo, bool invert)
 {
 	Datum geom = tnpointseq_geom(seq);
 	text *result = invert ? DatumGetTextP(geom_relate(geo, geom)) :
@@ -247,7 +247,7 @@ relate1_tnpointseq_geo(TemporalSeq *seq, Datum geo, bool invert)
 }
 
 text *
-relate1_tnpoints_geo(TemporalS *ts, Datum geo, bool invert)
+relate_tnpoints_geo(TemporalS *ts, Datum geo, bool invert)
 {
 	Datum geom = tnpoints_geom(ts);
 	text *result = invert ? DatumGetTextP(geom_relate(geo, geom)) :
@@ -261,7 +261,7 @@ relate1_tnpoints_geo(TemporalS *ts, Datum geo, bool invert)
  *****************************************************************************/
 
 text *
-relate1_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2)
+relate_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2)
 {
 	Datum geom1 =  tnpointinst_geom(inst1);
 	Datum geom2 =  tnpointinst_geom(inst2);
@@ -271,7 +271,7 @@ relate1_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2)
 }
 
 text *
-relate1_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2)
+relate_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2)
 {
 	Datum geom1 = tnpointi_geom(ti1);
 	Datum geom2 = tnpointi_geom(ti2);
@@ -281,7 +281,7 @@ relate1_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2)
 }
 
 text *
-relate1_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
+relate_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
 {
 	Datum geom1 = tnpointseq_geom(seq1);
 	Datum geom2 = tnpointseq_geom(seq2);
@@ -291,7 +291,7 @@ relate1_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
 }
 
 text *
-relate1_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
+relate_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
 {
 	Datum geom1 = tnpoints_trajectory(ts1);
 	Datum geom2 = tnpoints_trajectory(ts2);
@@ -352,18 +352,18 @@ spatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
 
 /*****************************************************************************/
 
-bool
-relate1_tnpoint_geo(Temporal *temp, Datum geo, bool invert)
+text *
+relate_tnpoint_geo_internal(Temporal *temp, Datum geo, bool invert)
 {
 	text *result = NULL;
 	if (temp->type == TEMPORALINST)
-		result = relate1_tnpointinst_geo((TemporalInst *)temp, geo, invert);
+		result = relate_tnpointinst_geo((TemporalInst *)temp, geo, invert);
 	else if (temp->type == TEMPORALI)
-		result = relate1_tnpointi_geo((TemporalI *)temp, geo, invert);
+		result = relate_tnpointi_geo((TemporalI *)temp, geo, invert);
 	else if (temp->type == TEMPORALSEQ)
-		result = relate1_tnpointseq_geo((TemporalSeq *)temp, geo, invert);
+		result = relate_tnpointseq_geo((TemporalSeq *)temp, geo, invert);
 	else if (temp->type == TEMPORALS)
-		result = relate1_tnpoints_geo((TemporalS *)temp, geo, invert);
+		result = relate_tnpoints_geo((TemporalS *)temp, geo, invert);
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Operation not supported")));
@@ -1032,7 +1032,7 @@ relate_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = relate1_tnpoint_geo(temp, geom, true);
+	text *result = relate_tnpoint_geo_internal(temp, geom, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_TEXT_P(result);
 }
@@ -1044,7 +1044,7 @@ relate_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = relate1_tnpoint_geo(temp, geom, false);
+	text *result = relate_tnpoint_geo_internal(temp, geom, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_TEXT_P(result);
 }
@@ -1067,16 +1067,16 @@ relate_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	
 	text *result = NULL;
 	if (inter1->type == TEMPORALINST)
-		result = relate1_tnpointinst_tnpointinst(
+		result = relate_tnpointinst_tnpointinst(
 			(TemporalInst *)inter1, (TemporalInst *)inter2);
 	else if (inter1->type == TEMPORALI)
-		result = relate1_tnpointi_tnpointi(
+		result = relate_tnpointi_tnpointi(
 			(TemporalI *)inter1, (TemporalI *)inter2);
 	else if (inter1->type == TEMPORALSEQ)
-		result = relate1_tnpointseq_tnpointseq(
+		result = relate_tnpointseq_tnpointseq(
 			(TemporalSeq *)inter1, (TemporalSeq *)inter2);
 	else if (inter1->type == TEMPORALS)
-		result = relate1_tnpoints_tnpoints(
+		result = relate_tnpoints_tnpoints(
 			(TemporalS *)inter1, (TemporalS *)inter2);
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 

@@ -732,11 +732,12 @@ PGDLLEXPORT Datum
 geom_as_npoint(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-	if (gserialized_get_type(gs) != POINTTYPE)
+	if (gserialized_get_type(gs) != POINTTYPE ||
+		gserialized_is_empty(gs))
 	{
 		PG_FREE_IF_COPY(gs, 0);
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), 
-			errmsg("Only point geometries accepted")));
+			errmsg("Only non-empty point geometries accepted")));
 	}
 	npoint *result = geom_as_npoint_internal(PointerGetDatum(gs));
 	if (result == NULL)
@@ -760,7 +761,7 @@ nsegment_as_geom_internal(nsegment *ns)
 		result = call_function3(LWGEOM_line_substring, line, 
 			Float8GetDatum(ns->pos1), Float8GetDatum(ns->pos2));
 	pfree(DatumGetPointer(line));
-	PG_RETURN_DATUM(result);
+	return result;
 }
 
 PG_FUNCTION_INFO_V1(nsegment_as_geom);
@@ -817,11 +818,12 @@ PGDLLEXPORT Datum
 geom_as_nsegment(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-	if (gserialized_get_type(gs) != LINETYPE)
+	if (gserialized_get_type(gs) != LINETYPE ||
+		gserialized_is_empty(gs))
 	{
 		PG_FREE_IF_COPY(gs, 0);
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), 
-			errmsg("Only line geometries accepted")));
+			errmsg("Only non-empty line geometries accepted")));
 	}
 	nsegment *result = geom_as_nsegment_internal(PointerGetDatum(gs));
 	PG_RETURN_POINTER(result);

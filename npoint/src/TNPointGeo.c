@@ -970,16 +970,27 @@ PGDLLEXPORT Datum
 tnpoint_at_geometry(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum geom = PG_GETARG_DATUM(1);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
 	Temporal *result = NULL; 
 	if (temp->type == TEMPORALINST)
-		result = (Temporal *)tnpointinst_at_geometry((TemporalInst *)temp, geom);
+		result = (Temporal *)tnpointinst_at_geometry((TemporalInst *)temp,
+			PointerGetDatum(gs));
 	else if (temp->type == TEMPORALI)
-		result = (Temporal *)tnpointi_at_geometry((TemporalI *)temp, geom);
+		result = (Temporal *)tnpointi_at_geometry((TemporalI *)temp,
+			PointerGetDatum(gs));
 	else if (temp->type == TEMPORALSEQ)
-		result = (Temporal *)tnpointseq_at_geometry((TemporalSeq *)temp, geom);
+		result = (Temporal *)tnpointseq_at_geometry((TemporalSeq *)temp,
+			PointerGetDatum(gs));
 	else if (temp->type == TEMPORALS)
-		result = (Temporal *)tnpoints_at_geometry((TemporalS *)temp, geom);
+		result = (Temporal *)tnpoints_at_geometry((TemporalS *)temp,
+			PointerGetDatum(gs));
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Operation not supported")));
@@ -1256,7 +1267,8 @@ NAI_tnpoints_geometry(TemporalS *ts, Datum geom)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
 		TemporalInst *inst = NAI_tnpointseq_geometry(seq, geom);
-		Datum value = temporalinst_value(inst);
+		npoint *np = DatumGetNpoint(temporalinst_value(inst));
+		Datum value = npoint_as_geom_internal(np);
 		double dist = DatumGetFloat8(call_function2(distance, value, geom));
 		if (dist < mindist)
 		{
@@ -1279,6 +1291,12 @@ NAI_geometry_tnpoint(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
 
 	Temporal *result;
 	if (temp->type == TEMPORALINST) 
@@ -1308,6 +1326,12 @@ NAI_tnpoint_geometry(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
 
 	Temporal *result;
 	if (temp->type == TEMPORALINST) 
@@ -1428,6 +1452,13 @@ NAD_geometry_tnpoint(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
 	Datum traj = tnpoint_geom(temp);
 	Datum result = call_function2(distance, traj, PointerGetDatum(gs));
 	pfree(DatumGetPointer(traj));
@@ -1443,6 +1474,13 @@ NAD_tnpoint_geometry(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
 	Datum traj = tnpoint_geom(temp);
 	Datum result = call_function2(distance, traj, PointerGetDatum(gs));
 	pfree(DatumGetPointer(traj));
@@ -1520,6 +1558,13 @@ shortestline_geometry_tnpoint(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+
 	Datum traj = tnpoint_geom(temp);
 	Datum result = call_function2(LWGEOM_shortestline2d, traj, PointerGetDatum(gs));
 	pfree(DatumGetPointer(traj));
@@ -1535,6 +1580,13 @@ shortestline_tnpoint_geometry(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	if (gserialized_is_empty(gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+
 	Datum traj = tnpoint_geom(temp);
 	Datum result = call_function2(LWGEOM_shortestline2d, traj, PointerGetDatum(gs));
 	pfree(DatumGetPointer(traj));
