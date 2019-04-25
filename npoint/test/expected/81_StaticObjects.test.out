@@ -1,0 +1,391 @@
+/******************************************************************************
+ * Input
+ ******************************************************************************/
+SELECT npoint 'npoint(1,0.5)';
+    npoint     
+---------------
+ NPoint(1,0.5)
+(1 row)
+
+SELECT npoint ' npoint   (   1   ,	0.5   )   ';
+    npoint     
+---------------
+ NPoint(1,0.5)
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.5,0.7)';
+      nsegment       
+---------------------
+ NSegment(1,0.5,0.7)
+(1 row)
+
+SELECT nsegment '  nsegment  (  1  ,  0.5  ,  0.7 ) ';
+      nsegment       
+---------------------
+ NSegment(1,0.5,0.7)
+(1 row)
+
+/******************************************************************************
+ * Constructors
+ ******************************************************************************/
+SELECT npoint(1, 0.5);
+    npoint     
+---------------
+ NPoint(1,0.5)
+(1 row)
+
+SELECT nsegment(1, 0.2, 0.6);
+      nsegment       
+---------------------
+ NSegment(1,0.2,0.6)
+(1 row)
+
+SELECT nsegment(1);
+    nsegment     
+-----------------
+ NSegment(1,0,1)
+(1 row)
+
+SELECT nsegment(1, 0.2);
+     nsegment      
+-------------------
+ NSegment(1,0.2,1)
+(1 row)
+
+SELECT nsegment(npoint(1, 0.5));
+      nsegment       
+---------------------
+ NSegment(1,0.5,0.5)
+(1 row)
+
+/******************************************************************************
+ * Accessing values
+ ******************************************************************************/
+SELECT route(npoint 'npoint(1,0.5)');
+ route 
+-------
+     1
+(1 row)
+
+SELECT getPosition(npoint 'npoint(1,0.5)');
+ getposition 
+-------------
+         0.5
+(1 row)
+
+SELECT route(nsegment 'nsegment(1,0.5,0.7)');
+ route 
+-------
+     1
+(1 row)
+
+SELECT startPosition(nsegment 'nsegment(1,0.5,0.7)');
+ startposition 
+---------------
+           0.5
+(1 row)
+
+SELECT endPosition(nsegment 'nsegment(1,0.5,0.7)');
+ endposition 
+-------------
+         0.7
+(1 row)
+
+/******************************************************************************
+ * Cast functions
+ ******************************************************************************/
+SELECT st_astext(npoint 'npoint(1,0.2)'::geometry);
+                st_astext                
+-----------------------------------------
+ POINT(69.790368869663 81.4520975905736)
+(1 row)
+
+SELECT st_astext(nsegment 'nsegment(1,0.5,0.7)'::geometry);
+                                    st_astext                                    
+---------------------------------------------------------------------------------
+ LINESTRING(48.7186629128278 77.7640705101509,34.6506927416814 75.3845848205875)
+(1 row)
+
+SELECT (npoint 'npoint(1,0.2)'::geometry)::npoint;
+    npoint     
+---------------
+ NPoint(1,0.2)
+(1 row)
+
+SELECT (nsegment 'nsegment(1,0.5,0.7)'::geometry)::nsegment;
+      nsegment       
+---------------------
+ NSegment(1,0.5,0.7)
+(1 row)
+
+/******************************************************************************
+ * Conversions between network and space
+ ******************************************************************************/
+SELECT point_in_network(ST_MakePoint(4.3560493, 50.8504975));
+ point_in_network 
+------------------
+ 
+(1 row)
+
+SELECT segment_in_network(ST_MakeEnvelope(4.3, 50.8, 4.4, 50.9));
+ segment_in_network 
+--------------------
+ 
+(1 row)
+
+/******************************************************************************
+ * Comparisons
+ ******************************************************************************/
+SELECT npoint 'npoint(1,0.5)' = npoint 'npoint(1,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' = npoint 'npoint(1,0.7)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' = npoint 'npoint(2,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' != npoint 'npoint(1,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' != npoint 'npoint(1,0.7)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' != npoint 'npoint(2,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' < npoint 'npoint(1,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' < npoint 'npoint(1,0.7)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' < npoint 'npoint(2,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' <= npoint 'npoint(1,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' <= npoint 'npoint(1,0.7)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' <= npoint 'npoint(2,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' > npoint 'npoint(1,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' > npoint 'npoint(1,0.7)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' > npoint 'npoint(2,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' >= npoint 'npoint(1,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' >= npoint 'npoint(1,0.7)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT npoint 'npoint(1,0.5)' >= npoint 'npoint(2,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' = nsegment 'nsegment(1,0.3,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' = nsegment 'nsegment(1,0.3,0.7)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' = nsegment 'nsegment(1,0.5,0.7)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' = nsegment 'nsegment(2,0.3,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' != nsegment 'nsegment(1,0.3,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' != nsegment 'nsegment(1,0.3,0.7)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' != nsegment 'nsegment(1,0.5,0.7)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' != nsegment 'nsegment(2,0.3,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' < nsegment 'nsegment(1,0.3,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' < nsegment 'nsegment(1,0.3,0.7)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' < nsegment 'nsegment(1,0.5,0.7)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' < nsegment 'nsegment(2,0.3,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' <= nsegment 'nsegment(1,0.3,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' <= nsegment 'nsegment(1,0.3,0.7)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' <= nsegment 'nsegment(1,0.5,0.7)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' <= nsegment 'nsegment(2,0.3,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' > nsegment 'nsegment(1,0.3,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' > nsegment 'nsegment(1,0.3,0.7)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' > nsegment 'nsegment(1,0.5,0.7)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' > nsegment 'nsegment(2,0.3,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' >= nsegment 'nsegment(1,0.3,0.5)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' >= nsegment 'nsegment(1,0.3,0.7)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' >= nsegment 'nsegment(1,0.5,0.7)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT nsegment 'nsegment(1,0.3,0.5)' >= nsegment 'nsegment(2,0.3,0.5)';
+ ?column? 
+----------
+ f
+(1 row)
+
+/******************************************************************************/

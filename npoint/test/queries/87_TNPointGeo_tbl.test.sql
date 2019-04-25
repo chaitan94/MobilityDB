@@ -5,17 +5,13 @@ SELECT max(st_npoints(st_astext(trajectory(temp)))) FROM tbl_tnpoint;
 SELECT count(*) FROM tbl_tnpoint t1, tbl_geomcollection t2 WHERE atGeometry(t1.temp, t2.g) IS NOT NULL;
 SELECT count(*) FROM tbl_tnpoint t1, tbl_geomcollection t2 WHERE minusGeometry(t1.temp, t2.g) IS NOT NULL;
 
-SELECT length(seq) FROM tbl_tnpointseq;
-SELECT length(ts) FROM tbl_tnpoints;
+SELECT MAX(length(temp)) FROM tbl_tnpoint;
 
-SELECT cumulativeLength(seq) FROM tbl_tnpointseq;
-SELECT cumulativeLength(ts) FROM tbl_tnpoints;
+SELECT MAX(maxValue(cumulativeLength(temp))) FROM tbl_tnpoint;
 
-SELECT speed(seq) FROM tbl_tnpointseq;
-SELECT speed(ts) FROM tbl_tnpoints;
+SELECT MAX(maxValue(speed(temp))) FROM tbl_tnpoint;
 
-SELECT azimuth(seq) FROM tbl_tnpointseq;
-SELECT azimuth(ts) FROM tbl_tnpoints;
+SELECT round(azimuth(temp), 13) FROM tbl_tnpoint WHERE azimuth(temp) IS NOT NULL LIMIT 10;
 
 /*****************************************************************************/
 

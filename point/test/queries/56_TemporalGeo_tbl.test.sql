@@ -32,23 +32,7 @@ SELECT transform(setSRID(temp, 5676), 4326) FROM tbl_tgeompoint3D;
 -------------------------------------------------------------------------------
 -- Transform by using Gauss Kruger Projection that is used in Secondo
 
-<<<<<<< HEAD
--- Temporal type
-
-SELECT transform_gk(tgeompoint 'Point(13.43593 52.41721)@2018-12-20');
-SELECT transform_gk(tgeompoint('Point(13.43593 52.41721)@2018-12-20'));
-
-SELECT astext(transform_gk(tgeompoint 'Point(13.43593 52.41721)@2018-12-20'));
-SELECT astext(transform_gk(tgeompoint('Point(13.43593 52.41721)@2018-12-20')));
-
-SELECT transform_gk(tgeompoint(TimestampTz) 'Point(13.43593 52.41721)@2018-12-20');
-SELECT transform_gk(tgeompoint(TimestampSet) '{Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00}');
-SELECT transform_gk(tgeompoint(Period) '[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00]');
-SELECT transform_gk(tgeompoint(PeriodSet) '{[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00],[Point(13.43705 52.41724)@2018-12-20 10:02:00,Point(13.43805 52.41730)@2018-12-20 10:03:00]}');
-
-=======
 SELECT transform_gk(temp) from tbl_tgeompoint LIMIT 10;
->>>>>>> master
 
 SELECT transform_gk(g) from tbl_geompoint where not st_isempty(g) LIMIT 10;
 SELECT transform_gk(g) from tbl_geomlinestring where not st_isempty(g) LIMIT 10;

@@ -41,7 +41,7 @@ INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
 SELECT '&<', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &< temp;
 INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
 SELECT '&>', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &> temp;
-
+INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
 SELECT '<<|', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np <<| temp;
 INSERT INTO test_georelativeposops(op, leftarg, rightarg, noidx)
 SELECT '|>>', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np |>> temp;

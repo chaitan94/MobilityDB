@@ -10,3 +10,5 @@ file(GLOB SQLNPOINT "npoint/src/sql/*.in.sql")
 list(SORT SQLNPOINT)
 set(SQL "${SQL};${SQLNPOINT}")
 set(CONTROLIN "${CONTROLIN};point/control.in;npoint/control.in")
+
+include("npoint/test/scripts/test.cmake")

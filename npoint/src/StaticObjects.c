@@ -612,7 +612,7 @@ Datum
 route_geom_from_rid(int64 rid)
 {
 	char sql[64];
-	sprintf(sql, "SELECT the_geom FROM ways WHERE gid = %ld", rid);
+	sprintf(sql, "SELECT the_geom FROM public.ways WHERE gid = %ld", rid);
 	bool isNull = true;
 	GSERIALIZED *result = NULL;
 	SPI_connect();

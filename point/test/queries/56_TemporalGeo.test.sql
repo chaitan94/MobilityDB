@@ -76,20 +76,10 @@ SELECT asEWKT(transform(setSRID(tgeogpoint '{[Point(1.5 1.5 1.5)@2000-01-01, Poi
 -- Transform to the Gauss Kruger projection used in Secondo
 
 -- Temporal type
-<<<<<<< HEAD
-
-SELECT asEWKT(transform_gk(tgeompoint('Point(13.43593 52.41721)@2018-12-20')));
-
-SELECT asEWKT(transform_gk(tgeompoint(TimestampTz) 'Point(13.43593 52.41721)@2018-12-20'));
-SELECT asEWKT(transform_gk(tgeompoint(TimestampSet) '{Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00}'));
-SELECT asEWKT(transform_gk(tgeompoint(Period) '[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00]'));
-SELECT asEWKT(transform_gk(tgeompoint(PeriodSet) '{[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00],[Point(13.43705 52.41724)@2018-12-20 10:02:00,Point(13.43805 52.41730)@2018-12-20 10:03:00]}'));
-=======
 SELECT asEWKT(transform_gk(tgeompoint 'Point(13.43593 52.41721)@2018-12-20'));
 SELECT asEWKT(transform_gk(tgeompoint '{Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00}'));
 SELECT asEWKT(transform_gk(tgeompoint '[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00]'));
 SELECT asEWKT(transform_gk(tgeompoint '{[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00],[Point(13.43705 52.41724)@2018-12-20 10:02:00,Point(13.43805 52.41730)@2018-12-20 10:03:00]}'));
->>>>>>> master
 
 -- PostGIS geometry
 SELECT ST_AsText(transform_gk(geometry 'Point Empty'));
