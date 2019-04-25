@@ -29,9 +29,10 @@ SELECT transform(setSRID(temp, 5676), 4326) FROM tbl_tgeompoint;
 SELECT transform(setSRID(temp, 5676), 4326) FROM tbl_tgeompoint3D;
 */
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 -- Transform by using Gauss Kruger Projection that is used in Secondo
 
+<<<<<<< HEAD
 -- Temporal type
 
 SELECT transform_gk(tgeompoint 'Point(13.43593 52.41721)@2018-12-20');
@@ -45,23 +46,15 @@ SELECT transform_gk(tgeompoint(TimestampSet) '{Point(13.43593 52.41721)@2018-12-
 SELECT transform_gk(tgeompoint(Period) '[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00]');
 SELECT transform_gk(tgeompoint(PeriodSet) '{[Point(13.43593 52.41721)@2018-12-20 10:00:00, Point(13.43605 52.41723)@2018-12-20 10:01:00],[Point(13.43705 52.41724)@2018-12-20 10:02:00,Point(13.43805 52.41730)@2018-12-20 10:03:00]}');
 
+=======
+SELECT transform_gk(temp) from tbl_tgeompoint LIMIT 10;
+>>>>>>> master
 
--- PostGIS geometry
+SELECT transform_gk(g) from tbl_geompoint where not st_isempty(g) LIMIT 10;
+SELECT transform_gk(g) from tbl_geomlinestring where not st_isempty(g) LIMIT 10;
 
---POINTTYPE
-SELECT transform_gk(ST_MakePoint(13.43593,52.41721));
-SELECT ST_AsText(transform_gk(ST_MakePoint(13.43593,52.41721)));
+-------------------------------------------------------------------------------
 
---LINETYPE
-SELECT transform_gk(ST_MakeLine(ST_MakePoint(13.43593,52.41721)));
-SELECT transform_gk(ST_MakeLine(ST_MakePoint(13.43593,52.41721),ST_MakeLine(ST_MakePoint(13.43605,52.41723))));
-SELECT transform_gk(ST_MakeLine(ARRAY[ST_MakePoint(13.43593,52.41721),ST_MakePoint(13.43593,52.41723)]));
-
-SELECT ST_AsText(transform_gk(ST_MakeLine(ST_MakePoint(13.43593,52.41721))));
-SELECT ST_AsText(transform_gk(ST_MakeLine(ST_MakePoint(13.43593,52.41721),ST_MakeLine(ST_MakePoint(13.43605,52.41723)))));
-SELECT ST_AsText(transform_gk(ST_MakeLine(ARRAY[ST_MakePoint(13.43593,52.41721),ST_MakePoint(13.43593,52.41723)])));
-
-/*****************************************************************************/
 SELECT tgeogpoint(temp) FROM tbl_tgeompoint LIMIT 10;
 SELECT tgeompoint(temp) FROM tbl_tgeogpoint LIMIT 10;
 SELECT tgeogpoint(temp) FROM tbl_tgeompoint3D LIMIT 10;
@@ -77,21 +70,36 @@ SELECT trajectory(temp) FROM tbl_tgeogpoint ORDER BY k LIMIT 10 ;
 SELECT trajectory(temp) FROM tbl_tgeompoint3D ORDER BY k LIMIT 10 ;
 SELECT trajectory(temp) FROM tbl_tgeogpoint3D ORDER BY k LIMIT 10 ;
 
+SELECT MAX(length(temp)) FROM tbl_tgeompoint;
+SELECT MAX(length(temp)) FROM tbl_tgeogpoint;
+SELECT MAX(length(temp)) FROM tbl_tgeompoint3D;
+SELECT MAX(length(temp)) FROM tbl_tgeompoint3D;
+
+SELECT MAX(maxValue(cumulativeLength(temp))) FROM tbl_tgeompoint;
+SELECT MAX(maxValue(cumulativeLength(temp))) FROM tbl_tgeogpoint;
+SELECT MAX(maxValue(cumulativeLength(temp))) FROM tbl_tgeompoint3D;
+SELECT MAX(maxValue(cumulativeLength(temp))) FROM tbl_tgeompoint3D;
+
+SELECT MAX(maxValue(speed(temp))) FROM tbl_tgeompoint;
+SELECT MAX(maxValue(speed(temp))) FROM tbl_tgeogpoint;
+SELECT MAX(maxValue(speed(temp))) FROM tbl_tgeompoint3D;
+SELECT MAX(maxValue(speed(temp))) FROM tbl_tgeompoint3D;
+
+SELECT st_astext(twcentroid(temp)) FROM tbl_tgeompoint LIMIT 10;
+SELECT st_astext(twcentroid(temp)) FROM tbl_tgeompoint3D LIMIT 10;
+
+SELECT round(azimuth(temp), 13) FROM tbl_tgeompoint WHERE azimuth(temp) IS NOT NULL LIMIT 10;
+SELECT round(azimuth(temp), 13) FROM tbl_tgeogpoint azimuth(temp) IS NOT NULL LIMIT 10;
+SELECT round(azimuth(temp), 13) FROM tbl_tgeompoint3D azimuth(temp) IS NOT NULL LIMIT 10;
+SELECT round(azimuth(temp), 13) FROM tbl_tgeompoint3D azimuth(temp) IS NOT NULL LIMIT 10;
+
+-------------------------------------------------------------------------------
+
 SELECT atGeometry(temp, g) FROM tbl_tgeompoint, tbl_geomcollection
 WHERE atGeometry(temp, g) IS NOT NULL AND atGeometry(temp, g) != temp LIMIT 10;
 
 SELECT minusGeometry(temp, g) FROM tbl_tgeompoint, tbl_geomcollection
 WHERE minusGeometry(temp, g) IS NOT NULL AND minusGeometry(temp, g) != temp LIMIT 10;
-
-SELECT round(azimuth(seq), 13) FROM tbl_tgeompointseq LIMIT 10;
-SELECT round(azimuth(ts), 13) FROM tbl_tgeompoints LIMIT 10;
-SELECT round(azimuth(seq), 13) FROM tbl_tgeogpointseq LIMIT 10;
-SELECT round(azimuth(ts), 13) FROM tbl_tgeogpoints LIMIT 10;
-
-SELECT round(azimuth(seq), 13) FROM tbl_tgeompoint3Dseq LIMIT 10;
-SELECT round(azimuth(ts), 13) FROM tbl_tgeompoint3Ds LIMIT 10;
-SELECT round(azimuth(seq), 13) FROM tbl_tgeogpoint3Dseq LIMIT 10;
-SELECT round(azimuth(ts), 13) FROM tbl_tgeogpoint3Ds LIMIT 10;
 
 -------------------------------------------------------------------------------
 
