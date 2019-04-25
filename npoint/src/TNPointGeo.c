@@ -332,20 +332,44 @@ PGDLLEXPORT Datum
 tnpoint_length(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	if (temp->type != TEMPORALSEQ && temp->type != TEMPORALS)
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("Input must be a temporal sequence (set)")));
-
 	double result; 
-	if (temp->type == TEMPORALSEQ)
+	if (temp->type == TEMPORALINST || temp->type == TEMPORALI)
+		result = 0;
+	else if (temp->type == TEMPORALSEQ)
 		result = tnpointseq_length_internal((TemporalSeq *)temp);	
-	else
+	else if (temp->type == TEMPORALS)
 		result = tnpoints_length_internal((TemporalS *)temp);	
+	else
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Operation not supported")));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_FLOAT8(result);
 }
 
 /* Cumulative length traversed by the temporal npoint */
+
+static TemporalInst *
+tnpointinst_cumulative_length_internal(TemporalInst *inst)
+{
+	return temporalinst_make(Float8GetDatum(0.0), inst->t, FLOAT8OID);
+}
+
+static TemporalI *
+tnpointi_cumulative_length_internal(TemporalI *ti)
+{
+	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
+	Datum length = Float8GetDatum(0.0);
+	for (int i = 0; i < ti->count; i++)
+	{
+		TemporalInst *inst = temporali_inst_n(ti, i);
+		instants[i] = temporalinst_make(length, inst->t, FLOAT8OID);
+	}
+	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
+	for (int i = 1; i < ti->count; i++)
+		pfree(instants[i]);
+	pfree(instants);
+	return result;
+}
 
 static TemporalSeq *
 tnpointseq_cumulative_length_internal(TemporalSeq *seq, double prevlength)
@@ -412,12 +436,14 @@ PGDLLEXPORT Datum
 tnpoint_cumulative_length(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	if (temp->type != TEMPORALSEQ && temp->type != TEMPORALS)
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("Input must be a temporal sequence (set)")));
-
 	Temporal *result; 
-	if (temp->type == TEMPORALSEQ)
+	if (temp->type == TEMPORALINST)
+		result = (Temporal *)tnpointinst_cumulative_length_internal(
+			(TemporalInst *)temp);
+	else if (temp->type == TEMPORALI)
+		result = (Temporal *)tnpointi_cumulative_length_internal(
+			(TemporalI *)temp);
+	else if (temp->type == TEMPORALSEQ)
 		result = (Temporal *)tnpointseq_cumulative_length_internal(
 			(TemporalSeq *)temp, 0);	
 	else
@@ -493,11 +519,11 @@ PGDLLEXPORT Datum
 tnpoint_speed(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	if (temp->type != TEMPORALSEQ && temp->type != TEMPORALS)
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("Input must be a temporal sequence (set)")));
-
 	Temporal *result; 
+	if (temp->type == TEMPORALSEQ)
+		result = (Temporal *)tnpointseq_speed_internal((TemporalSeq *)temp);	
+	if (temp->type == TEMPORALSEQ)
+		result = (Temporal *)tnpointseq_speed_internal((TemporalSeq *)temp);	
 	if (temp->type == TEMPORALSEQ)
 		result = (Temporal *)tnpointseq_speed_internal((TemporalSeq *)temp);	
 	else
@@ -663,15 +689,16 @@ PGDLLEXPORT Datum
 tnpoint_azimuth(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	if (temp->type != TEMPORALSEQ && temp->type != TEMPORALS)
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("Input must be a temporal sequence (set)")));
-
 	Temporal *result; 
-	if (temp->type == TEMPORALSEQ)
+	if (temp->type == TEMPORALINST || temp->type == TEMPORALSEQ)
+		result = NULL;
+	else if (temp->type == TEMPORALSEQ)
 		result = (Temporal *)tnpointseq_azimuth((TemporalSeq *)temp);
-	else
+	else if (temp->type == TEMPORALS)
 		result = (Temporal *)tnpoints_azimuth((TemporalS *)temp);
+	else
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Bad temporal type")));
 	PG_FREE_IF_COPY(temp, 0);
 	if (result == NULL)
 		PG_RETURN_NULL();
