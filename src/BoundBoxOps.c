@@ -215,6 +215,11 @@ temporalinst_make_bbox(void *box, Datum value, TimestampTz t, Oid valuetypid)
 		tpointinst_make_gbox((GBOX *)box, value, t);
 		return true;
 	}
+	if (valuetypid == type_oid(T_NPOINT)) 
+	{
+		tnpointinst_make_gbox((GBOX *)box, value, t);
+		return true;
+	}
 #endif
 	/* Types without bounding box, for example, tdoubleN* */
 	return false;
@@ -358,6 +363,11 @@ temporals_make_bbox(void *box, TemporalSeq **sequences, int count)
 		sequences[0]->valuetypid == type_oid(T_GEOGRAPHY)) 
 	{
 		tpointseqarr_to_gbox((GBOX *)box, sequences, count);
+		return true;
+	}
+	if (sequences[0]->valuetypid == type_oid(T_NPOINT)) 
+	{
+		tnpointseqarr_to_gbox((GBOX *)box, sequences, count);
 		return true;
 	}
 #endif
