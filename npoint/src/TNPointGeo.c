@@ -203,7 +203,7 @@ tnpoint_trajectory(PG_FUNCTION_ARGS)
 		result = tnpoints_trajectory((TemporalS *)temp);
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
+			errmsg("Bad temporal type")));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -283,7 +283,7 @@ tnpoint_geom(Temporal *temp)
 		result = tnpoints_geom((TemporalS *)temp);
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
+			errmsg("Bad temporal type")));
 	return result;
 }
 
@@ -295,7 +295,7 @@ tnpoint_geom(Temporal *temp)
 /* Length traversed by the temporal npoint */
 
 static double
-tnpointseq_length_internal(TemporalSeq *seq)
+tnpointseq_length(TemporalSeq *seq)
 {
 	if (seq->count == 1)
 		return 0;
@@ -315,13 +315,13 @@ tnpointseq_length_internal(TemporalSeq *seq)
 }
 
 static double
-tnpoints_length_internal(TemporalS *ts)
+tnpoints_length(TemporalS *ts)
 {
 	double result = 0;
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
-		result += tnpointseq_length_internal(seq);
+		result += tnpointseq_length(seq);
 	}
 	return result;
 }
@@ -336,12 +336,12 @@ tnpoint_length(PG_FUNCTION_ARGS)
 	if (temp->type == TEMPORALINST || temp->type == TEMPORALI)
 		result = 0;
 	else if (temp->type == TEMPORALSEQ)
-		result = tnpointseq_length_internal((TemporalSeq *)temp);	
+		result = tnpointseq_length((TemporalSeq *)temp);	
 	else if (temp->type == TEMPORALS)
-		result = tnpoints_length_internal((TemporalS *)temp);	
+		result = tnpoints_length((TemporalS *)temp);	
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
+			errmsg("Bad temporal type")));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_FLOAT8(result);
 }
@@ -349,20 +349,20 @@ tnpoint_length(PG_FUNCTION_ARGS)
 /* Cumulative length traversed by the temporal npoint */
 
 static TemporalInst *
-tnpointinst_cumulative_length_internal(TemporalInst *inst)
+tnpointinst_set_zero(TemporalInst *inst)
 {
 	return temporalinst_make(Float8GetDatum(0.0), inst->t, FLOAT8OID);
 }
 
 static TemporalI *
-tnpointi_cumulative_length_internal(TemporalI *ti)
+tnpointi_set_zero(TemporalI *ti)
 {
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
-	Datum length = Float8GetDatum(0.0);
+	Datum zero = Float8GetDatum(0.0);
 	for (int i = 0; i < ti->count; i++)
 	{
 		TemporalInst *inst = temporali_inst_n(ti, i);
-		instants[i] = temporalinst_make(length, inst->t, FLOAT8OID);
+		instants[i] = temporalinst_make(zero, inst->t, FLOAT8OID);
 	}
 	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
 	for (int i = 1; i < ti->count; i++)
@@ -372,7 +372,7 @@ tnpointi_cumulative_length_internal(TemporalI *ti)
 }
 
 static TemporalSeq *
-tnpointseq_cumulative_length_internal(TemporalSeq *seq, double prevlength)
+tnpointseq_cumulative_length(TemporalSeq *seq, double prevlength)
 {
 	if (seq->count == 1)
 	{
@@ -410,14 +410,14 @@ tnpointseq_cumulative_length_internal(TemporalSeq *seq, double prevlength)
 }
 
 static TemporalS *
-tnpoints_cumulative_length_internal(TemporalS *ts)
+tnpoints_cumulative_length(TemporalS *ts)
 {
 	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * ts->count);
 	double length = 0;
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
-		sequences[i] = tnpointseq_cumulative_length_internal(seq, length);
+		sequences[i] = tnpointseq_cumulative_length(seq, length);
 		TemporalInst *end = temporalseq_inst_n(sequences[i], seq->count - 1);
 		length += DatumGetFloat8(temporalinst_value(end));
 	}
@@ -438,17 +438,16 @@ tnpoint_cumulative_length(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result; 
 	if (temp->type == TEMPORALINST)
-		result = (Temporal *)tnpointinst_cumulative_length_internal(
-			(TemporalInst *)temp);
+		result = (Temporal *)tnpointinst_set_zero((TemporalInst *)temp);
 	else if (temp->type == TEMPORALI)
-		result = (Temporal *)tnpointi_cumulative_length_internal(
-			(TemporalI *)temp);
+		result = (Temporal *)tnpointi_set_zero((TemporalI *)temp);
 	else if (temp->type == TEMPORALSEQ)
-		result = (Temporal *)tnpointseq_cumulative_length_internal(
-			(TemporalSeq *)temp, 0);	
+		result = (Temporal *)tnpointseq_cumulative_length((TemporalSeq *)temp, 0);	
+	else if (temp->type == TEMPORALS)
+		result = (Temporal *)tnpoints_cumulative_length((TemporalS *)temp);	
 	else
-		result = (Temporal *)tnpoints_cumulative_length_internal(
-			(TemporalS *)temp);	
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Bad temporal type")));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
@@ -456,7 +455,7 @@ tnpoint_cumulative_length(PG_FUNCTION_ARGS)
 /* Speed of the temporal npoint */
 
 static TemporalSeq *
-tnpointseq_speed_internal(TemporalSeq *seq)
+tnpointseq_speed(TemporalSeq *seq)
 {
 	if (seq->count == 1)
 		return NULL;
@@ -490,14 +489,14 @@ tnpointseq_speed_internal(TemporalSeq *seq)
 }
 
 static TemporalS *
-tnpoints_speed_internal(TemporalS *ts)
+tnpoints_speed(TemporalS *ts)
 {
 	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * ts->count);
 	int k = 0;
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
-		TemporalSeq *seq1 = tnpointseq_speed_internal(seq);
+		TemporalSeq *seq1 = tnpointseq_speed(seq);
 		if (seq1 != NULL)
 			sequences[k++] = seq1;
 	}
@@ -520,14 +519,17 @@ tnpoint_speed(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result; 
-	if (temp->type == TEMPORALSEQ)
-		result = (Temporal *)tnpointseq_speed_internal((TemporalSeq *)temp);	
-	if (temp->type == TEMPORALSEQ)
-		result = (Temporal *)tnpointseq_speed_internal((TemporalSeq *)temp);	
-	if (temp->type == TEMPORALSEQ)
-		result = (Temporal *)tnpointseq_speed_internal((TemporalSeq *)temp);	
+	if (temp->type == TEMPORALINST)
+		result = (Temporal *)tnpointinst_set_zero((TemporalInst *)temp);	
+	else if (temp->type == TEMPORALI)
+		result = (Temporal *)tnpointi_set_zero((TemporalI *)temp);	
+	else if (temp->type == TEMPORALSEQ)
+		result = (Temporal *)tnpointseq_speed((TemporalSeq *)temp);	
+	else if (temp->type == TEMPORALS)
+		result = (Temporal *)tnpoints_speed((TemporalS *)temp);	
 	else
-		result = (Temporal *)tnpoints_speed_internal((TemporalS *)temp);	
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Bad temporal type")));
 	PG_FREE_IF_COPY(temp, 0);
 	if (result == NULL)
 		PG_RETURN_NULL();
@@ -690,7 +692,7 @@ tnpoint_azimuth(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result; 
-	if (temp->type == TEMPORALINST || temp->type == TEMPORALSEQ)
+	if (temp->type == TEMPORALINST || temp->type == TEMPORALI)
 		result = NULL;
 	else if (temp->type == TEMPORALSEQ)
 		result = (Temporal *)tnpointseq_azimuth((TemporalSeq *)temp);
@@ -1020,7 +1022,7 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 			PointerGetDatum(gs));
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
+			errmsg("Bad temporal type")));
 	PG_FREE_IF_COPY(temp, 0);
 	if (result == NULL)
 		PG_RETURN_NULL();
@@ -1206,7 +1208,7 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 		result = (Temporal *)tnpoints_minus_geometry((TemporalS *)temp, gs, &box2);
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
+			errmsg("Bad temporal type")));
 
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
@@ -1250,7 +1252,6 @@ NAI_tnpointseq_geometry(TemporalSeq *seq, Datum geom)
 		return temporalinst_copy(temporalseq_inst_n(seq, 0));
 
 	double mindist = DBL_MAX;
-	Datum minpoint = 0; /* keep compiler quiet */
 	TimestampTz t = 0; /* keep compiler quiet */
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
 	for (int i = 0; i < seq->count-1; i++)
@@ -1262,24 +1263,29 @@ NAI_tnpointseq_geometry(TemporalSeq *seq, Datum geom)
 		if (dist < mindist)
 		{
 			mindist = dist;
-			minpoint = point;
 			GSERIALIZED *gstraj = (GSERIALIZED *)DatumGetPointer(traj);
 			if (gserialized_get_type(gstraj) == POINTTYPE)
 				t = inst1->t;
 			else
 			{
 				double fraction = DatumGetFloat8(call_function2(
-					LWGEOM_line_locate_point, traj, minpoint));
+					LWGEOM_line_locate_point, traj, point));
 				t = inst1->t + (inst2->t - inst1->t) * fraction;
 			}
 		}
-		else
-			pfree(DatumGetPointer(point)); 			
 		inst1 = inst2;
 		pfree(DatumGetPointer(traj)); 
+		pfree(DatumGetPointer(point)); 			
 	}
-	TemporalInst *result = temporalinst_make(minpoint, t, seq->valuetypid);
-	pfree(DatumGetPointer(minpoint)); 
+	TemporalInst *result = temporalseq_at_timestamp(seq, t);
+	/* If t is at an exclusive bound */
+	 if (result == NULL)
+	 {
+		if (timestamp_cmp_internal(seq->period.lower, t) == 0)
+			result = temporalinst_copy(temporalseq_inst_n(seq, 0));
+		else
+			result = temporalinst_copy(temporalseq_inst_n(seq, seq->count - 1));
+	 }
 	return result;
 }
 
@@ -1339,7 +1345,7 @@ NAI_geometry_tnpoint(PG_FUNCTION_ARGS)
 			PointerGetDatum(gs));
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
+			errmsg("Bad temporal type")));
 	
 	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
@@ -1374,7 +1380,7 @@ NAI_tnpoint_geometry(PG_FUNCTION_ARGS)
 			PointerGetDatum(gs));
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
+			errmsg("Bad temporal type")));
 	
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
@@ -1405,7 +1411,7 @@ NAI_npoint_tnpoint(PG_FUNCTION_ARGS)
 			PointerGetDatum(gs));
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
+			errmsg("Bad temporal type")));
 	
     POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	pfree(DatumGetPointer(geom));
@@ -1437,7 +1443,7 @@ NAI_tnpoint_npoint(PG_FUNCTION_ARGS)
 			PointerGetDatum(gs));
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
+			errmsg("Bad temporal type")));
 	
     POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	pfree(DatumGetPointer(geom));
@@ -1820,7 +1826,7 @@ shortestline_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 			(TemporalS *)sync2);
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
+			errmsg("Bad temporal type")));
 	
 	pfree(sync1); pfree(sync2);
 	PG_FREE_IF_COPY(temp1, 0);

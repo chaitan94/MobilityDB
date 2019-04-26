@@ -1,0 +1,259 @@
+/*****************************************************************************
+ * Geometry rel tnpoint
+ *****************************************************************************/
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE contains(t1.g, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE containsproperly(t1.g, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE covers(t1.g, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE coveredby(t1.g, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE crosses(t1.g, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE disjoint(t1.g, t2.temp);
+ count 
+-------
+ 10000
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE equals(t1.g, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE intersects(t1.g, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE overlaps(t1.g, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE touches(t1.g, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE within(t1.g, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE dwithin(t1.g, t2.temp, 0.01);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE relate(t1.g, t2.temp) IS NOT NULL;
+ count 
+-------
+ 10000
+(1 row)
+
+SELECT count(*) FROM tbl_geompoint t1, tbl_tnpoint t2 WHERE relate(t1.g, t2.temp, 'T*****FF*');
+ count 
+-------
+     0
+(1 row)
+
+/*****************************************************************************
+ * tnpoint rel <type>
+ *****************************************************************************/
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE contains(t1.temp, t2.g);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE containsproperly(t1.temp, t2.g);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE covers(t1.temp, t2.g);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE coveredby(t1.temp, t2.g);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE crosses(t1.temp, t2.g);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE disjoint(t1.temp, t2.g);
+ count 
+-------
+ 10000
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE equals(t1.temp, t2.g);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE intersects(t1.temp, t2.g);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE overlaps(t1.temp, t2.g);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE touches(t1.temp, t2.g);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE within(t1.temp, t2.g);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE dwithin(t1.temp, t2.g, 0.01);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE relate(t1.temp, t2.g) IS NOT NULL;
+ count 
+-------
+ 10000
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_geompoint t2 WHERE relate(t1.temp, t2.g, 'T*****FF*');
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE contains(t1.temp, t2.temp);
+ count 
+-------
+    75
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE containsproperly(t1.temp, t2.temp);
+ count 
+-------
+    29
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE covers(t1.temp, t2.temp);
+ count 
+-------
+    75
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE coveredby(t1.temp, t2.temp);
+ count 
+-------
+    75
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE crosses(t1.temp, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE disjoint(t1.temp, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE equals(t1.temp, t2.temp);
+ count 
+-------
+    75
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE intersects(t1.temp, t2.temp);
+ count 
+-------
+    75
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE overlaps(t1.temp, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE touches(t1.temp, t2.temp);
+ count 
+-------
+     0
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE within(t1.temp, t2.temp);
+ count 
+-------
+    75
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE dwithin(t1.temp, t2.temp, 0.01);
+ count 
+-------
+    75
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE relate(t1.temp, t2.temp) IS NOT NULL;
+ count 
+-------
+   100
+(1 row)
+
+SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE relate(t1.temp, t2.temp, 'T*****FF*');
+ count 
+-------
+   100
+(1 row)
+
+/*****************************************************************************/

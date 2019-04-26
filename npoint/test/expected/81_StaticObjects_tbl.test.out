@@ -1,56 +1,155 @@
-﻿/******************************************************************************
+/******************************************************************************
  * Input
  ******************************************************************************/
-
 /******************************************************************************
  * Constructors
  ******************************************************************************/
-
 /******************************************************************************
  * Accessing values
  ******************************************************************************/
-
 SELECT MAX(route(np)) FROM tbl_npoint;
+ max 
+-----
+  98
+(1 row)
+
 SELECT MAX(getPosition(np)) FROM tbl_npoint;
+   max    
+----------
+ 0.999506
+(1 row)
 
 SELECT MAX(route(ns)) FROM tbl_nsegment;
+ max 
+-----
+  99
+(1 row)
+
 SELECT MAX(startPosition(ns)) FROM tbl_nsegment;
+   max    
+----------
+ 0.914219
+(1 row)
+
 SELECT MAX(endPosition(ns)) FROM tbl_nsegment;
+   max    
+----------
+ 0.997257
+(1 row)
 
 /******************************************************************************
  * Cast functions
  ******************************************************************************/
-
 SELECT count(*) FROM tbl_npoint where np::geometry is not null;
-SELECT count(*) FROM tbl_nsegment ns::geometry is not null;
+ count 
+-------
+   100
+(1 row)
 
+SELECT count(*) FROM tbl_nsegment ns::geometry is not null;
+ERROR:  syntax error at or near "::"
+LINE 1: SELECT count(*) FROM tbl_nsegment ns::geometry is not null;
+                                            ^
 SELECT count(*) FROM tbl_npoint WHERE np = (np::geometry)::npoint;
+ count 
+-------
+   100
+(1 row)
+
 SELECT count(*) FROM tbl_nsegment WHERE ns = (ns::geometry)::nsegment;
+ count 
+-------
+   100
+(1 row)
 
 /******************************************************************************
  * Conversions between network and space
  ******************************************************************************/
-
 SELECT count(*) FROM tbl_geompoint t WHERE point_in_network(t.g) IS NOT NULL;
+ count 
+-------
+     0
+(1 row)
 
 SELECT count(*) FROM tbl_geompoint t WHERE segment_in_network(t.g) IS NOT NULL;
+ count 
+-------
+     0
+(1 row)
 
 /******************************************************************************
  * Comparisons
  ******************************************************************************/
-
 SELECT count(*) FROM tbl_npoint t1, tbl_npoint t2 WHERE t1.np = t2.np;
+ count 
+-------
+   100
+(1 row)
+
 SELECT count(*) FROM tbl_npoint t1, tbl_npoint t2 WHERE t1.np != t2.np;
+ count 
+-------
+  9900
+(1 row)
+
 SELECT count(*) FROM tbl_npoint t1, tbl_npoint t2 WHERE t1.np < t2.np;
+ count 
+-------
+  4950
+(1 row)
+
 SELECT count(*) FROM tbl_npoint t1, tbl_npoint t2 WHERE t1.np <= t2.np;
+ count 
+-------
+  5050
+(1 row)
+
 SELECT count(*) FROM tbl_npoint t1, tbl_npoint t2 WHERE t1.np > t2.np;
+ count 
+-------
+  4950
+(1 row)
+
 SELECT count(*) FROM tbl_npoint t1, tbl_npoint t2 WHERE t1.np >= t2.np;
+ count 
+-------
+  5050
+(1 row)
 
 SELECT count(*) FROM tbl_nsegment t1, tbl_nsegment t2 WHERE t1.ns = t2.ns;
+ count 
+-------
+   100
+(1 row)
+
 SELECT count(*) FROM tbl_nsegment t1, tbl_nsegment t2 WHERE t1.ns != t2.ns;
+ count 
+-------
+  9900
+(1 row)
+
 SELECT count(*) FROM tbl_nsegment t1, tbl_nsegment t2 WHERE t1.ns < t2.ns;
+ count 
+-------
+  4950
+(1 row)
+
 SELECT count(*) FROM tbl_nsegment t1, tbl_nsegment t2 WHERE t1.ns <= t2.ns;
+ count 
+-------
+  5050
+(1 row)
+
 SELECT count(*) FROM tbl_nsegment t1, tbl_nsegment t2 WHERE t1.ns > t2.ns;
+ count 
+-------
+  4950
+(1 row)
+
 SELECT count(*) FROM tbl_nsegment t1, tbl_nsegment t2 WHERE t1.ns >= t2.ns;
+ count 
+-------
+  5050
+(1 row)
 
 /******************************************************************************/
