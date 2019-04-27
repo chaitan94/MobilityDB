@@ -96,7 +96,7 @@ tnpointinstarr_cont_to_gbox(GBOX *box, TemporalInst **instants, int count)
 		mmax = Max(mmax, instants[i]->t);
 	}
 
-	Datum line = route_geom_from_rid(rid);
+	Datum line = route_geom(rid);
 	Datum geom;
 	if (posmin == 0 && posmax == 1)
 		geom = PointerGetDatum(gserialized_copy((GSERIALIZED *)PG_DETOAST_DATUM(line)));

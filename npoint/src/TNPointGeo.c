@@ -22,7 +22,7 @@ tnpointseq_trajectory(TemporalSeq *seq)
 	Datum *trajs = palloc(sizeof(Datum) * (seq->count - 1));
 	TemporalInst *inst = temporalseq_inst_n(seq, 0);
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst));
-	Datum line = route_geom_from_rid(np1->rid);
+	Datum line = route_geom(np1->rid);
 	int k = 0;
 	for (int i = 1; i < seq->count; i++)
 	{
@@ -89,7 +89,7 @@ tnpointseq_trajectory1(TemporalInst *inst1, TemporalInst *inst2)
 	if (np1->pos == np2->pos)
 		return npoint_as_geom_internal(np1);
 
-	Datum line = route_geom_from_rid(np1->rid);
+	Datum line = route_geom(np1->rid);
 	Datum traj;
 	if (np1->pos < np2->pos)
 	{
@@ -302,7 +302,7 @@ tnpointseq_length(TemporalSeq *seq)
 
 	TemporalInst *inst = temporalseq_inst_n(seq, 0);
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst));
-	double route_length = route_length_from_rid(np1->rid);
+	double length = route_length(np1->rid);
 	double fraction = 0;
 	for (int i = 1; i < seq->count; i++)
 	{
@@ -311,7 +311,7 @@ tnpointseq_length(TemporalSeq *seq)
 		fraction += fabs(np2->pos - np1->pos);
 		np1 = np2;
 	}
-	return route_length * fraction;
+	return length * fraction;
 }
 
 static double
@@ -388,14 +388,14 @@ tnpointseq_cumulative_length(TemporalSeq *seq, double prevlength)
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * seq->count);
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
-	double route_length = route_length_from_rid(np1->rid);
+	double rlength = route_length(np1->rid);
 	double length = prevlength;
 	instants[0] = temporalinst_make(Float8GetDatum(length), inst1->t, FLOAT8OID);
 	for (int i = 1; i < seq->count; i++)
 	{
 		TemporalInst *inst2 = temporalseq_inst_n(seq, i);
 		npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
-		length += fabs(np2->pos - np1->pos) * route_length;
+		length += fabs(np2->pos - np1->pos) * rlength;
 		instants[i] = temporalinst_make(Float8GetDatum(length), inst2->t,
 			FLOAT8OID);
 		inst1 = inst2;
@@ -463,14 +463,14 @@ tnpointseq_speed(TemporalSeq *seq)
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * seq->count);
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
-	double route_length = route_length_from_rid(np1->rid);
+	double rlength = route_length(np1->rid);
 	TemporalInst *inst2 = NULL; /* make the compiler quiet */
 	double speed = 0; /* make the compiler quiet */
 	for (int i = 0; i < seq->count - 1; i++)
 	{
 		inst2 = temporalseq_inst_n(seq, i + 1);
 		npoint *np2 = DatumGetNpoint(temporalinst_value(inst1));
-		double length = fabs(np2->pos - np1->pos) * route_length;
+		double length = fabs(np2->pos - np1->pos) * rlength;
 		speed = length / (((double)(inst2->t) - (double)(inst1->t)) / 1000000);
 		instants[i] = temporalinst_make(Float8GetDatum(speed),
 			inst1->t, FLOAT8OID);

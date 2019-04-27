@@ -48,10 +48,7 @@ npoint_parse(char **str)
 
 	*str += delim + 1;
 
-	npoint *result = (npoint *)palloc(sizeof(npoint));
-	result->rid = rid;
-	result->pos = pos;
-	return result;
+	return npoint_make(rid, pos);
 }
 
 nsegment *
@@ -89,11 +86,7 @@ nsegment_parse(char **str)
 
 	*str += delim + 1;
 
-	nsegment *result = (nsegment *)palloc(sizeof(nsegment));
-	result->rid = rid;
-	result->pos1 = Min(pos1, pos2);
-	result->pos2 = Max(pos1, pos2);
-	return result;
+	return nsegment_make(rid, pos1, pos2);
 }
 
 TemporalSeq *

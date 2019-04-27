@@ -155,54 +155,6 @@ CREATE FUNCTION nsegment(geometry)
 CREATE CAST (nsegment AS geometry) WITH FUNCTION geometry(nsegment);
 CREATE CAST (geometry AS nsegment) WITH FUNCTION nsegment(geometry);
 
-CREATE OR REPLACE FUNCTION point_in_network(p geometry(point))
-RETURNS npoint AS $$
-DECLARE
-     np npoint;
-BEGIN
-     SELECT npoint(gid, ST_LineLocatePoint(the_geom, p))
-     FROM ways
-     WHERE ST_DWithin(the_geom, p, 1e-5)
-     ORDER BY ST_Distance(the_geom, p)
-     LIMIT 1
-     INTO np;
-     
-     RETURN np;
-END; 
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION segment_in_network(geo geometry)
-RETURNS nsegment[] AS $$
-DECLARE
-     ns nsegment;
-     result nsegment[];
-BEGIN
-     WITH tbl_route_intersection AS (
-          -- Find intersections of geo and network
-          -- Each intersection is either a point or a linestring
-          SELECT gid, the_geom, (ST_Dump(ST_Intersection(the_geom, geo))).geom AS intersection
-          FROM ways 
-     ),   
-          tbl_nsegment AS (
-		  -- Linear reference for point
-          SELECT nsegment(gid, ST_LineLocatePoint(the_geom, intersection)) AS ns
-          FROM tbl_route_intersection
-          WHERE ST_GeometryType(intersection) = 'ST_Point'
-          UNION ALL
-		  -- Linear reference for linestring
-          SELECT nsegment(gid, ST_LineLocatePoint(the_geom, ST_StartPoint(intersection)),
-		ST_LineLocatePoint(the_geom, ST_EndPoint(intersection))) AS ns
-          FROM tbl_route_intersection
-          WHERE ST_GeometryType(intersection) = 'ST_LineString' 
-     )	  
-     SELECT array_agg(t.ns)
-     FROM tbl_nsegment t
-     INTO result;
-	 
-     RETURN result;
-END; 
-$$ LANGUAGE plpgsql;
-
 /******************************************************************************
  * Operators
  ******************************************************************************/

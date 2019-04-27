@@ -41,6 +41,8 @@ CREATE TYPE tnpoint (
 	output = temporal_out,
 	receive = tnpoint_recv,
 	send = temporal_send,
+	typmod_in = temporal_typmod_in,
+	typmod_out = temporal_typmod_out,
 	storage = extended,
 	alignment = double
 --    , analyze = temporal_analyze

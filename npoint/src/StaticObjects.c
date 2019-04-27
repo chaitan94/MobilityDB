@@ -180,6 +180,9 @@ nsegment_send(PG_FUNCTION_ARGS)
 npoint *
 npoint_make(int64 rid, double pos)
 {
+	if (!route_exists(rid))
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("there is no route with gid value %lu in table ways", rid)));
 	if (pos < 0 || pos > 1)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
 			errmsg("the relative position must be a real number between 0 and 1")));
@@ -204,6 +207,9 @@ npoint_constructor(PG_FUNCTION_ARGS)
 nsegment *
 nsegment_make(int64 rid, double pos1, double pos2)
 {
+	if (!route_exists(rid))
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("there is no route with gid value %lu in table ways", rid)));
 	if (pos1 < 0 || pos1 > 1 || pos2 < 0 || pos2 > 1)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
 			errmsg("the relative position must be a real number between 0 and 1")));
@@ -581,8 +587,28 @@ nsegment_gt(PG_FUNCTION_ARGS)
 
 /* Access edge table to get the route length from corresponding rid */
 
+bool
+route_exists(int64 rid)
+{
+	char sql[64];
+	sprintf(sql, "SELECT true FROM ways WHERE gid = %ld", rid);
+	bool isNull = true;
+	bool result = false;
+	SPI_connect();
+	int ret = SPI_execute(sql, true, 1);
+	uint64 proc = SPI_processed;
+	if (ret > 0 && proc > 0 && SPI_tuptable != NULL)
+	{
+		SPITupleTable *tuptable = SPI_tuptable;
+		result = DatumGetBool(SPI_getbinval(tuptable->vals[0], 
+			tuptable->tupdesc, 1, &isNull));
+	}
+	SPI_finish();
+	return result;
+}
+
 double
-route_length_from_rid(int64 rid)
+route_length(int64 rid)
 {
 	char sql[64];
 	sprintf(sql, "SELECT length FROM ways WHERE gid = %ld", rid);
@@ -609,7 +635,7 @@ route_length_from_rid(int64 rid)
 /* Access edge table to get the route geometry from corresponding rid */
 
 Datum
-route_geom_from_rid(int64 rid)
+route_geom(int64 rid)
 {
 	char sql[64];
 	sprintf(sql, "SELECT the_geom FROM public.ways WHERE gid = %ld", rid);
@@ -674,7 +700,7 @@ rid_from_geom(Datum geom)
 Datum
 npoint_as_geom_internal(npoint *np)
 {
-	Datum line = route_geom_from_rid(np->rid);
+	Datum line = route_geom(np->rid);
 	Datum result = call_function2(LWGEOM_line_interpolate_point, line, Float8GetDatum(np->pos));
 	pfree(DatumGetPointer(line));
 	return result;
@@ -752,7 +778,7 @@ geom_as_npoint(PG_FUNCTION_ARGS)
 Datum
 nsegment_as_geom_internal(nsegment *ns)
 {
-	Datum line = route_geom_from_rid(ns->rid);
+	Datum line = route_geom(ns->rid);
 	Datum result;
 	if (fabs(ns->pos1 - ns->pos2) < EPSILON)
 		result = call_function2(LWGEOM_line_interpolate_point, line, 
@@ -800,13 +826,17 @@ geom_as_nsegment_internal(Datum line)
 	for (int i = 1; i < k; i++)
 	{
 		if (points[i]->rid != rid)
-            ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-                errmsg("Cannot transform a geometry into a network segment")));
+		{
+			for (int j = 0; j < k; j++)
+				pfree(points[j]);
+			pfree(points);
+			return NULL;
+		}
         minPos = Min(minPos, points[i]->pos);
 		maxPos = Max(maxPos, points[i]->pos);
 	}
 	nsegment *result = nsegment_make(rid, minPos, maxPos);
-	for (int i = 1; i < k; i++)
+	for (int i = 0; i < k; i++)
 		pfree(points[i]);
 	pfree(points);
 	return result;
@@ -826,6 +856,8 @@ geom_as_nsegment(PG_FUNCTION_ARGS)
 			errmsg("Only non-empty line geometries accepted")));
 	}
 	nsegment *result = geom_as_nsegment_internal(PointerGetDatum(gs));
+	if (result == NULL)
+		PG_RETURN_NULL();
 	PG_RETURN_POINTER(result);
 }
 
@@ -837,7 +869,7 @@ nsegmentarr_to_geom_internal(nsegment **segments, int count)
 	Datum *sublines = palloc(sizeof(Datum) * count);
 	for (int i = 0; i < count; i++)
 	{
-		Datum line = route_geom_from_rid(segments[i]->rid);
+		Datum line = route_geom(segments[i]->rid);
 		if (segments[i]->pos1 == 0 && segments[i]->pos2 == 1)
 			sublines[i] = PointerGetDatum(gserialized_copy((GSERIALIZED *)PG_DETOAST_DATUM(line)));
 		else if (segments[i]->pos1 == segments[i]->pos2)

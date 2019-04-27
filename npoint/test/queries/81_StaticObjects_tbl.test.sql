@@ -18,7 +18,7 @@ SELECT MAX(startPosition(ns)) FROM tbl_nsegment;
 SELECT MAX(endPosition(ns)) FROM tbl_nsegment;
 
 /******************************************************************************
- * Cast functions
+ * Cast functions between network and space
  ******************************************************************************/
 
 SELECT count(*) FROM tbl_npoint where np::geometry is not null;
@@ -27,13 +27,8 @@ SELECT count(*) FROM tbl_nsegment ns::geometry is not null;
 SELECT count(*) FROM tbl_npoint WHERE np = (np::geometry)::npoint;
 SELECT count(*) FROM tbl_nsegment WHERE ns = (ns::geometry)::nsegment;
 
-/******************************************************************************
- * Conversions between network and space
- ******************************************************************************/
-
-SELECT count(*) FROM tbl_geompoint t WHERE point_in_network(t.g) IS NOT NULL;
-
-SELECT count(*) FROM tbl_geompoint t WHERE segment_in_network(t.g) IS NOT NULL;
+SELECT count(*) FROM tbl_geompoint WHERE CASE WHEN NOT ST_IsEmpty(g) THEN g::npoint IS NOT NULL END
+SELECT count(*) FROM tbl_geomlinestring WHERE CASE WHEN NOT ST_IsEmpty(g) THEN g::nsegment IS NOT NULL END
 
 /******************************************************************************
  * Comparisons

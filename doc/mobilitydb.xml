@@ -348,7 +348,7 @@ SELECT periods(periodset '{[2012-01-01, 2012-01-03), [2012-01-04, 2012-01-04], [
 						<para><varname>=</varname>: Equal</para>
 						<para>Signature: <varname>time = time</varname></para>
 						<programlisting>
-SELECT period '[2012-01-01, 2012-01-04)' = period '[2012-01-01, 2012-01-04)';
+SELECT npoint 'Npoint(3, 0.5)' = npoint 'Npoint(3, 0.5)';
 -- true
 						</programlisting>
 					</listitem>
@@ -357,7 +357,7 @@ SELECT period '[2012-01-01, 2012-01-04)' = period '[2012-01-01, 2012-01-04)';
 						<para><varname>&lt;&gt;</varname>: Not equal</para>
 						<para>Signature: <varname>time &lt;&gt; time</varname></para>
 						<programlisting>
-SELECT period '[2012-01-01, 2012-01-04)' &lt;&gt; period '[2012-01-03, 2012-01-05)';
+SELECT npoint 'Npoint(3, 0.5)' &lt;&gt; period '[2012-01-03, 2012-01-05)';
 -- true
 						</programlisting>
 					</listitem>
@@ -3962,12 +3962,14 @@ SELECT st_astext(nsegment(76, 0.33, 0.33)::geometry);
 				<para>
 					Similarly, <varname>geometry</varname> values of type point or linestring (restricted to two points) can be converted, respectively, to <varname>npoint</varname> and <varname>nsegment</varname> values using an explicit <varname>CAST</varname> or using the <varname>::</varname> notation. For this, the route that intersects the given points must be found, where a tolerance of 0.00001 units (depending on the coordinate system) is assumed so a point and a route that are close are considered to intersect. If no such route is found, a null value is returned.
 					<programlisting>
-SELECT st_astext(npoint(76, 0.33)::geometry);
--- "POINT(21.6338731332283 50.0545869554067)"
-SELECT st_astext(nsegment(76, 0.33, 0.66)::geometry);
--- "LINESTRING(21.6338731332283 50.0545869554067,30.7475989651999 53.9185062927473)"
-SELECT st_astext(nsegment(76, 0.33, 0.33)::geometry);
--- "POINT(21.6338731332283 50.0545869554067)"
+SELECT geometry 'Point(279.269156511873 811.497076880187)'::npoint;
+-- "NPoint(3,0.781413)"
+SELECT geometry 'LINESTRING(406.729536784738 702.58583437902,383.570801314823 845.137059419277)'::nsegment;
+-- "NSegment(3,0.6,0.9)"
+SELECT geometry 'Point(279.3 811.5)'::npoint;
+-- NULL
+SELECT geometry 'LINESTRING(406.7 702.6,383.6 845.1)'::nsegment;
+-- NULL
 					</programlisting>
 				</para>
 
@@ -3992,6 +3994,94 @@ SELECT memSize(tint '{1@2012-01-01, 2@2012-01-02, 3@2012-01-03}');
 				</itemizedlist>
 			</sect2>
 
+			<sect2>
+				<title>Operators</title>
+
+				<para>The comparison operators (<varname>=</varname>, <varname>&lt;</varname>, and so on) for static network types require that the left and right arguments be of the same type. Excepted the equality and inequality, the other comparison operators are not useful in the real world but allow B-tree indexes to be constructed on static network types.</para>
+
+				<itemizedlist>
+					<listitem>
+						<para><varname>=</varname>: Equal</para>
+						<para>Signature: <varname>{npoint, nsegment} = {npoint, nsegment}</varname></para>
+						<programlisting>
+SELECT npoint 'Npoint(3, 0.5)' = npoint 'Npoint(3, 0.5)';
+-- true
+SELECT nsegment 'Nsegment(3, 0.5, 0.5)' = nsegment 'Nsegment(3, 0.5, 0.6)';
+-- false
+						</programlisting>
+					</listitem>
+
+					<listitem>
+						<para><varname>&lt;&gt;</varname>: Not equal</para>
+						<para>Signature: <varname>{npoint, nsegment} &lt;&gt; {npoint, nsegment}</varname></para>
+						<programlisting>
+SELECT npoint 'Npoint(3, 0.5)' &lt;&gt; npoint 'Npoint(3, 0.6);
+-- true
+SELECT nsegment 'Nsegment(3, 0.5, 0.5)' &lt;&gt; nsegment 'Nsegment(3, 0.5, 0.5)';
+-- false
+						</programlisting>
+					</listitem>
+
+					<listitem>
+						<para><varname>&lt;</varname>: Less than</para>
+						<para>Signature: <varname>{npoint, nsegment} &lt; {npoint, nsegment}</varname></para>
+						<programlisting>
+SELECT nsegment 'Nsegment(3, 0.5, 0.5)' &lt; nsegment 'Nsegment(3, 0.5, 0.6)';
+-- true
+						</programlisting>
+					</listitem>
+
+					<listitem>
+						<para><varname>&gt;</varname>: Greater than</para>
+						<para>Signature: <varname>{npoint, nsegment} &gt; {npoint, nsegment}</varname></para>
+						<programlisting>
+SELECT nsegment 'Nsegment(3, 0.5, 0.5)' &gt; nsegment 'Nsegment(2, 0.5, 0.5)';
+-- true
+						</programlisting>
+					</listitem>
+
+					<listitem>
+						<para><varname>&lt;=</varname>: Less than or equal to</para>
+						<para>Signature: <varname>{npoint, nsegment} &lt;= {npoint, nsegment}</varname></para>
+						<programlisting>
+SELECT npoint 'Npoint(1, 0.5)' &lt;= npoint 'Npoint(2, 0.5)';
+-- true
+						</programlisting>
+					</listitem>
+
+					<listitem>
+						<para><varname>&gt;=</varname>: Greater than or equal to</para>
+						<para>Signature: <varname>{npoint, nsegment} &gt;= {npoint, nsegment}</varname></para>
+						<programlisting>
+SELECT npoint 'Npoint(1, 0.6)' &lt;= npoint 'Npoint(1, 0.5)';
+-- true
+						</programlisting>
+					</listitem>
+				</itemizedlist>
+			</sect2>
 		</sect1>
+
+		<sect1>
+			<title>Temporal Network Points</title>
+			<para>
+				The temporal network point type <varname>tnpoint</varname> allows to represent the movement of objects over a network. It corresponds to the  temporal point type <varname>tgeompoint</varname> restricted to two-dimensional coordinates. As all the other temporal types it comes in four durations, namely, instant, instant set, sequence and sequence set. Examples of <varname>tnpoint</varname> values in these durations are given next.
+					<programlisting>
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}';
+					</programlisting>
+			</para>
+
+			<para>
+				The temporal network point type support type modifiers (or typmod in PostgreSQL terminology). The possible values for the type modifier are Instant, InstantSet, Sequence, and SequenceSet. If no type modifier is specified for a column, values of any duration are allowed.
+					<programlisting>
+SELECT tnpoint(Sequence) '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]';
+SELECT tnpoint(Sequence) 'Npoint(1, 0.2)@2000-01-01';
+-- ERROR:  Temporal type (Instant) does not match column type (Sequence)
+					</programlisting>
+			</para>
+		</sect1>
+
 	</chapter>
 </book>

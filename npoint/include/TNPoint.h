@@ -74,8 +74,9 @@ extern Datum nsegmentarr_to_geom_internal(nsegment **segments, int count);
 extern npoint *npoint_make(int64 rid, double pos);
 extern nsegment *nsegment_make(int64 rid, double pos1, double pos2);
 
-extern double route_length_from_rid(int64 rid);
-extern Datum route_geom_from_rid(int64 rid);
+extern bool route_exists(int64 rid);
+extern double route_length(int64 rid);
+extern Datum route_geom(int64 rid);
 
 extern Datum npoint_as_geom_internal(npoint *np);
 extern Datum nsegment_as_geom_internal(nsegment *ns);
