@@ -3811,4 +3811,54 @@ ORDER BY S1.GroupId, S1.PointId;
 		</sect1>
 	</chapter>
 
+	<chapter id="temporal_network_point">
+		<title>Temporal Network Points</title>
+		<para>The temporal points that we have considered so far represent the movement of objects that can move freely on space since it is assumed that they can change their position from one location to the next one without any motion restriction. This is the case for animals and for flying objects such as planes or drones. However, in many cases, objects do not move freely in space but rather within spatially embedded networks such as routes or railways. In this case, it is necessary to take the embedded networks into account while describing the movements of these moving objects. Temporal network points account for these requirements. Compared with the free-space temporal points, network-based points have the following advantages:
+			<itemizedlist>
+				<listitem>
+					<para>Network points provide road constraints that reflect the real movements of moving objects.</para>
+				</listitem>
+
+				<listitem>
+					<para>The geometric information is not stored with the moving point, but once and for all in the fixed networks. In this way, the location representations and interpolations are more precise.</para>
+				</listitem>
+
+				<listitem>
+					<para>Network points are more efficient in terms of data storage, location update, formulation of query, as well as indexing. These are discussed later in this document.</para>
+				</listitem>
+			</itemizedlist>
+		</para>
+		<para>
+		Temporal network points are based on <ulink url="https://pgrouting.org/">pgRouting</ulink>, a PostgreSQL extension for developing network routing applications and doing graph analysis. Therefore, temporal network points asume that the underlying network is defined in a table named <varname>ways</varname>, which has at least three columns: <varname>gid</varname> containing the unique route identifier, <varname>length</varname> containing the route length, and <varname>the_geom</varname> containing the route geometry.
+		</para>
+		<para>
+		There are two static network types, <varname>npoint</varname> (short for network point) and <varname>nsegment</varname> (short for network segment), which represent, respectively, a point and a segment of a route. An <varname>npoint</varname> value is composed of a route identifier and a float number in the range [0,1] determining a relative position of the route, where 0 corresponds to the begining of the route and 1 to the end of the route. A <varname>nsegment</varname> value is composed of a route identifier and two float numbers in the range [0,1] determining the start and end relative positions. A <varname>nsegment</varname> value whose start and end positions are equal corresponds to a <varname>npoint</varname> value.
+		</para>
+		<para>
+		The <varname>npoint</varname> type serves as base type for defining the temporal network point type <varname>tnpoint</varname>. The <varname>tnpoint</varname> type has similar functionality as the temporal point type <varname>tgeompoint</varname> with the exception that it only considers two dimensions. Thus, all functions and operators described before for the <varname>tgeompoint</varname> type are also applicable for the <varname>tnpoint</varname> type. In addition, there are specific functions defined for the <varname>tnpoint</varname> type.
+		</para>
+		<sect1>
+		<title>Static Network Types</title>
+		<para>An <varname>npoint</varname> value is a couple of the form <varname>(rid, position)</varname> where <varname>rid</varname> is a <varname>bigint</varname> value representing a route identifier and <varname>position</varname> is a <varname>float</varname> value in the range [0,1] indicating its relative position.  <varname>position = 0</varname> denotes the starting position of route, and  <varname>position = 1</varname> denotes the ending position of route. The road distance between an <varname>npoint</varname> value and the starting position of route with identifier  <varname>rid</varname> is computed by  <varname>position x length</varname>, where <varname>length</varname> is the route length. Examples of input of network point values are as follows:
+				<programlisting>
+SELECT npoint '(76, 0.3)';
+SELECT npoint '(64, 1.0)';
+				</programlisting>		
+		</para>
+
+		<para>An <varname>nsegment</varname> value is a triple of the form <varname>(rid, startPosition, endPosition)</varname> where <varname>rid</varname> is a <varname>bigint</varname> value representing a route identifier and <varname>startPosition</varname> and <varname>endPosition</varname> are <varname>float</varname> values in the range [0,1] such that <varname>startPosition</varname> &leq; <varname>endPosition</varname>.  Semantically, a network segment represents a set of network points <varname>(rid,pos)</varname> with pos 1 ≤ pos ≤ pos 2 .
+In case of pos 1 = 0 and pos 2 = 1, the route interval is equivalent to the entire route rid.
+In case of pos 1 = pos 2 , the route interval degenerates into a single network position.
+		
+		
+		<varname>position = 0</varname> denotes the starting position of route, and  <varname>position = 1</varname> denotes the ending position of route. The road distance between an <varname>npoint</varname> value and the starting position of route with identifier  <varname>rid</varname> is computed by  <varname>position x length</varname>, where <varname>length</varname> is the route length. Examples of input of network point values are as follows:
+				<programlisting>
+SELECT nsegment '(76, 0.3, 0.5)';
+SELECT nsegment '(64, 0.5, 0.5)';
+SELECT nsegment '(64, 0.0, 1.0)';
+				</programlisting>		
+		</para>
+
+		</sect1>
+	</chapter>
 </book>
