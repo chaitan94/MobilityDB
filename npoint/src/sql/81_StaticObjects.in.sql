@@ -94,6 +94,8 @@ CREATE FUNCTION nsegment(npoint)
 	AS 'MODULE_PATHNAME', 'nsegment_from_npoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE CAST (npoint AS nsegment) WITH FUNCTION nsegment(npoint);
+
 /*****************************************************************************
  * Accessing values
  *****************************************************************************/
