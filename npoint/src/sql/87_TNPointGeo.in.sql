@@ -65,6 +65,15 @@ CREATE FUNCTION speed(tnpoint)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;	
 	
 /*****************************************************************************
+ * Time-weighted centroid
+ *****************************************************************************/	
+
+CREATE FUNCTION twCentroid(tnpoint)
+	RETURNS geometry
+	AS 'MODULE_PATHNAME', 'tnpoint_twcentroid'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+	
+/*****************************************************************************
  * Temporal azimuth
  *****************************************************************************/	
 
