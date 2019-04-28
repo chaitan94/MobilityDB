@@ -14,6 +14,21 @@
  * Temporal npoint to gbox
  *****************************************************************************/
 
+CREATE FUNCTION gbox(npoint)
+	RETURNS gbox
+	AS 'MODULE_PATHNAME', 'npoint_to_gbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+	
+CREATE FUNCTION gbox(npoint, timestamptz)
+	RETURNS gbox
+	AS 'MODULE_PATHNAME', 'npoint_timestamp_to_gbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+	
+CREATE FUNCTION gbox(npoint, period)
+	RETURNS gbox
+	AS 'MODULE_PATHNAME', 'npoint_period_to_gbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+	
 CREATE FUNCTION gbox(tnpoint)
 	RETURNS gbox
 	AS 'MODULE_PATHNAME', 'tnpoint_to_gbox'

@@ -25,8 +25,9 @@
  * Transform a temporal npoint to a GBOX
  *****************************************************************************/
 
-void
-npoint_to_gbox(GBOX *box, npoint *np)
+// TODO: set return value appropriately
+bool
+npoint_to_gbox_internal(GBOX *box, npoint *np)
 {
 	double infinity = get_float8_infinity();
 	Datum geom = npoint_as_geom_internal(DatumGetNpoint(np));
@@ -34,34 +35,44 @@ npoint_to_gbox(GBOX *box, npoint *np)
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 	if (gserialized_get_gbox_p(gs, &gbox) == LW_FAILURE)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("Error while computing the bounding box of the temporal network point")));
+			errmsg("Error while computing the bounding box of the network point")));
 
 	memcpy(box, &gbox, sizeof(GBOX));
 	box->zmin = box->mmin = -infinity;
 	box->zmax = box->mmax = infinity;
+	FLAGS_SET_Z(box->flags, false);
+	FLAGS_SET_M(box->flags, false);
+	FLAGS_SET_GEODETIC(box->flags, false);
 	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	pfree(DatumGetPointer(geom));
-	return;
+	return true;
+}
+
+bool
+npoint_timestamp_to_gbox_internal(GBOX *box, npoint *np, TimestampTz t)
+{
+	npoint_to_gbox_internal(box, np);
+	box->mmin = box->mmax = t;
+	FLAGS_SET_M(box->flags, true);
+	return true;
+}
+
+bool
+npoint_period_to_gbox_internal(GBOX *box, npoint *np, Period *p)
+{
+	npoint_to_gbox_internal(box, np);
+	box->mmin = p->lower;
+	box->mmax = p->upper;
+	FLAGS_SET_M(box->flags, true);
+	return true;
 }
 
 void
 tnpointinst_make_gbox(GBOX *box, Datum value, TimestampTz t)
 {
-	double infinity = get_float8_infinity();
-	Datum geom = npoint_as_geom_internal(DatumGetNpoint(value));
-	GBOX gbox;
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
-	if (gserialized_get_gbox_p(gs, &gbox) == LW_FAILURE)
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("Error while computing the bounding box of the temporal network point")));
-
-	memcpy(box, &gbox, sizeof(GBOX));
-	box->zmin = -infinity;
-	box->zmax = infinity;
+	npoint_to_gbox_internal(box, DatumGetNpoint(value));
 	box->mmin = box->mmax = t;
 	FLAGS_SET_M(box->flags, true);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	return;
 }
 
@@ -135,6 +146,41 @@ tnpointseqarr_to_gbox(GBOX *box, TemporalSeq **sequences, int count)
 }
 
 /*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(npoint_to_gbox);
+
+PGDLLEXPORT Datum
+npoint_to_gbox(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	GBOX *result = palloc0(sizeof(GBOX));
+	npoint_to_gbox_internal(result, np);
+	PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(npoint_timestamp_to_gbox);
+
+PGDLLEXPORT Datum
+npoint_timestamp_to_gbox(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
+	GBOX *result = palloc0(sizeof(GBOX));
+	npoint_timestamp_to_gbox_internal(result, np, t);
+	PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(npoint_period_to_gbox);
+
+PGDLLEXPORT Datum
+npoint_period_to_gbox(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	Period *p = PG_GETARG_PERIOD(1);
+	GBOX *result = palloc0(sizeof(GBOX));
+	npoint_period_to_gbox_internal(result, np, p);
+	PG_RETURN_POINTER(result);
+}
 
 PG_FUNCTION_INFO_V1(tnpoint_to_gbox);
 

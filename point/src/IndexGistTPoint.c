@@ -259,10 +259,10 @@ gist_tpoint_consistent(PG_FUNCTION_ARGS)
 	}
 	else if (subtype == type_oid(T_NPOINT))
 	{
-		npoint *np = PG_GETARG_NPOINT(1);
-		if (np == NULL)
+		if (PG_ARGISNULL(1))
 			PG_RETURN_BOOL(false);
-		npoint_to_gbox(&query, np);
+		if (!npoint_to_gbox_internal(&query, PG_GETARG_NPOINT(1)))
+			PG_RETURN_BOOL(false);
 	}
 	else if (subtype == TIMESTAMPTZOID)
 	{

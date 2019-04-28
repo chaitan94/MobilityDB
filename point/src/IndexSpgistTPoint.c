@@ -584,7 +584,7 @@ spgist_tpoint_inner_consistent(PG_FUNCTION_ARGS)
 			geo_to_gbox_internal(&queries[i], 
 				(GSERIALIZED*)PG_DETOAST_DATUM(in->scankeys[i].sk_argument));
 		else if (subtype == type_oid(T_NPOINT))
-			npoint_to_gbox(&queries[i], 
+			npoint_to_gbox_internal(&queries[i], 
 				DatumGetNpoint(in->scankeys[i].sk_argument));
 		else if (subtype == TIMESTAMPTZOID)
 			timestamp_to_gbox_internal(&queries[i],
@@ -759,8 +759,10 @@ spgist_tpoint_leaf_consistent(PG_FUNCTION_ARGS)
 		else if (subtype == type_oid(T_NPOINT))
 		{
 			npoint *np = DatumGetNpoint(in->scankeys[i].sk_argument);
-			npoint_to_gbox(&query, np);
-			res = index_leaf_consistent_gbox(key, &query, strategy);
+			if (!npoint_to_gbox_internal(&query, np))
+				res = false;
+			else
+				res = index_leaf_consistent_gbox(key, &query, strategy);
 		}
 		else if (subtype == TIMESTAMPTZOID)
 		{

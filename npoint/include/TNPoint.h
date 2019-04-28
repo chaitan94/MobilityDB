@@ -123,6 +123,12 @@ extern npoint * geom_as_npoint_internal(Datum value);
 
 extern Datum tnpointseq_in(PG_FUNCTION_ARGS);
 extern Datum tnpoints_in(PG_FUNCTION_ARGS);
+
+extern TemporalInst *tnpointinst_as_tgeompointinst(TemporalInst *inst);
+extern TemporalI *tnpointi_as_tgeompointi(TemporalI *ti);
+extern TemporalSeq *tnpointseq_as_tgeompointseq(TemporalSeq *seq);
+extern TemporalS *tnpoints_as_tgeompoints(TemporalS *ts);
+
 extern Datum tnpoint_positions(PG_FUNCTION_ARGS);
 extern Datum tnpoint_routes(PG_FUNCTION_ARGS);
 
@@ -169,8 +175,12 @@ extern Temporal *distance_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *te
  * BoundBoxOps.c
  *****************************************************************************/
 
-extern void npoint_to_gbox(GBOX *box, npoint *np);
+extern Datum npoint_to_gbox(PG_FUNCTION_ARGS);
+extern Datum npoint_timestamp_to_gbox(PG_FUNCTION_ARGS);
+extern Datum npoint_period_to_gbox(PG_FUNCTION_ARGS);
 extern Datum tnpoint_to_gbox(PG_FUNCTION_ARGS);
+
+extern bool npoint_to_gbox_internal(GBOX *box, npoint *np);
 
 extern void tnpointinst_make_gbox(GBOX *box, Datum value, TimestampTz t);
 extern void tnpointinstarr_disc_to_gbox(GBOX *box, TemporalInst **inst, int count);

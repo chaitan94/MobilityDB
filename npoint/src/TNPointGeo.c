@@ -399,6 +399,7 @@ tnpointseq_cumulative_length(TemporalSeq *seq, double prevlength)
 		instants[i] = temporalinst_make(Float8GetDatum(length), inst2->t,
 			FLOAT8OID);
 		inst1 = inst2;
+		np1 = np2;
 	}
 	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, seq->count,
 		seq->period.lower_inc, seq->period.upper_inc, false);
@@ -469,12 +470,13 @@ tnpointseq_speed(TemporalSeq *seq)
 	for (int i = 0; i < seq->count - 1; i++)
 	{
 		inst2 = temporalseq_inst_n(seq, i + 1);
-		npoint *np2 = DatumGetNpoint(temporalinst_value(inst1));
+		npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
 		double length = fabs(np2->pos - np1->pos) * rlength;
 		speed = length / (((double)(inst2->t) - (double)(inst1->t)) / 1000000);
 		instants[i] = temporalinst_make(Float8GetDatum(speed),
 			inst1->t, FLOAT8OID);
 		inst1 = inst2;
+		np1 = np2;
 	}
 	instants[seq->count-1] = temporalinst_make(Float8GetDatum(speed),
 	   inst2->t, FLOAT8OID);
@@ -534,6 +536,56 @@ tnpoint_speed(PG_FUNCTION_ARGS)
 	if (result == NULL)
 		PG_RETURN_NULL();
 	PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************
+ * Time-weighed centroid for temporal network points
+ *****************************************************************************/
+
+/*****************************************************************************
+ * Time-weighed centroid for temporal geometry points
+ *****************************************************************************/
+
+static Datum
+tnpointi_twcentroid(TemporalI *ti)
+{
+    TemporalI *ti1 = tnpointi_as_tgeompointi(ti);
+    return tgeompointi_twcentroid(ti1);
+}
+
+static Datum
+tnpointseq_twcentroid(TemporalSeq *seq)
+{
+    TemporalSeq *seq1 = tnpointseq_as_tgeompointseq(seq);
+    return tgeompointseq_twcentroid(seq1);
+}
+
+static Datum
+tnpoints_twcentroid(TemporalS *ts)
+{
+    TemporalS *ts1 = tnpoints_as_tgeompoints(ts);
+    return tgeompoints_twcentroid(ts1);
+}
+PG_FUNCTION_INFO_V1(tnpoint_twcentroid);
+
+PGDLLEXPORT Datum
+tnpoint_twcentroid(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	Datum result = 0; 
+	if (temp->type == TEMPORALINST) 
+		result = temporalinst_value_copy((TemporalInst *)temp);
+	else if (temp->type == TEMPORALI) 
+		result = tnpointi_twcentroid((TemporalI *)temp);
+	else if (temp->type == TEMPORALSEQ) 
+		result = tnpointseq_twcentroid((TemporalSeq *)temp);
+	else if (temp->type == TEMPORALS) 
+		result = tnpoints_twcentroid((TemporalS *)temp);
+	else
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Operation not supported")));
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_DATUM(result);
 }
 
 /*****************************************************************************
