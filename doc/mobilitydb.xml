@@ -4318,9 +4318,49 @@ SELECT minusGeometry(tnpoint '[NPoint(2, 0.3)@2012-01-01, NPoint(2, 0.7)@2012-01
 					</programlisting>
 				</listitem>
 
+				<listitem>
+				<para>Traditional comparison operators</para>
+				<programlisting>
+SELECT tnpoint '{[NPoint(1, 0.1)@2001-01-01, NPoint(1, 0.3)@2001-01-02), 
+	[NPoint(1, 0.3)@2001-01-02, NPoint(1, 0.5)@2001-01-03]}' = 
+	tnpoint '[NPoint(1, 0.1)@2001-01-01, NPoint(1, 0.5)@2001-01-03]';
+-- true
+SELECT tnpoint '{[NPoint(1, 0.1)@2001-01-01, NPoint(1, 0.5)@2001-01-03]}' &lt;&gt; 
+	tnpoint '[NPoint(1, 0.1)@2001-01-01, NPoint(1, 0.5)@2001-01-03]';
+-- false
+SELECT tnpoint '[NPoint(1, 0.1)@2001-01-01, NPoint(1, 0.5)@2001-01-03]' &lt;
+	tnpoint '[NPoint(1, 0.1)@2001-01-01, NPoint(1, 0.6)@2001-01-03]';
+-- true
+					</programlisting>
+				</listitem>
 
+				<listitem>
+				<para>Temporal comparison operators</para>
+				<programlisting>
+SELECT tnpoint '[NPoint(1, 0.2)@2012-01-01, NPoint(1, 0.4)@2012-01-03)' #= npoint 'NPoint(1, 0.3)';
+-- "{[f@2012-01-01, t@2012-01-02], (f@2012-01-02, f@2012-01-03)}"
+SELECT tnpoint '[NPoint(1, 0.2)@2012-01-01, NPoint(1, 0.8)@2012-01-03)' #<> 
+tnpoint '[NPoint(1, 0.3)@2012-01-01, NPoint(1, 0.7)@2012-01-03)';
+-- "{[t@2012-01-01, f@2012-01-02], (t@2012-01-02, t@2012-01-03)}"
+					</programlisting>
+				</listitem>
 
+				<listitem>
+					<para><varname>&amp;=</varname>: Is ever equal to the value?</para>
+					<programlisting>
+SELECT tnpoint '[Npoint(1, 0.2)@2012-01-01, Npoint(1, 0.4)@2012-01-04)' &amp;= Npoint(1, 0.3);
+-- true
+					</programlisting>
+				</listitem>
 
+				<listitem>
+					<para><varname>@=</varname>: Is always equal to the value?</para>
+					<para>Signature: <varname>ttype @= base: bool</varname></para>
+					<programlisting>
+SELECT tnpoint '[Npoint(1, 0.2)@2012-01-01, Npoint(1, 0.2)@2012-01-04)' @= Npoint(1, 0.2);
+-- true
+					</programlisting>
+				</listitem>
 
 
 

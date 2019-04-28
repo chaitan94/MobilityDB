@@ -39,17 +39,28 @@ tnpointseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 	if (startnp1->rid != startnp2->rid)
 		return false;
 
-	double s1 = startnp1->pos;
-	double e1 = endnp1->pos;
-	double s2 = startnp2->pos;
-	double e2 = endnp2->pos;
+	/* Compute the instant t at which the linear functions of the two segments
+	   are equal: at + b = ct + d that is t = (d - b) / (a - c).
+	   To reduce problems related to floating point arithmetic, t1 and t2
+	   are shifted, respectively, to 0 and 1 before the computation */
+	double x1 = startnp1->pos;
+	double x2 = endnp1->pos;
+	double x3 = startnp2->pos;
+	double x4 = endnp2->pos;
 	TimestampTz lower = start1->t;
 	TimestampTz upper = end1->t;
-
-	if (e1 - s1 - e2 + s2 == 0)
+	double denum = fabs(x2 - x1 - x4 + x3);
+	if (denum == 0)
+		/* Parallel segments */
 		return false;
 
-	TimestampTz t = (TimestampTz)(((upper-lower)*(s2-s1) + lower * (s2-s1+e1-e2)) / (e1-s1-e2+s2));
+	double fraction = fabs((x3 - x1) / denum);
+	if (fraction <= EPSILON || fraction >= (1.0 - EPSILON))
+		/* Intersection occurs out of the period */
+		return false;
+
+	double duration = (double)(end1->t) - (double)(start1->t);
+	TimestampTz t = (double)(start1->t) + (duration * fraction);
 	if (t == lower && lower_inc)
 		*inter = lower;
 	else if (t == upper && upper_inc)
@@ -88,23 +99,14 @@ tnpointseq_geom_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 	 * they have 0 or 1 intersection */
 	if (startnp1->rid == startnp2->rid)
 	{
-		if (e1 - s1 - e2 + s2 == 0)
-			return 0;
-
-		TimestampTz t = (TimestampTz)(((upper-lower)*(s2-s1) + 
-			lower * (s2-s1+e1-e2)) / (e1-s1-e2+s2));
-		if (t == lower && lower_inc)
-			*inter = lower;
-		else if (t == upper && upper_inc)
-			*inter = upper;
-		else if (t > lower && t < upper)
-			*inter= t;
+		if (tnpointseq_intersect_at_timestamp(start1, end1, start2, end2, 
+			lower_inc, upper_inc, inter))
+			return 1;
 		else
 			return 0;
-		return 1;
 	}
 
-	/* When two periods are on different routes,
+	/* When two sequences are on different routes,
 	 * intersection occurs only on route endpoints */
 	int countinter = 0;
 
