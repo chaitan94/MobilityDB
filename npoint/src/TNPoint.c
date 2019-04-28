@@ -16,31 +16,16 @@
  * Input/output functions
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(tnpointseq_in);
+PG_FUNCTION_INFO_V1(tnpoint_in);
 
 PGDLLEXPORT Datum
-tnpointseq_in(PG_FUNCTION_ARGS)
+tnpoint_in(PG_FUNCTION_ARGS) 
 {
 	char *input = PG_GETARG_CSTRING(0);
 	Oid temptypid = PG_GETARG_OID(1);
 	Oid valuetypid;
 	temporal_typinfo(temptypid, &valuetypid);
-	TemporalSeq *result = tnpointseq_parse(&input, valuetypid);
-	if (result == 0)
-		PG_RETURN_NULL();
-	PG_RETURN_POINTER(result);
-}
-
-PG_FUNCTION_INFO_V1(tnpoints_in);
-
-PGDLLEXPORT Datum
-tnpoints_in(PG_FUNCTION_ARGS)
-{
-	char *input = PG_GETARG_CSTRING(0);
-	Oid temptypid = PG_GETARG_OID(1);
-	Oid valuetypid;
-	temporal_typinfo(temptypid, &valuetypid);
-	TemporalS *result = tnpoints_parse(&input, valuetypid);
+	Temporal *result = tnpoint_parse(&input, valuetypid);
 	if (result == 0)
 		PG_RETURN_NULL();
 	PG_RETURN_POINTER(result);
@@ -182,6 +167,8 @@ tgeompointinst_as_tnpointinst(TemporalInst *inst)
 {
 	Datum geom = temporalinst_value(inst);
 	npoint *np = geom_as_npoint_internal(geom);
+	if (np == NULL)
+		return NULL;
 	TemporalInst *result = temporalinst_make(PointerGetDatum(np), inst->t, type_oid(T_NPOINT));
 	return result;
 }
@@ -193,7 +180,15 @@ tgeompointi_as_tnpointi(TemporalI *ti)
 	for (int i = 0; i < ti->count; i++)
 	{
 		TemporalInst *inst = temporali_inst_n(ti, i);
-		instants[i] = tgeompointinst_as_tnpointinst(inst);
+		TemporalInst *inst1 = tgeompointinst_as_tnpointinst(inst);
+		if (inst1 == NULL)
+		{
+			for (int j = 0; j < i; j++)
+				pfree(instants[j]);
+			pfree(instants);
+			return NULL;
+		}
+		instants[i] = inst1;
 	}
 	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
 	for (int i = 0; i < ti->count; i++)
@@ -209,7 +204,15 @@ tgeompointseq_as_tnpointseq(TemporalSeq *seq)
 	for (int i = 0; i < seq->count; i++)
 	{
 		TemporalInst *inst = temporalseq_inst_n(seq, i);
-		instants[i] = tgeompointinst_as_tnpointinst(inst);
+		TemporalInst *inst1 = tgeompointinst_as_tnpointinst(inst);
+		if (inst1 == NULL)
+		{
+			for (int j = 0; j < i; j++)
+				pfree(instants[j]);
+			pfree(instants);
+			return NULL;
+		}
+		instants[i] = inst1;
 	}
 	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, seq->count,
 		seq->period.lower_inc, seq->period.upper_inc, false);
@@ -226,7 +229,15 @@ tgeompoints_as_tnpoints(TemporalS *ts)
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
-		sequences[i] = tgeompointseq_as_tnpointseq(seq);
+		TemporalSeq *seq1 = tgeompointseq_as_tnpointseq(seq);
+		if (seq1 == NULL)
+		{
+			for (int j = 0; j < i; j++)
+				pfree(sequences[j]);
+			pfree(sequences);
+			return NULL;
+		}
+		sequences[i] = seq1;
 	}
 	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, 
 		false);
@@ -255,6 +266,8 @@ tgeompoint_as_tnpoint(PG_FUNCTION_ARGS)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
 			errmsg("Bad temporal type")));
 	PG_FREE_IF_COPY(temp, 0);
+	if (result == NULL)
+		PG_RETURN_NULL();
 	PG_RETURN_POINTER(result);
 }
 

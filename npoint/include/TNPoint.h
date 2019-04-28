@@ -41,8 +41,7 @@ typedef struct
 
 extern npoint *npoint_parse(char **str);
 extern nsegment *nsegment_parse(char **str);
-extern TemporalSeq *tnpointseq_parse(char **str, Oid basetype);
-extern TemporalS *tnpoints_parse(char **str, Oid basetype);
+extern Temporal *tnpoint_parse(char **str, Oid basetype);
 
 /*****************************************************************************
  * StaticObjects.c

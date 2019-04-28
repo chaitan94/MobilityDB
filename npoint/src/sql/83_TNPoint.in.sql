@@ -20,7 +20,7 @@ SELECT register_temporal('tnpoint', 'npoint');
 
 CREATE FUNCTION tnpoint_in(cstring, oid, integer)
 	RETURNS tnpoint 
-	AS 'MODULE_PATHNAME', 'temporal_in'
+	AS 'MODULE_PATHNAME', 'tnpoint_in'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_out(tnpoint)
 	RETURNS cstring 

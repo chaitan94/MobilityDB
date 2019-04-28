@@ -4081,7 +4081,70 @@ SELECT tnpoint(Sequence) 'Npoint(1, 0.2)@2000-01-01';
 -- ERROR:  Temporal type (Instant) does not match column type (Sequence)
 					</programlisting>
 			</para>
+
+			<para>Temporal network point values of sequence duration must be defined on a single route. Therefore, a value of sequence set duration is needed for representing the movement of an object that traverses several routes, even if there is no temporal gap. For example, in the following value
+				<programlisting>
+SELECT tnpoint '{[NPoint(1, 0.2)@2001-01-01, NPoint(1, 0.5)@2001-01-03),
+[NPoint(2, 0.4)@2001-01-03, NPoint(2, 0.6)@2001-01-04)}';
+				</programlisting>
+			the network point changes its route at 2001-01-03.
+			</para>
+
+			<para>Temporal network point values of sequence or sequence set duration are converted into a <emphasis role="strong">normal</emphasis> form so that equivalent values have identical representations. For this, consecutive instant values are merged when possible. Three consecutive instant values can be merged into two if the linear functions defining the evolution of values are the same. Examples of transformation into a normal form are as follows.
+			Examples of transformation into a normal form are as follows.
+				<programlisting>
+SELECT tnpoint '[NPoint(1, 0.2)@2001-01-01, NPoint(1, 0.4)@2001-01-02, NPoint(1, 0.6)@2001-01-03)';
+-- "[NPoint(1,0.2)@2001-01-01, NPoint(1,0.6)@2001-01-03)"
+SELECT tnpoint '{[NPoint(1, 0.2)@2001-01-01, NPoint(1, 0.3)@2001-01-02, NPoint(1, 0.5)@2001-01-03),
+[NPoint(1, 0.5)@2001-01-03, NPoint(1, 0.7)@2001-01-04)}';
+-- "{[NPoint(1,0.2)@2001-01-01, NPoint(1,0.3)@2001-01-02, NPoint(1,0.7)@2001-01-04)}"
+				</programlisting>
+			</para>
 		</sect1>
+
+		<sect1 id="validity_network_points">
+			<title>Validity of Temporal Network Points</title>
+
+			<para>Temporal network point values must satisfy the constraints specified in Section <xref linkend="validity_temporal_types"/> so that they are well defined. An error is raised whenever one of these constraints are not satisfied. Examples of incorrect values are as follows.
+				<programlisting>
+-- null values are not allowed
+SELECT tnpoint 'NULL@2001-01-01 08:05:00';
+SELECT tnpoint 'Point(0 0)@NULL';
+-- base type is not a network point
+SELECT tnpoint 'Point(0 0)@2001-01-01 08:05:00';
+-- multiple routes in a sequence
+SELECT tnpoint '[Npoint(1, 0.2)@2001-01-01 09:00:00, Npoint(2, 0.2)@2001-01-01 09:05:00)';
+				</programlisting>
+			</para>
+		</sect1>
+
+		<sect1 id="casting_temporal_network_points">
+			<title>Casting for Temporal Network Points</title>
+
+			<para>A temporal network point value can be converted to and from a temporal geometry point. This can be done using the notation <varname>CAST(ttype1 AS ttype2)</varname> or <varname>ttype1::ttype2</varname>. A null value is returned if any of the composing <varname>geometry</varname> point values cannot be converted into a <varname>npoint</varname> value.</para>
+			<itemizedlist>
+				<listitem>
+					<para>Temporal network point to temporal geometry point</para>
+					<para>Cast: <varname>tnpoint::tgeompoint</varname></para>
+					<programlisting>
+SELECT astext((tnpoint '[NPoint(1, 0.2)@2001-01-01, NPoint(1, 0.3)@2001-01-02)')::tgeompoint);
+-- "[POINT(23.057077727326 28.7666335767956)@2001-01-01, POINT(48.7117553116406 20.9256801894708)@2001-01-02)"
+					</programlisting>
+				</listitem>
+
+				<listitem>
+					<para>Temporal geometry point to temporal network point</para>
+					<para>Casts: <varname>tgeompoint::tnpoint</varname></para>
+					<programlisting>
+SELECT tgeompoint '[POINT(23.057077727326 28.7666335767956)@2001-01-01, POINT(48.7117553116406 20.9256801894708)@2001-01-02)'::tnpoint
+-- "[NPoint(1,0.2)@2001-01-01 00:00:00+01, NPoint(1,0.3)@2001-01-02 00:00:00+01)"
+SELECT tgeompoint '[POINT(23.057077727326 28.7666335767956)@2001-01-01, POINT(48.7117553116406 20.9)@2001-01-02)'::tnpoint
+-- NULL
+					</programlisting>
+				</listitem>
+			</itemizedlist>
+		</sect1>
+
 
 	</chapter>
 </book>

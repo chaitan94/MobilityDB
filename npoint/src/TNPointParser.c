@@ -89,9 +89,10 @@ nsegment_parse(char **str)
 	return nsegment_make(rid, pos1, pos2);
 }
 
-TemporalSeq *
-tnpointseq_parse(char **str, Oid basetype)
+static TemporalSeq *
+tnpointseq_parse(char **str, Oid basetype, bool end)
 {
+	p_whitespace(str);
 	bool lower_inc = false, upper_inc = false;
 	if (p_obracket(str))
 		lower_inc = true;
@@ -103,14 +104,14 @@ tnpointseq_parse(char **str, Oid basetype)
 
 	//FIXME: parsing twice
 	char *bak = *str;
-	TemporalInst *inst = temporalinst_parse1(str, basetype, false);
+	TemporalInst *inst = temporalinst_parse(str, basetype, false);
 	int64 rid0 = DatumGetNpoint(temporalinst_value(inst))->rid;
 	int count = 1;
 	while (p_comma(str))
 	{
 		count++;
 		pfree(inst);
-		inst = temporalinst_parse1(str, basetype, false);
+		inst = temporalinst_parse(str, basetype, false);
 		int64 rid = DatumGetNpoint(temporalinst_value(inst))->rid;
 		if (rid != rid0)
 		{
@@ -127,18 +128,24 @@ tnpointseq_parse(char **str, Oid basetype)
 	else
 		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
 				errmsg("Could not parse temporal value")));
-
-	*str = bak; // unparse what we parsed...
+	if (end)
+	{
+		/* Ensure there is no more input */
+		p_whitespace(str);
+		if (**str != 0)
+			ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
+				errmsg("Could not parse temporal value")));
+	}
+	/* Second parsing */
+	*str = bak;
 	TemporalInst **insts = palloc(sizeof(TemporalInst *) * count);
 	for (int i = 0; i < count; i++)
 	{
 		p_comma(str);
-		insts[i] = temporalinst_parse1(str, basetype, false);
+		insts[i] = temporalinst_parse(str, basetype, false);
 	}
-
 	p_cbracket(str);
 	p_cparen(str);
-
 	TemporalSeq *result = temporalseq_from_temporalinstarr(insts,
 		count, lower_inc, upper_inc, true);
 
@@ -149,34 +156,40 @@ tnpointseq_parse(char **str, Oid basetype)
 	return result;
 }
 
-TemporalS *
+static TemporalS *
 tnpoints_parse(char **str, Oid basetype)
 {
+	p_whitespace(str);
 	if (!p_obrace(str))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-				errmsg("Could not parse temporal value")));
+			errmsg("Could not parse temporal value")));
 
 	//FIXME: parsing twice
 	char *bak = *str;
-	TemporalSeq *seq = tnpointseq_parse(str, basetype);
+	TemporalSeq *seq = tnpointseq_parse(str, basetype, false);
 	int count = 1;
 	while (p_comma(str))
 	{
 		count++;
 		pfree(seq);
-		seq = tnpointseq_parse(str, basetype);
+		seq = tnpointseq_parse(str, basetype, false);
 	}
 	pfree(seq);
 	if (!p_cbrace(str))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
 				errmsg("Could not parse temporal value")));
-
+	/* Ensure there is no more input */
+	p_whitespace(str);
+	if (**str != 0)
+		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
+			errmsg("Could not parse temporal value")));
+	/* Second parsing */
 	*str = bak;
 	TemporalSeq **seqs = palloc(sizeof(TemporalSeq *) * count);
 	for (int i = 0; i < count; i++)
 	{
 		p_comma(str);
-		seqs[i] = tnpointseq_parse(str, basetype);
+		seqs[i] = tnpointseq_parse(str, basetype, false);
 	}
 	p_cbrace(str);
 	TemporalS *result = temporals_from_temporalseqarr(seqs, count, true);
@@ -186,6 +199,35 @@ tnpoints_parse(char **str, Oid basetype)
 	pfree(seqs);
 
 	return result;
+}
+
+Temporal *
+tnpoint_parse(char **str, Oid basetype) 
+{
+	p_whitespace(str);
+	
+	/* Determine the type of the temporal point */
+	if (**str != '{' && **str != '[' && **str != '(')
+		return (Temporal *)temporalinst_parse(str, basetype, true);
+	else if (**str == '[' || **str == '(')
+		return (Temporal *)tnpointseq_parse(str, basetype, true);		
+	else if (**str == '{')
+	{
+		char *bak = *str;
+		p_obrace(str);
+		p_whitespace(str);
+		if (**str == '[' || **str == '(')
+		{
+			*str = bak;
+			return (Temporal *)tnpoints_parse(str, basetype);
+		}
+		else
+		{
+			*str = bak;
+			return (Temporal *)temporali_parse(str, basetype);		
+		}
+	}
+	return NULL; /* keep compiler quiet */
 }
 
 /*****************************************************************************/
