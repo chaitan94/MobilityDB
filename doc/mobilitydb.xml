@@ -4362,6 +4362,72 @@ SELECT tnpoint '[Npoint(1, 0.2)@2012-01-01, Npoint(1, 0.2)@2012-01-04)' @= Npoin
 					</programlisting>
 				</listitem>
 
+				<listitem>
+					<para>Relative position bounding box operators</para>
+					<programlisting>
+SELECT tint '[1@2012-01-01, 1@2012-01-04)' &lt;&lt; tint '[2@2012-01-03, 2@2012-01-05)';
+-- true
+					</programlisting>
+				</listitem>
+
+				<listitem>
+					<para>Topological bounding box operators</para>
+					<programlisting>
+SELECT tint '[1@2012-01-01, 1@2012-01-04)' &lt;&lt; tint '[2@2012-01-03, 2@2012-01-05)';
+-- true
+					</programlisting>
+				</listitem>
+
+				<listitem>
+					<para><varname>|=|</varname>: Smallest distance ever between the two arguments</para>
+					<programlisting>
+SELECT tgeompoint '[Point(0 0)@2012-01-02, Point(1 1)@2012-01-04, Point(0 0)@2012-01-06)' |=|26002>
+geometry 'Linestring(2 2,2 1,3 1)';
+-- "1"
+SELECT tgeompoint '[Point(0 0)@2012-01-01, Point(1 1)@2012-01-03, Point(0 0)@2012-01-05)' |=|26006>
+tgeompoint '[Point(2 0)@2012-01-02, Point(1 1)@2012-01-04, Point(2 2)@2012-01-06)';
+-- "0.5"
+					</programlisting>
+				</listitem>
+
+				<listitem>
+					<para><varname>&lt;-&gt;</varname>: Distance</para>
+					<programlisting>
+SELECT tgeompoint '[Point(0 0)@2012-01-01, Point(1 1)@2012-01-03)' &lt;-&gt; geometry 'Point(0 1)';
+-- "[1@2012-01-01, 0.707106781186548@2012-01-02, 1@2012-01-03)"
+SELECT tgeompoint '[Point(0 0)@2012-01-01, Point(1 1)@2012-01-03)' &lt;-&gt;
+tgeompoint '[Point(0 1)@2012-01-01, Point(1 0)@2012-01-03)';
+-- "[1@2012-01-01, 0@2012-01-02, 1@2012-01-03)"
+SELECT tgeompoint '[Point(0 1)@2012-01-01, Point(0 0)@2012-01-03)' &lt;-&gt;
+tgeompoint '[Point(0 0)@2012-01-01, Point(1 0)@2012-01-03)';
+-- "[1@2012-01-01, 0.707106781186548@2012-01-02, 1@2012-01-03)"
+SELECT tgeompoint '[Point(0 0)@2012-01-01, Point(1 1)@2012-01-02)' &lt;-&gt;26020>
+tgeompoint '[Point(0 1)@2012-01-01, Point(1 2)@2012-01-02)';
+-- "[1@2012-01-01,1@2012-01-02)"
+					</programlisting>
+				</listitem>
+
+				<itemizedlist>
+					<listitem>
+						<para>Possible spatial relationships</para>
+						<programlisting>
+SELECT contains(geometry 'Polygon((0 0,0 1,1 1,1 0,0 0))',28002>
+tgeompoint '[Point(0 0)@2012-01-01, Point(1 1)@2012-01-03)');
+-- true
+						</programlisting>
+					</listitem>
+
+				<itemizedlist>
+					<listitem>
+						<para>Temporal spatial relationships</para>
+						<programlisting>
+SELECT tcontains(geometry 'Polygon((0 0,0 1,1 1,1 0,0 0))',28002>
+tgeompoint '[Point(0 0)@2012-01-01, Point(1 1)@2012-01-03)');
+-- true
+						</programlisting>
+					</listitem>
+
+
 
 
 
