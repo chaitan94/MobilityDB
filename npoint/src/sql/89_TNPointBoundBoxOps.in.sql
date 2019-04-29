@@ -37,7 +37,12 @@ CREATE FUNCTION gbox(tnpoint)
 /*****************************************************************************
  * Expand
  *****************************************************************************/
-	
+
+CREATE FUNCTION expandSpatial(npoint, float)
+	RETURNS gbox
+	AS 'MODULE_PATHNAME', 'npoint_expand_spatial'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION expandSpatial(tnpoint, float)
 	RETURNS gbox
 	AS 'MODULE_PATHNAME', 'tpoint_expand_spatial'

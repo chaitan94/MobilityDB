@@ -768,7 +768,7 @@ tdwithin_tpointseq_geo1(TemporalSeq *seq, Datum geo, Datum dist, int *count)
 	return result;
 }
 
-static TemporalS *
+TemporalS *
 tdwithin_tpointseq_geo(TemporalSeq *seq, Datum geo, Datum dist)
 {
 	int count;
@@ -782,7 +782,7 @@ tdwithin_tpointseq_geo(TemporalSeq *seq, Datum geo, Datum dist)
 	return result;
 }
 
-static TemporalS *
+TemporalS *
 tdwithin_tpoints_geo(TemporalS *ts, Datum geo, Datum dist)
 {
 	/* Singleton sequence set */

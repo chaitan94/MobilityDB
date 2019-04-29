@@ -5,10 +5,22 @@ SELECT MAX(maxValue(t1.g <-> t2.temp)) FROM tbl_geompoint t1, tbl_tnpoint t2;
  129.290973758369
 (1 row)
 
+SELECT MAX(maxValue(t1.np <-> t2.temp)) FROM tbl_npoint t1, tbl_tnpoint t2;
+       max        
+------------------
+ 127.525995927387
+(1 row)
+
 SELECT MAX(maxValue(t1.temp <-> t2.g)) FROM tbl_tnpoint t1, tbl_geompoint t2;
        max        
 ------------------
  129.290973758369
+(1 row)
+
+SELECT MAX(maxValue(t1.temp <-> t2.np)) FROM tbl_tnpoint t1, tbl_npoint t2;
+       max        
+------------------
+ 127.525995927387
 (1 row)
 
 SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp <-> t2.temp IS NOT NULL;

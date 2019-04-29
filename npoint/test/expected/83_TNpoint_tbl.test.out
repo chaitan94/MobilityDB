@@ -500,7 +500,7 @@ SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2
 WHERE t1.temp < t2.temp;
  count 
 -------
-  6697
+  6732
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2
@@ -514,13 +514,13 @@ SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2
 WHERE t1.temp > t2.temp;
  count 
 -------
-  3203
+  3168
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2
 WHERE t1.temp >= t2.temp;
  count 
 -------
-  3263
+  3398
 (1 row)
 

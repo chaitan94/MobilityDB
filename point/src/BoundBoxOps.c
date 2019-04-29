@@ -306,7 +306,7 @@ tpointseqarr_to_gbox(GBOX *box, TemporalSeq **sequences, int count)
 /*
  * Expand the box on the spatial dimension
  */
-static GBOX *
+GBOX *
 gbox_expand_spatial_internal(GBOX *box, double d)
 {
 	GBOX *result = gbox_copy(box);

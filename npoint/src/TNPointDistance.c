@@ -387,6 +387,72 @@ distance_geo_tnpoint(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
+PG_FUNCTION_INFO_V1(distance_npoint_tnpoint);
+
+PGDLLEXPORT Datum
+distance_npoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+
+	Temporal *result = NULL; 
+	if (temp->type == TEMPORALINST)
+		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
+			PointerGetDatum(gs), &geom_distance2d, 
+			FLOAT8OID, true);
+	else if (temp->type == TEMPORALI)
+		result = (Temporal *)tspatialrel_tnpointi_geo((TemporalI *)temp,
+			PointerGetDatum(gs), &geom_distance2d, 
+			FLOAT8OID, true);
+	else if (temp->type == TEMPORALSEQ)
+		result = (Temporal *)distance_tnpointseq_geo((TemporalSeq *)temp, 
+			PointerGetDatum(gs));
+	else if (temp->type == TEMPORALS)
+		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
+			PointerGetDatum(gs));
+	else
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Operation not supported")));
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(distance_tnpoint_npoint);
+
+PGDLLEXPORT Datum
+distance_tnpoint_npoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	npoint *np = PG_GETARG_NPOINT(1);
+	Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+
+	Temporal *result = NULL; 
+	if (temp->type == TEMPORALINST)
+		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
+			PointerGetDatum(gs), &geom_distance2d, 
+			FLOAT8OID, true);
+	else if (temp->type == TEMPORALI)
+		result = (Temporal *)tspatialrel_tnpointi_geo((TemporalI *)temp,
+			PointerGetDatum(gs), &geom_distance2d, 
+			FLOAT8OID, true);
+	else if (temp->type == TEMPORALSEQ)
+		result = (Temporal *)distance_tnpointseq_geo((TemporalSeq *)temp, 
+			PointerGetDatum(gs));
+	else if (temp->type == TEMPORALS)
+		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
+			PointerGetDatum(gs));
+	else
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Operation not supported")));
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_POINTER(result);
+}
+
 PG_FUNCTION_INFO_V1(distance_tnpoint_geo);
 
 PGDLLEXPORT Datum

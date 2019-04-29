@@ -194,6 +194,24 @@ tnpoint_to_gbox(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
+/*****************************************************************************/
+/*
+ * Expand the network point on the spatial dimension
+ */
+
+PG_FUNCTION_INFO_V1(npoint_expand_spatial);
+
+PGDLLEXPORT Datum
+npoint_expand_spatial(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	double d = PG_GETARG_FLOAT8(1);
+	GBOX box;
+	npoint_to_gbox_internal(&box, np);
+	GBOX *result = gbox_expand_spatial_internal(&box, d);
+	PG_RETURN_POINTER(result);
+}
+
 /*****************************************************************************
  * overlaps
  *****************************************************************************/

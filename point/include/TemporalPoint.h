@@ -344,6 +344,9 @@ extern Datum tdwithin_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum tdwithin_tpoint_geo(PG_FUNCTION_ARGS);
 extern Datum tdwithin_tpoint_tpoint(PG_FUNCTION_ARGS);
 
+extern TemporalS *tdwithin_tpointseq_geo(TemporalSeq *seq, Datum geo, Datum dist);
+extern TemporalS *tdwithin_tpoints_geo(TemporalS *ts, Datum geo, Datum dist);
+
 extern Datum trelate_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum trelate_tpoint_geo(PG_FUNCTION_ARGS);
 extern Datum trelate_tpoint_tpoint(PG_FUNCTION_ARGS);
@@ -382,6 +385,8 @@ extern Datum gbox_expand_spatial(PG_FUNCTION_ARGS);
 extern Datum tpoint_expand_spatial(PG_FUNCTION_ARGS);
 extern Datum gbox_expand_temporal(PG_FUNCTION_ARGS);
 extern Datum tpoint_expand_temporal(PG_FUNCTION_ARGS);
+
+extern GBOX *gbox_expand_spatial_internal(GBOX *box, double d);
 
 /* Transform a <Type> to a GBOX */
 
