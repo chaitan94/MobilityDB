@@ -14,7 +14,7 @@ SELECT count(*) FROM tbl_tnpoint t1, tbl_geomcollection t2 WHERE atGeometry(t1.t
 SELECT count(*) FROM tbl_tnpoint t1, tbl_geomcollection t2 WHERE minusGeometry(t1.temp, t2.g) IS NOT NULL;
  count 
 -------
-  9884
+  9717
 (1 row)
 
 SELECT MAX(length(temp)) FROM tbl_tnpoint;
@@ -24,15 +24,15 @@ SELECT MAX(length(temp)) FROM tbl_tnpoint;
 (1 row)
 
 SELECT MAX(maxValue(cumulativeLength(temp))) FROM tbl_tnpoint;
-       max        
-------------------
- 14705.8765868325
+       max       
+-----------------
+ 14661.268861497
 (1 row)
 
 SELECT MAX(maxValue(speed(temp))) FROM tbl_tnpoint;
        max        
 ------------------
- 3.05656058035591
+ 2.29694521343453
 (1 row)
 
 SELECT round(azimuth(temp), 13) FROM tbl_tnpoint WHERE azimuth(temp) IS NOT NULL LIMIT 10;

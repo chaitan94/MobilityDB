@@ -58,7 +58,7 @@ SELECT count(*) FROM tbl_tnpoint WHERE temp = (temp::tgeompoint)::tnpoint;
  * Accessor functions
  ******************************************************************************/
 
-SELECT DISTINCT temporalType(temp) FROM tbl_tnpoint;
+SELECT DISTINCT temporalType(temp) FROM tbl_tnpoint ORDER BY 1;
 
 SELECT MAX(memSize(temp)) FROM tbl_tnpoint;
 

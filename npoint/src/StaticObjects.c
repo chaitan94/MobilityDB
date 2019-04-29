@@ -591,7 +591,7 @@ bool
 route_exists(int64 rid)
 {
 	char sql[64];
-	sprintf(sql, "SELECT true FROM ways WHERE gid = %ld", rid);
+	sprintf(sql, "SELECT true FROM public.ways WHERE gid = %ld", rid);
 	bool isNull = true;
 	bool result = false;
 	SPI_connect();
@@ -611,7 +611,7 @@ double
 route_length(int64 rid)
 {
 	char sql[64];
-	sprintf(sql, "SELECT length FROM ways WHERE gid = %ld", rid);
+	sprintf(sql, "SELECT length FROM public.ways WHERE gid = %ld", rid);
 	bool isNull = true;
 	double result = 0;
 	SPI_connect();
@@ -724,7 +724,7 @@ geom_as_npoint_internal(Datum geom)
 	char *geomstr = ewkt_out(ANYOID, geom);
 	char sql[512];
 	sprintf(sql, "SELECT npoint(gid, ST_LineLocatePoint(the_geom, '%s'))\
-		FROM ways WHERE ST_DWithin(the_geom, '%s', 1e-5) \
+		FROM public.ways WHERE ST_DWithin(the_geom, '%s', 1e-5) \
 		ORDER BY ST_Distance(the_geom, '%s') LIMIT 1", geomstr, geomstr, geomstr);
 	pfree(geomstr);
 	npoint *result = (npoint *)palloc(sizeof(npoint));

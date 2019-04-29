@@ -92,7 +92,7 @@ SELECT endPosition(nsegment 'nsegment(1,0.5,0.7)');
 (1 row)
 
 /******************************************************************************
- * Cast functions
+ * Cast functions between network and space
  ******************************************************************************/
 SELECT st_astext(npoint 'npoint(1,0.2)'::geometry);
                 st_astext                
@@ -118,18 +118,15 @@ SELECT (nsegment 'nsegment(1,0.5,0.7)'::geometry)::nsegment;
  NSegment(1,0.5,0.7)
 (1 row)
 
-/******************************************************************************
- * Conversions between network and space
- ******************************************************************************/
-SELECT point_in_network(ST_MakePoint(4.3560493, 50.8504975));
- point_in_network 
-------------------
+SELECT geometry 'Point(610.455019399524 528.508247341961)'::npoint;
+ npoint 
+--------
  
 (1 row)
 
-SELECT segment_in_network(ST_MakeEnvelope(4.3, 50.8, 4.4, 50.9));
- segment_in_network 
---------------------
+SELECT geometry 'LINESTRING(416.346567736997 528.335344322874,610.455019399524 528.508247341961,476.989195102204 642.550969672973)'::nsegment;
+ nsegment 
+----------
  
 (1 row)
 

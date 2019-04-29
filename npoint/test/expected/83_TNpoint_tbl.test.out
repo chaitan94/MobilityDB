@@ -145,19 +145,19 @@ SELECT count(*) FROM tbl_tnpoint where temp::tgeompoint is not null;
 SELECT count(*) FROM tbl_tnpoint WHERE temp = (temp::tgeompoint)::tnpoint;
  count 
 -------
-    25
+   100
 (1 row)
 
 /******************************************************************************
  * Accessor functions
  ******************************************************************************/
-SELECT DISTINCT temporalType(temp) FROM tbl_tnpoint;
+SELECT DISTINCT temporalType(temp) FROM tbl_tnpoint ORDER BY 1;
  temporaltype 
 --------------
+ Instant
  InstantSet
  Sequence
  SequenceSet
- Instant
 (4 rows)
 
 SELECT MAX(memSize(temp)) FROM tbl_tnpoint;
@@ -500,7 +500,7 @@ SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2
 WHERE t1.temp < t2.temp;
  count 
 -------
-  6644
+  6697
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2
@@ -514,13 +514,13 @@ SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2
 WHERE t1.temp > t2.temp;
  count 
 -------
-  3256
+  3203
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2
 WHERE t1.temp >= t2.temp;
  count 
 -------
-  3356
+  3263
 (1 row)
 

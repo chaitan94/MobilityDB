@@ -42,9 +42,9 @@ SELECT (npoint 'npoint(1,0.2)'::geometry)::npoint;
 
 SELECT (nsegment 'nsegment(1,0.5,0.7)'::geometry)::nsegment;
 
-SELECT geometry 'Point(610.455019399524 528.508247341961)'::npoint
+SELECT geometry 'Point(610.455019399524 528.508247341961)'::npoint;
 
-SELECT geometry 'LINESTRING(416.346567736997 528.335344322874,610.455019399524 528.508247341961,476.989195102204 642.550969672973)'::nsegment
+SELECT geometry 'LINESTRING(416.346567736997 528.335344322874,610.455019399524 528.508247341961,476.989195102204 642.550969672973)'::nsegment;
 
 /******************************************************************************
  * Comparisons
