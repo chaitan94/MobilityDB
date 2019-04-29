@@ -215,6 +215,19 @@ extern Datum tpoint_tcentroid_transfn(PG_FUNCTION_ARGS);
 extern Datum tpoint_tcentroid_combinefn(PG_FUNCTION_ARGS);
 extern Datum tpoint_tcentroid_finalfn(PG_FUNCTION_ARGS);
 
+extern AggregateState *
+tpointinst_tcentroid_transfn(FunctionCallInfo fcinfo, AggregateState *state, 
+	TemporalInst *inst,	Datum (*func)(Datum, Datum));
+extern AggregateState *
+tpointi_tcentroid_transfn(FunctionCallInfo fcinfo, AggregateState *state, 
+	TemporalI *ti, Datum (*func)(Datum, Datum));
+extern AggregateState *
+tpointseq_tcentroid_transfn(FunctionCallInfo fcinfo, AggregateState *state, 
+	TemporalSeq *seq, Datum (*func)(Datum, Datum));
+extern AggregateState *
+tpoints_tcentroid_transfn(FunctionCallInfo fcinfo, AggregateState *state, 
+	TemporalS *ts, Datum (*func)(Datum, Datum));
+
 /*****************************************************************************
  * Spatial relationship functions defined in SpatialRels.c
  *****************************************************************************/

@@ -4437,18 +4437,102 @@ SELECT intersects(tnpoint '[NPoint(1, 0.1)@2012-01-01, NPoint(1, 0.3)@2012-01-03
 				<listitem>
 					<para>Temporal spatial relationships</para>
 					<programlisting>
-SELECT tdwithin(geometry 'Polygon((0 0,0 1,1 1,1 0,0 0))',
-tgeompoint '[Point(0 0)@2012-01-01, Point(1 1)@2012-01-03)');
--- true
+SELECT tdisjoint(geometry 'Polygon((0 0,0 50,50 50,50 0,0 0))',
+	tnpoint '[NPoint(1, 0.1)@2012-01-01, NPoint(1, 0.3)@2012-01-03)');
+-- "{[t@2012-01-01 00:00:00+01, t@2012-01-03 00:00:00+01)}"
+SELECT tdwithin(tnpoint '[NPoint(1, 0.3)@2012-01-01, NPoint(1, 0.5)@2012-01-03)',
+	tnpoint '[NPoint(1, 0.5)@2012-01-01, NPoint(1, 0.3)@2012-01-03)', 1);
+-- "{[t@2012-01-01 00:00:00+01, t@2012-01-01 22:35:55.379053+01], (f@2012-01-01 22:35:55.379053+01, 
+	t@2012-01-02 01:24:04.620946+01, t@2012-01-03 00:00:00+01)}"
+SELECT trelate(tnpoint '[NPoint(1, 0.1)@2012-01-01, NPoint(1, 0.3)@2012-01-03)',
+	npoint 'NPoint(1, 0.2)');
+-- "{["FF0FFF0F2"@2012-01-01 00:00:00+01, "FF0FFF0F2"@2012-01-03 00:00:00+01)}"
+SELECT trelate(tnpoint '[NPoint(1, 0.1)@2012-01-01, NPoint(1, 0.3)@2012-01-03)',
+	tnpoint '[NPoint(1, 0.3)@2012-01-01, NPoint(1, 0.1)@2012-01-03)', '0FFFFFFF2');
+-- "{[f@2012-01-01 00:00:00+01, t@2012-01-02 00:00:00+01, t@2012-01-03 00:00:00+01)}"
+					</programlisting>
+				</listitem>
+			</itemizedlist>
+		</sect1>
+
+		<sect1>
+			<title>Aggregate Functions for Temporal Network Points</title>
+			<para>The three aggregate functions for temporal network points are illustrated next.</para>
+		
+			<itemizedlist>
+				<listitem>
+					<para><varname>tcount</varname>: Temporal count</para>
+					<programlisting>
+WITH Temp(temp) AS (
+	SELECT tnpoint '[NPoint(1, 0.1)@2012-01-01, NPoint(1, 0.3)@2012-01-03)' UNION
+	SELECT tnpoint '[NPoint(1, 0.2)@2012-01-02, NPoint(1, 0.4)@2012-01-04)' UNION
+	SELECT tnpoint '[NPoint(1, 0.3)@2012-01-03, NPoint(1, 0.5)@2012-01-05)' )
+SELECT tcount(Temp)
+FROM Temp
+-- "{[1@2012-01-01, 2@2012-01-02, 1@2012-01-04, 1@2012-01-05)}"
 					</programlisting>
 				</listitem>
 
+				<listitem>
+					<para><varname>wcount</varname>: Window count</para>
+					<programlisting>
 
+WITH Temp(temp) AS (
+	SELECT tnpoint '[NPoint(1, 0.1)@2012-01-01, NPoint(1, 0.3)@2012-01-03)' UNION
+	SELECT tnpoint '[NPoint(1, 0.2)@2012-01-02, NPoint(1, 0.4)@2012-01-04)' UNION
+	SELECT tnpoint '[NPoint(1, 0.3)@2012-01-03, NPoint(1, 0.5)@2012-01-05)' )
+SELECT wcount(Temp, '1 day')
+FROM Temp
+-- "{[1@2012-01-01, 2@2012-01-02, 3@2012-01-03, 2@2012-01-04, 1@2012-01-05, 1@2012-01-06)}"
+					</programlisting>
+				</listitem>
 
-
-
+				<listitem>
+					<para><varname>tcentroid</varname>: Temporal centroid</para>
+					<para>Signature: <varname>tcentroid(tgeompoint): tgeompoint</varname></para>
+					<programlisting>
+WITH Temp(temp) AS (
+	SELECT tnpoint '[NPoint(1, 0.1)@2012-01-01, NPoint(1, 0.3)@2012-01-03)' UNION
+	SELECT tnpoint '[NPoint(1, 0.2)@2012-01-01, NPoint(1, 0.4)@2012-01-03)' UNION
+	SELECT tnpoint '[NPoint(1, 0.3)@2012-01-01, NPoint(1, 0.5)@2012-01-03)' )
+SELECT astext(tcentroid(Temp))
+FROM Temp
+-- "{[POINT(72.451531682218 76.5231414472853)@2012-01-01, POINT(55.7001249027598 72.9552602410653)@2012-01-03)}"
+					</programlisting>
+				</listitem>
 			</itemizedlist>
 		</sect1>
+
+		<sect1>
+			<title>Indexing of Temporal Network Points</title>
+			<para>GiST and SP-GiST indexes can be created for table columns of temporal networks points. An example of index creation is follows:
+				<programlisting>
+CREATE INDEX Trips_Trip_SPGist_Idx ON Trips USING SPGist(Trip);
+				</programlisting>
+			</para>
+
+			<para>The GiST and SP-GiST indexes store the bounding box for the temporal network points, which is a <varname>gbox</varname> and thus stores the absolute coordinates of the underlying space.</para>
+			
+			<para>A GiST or SP-GiST index can accelerate queries involving the following operators:
+				<itemizedlist>
+					<listitem>
+						<para><varname>&lt;&lt;</varname>, <varname>&amp;&lt;</varname>, <varname>&amp;&gt;</varname>, <varname>&gt;&gt;</varname>, <varname>&lt;&lt;|</varname>, <varname>&amp;&lt;|</varname>, <varname>|&amp;&gt;</varname>, <varname>|&gt;&gt;</varname>, which only consider the spatial dimension in temporal network points,</para>
+					</listitem>
+
+					<listitem>
+						<para><varname>&amp;&lt;#</varname>, <varname>&lt;&lt;#</varname>, <varname>#&gt;&gt;</varname>, <varname>#&amp;&gt;</varname>, which only consider the time dimension in temporal network points,</para>
+					</listitem>
+
+					<listitem>
+						<para><varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, and <varname>~=</varname>, which consider as many dimensions as they are shared by the indexed column and the query argument. These operators work on bounding boxes, not the entire values.</para>
+					</listitem>
+				</itemizedlist>
+			</para>
+
+			<para>In addition, a GiST index can accelerate nearest neighbor queries involving the <varname>|=|</varname> operator.</para>
+			
+		</sect1>
+
 
 	</chapter>
 </book>

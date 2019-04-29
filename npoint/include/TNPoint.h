@@ -1,3 +1,15 @@
+/*****************************************************************************
+ *
+ * TNPoint.h
+ *	  Functions for temporal network points.
+ *
+ * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
+ * 		Universite Libre de Bruxelles
+ * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1994, Regents of the University of California
+ *
+ *****************************************************************************/
+
 #ifndef __TEMPORALNPOINT_H__
 #define __TEMPORALNPOINT_H__
 
@@ -128,6 +140,7 @@ extern TemporalInst *tnpointinst_as_tgeompointinst(TemporalInst *inst);
 extern TemporalI *tnpointi_as_tgeompointi(TemporalI *ti);
 extern TemporalSeq *tnpointseq_as_tgeompointseq(TemporalSeq *seq);
 extern TemporalS *tnpoints_as_tgeompoints(TemporalS *ts);
+extern Temporal *tnpoint_as_tgeompoint_internal(Temporal *temp);
 
 extern Datum tnpoint_positions(PG_FUNCTION_ARGS);
 extern Datum tnpoint_routes(PG_FUNCTION_ARGS);

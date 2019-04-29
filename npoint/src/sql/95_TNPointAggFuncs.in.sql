@@ -39,5 +39,20 @@ CREATE AGGREGATE wcount(tnpoint, interval) (
 	DESERIALFUNC = tagg_deserialize,
 	PARALLEL = SAFE
 );
-	
+
+CREATE FUNCTION tcentroid_transfn(internal, tnpoint)
+	RETURNS internal
+	AS 'MODULE_PATHNAME', 'tnpoint_tcentroid_transfn'
+	LANGUAGE C IMMUTABLE PARALLEL SAFE;
+
+CREATE AGGREGATE tcentroid(tnpoint) (
+	SFUNC = tcentroid_transfn,
+	STYPE = internal,
+	COMBINEFUNC = tcentroid_combinefn,
+	FINALFUNC = tcentroid_finalfn,
+	SERIALFUNC = tagg_serialize,
+	DESERIALFUNC = tagg_deserialize,
+	PARALLEL = SAFE
+);
+
 /*****************************************************************************/
