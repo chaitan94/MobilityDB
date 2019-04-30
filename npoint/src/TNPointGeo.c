@@ -17,6 +17,45 @@
  *****************************************************************************/
 
 Datum
+tnpointseq_trajectory1(TemporalInst *inst1, TemporalInst *inst2)
+{
+	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
+	npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
+
+	if (np1->rid != np2->rid)
+		return PointerGetDatum(NULL);
+	if (np1->pos == np2->pos)
+		return npoint_as_geom_internal(np1);
+
+	Datum line = route_geom(np1->rid);
+	Datum traj;
+	if (np1->pos < np2->pos)
+	{
+		if (np1->pos == 0 && np2->pos == 1)
+			traj = PointerGetDatum(gserialized_copy(
+				(GSERIALIZED *)PG_DETOAST_DATUM(line)));
+		else
+			traj = call_function3(LWGEOM_line_substring, line,
+				Float8GetDatum(np1->pos), Float8GetDatum(np2->pos));
+	}
+	else
+	{
+		Datum traj2;
+		if (np2->pos == 0 && np1->pos == 1)
+			traj2 = PointerGetDatum(gserialized_copy(
+				(GSERIALIZED *)PG_DETOAST_DATUM(line)));
+		else
+			traj2 = call_function3(LWGEOM_line_substring, line,
+				Float8GetDatum(np2->pos), Float8GetDatum(np1->pos));
+		traj = call_function1(LWGEOM_reverse, traj2);
+		pfree(DatumGetPointer(traj2));
+	}
+
+	pfree(DatumGetPointer(line));
+	return traj;
+}
+
+Datum
 tnpointseq_trajectory(TemporalSeq *seq)
 {
 	Datum *trajs = palloc(sizeof(Datum) * (seq->count - 1));
@@ -54,13 +93,9 @@ tnpointseq_trajectory(TemporalSeq *seq)
 
 	Datum result;
 	if (k == 0)
-	{
 		result = npoint_as_geom_internal(np1);
-	}
 	else if (k == 1)
-	{
 		result = trajs[0];
-	}
 	else
 	{
 		ArrayType *array = datumarr_to_array(trajs, k, type_oid(T_GEOMETRY));
@@ -76,45 +111,6 @@ tnpointseq_trajectory(TemporalSeq *seq)
 	pfree(DatumGetPointer(line));
 	pfree(trajs);
 	return result;
-}
-
-Datum
-tnpointseq_trajectory1(TemporalInst *inst1, TemporalInst *inst2)
-{
-	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
-	npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
-
-	if (np1->rid != np2->rid)
-		PG_RETURN_POINTER(NULL);
-	if (np1->pos == np2->pos)
-		return npoint_as_geom_internal(np1);
-
-	Datum line = route_geom(np1->rid);
-	Datum traj;
-	if (np1->pos < np2->pos)
-	{
-		if (np1->pos == 0 && np2->pos == 1)
-			traj = PointerGetDatum(gserialized_copy(
-				(GSERIALIZED *)PG_DETOAST_DATUM(line)));
-		else
-			traj = call_function3(LWGEOM_line_substring, line,
-				Float8GetDatum(np1->pos), Float8GetDatum(np2->pos));
-	}
-	else
-	{
-		Datum traj2;
-		if (np2->pos == 0 && np1->pos == 1)
-			traj2 = PointerGetDatum(gserialized_copy(
-				(GSERIALIZED *)PG_DETOAST_DATUM(line)));
-		else
-			traj2 = call_function3(LWGEOM_line_substring, line,
-				Float8GetDatum(np2->pos), Float8GetDatum(np1->pos));
-		traj = call_function1(LWGEOM_reverse, traj2);
-		pfree(DatumGetPointer(traj2));
-	}
-
-	pfree(DatumGetPointer(line));
-	return traj;
 }
 
 Datum
@@ -539,10 +535,6 @@ tnpoint_speed(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Time-weighed centroid for temporal network points
- *****************************************************************************/
-
-/*****************************************************************************
  * Time-weighed centroid for temporal geometry points
  *****************************************************************************/
 
@@ -765,7 +757,7 @@ tnpoint_azimuth(PG_FUNCTION_ARGS)
 
 /* Restrict a temporal npoint to a geometry */
 
-TemporalInst *
+static TemporalInst *
 tnpointinst_at_geometry(TemporalInst *inst, Datum geom)
 {
 	Datum point = tnpointinst_geom(inst);
@@ -777,7 +769,7 @@ tnpointinst_at_geometry(TemporalInst *inst, Datum geom)
 		inst->valuetypid);
 }
 
-TemporalI *
+static TemporalI *
 tnpointi_at_geometry(TemporalI *ti, Datum geom)
 {
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
@@ -1294,8 +1286,6 @@ NAI_tnpointi_geometry(TemporalI *ti, Datum geom)
 	return temporalinst_copy(temporali_inst_n(ti, number));
 }
 
-/*****************************************************************************/
-
 static TemporalInst *
 NAI_tnpointseq_geometry(TemporalSeq *seq, Datum geom)
 {
@@ -1340,8 +1330,6 @@ NAI_tnpointseq_geometry(TemporalSeq *seq, Datum geom)
 	 }
 	return result;
 }
-
-/*****************************************************************************/
 
 static TemporalInst *
 NAI_tnpoints_geometry(TemporalS *ts, Datum geom)
@@ -1404,6 +1392,38 @@ NAI_geometry_tnpoint(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
+PG_FUNCTION_INFO_V1(NAI_npoint_tnpoint);
+
+PGDLLEXPORT Datum
+NAI_npoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+
+	Temporal *result;
+	if (temp->type == TEMPORALINST) 
+		result = (Temporal *)temporalinst_copy((TemporalInst *)temp);
+	else if (temp->type == TEMPORALI) 
+		result = (Temporal *)NAI_tnpointi_geometry((TemporalI *)temp, 
+			PointerGetDatum(gs));
+	else if (temp->type == TEMPORALSEQ) 
+		result = (Temporal *)NAI_tnpointseq_geometry((TemporalSeq *)temp, 
+			PointerGetDatum(gs));
+	else if (temp->type == TEMPORALS) 
+		result = (Temporal *)NAI_tnpoints_geometry((TemporalS *)temp,
+			PointerGetDatum(gs));
+	else
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
+			errmsg("Bad temporal type")));
+	
+    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_POINTER(result);
+}
+
 PG_FUNCTION_INFO_V1(NAI_tnpoint_geometry);
 
 PGDLLEXPORT Datum
@@ -1436,38 +1456,6 @@ NAI_tnpoint_geometry(PG_FUNCTION_ARGS)
 	
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
-	PG_RETURN_POINTER(result);
-}
-
-PG_FUNCTION_INFO_V1(NAI_npoint_tnpoint);
-
-PGDLLEXPORT Datum
-NAI_npoint_tnpoint(PG_FUNCTION_ARGS)
-{
-	npoint *np = PG_GETARG_NPOINT(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
-
-	Temporal *result;
-	if (temp->type == TEMPORALINST) 
-		result = (Temporal *)temporalinst_copy((TemporalInst *)temp);
-	else if (temp->type == TEMPORALI) 
-		result = (Temporal *)NAI_tnpointi_geometry((TemporalI *)temp, 
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALSEQ) 
-		result = (Temporal *)NAI_tnpointseq_geometry((TemporalSeq *)temp, 
-			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALS) 
-		result = (Temporal *)NAI_tnpoints_geometry((TemporalS *)temp,
-			PointerGetDatum(gs));
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Bad temporal type")));
-	
-    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
-	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -1552,6 +1540,24 @@ NAD_geometry_tnpoint(PG_FUNCTION_ARGS)
 	PG_RETURN_DATUM(result);
 }
 
+PG_FUNCTION_INFO_V1(NAD_npoint_tnpoint);
+
+PGDLLEXPORT Datum
+NAD_npoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	Datum traj = tnpoint_geom(temp);
+	Datum result = call_function2(distance, traj, PointerGetDatum(gs));
+	pfree(DatumGetPointer(traj));	
+    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_POINTER(result);
+}
+
 PG_FUNCTION_INFO_V1(NAD_tnpoint_geometry);
 
 PGDLLEXPORT Datum
@@ -1572,24 +1578,6 @@ NAD_tnpoint_geometry(PG_FUNCTION_ARGS)
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_DATUM(result);
-}
-
-PG_FUNCTION_INFO_V1(NAD_npoint_tnpoint);
-
-PGDLLEXPORT Datum
-NAD_npoint_tnpoint(PG_FUNCTION_ARGS)
-{
-	npoint *np = PG_GETARG_NPOINT(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
-	Datum traj = tnpoint_geom(temp);
-	Datum result = call_function2(distance, traj, PointerGetDatum(gs));
-	pfree(DatumGetPointer(traj));	
-    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(NAD_tnpoint_npoint);
@@ -1658,6 +1646,24 @@ shortestline_geometry_tnpoint(PG_FUNCTION_ARGS)
 	PG_RETURN_DATUM(result);
 }
 
+PG_FUNCTION_INFO_V1(shortestline_npoint_tnpoint);
+
+PGDLLEXPORT Datum
+shortestline_npoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	Datum geom = npoint_as_geom_internal(np);
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	Datum traj = tnpoint_geom(temp);
+	Datum result = call_function2(LWGEOM_shortestline2d, traj, PointerGetDatum(gs));
+	pfree(DatumGetPointer(traj));	
+    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_POINTER(result);
+}
+
 PG_FUNCTION_INFO_V1(shortestline_tnpoint_geometry);
 
 PGDLLEXPORT Datum
@@ -1678,24 +1684,6 @@ shortestline_tnpoint_geometry(PG_FUNCTION_ARGS)
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_DATUM(result);
-}
-
-PG_FUNCTION_INFO_V1(shortestline_npoint_tnpoint);
-
-PGDLLEXPORT Datum
-shortestline_npoint_tnpoint(PG_FUNCTION_ARGS)
-{
-	npoint *np = PG_GETARG_NPOINT(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
-	Datum traj = tnpoint_geom(temp);
-	Datum result = call_function2(LWGEOM_shortestline2d, traj, PointerGetDatum(gs));
-	pfree(DatumGetPointer(traj));	
-    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_POINTER(result);
 }
 
 PG_FUNCTION_INFO_V1(shortestline_tnpoint_npoint);

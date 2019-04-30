@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * Parser.c
+ * TNPointParser.c
  *	  Functions for parsing static network types.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,

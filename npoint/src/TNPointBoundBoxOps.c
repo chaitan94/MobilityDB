@@ -48,25 +48,6 @@ npoint_to_gbox_internal(GBOX *box, npoint *np)
 	return true;
 }
 
-bool
-npoint_timestamp_to_gbox_internal(GBOX *box, npoint *np, TimestampTz t)
-{
-	npoint_to_gbox_internal(box, np);
-	box->mmin = box->mmax = t;
-	FLAGS_SET_M(box->flags, true);
-	return true;
-}
-
-bool
-npoint_period_to_gbox_internal(GBOX *box, npoint *np, Period *p)
-{
-	npoint_to_gbox_internal(box, np);
-	box->mmin = p->lower;
-	box->mmax = p->upper;
-	FLAGS_SET_M(box->flags, true);
-	return true;
-}
-
 void
 tnpointinst_make_gbox(GBOX *box, Datum value, TimestampTz t)
 {
@@ -158,6 +139,15 @@ npoint_to_gbox(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
+static bool
+npoint_timestamp_to_gbox_internal(GBOX *box, npoint *np, TimestampTz t)
+{
+	npoint_to_gbox_internal(box, np);
+	box->mmin = box->mmax = t;
+	FLAGS_SET_M(box->flags, true);
+	return true;
+}
+
 PG_FUNCTION_INFO_V1(npoint_timestamp_to_gbox);
 
 PGDLLEXPORT Datum
@@ -168,6 +158,16 @@ npoint_timestamp_to_gbox(PG_FUNCTION_ARGS)
 	GBOX *result = palloc0(sizeof(GBOX));
 	npoint_timestamp_to_gbox_internal(result, np, t);
 	PG_RETURN_POINTER(result);
+}
+
+static bool
+npoint_period_to_gbox_internal(GBOX *box, npoint *np, Period *p)
+{
+	npoint_to_gbox_internal(box, np);
+	box->mmin = p->lower;
+	box->mmax = p->upper;
+	FLAGS_SET_M(box->flags, true);
+	return true;
 }
 
 PG_FUNCTION_INFO_V1(npoint_period_to_gbox);

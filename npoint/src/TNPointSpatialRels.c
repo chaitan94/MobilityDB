@@ -24,7 +24,7 @@
  * Generic binary functions for tnpoint <rel> geo
  *****************************************************************************/
 
-bool
+static bool
 spatialrel_tnpointinst_geo(TemporalInst *inst, Datum geo, 
 	Datum (*operator)(Datum, Datum), bool invert)
 {
@@ -35,7 +35,7 @@ spatialrel_tnpointinst_geo(TemporalInst *inst, Datum geo,
 	return result;
 }
 
-bool
+static bool
 spatialrel_tnpointi_geo(TemporalI *ti, Datum geo, 
 	Datum (*operator)(Datum, Datum), bool invert)
 {
@@ -46,7 +46,7 @@ spatialrel_tnpointi_geo(TemporalI *ti, Datum geo,
 	return result;
 }
 
-bool
+static bool
 spatialrel_tnpointseq_geo(TemporalSeq *seq, Datum geo, 
 	Datum (*operator)(Datum, Datum), bool invert)
 {
@@ -57,7 +57,7 @@ spatialrel_tnpointseq_geo(TemporalSeq *seq, Datum geo,
 	return result;
 }
 
-bool
+static bool
 spatialrel_tnpoints_geo(TemporalS *ts, Datum geo, 
 	Datum (*operator)(Datum, Datum), bool invert)
 {
@@ -72,7 +72,7 @@ spatialrel_tnpoints_geo(TemporalS *ts, Datum geo,
  * Generic binary functions for tnpoint <rel> tnpoint
  *****************************************************************************/
 
-bool
+static bool
 spatialrel_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2, 
 	Datum (*operator)(Datum, Datum))
 {
@@ -83,7 +83,7 @@ spatialrel_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2,
 	return result;
 }
 
-bool
+static bool
 spatialrel_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2, 
 	Datum (*operator)(Datum, Datum))
 {
@@ -94,7 +94,7 @@ spatialrel_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2,
 	return result;
 }
 
-bool
+static bool
 spatialrel_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2, 
 	Datum (*operator)(Datum, Datum))
 {
@@ -105,7 +105,7 @@ spatialrel_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	return result;
 }
 
-bool
+static bool
 spatialrel_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, 
 	Datum (*operator)(Datum, Datum))
 {
@@ -120,7 +120,7 @@ spatialrel_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2,
  * Generic ternary functions for tnpoint <rel> geo
  *****************************************************************************/
 
-bool
+static bool
 spatialrel3_tnpointinst_geo(TemporalInst *inst, Datum geo, Datum param, 
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
@@ -131,7 +131,7 @@ spatialrel3_tnpointinst_geo(TemporalInst *inst, Datum geo, Datum param,
 	return result;
 }
 
-bool
+static bool
 spatialrel3_tnpointi_geo(TemporalI *ti, Datum geo, Datum param, 
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
@@ -142,7 +142,7 @@ spatialrel3_tnpointi_geo(TemporalI *ti, Datum geo, Datum param,
 	return result;
 }
 
-bool
+static bool
 spatialrel3_tnpointseq_geo(TemporalSeq *seq, Datum geo, Datum param, 
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
@@ -153,7 +153,7 @@ spatialrel3_tnpointseq_geo(TemporalSeq *seq, Datum geo, Datum param,
 	return result;
 }
 
-bool
+static bool
 spatialrel3_tnpoints_geo(TemporalS *ts, Datum geo, Datum param, 
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
@@ -168,7 +168,7 @@ spatialrel3_tnpoints_geo(TemporalS *ts, Datum geo, Datum param,
  * Generic ternary functions for tnpoint <rel> tnpoint
  *****************************************************************************/
 
-bool
+static bool
 spatialrel3_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2, Datum param, 
 	Datum (*operator)(Datum, Datum, Datum))
 {
@@ -179,7 +179,7 @@ spatialrel3_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2, Da
 	return result;
 }
 
-bool
+static bool
 spatialrel3_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2, Datum param, 
 	Datum (*operator)(Datum, Datum, Datum))
 {
@@ -190,7 +190,7 @@ spatialrel3_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2, Datum param,
 	return result;
 }
 
-bool
+static bool
 spatialrel3_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2, Datum param, 
 	Datum (*operator)(Datum, Datum, Datum))
 {
@@ -201,7 +201,7 @@ spatialrel3_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2, Datum pa
 	return result;
 }
 
-bool
+static bool
 spatialrel3_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, Datum param, 
 	Datum (*operator)(Datum, Datum, Datum))
 {
@@ -216,7 +216,7 @@ spatialrel3_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, Datum param,
  * Generic relate functions for tnpoint relate geo
  *****************************************************************************/
 
-text *
+static text *
 relate_tnpointinst_geo(TemporalInst *inst, Datum geo, bool invert)
 {
 	Datum geom = tnpointinst_geom(inst);
@@ -226,7 +226,7 @@ relate_tnpointinst_geo(TemporalInst *inst, Datum geo, bool invert)
 	return result;
 }
 
-text *
+static text *
 relate_tnpointi_geo(TemporalI *ti, Datum geo, bool invert)
 {
 	Datum geom = tnpointi_geom(ti);
@@ -236,7 +236,7 @@ relate_tnpointi_geo(TemporalI *ti, Datum geo, bool invert)
 	return result;
 }
 
-text *
+static text *
 relate_tnpointseq_geo(TemporalSeq *seq, Datum geo, bool invert)
 {
 	Datum geom = tnpointseq_geom(seq);
@@ -246,7 +246,7 @@ relate_tnpointseq_geo(TemporalSeq *seq, Datum geo, bool invert)
 	return result;
 }
 
-text *
+static text *
 relate_tnpoints_geo(TemporalS *ts, Datum geo, bool invert)
 {
 	Datum geom = tnpoints_geom(ts);
@@ -260,7 +260,7 @@ relate_tnpoints_geo(TemporalS *ts, Datum geo, bool invert)
  * Generic relate functions for tnpoint relate tnpoint 
  *****************************************************************************/
 
-text *
+static text *
 relate_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2)
 {
 	Datum geom1 =  tnpointinst_geom(inst1);
@@ -270,7 +270,7 @@ relate_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2)
 	return result;
 }
 
-text *
+static text *
 relate_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2)
 {
 	Datum geom1 = tnpointi_geom(ti1);
@@ -280,7 +280,7 @@ relate_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2)
 	return result;
 }
 
-text *
+static text *
 relate_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
 {
 	Datum geom1 = tnpointseq_geom(seq1);
@@ -290,7 +290,7 @@ relate_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
 	return result;
 }
 
-text *
+static text *
 relate_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
 {
 	Datum geom1 = tnpoints_trajectory(ts1);
@@ -304,7 +304,7 @@ relate_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
  * Dispatch Functions
  *****************************************************************************/
 
-bool
+static bool
 spatialrel_tnpoint_geo(Temporal *temp, Datum geom,
 	Datum (*operator)(Datum, Datum), bool invert)
 {
@@ -327,7 +327,7 @@ spatialrel_tnpoint_geo(Temporal *temp, Datum geom,
 	return result;
 }
 
-bool
+static bool
 spatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
 	Datum (*operator)(Datum, Datum))
 {
@@ -352,7 +352,7 @@ spatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
 
 /*****************************************************************************/
 
-text *
+static text *
 relate_tnpoint_geo_internal(Temporal *temp, Datum geo, bool invert)
 {
 	text *result = NULL;
@@ -372,7 +372,7 @@ relate_tnpoint_geo_internal(Temporal *temp, Datum geo, bool invert)
 
 /*****************************************************************************/
 
-bool
+static bool
 spatialrel3_tnpoint_geo(Temporal *temp, Datum geom, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
@@ -395,7 +395,7 @@ spatialrel3_tnpoint_geo(Temporal *temp, Datum geom, Datum param,
 	return result;
 }
 
-bool
+static bool
 spatialrel3_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2, Datum param,
 	Datum (*operator)(Datum, Datum, Datum))
 {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * TemporalNPoint.c
- *	  Basic functions for temporal network-constrained points.
+ * TNPoint.c
+ *	  Basic functions for temporal network points.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li
  *		Universite Libre de Bruxelles
