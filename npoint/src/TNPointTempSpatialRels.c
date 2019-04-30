@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * TempSpatialRels.c
- *	  Temporal spatial relationships for temporal network-constrained points.
+ * TNPointTempSpatialRels.c
+ *	  Temporal spatial relationships for temporal network points.
  *
  * These relationships are applied at each instant and result in a temporal
  * boolean/text. The following relationships are supported:

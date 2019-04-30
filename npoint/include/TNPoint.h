@@ -335,12 +335,10 @@ extern Datum relate_pattern_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 extern bool tnpointseq_intersect_at_timestamp(TemporalInst *start1, 
 	TemporalInst *end1,	TemporalInst *start2, TemporalInst *end2, 
 	bool lower_inc, bool upper_inc, TimestampTz *inter);
-
 extern TemporalInst *tspatialrel_tnpointinst_geo(TemporalInst *inst, Datum geo,
 	Datum (*operator)(Datum, Datum), Oid valuetypid, bool invert);
 extern TemporalI *tspatialrel_tnpointi_geo(TemporalI *ti, Datum geo,
 	Datum (*operator)(Datum, Datum), Oid valuetypid, bool invert);
-
 extern TemporalInst *tspatialrel_tnpointinst_tnpointinst(
 	TemporalInst *inst1, TemporalInst *inst2,
 	Datum (*operator)(Datum, Datum), Oid valuetypid);
@@ -402,6 +400,40 @@ extern Datum trelate_pattern_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum trelate_pattern_tnpoint_geo(PG_FUNCTION_ARGS);
 extern Datum trelate_pattern_tnpoint_npoint(PG_FUNCTION_ARGS);
 extern Datum trelate_pattern_tnpoint_tnpoint(PG_FUNCTION_ARGS);
+
+/*****************************************************************************
+ * TNPointRelPosOps.c
+ *****************************************************************************/
+
+extern Datum left_npoint_tnpoint(PG_FUNCTION_ARGS);
+extern Datum overleft_npoint_tnpoint(PG_FUNCTION_ARGS);
+extern Datum right_npoint_tnpoint(PG_FUNCTION_ARGS);
+extern Datum overright_npoint_tnpoint(PG_FUNCTION_ARGS);
+extern Datum below_npoint_tnpoint(PG_FUNCTION_ARGS);
+extern Datum overbelow_npoint_tnpoint(PG_FUNCTION_ARGS);
+extern Datum above_npoint_tnpoint(PG_FUNCTION_ARGS);
+extern Datum overabove_npoint_tnpoint(PG_FUNCTION_ARGS);
+extern Datum left_tnpoint_npoint(PG_FUNCTION_ARGS);
+extern Datum overleft_tnpoint_npoint(PG_FUNCTION_ARGS);
+extern Datum right_tnpoint_npoint(PG_FUNCTION_ARGS);
+extern Datum overright_tnpoint_npoint(PG_FUNCTION_ARGS);
+extern Datum below_tnpoint_npoint(PG_FUNCTION_ARGS);
+extern Datum overbelow_tnpoint_npoint(PG_FUNCTION_ARGS);
+extern Datum above_tnpoint_npoint(PG_FUNCTION_ARGS);
+extern Datum overabove_tnpoint_npoint(PG_FUNCTION_ARGS);
+
+/*****************************************************************************
+ * TNPointAggFuncs.c
+ *****************************************************************************/
+
+extern Datum tnpoint_tcentroid_transfn(PG_FUNCTION_ARGS);
+
+/*****************************************************************************
+ * TNPointIndex.c
+ *****************************************************************************/
+
+extern Datum gist_tnpoint_compress(PG_FUNCTION_ARGS);
+extern Datum spgist_tnpoint_compress(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 

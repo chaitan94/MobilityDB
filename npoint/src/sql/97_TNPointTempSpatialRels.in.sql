@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * TempSpatialRels.sql
- *	  Spatial relationships for temporal network-constrained points.
+ * TNPointTempSpatialRels.sql
+ *	  Spatial relationships for temporal network points.
  *
  * These relationships are applied at each instant and result in a temporal 
  * Boolean. The following relationships are supported:

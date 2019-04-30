@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * IndexTPoint.c
+ * TPointIndex.c
  *	  R-tree GiST and SP-GiST indexes for temporal network-constrained points.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li

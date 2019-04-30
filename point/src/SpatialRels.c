@@ -667,7 +667,7 @@ relate2_tpoint_geo(Temporal *temp, Datum geo, bool invert)
 }
 
 /*****************************************************************************
- * Temporal contains
+ * contains
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(contains_geo_tpoint);
@@ -780,7 +780,7 @@ contains_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal containsproperly
+ * containsproperly
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(containsproperly_geo_tpoint);
@@ -893,7 +893,7 @@ containsproperly_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal covers (for both geometry and geography)
+ * covers (for both geometry and geography)
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(covers_geo_tpoint);
@@ -1034,7 +1034,7 @@ covers_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal coveredby (for both geometry and geography)
+ * coveredby (for both geometry and geography)
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(coveredby_geo_tpoint);
@@ -1175,7 +1175,7 @@ coveredby_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal crosses
+ * crosses
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(crosses_geo_tpoint);
@@ -1288,7 +1288,7 @@ crosses_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal disjoint
+ * disjoint
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(disjoint_geo_tpoint);
@@ -1401,7 +1401,7 @@ disjoint_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal equals
+ * equals
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(equals_geo_tpoint);
@@ -1514,7 +1514,7 @@ equals_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal intersects (for both geometry and geography)
+ * intersects (for both geometry and geography)
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(intersects_geo_tpoint);
@@ -1664,7 +1664,7 @@ intersects_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal overlaps
+ * overlaps
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(overlaps_geo_tpoint);
@@ -1777,7 +1777,7 @@ overlaps_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal touches
+ * touches
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(touches_geo_tpoint);
@@ -1890,7 +1890,7 @@ touches_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal within
+ * within
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(within_geo_tpoint);
@@ -2003,7 +2003,7 @@ within_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal dwithin (for both geometry and geography)
+ * dwithin (for both geometry and geography)
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(dwithin_geo_tpoint);
@@ -2179,7 +2179,7 @@ dwithin_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Temporal relate
+ * relate
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(relate_geo_tpoint);
@@ -2307,7 +2307,7 @@ relate_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
  
 /*****************************************************************************
- * Temporal relate_pattern
+ * relate_pattern
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(relate_pattern_geo_tpoint);

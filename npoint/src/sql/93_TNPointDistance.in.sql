@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * TempDistance.sql
- *	  Temporal distance for temporal network-constrained points.
+ * TNPointDistance.sql
+ *	  Temporal distance for temporal network points.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li,
  * 		Universite Libre de Bruxelles

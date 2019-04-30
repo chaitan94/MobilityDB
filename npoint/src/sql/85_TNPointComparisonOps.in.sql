@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * ComparisonOps.sql
- *	  Comparison functions and operators for temporal network-constrained points.
+ * TNPointComparisonOps.sql
+ *	  Comparison functions and operators for temporal network points.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li
  *	  Universite Libre de Bruxelles

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * RelativePosOps.sql
- *	  Relative position operators for temporal network-constrained points.
+ * TNPointRelativePosOps.sql
+ *	  Relative position operators for temporal network points.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li,
  * 		Universite Libre de Bruxelles
@@ -248,22 +248,6 @@ CREATE FUNCTION temporal_overabove(npoint, tnpoint)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'overabove_npoint_tnpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_before(npoint, tnpoint)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'before_npoint_tnpoint'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_overbefore(npoint, tnpoint)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overbefore_npoint_tnpoint'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_after(npoint, tnpoint)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'after_npoint_tnpoint'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_overafter(npoint, tnpoint)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overafter_npoint_tnpoint'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR << (
 	LEFTARG = npoint, RIGHTARG = tnpoint,
@@ -308,28 +292,6 @@ CREATE OPERATOR |&> (
 	LEFTARG = npoint, RIGHTARG = tnpoint,
 	PROCEDURE = temporal_overabove,
 	RESTRICT = overabove_point_sel, JOIN = positionjoinseltemp
-);
-CREATE OPERATOR <<# (
-	LEFTARG = npoint, RIGHTARG = tnpoint,
-	PROCEDURE = temporal_before,
-	COMMUTATOR = '#>>',
-	RESTRICT = before_temporal_sel, JOIN = positionjoinseltemp
-);
-CREATE OPERATOR &<# (
-	LEFTARG = npoint, RIGHTARG = tnpoint,
-	PROCEDURE = temporal_overbefore,
-	RESTRICT = overbefore_temporal_sel, JOIN = positionjoinseltemp
-);
-CREATE OPERATOR #>> (
-	LEFTARG = npoint, RIGHTARG = tnpoint,
-	PROCEDURE = temporal_after,
-	COMMUTATOR = '<<#',
-	RESTRICT = after_temporal_sel, JOIN = positionjoinseltemp
-);
-CREATE OPERATOR #&> (
-	LEFTARG = npoint, RIGHTARG = tnpoint,
-	PROCEDURE = temporal_overafter,
-	RESTRICT = overafter_temporal_sel, JOIN = positionjoinseltemp
 );
 
 /*****************************************************************************

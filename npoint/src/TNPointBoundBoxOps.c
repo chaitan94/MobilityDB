@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * BoundBoxOps.c
- *	  Bounding box operators for temporal network-constrained points.
+ * TNPointBoundBoxOps.c
+ *	  Bounding box operators for temporal network points.
  *
  * These operators test the bounding boxes of temporal npoints, which are
  * 3D boxes, where the x and y coordinates are for the space (value)

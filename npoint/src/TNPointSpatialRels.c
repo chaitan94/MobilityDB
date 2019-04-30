@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * SpatialRels.c
- *	  Spatial relationships for temporal network-constrained points.
+ * TNPointSpatialRels.c
+ *	  Spatial relationships for temporal network points.
  *
  * These relationships project the temporal dimension and return a Boolean.
  * They are thus defined with the "at any instant" semantics, that is, the

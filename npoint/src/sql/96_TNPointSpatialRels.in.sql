@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * SpatialRels.sql
- *	  Spatial relationships for temporal network-constrained points.
+ * TNPointSpatialRels.sql
+ *	  Spatial relationships for temporal network points.
  *
  * These relationships are generalized to the temporal dimension with the 
  * "at any instant" semantics, that is, the traditional operator is applied to
