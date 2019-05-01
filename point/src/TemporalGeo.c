@@ -36,7 +36,7 @@ wkt_out(Oid type, Datum value)
 	return result;
 }
 
-static char *
+char *
 ewkt_out(Oid type, Datum value)
 {
 	GSERIALIZED *gs = (GSERIALIZED *)DatumGetPointer(value);
