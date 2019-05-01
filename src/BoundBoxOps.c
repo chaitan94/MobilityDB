@@ -230,7 +230,8 @@ temporal_bbox_cmp(Oid valuetypid, void *box1, void *box2)
 		return box_cmp_internal((BOX *)box1, (BOX *)box2);
 #ifdef WITH_POSTGIS
 	if (valuetypid == type_oid(T_GEOGRAPHY) || 
-		valuetypid == type_oid(T_GEOMETRY))
+		valuetypid == type_oid(T_GEOMETRY) || 
+		valuetypid == type_oid(T_NPOINT))
 		return gbox_cmp_internal((GBOX *)box1, (GBOX *)box2);
 #endif
 	/* Types without bounding box, for example, doubleN */
