@@ -201,7 +201,7 @@ temporal_bbox_size(Oid valuetypid)
 }
 
 /*****************************************************************************
- * Equality of bounding boxes
+ * Equality and comparison of bounding boxes
  *****************************************************************************/
 
 bool
@@ -219,6 +219,22 @@ temporal_bbox_eq(Oid valuetypid, void *box1, void *box2)
 #endif
 	/* Types without bounding box, for example, doubleN */
 	return false;
+} 
+
+int
+temporal_bbox_cmp(Oid valuetypid, void *box1, void *box2) 
+{
+	if (valuetypid == BOOLOID || valuetypid == TEXTOID)
+		return period_cmp_internal((Period *)box1, (Period *)box2);
+	if (valuetypid == INT4OID || valuetypid == FLOAT8OID)
+		return box_cmp_internal((BOX *)box1, (BOX *)box2);
+#ifdef WITH_POSTGIS
+	if (valuetypid == type_oid(T_GEOGRAPHY) || 
+		valuetypid == type_oid(T_GEOMETRY))
+		return gbox_cmp_internal((GBOX *)box1, (GBOX *)box2);
+#endif
+	/* Types without bounding box, for example, doubleN */
+	return 0;
 } 
 
 /*****************************************************************************
