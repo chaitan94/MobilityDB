@@ -41,11 +41,9 @@ SELECT contains(geometry 'Point empty', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npo
 (1 row)
 
 SELECT contains(geometry 'Point empty', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- contains 
-----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "contains" statement 1
 SELECT contains(npoint 'NPoint(2, 0.3)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  contains 
 ----------
@@ -113,11 +111,9 @@ SELECT contains(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, 
 (1 row)
 
 SELECT contains(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point empty');
- contains 
-----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "contains" statement 1
 SELECT contains(tnpoint 'Npoint(1, 0.5)@2000-01-01',  npoint 'NPoint(2, 0.3)');
  contains 
 ----------
@@ -233,11 +229,9 @@ SELECT contains(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, 
 (1 row)
 
 SELECT contains(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- contains 
-----------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "contains" statement 1
 SELECT containsproperly(geometry 'Point(1 1)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  containsproperly 
 ------------------
@@ -281,11 +275,9 @@ SELECT containsproperly(geometry 'Point empty', tnpoint '[Npoint(1, 0.2)@2000-01
 (1 row)
 
 SELECT containsproperly(geometry 'Point empty', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- containsproperly 
-------------------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "containsproperly" statement 1
 SELECT containsproperly(npoint 'NPoint(2, 0.3)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  containsproperly 
 ------------------
@@ -353,11 +345,9 @@ SELECT containsproperly(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000
 (1 row)
 
 SELECT containsproperly(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point empty');
- containsproperly 
-------------------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "containsproperly" statement 1
 SELECT containsproperly(tnpoint 'Npoint(1, 0.5)@2000-01-01',  npoint 'NPoint(2, 0.3)');
  containsproperly 
 ------------------
@@ -473,11 +463,9 @@ SELECT containsproperly(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000
 (1 row)
 
 SELECT containsproperly(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- containsproperly 
-------------------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "containsproperly" statement 1
 SELECT covers(geometry 'Point(1 1)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  covers 
 --------
@@ -713,11 +701,9 @@ SELECT covers(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT covers(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- covers 
---------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "covers" statement 1
 SELECT coveredby(geometry 'Point(1 1)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  coveredby 
 -----------
@@ -761,11 +747,9 @@ SELECT coveredby(geometry 'Point empty', tnpoint '[Npoint(1, 0.2)@2000-01-01, Np
 (1 row)
 
 SELECT coveredby(geometry 'Point empty', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- coveredby 
------------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "coveredby" statement 1
 SELECT coveredby(npoint 'NPoint(2, 0.3)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  coveredby 
 -----------
@@ -833,11 +817,9 @@ SELECT coveredby(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02,
 (1 row)
 
 SELECT coveredby(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point empty');
- coveredby 
------------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "coveredby" statement 1
 SELECT coveredby(tnpoint 'Npoint(1, 0.5)@2000-01-01',  npoint 'NPoint(2, 0.3)');
  coveredby 
 -----------
@@ -953,11 +935,9 @@ SELECT coveredby(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02,
 (1 row)
 
 SELECT coveredby(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- coveredby 
------------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "coveredby" statement 1
 SELECT crosses(geometry 'Point(1 1)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  crosses 
 ---------
@@ -1001,11 +981,9 @@ SELECT crosses(geometry 'Point empty', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoi
 (1 row)
 
 SELECT crosses(geometry 'Point empty', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- crosses 
----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "crosses" statement 1
 SELECT crosses(npoint 'NPoint(2, 0.3)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  crosses 
 ---------
@@ -1073,11 +1051,9 @@ SELECT crosses(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, N
 (1 row)
 
 SELECT crosses(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point empty');
- crosses 
----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "crosses" statement 1
 SELECT crosses(tnpoint 'Npoint(1, 0.5)@2000-01-01',  npoint 'NPoint(2, 0.3)');
  crosses 
 ---------
@@ -1193,11 +1169,9 @@ SELECT crosses(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, N
 (1 row)
 
 SELECT crosses(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- crosses 
----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "crosses" statement 1
 SELECT disjoint(geometry 'Point(1 1)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  disjoint 
 ----------
@@ -1217,11 +1191,8 @@ SELECT disjoint(geometry 'Point(1 1)', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoi
 (1 row)
 
 SELECT disjoint(geometry 'Point(1 1)', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- disjoint 
-----------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT disjoint(geometry 'Point empty', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  disjoint 
 ----------
@@ -1241,11 +1212,8 @@ SELECT disjoint(geometry 'Point empty', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npo
 (1 row)
 
 SELECT disjoint(geometry 'Point empty', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- disjoint 
-----------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT disjoint(npoint 'NPoint(2, 0.3)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  disjoint 
 ----------
@@ -1265,11 +1233,8 @@ SELECT disjoint(npoint 'NPoint(2, 0.3)', tnpoint '[Npoint(1, 0.2)@2000-01-01, Np
 (1 row)
 
 SELECT disjoint(npoint 'NPoint(2, 0.3)', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- disjoint 
-----------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT disjoint(tnpoint 'Npoint(1, 0.5)@2000-01-01',  geometry 'Point(1 1)');
  disjoint 
 ----------
@@ -1289,11 +1254,8 @@ SELECT disjoint(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, 
 (1 row)
 
 SELECT disjoint(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point(1 1)');
- disjoint 
-----------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT disjoint(tnpoint 'Npoint(1, 0.5)@2000-01-01',  geometry 'Point empty');
  disjoint 
 ----------
@@ -1313,11 +1275,8 @@ SELECT disjoint(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, 
 (1 row)
 
 SELECT disjoint(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point empty');
- disjoint 
-----------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT disjoint(tnpoint 'Npoint(1, 0.5)@2000-01-01',  npoint 'NPoint(2, 0.3)');
  disjoint 
 ----------
@@ -1337,11 +1296,8 @@ SELECT disjoint(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, 
 (1 row)
 
 SELECT disjoint(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  npoint 'NPoint(2, 0.3)');
- disjoint 
-----------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT disjoint(tnpoint 'Npoint(1, 0.5)@2000-01-01', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  disjoint 
 ----------
@@ -1433,11 +1389,8 @@ SELECT disjoint(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, 
 (1 row)
 
 SELECT disjoint(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- disjoint 
-----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT equals(geometry 'Point(1 1)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  equals 
 --------
@@ -1481,11 +1434,9 @@ SELECT equals(geometry 'Point empty', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoin
 (1 row)
 
 SELECT equals(geometry 'Point empty', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- equals 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "equals" statement 1
 SELECT equals(npoint 'NPoint(2, 0.3)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  equals 
 --------
@@ -1553,11 +1504,9 @@ SELECT equals(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT equals(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point empty');
- equals 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "equals" statement 1
 SELECT equals(tnpoint 'Npoint(1, 0.5)@2000-01-01',  npoint 'NPoint(2, 0.3)');
  equals 
 --------
@@ -1673,11 +1622,9 @@ SELECT equals(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT equals(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- equals 
---------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "equals" statement 1
 SELECT intersects(geometry 'Point(1 1)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  intersects 
 ------------
@@ -1961,11 +1908,9 @@ SELECT overlaps(geometry 'Point empty', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npo
 (1 row)
 
 SELECT overlaps(geometry 'Point empty', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- overlaps 
-----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "overlaps" statement 1
 SELECT overlaps(npoint 'NPoint(2, 0.3)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  overlaps 
 ----------
@@ -2033,11 +1978,9 @@ SELECT overlaps(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, 
 (1 row)
 
 SELECT overlaps(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point empty');
- overlaps 
-----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "overlaps" statement 1
 SELECT overlaps(tnpoint 'Npoint(1, 0.5)@2000-01-01',  npoint 'NPoint(2, 0.3)');
  overlaps 
 ----------
@@ -2153,11 +2096,9 @@ SELECT overlaps(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, 
 (1 row)
 
 SELECT overlaps(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- overlaps 
-----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "overlaps" statement 1
 SELECT touches(geometry 'Point(1 1)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  touches 
 ---------
@@ -2201,11 +2142,9 @@ SELECT touches(geometry 'Point empty', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoi
 (1 row)
 
 SELECT touches(geometry 'Point empty', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- touches 
----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "touches" statement 1
 SELECT touches(npoint 'NPoint(2, 0.3)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  touches 
 ---------
@@ -2273,11 +2212,9 @@ SELECT touches(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, N
 (1 row)
 
 SELECT touches(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point empty');
- touches 
----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "touches" statement 1
 SELECT touches(tnpoint 'Npoint(1, 0.5)@2000-01-01',  npoint 'NPoint(2, 0.3)');
  touches 
 ---------
@@ -2393,11 +2330,9 @@ SELECT touches(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, N
 (1 row)
 
 SELECT touches(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- touches 
----------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "touches" statement 1
 SELECT within(geometry 'Point(1 1)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  within 
 --------
@@ -2441,11 +2376,9 @@ SELECT within(geometry 'Point empty', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoin
 (1 row)
 
 SELECT within(geometry 'Point empty', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- within 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "within" statement 1
 SELECT within(npoint 'NPoint(2, 0.3)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
  within 
 --------
@@ -2513,11 +2446,9 @@ SELECT within(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT within(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point empty');
- within 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "within" statement 1
 SELECT within(tnpoint 'Npoint(1, 0.5)@2000-01-01',  npoint 'NPoint(2, 0.3)');
  within 
 --------
@@ -2633,11 +2564,9 @@ SELECT within(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT within(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
- within 
---------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
+CONTEXT:  SQL function "within" statement 1
 SELECT dwithin(geometry 'Point(1 1)', tnpoint 'Npoint(1, 0.5)@2000-01-01', 2);
  dwithin 
 ---------
@@ -2897,11 +2826,8 @@ SELECT relate(geometry 'Point(1 1)', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint
 (1 row)
 
 SELECT relate(geometry 'Point(1 1)', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
-  relate   
------------
- FF0FFF102
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(geometry 'Point empty', tnpoint 'Npoint(1, 0.5)@2000-01-01');
   relate   
 -----------
@@ -2921,11 +2847,8 @@ SELECT relate(geometry 'Point empty', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoin
 (1 row)
 
 SELECT relate(geometry 'Point empty', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
-  relate   
------------
- FFFFFF102
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(npoint 'NPoint(2, 0.3)', tnpoint 'Npoint(1, 0.5)@2000-01-01');
   relate   
 -----------
@@ -2945,11 +2868,8 @@ SELECT relate(npoint 'NPoint(2, 0.3)', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoi
 (1 row)
 
 SELECT relate(npoint 'NPoint(2, 0.3)', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
-  relate   
------------
- FF0FFF102
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(tnpoint 'Npoint(1, 0.5)@2000-01-01',  geometry 'Point(1 1)');
   relate   
 -----------
@@ -2969,11 +2889,8 @@ SELECT relate(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT relate(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point(1 1)');
-  relate   
------------
- FF1FF00F2
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(tnpoint 'Npoint(1, 0.5)@2000-01-01',  geometry 'Point empty');
   relate   
 -----------
@@ -2993,11 +2910,8 @@ SELECT relate(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT relate(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point empty');
-  relate   
------------
- FF1FF0FF2
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(tnpoint 'Npoint(1, 0.5)@2000-01-01',  npoint 'NPoint(2, 0.3)');
   relate   
 -----------
@@ -3017,11 +2931,8 @@ SELECT relate(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT relate(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  npoint 'NPoint(2, 0.3)');
-  relate   
------------
- FF1FF00F2
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(tnpoint 'Npoint(1, 0.5)@2000-01-01', tnpoint 'Npoint(1, 0.5)@2000-01-01');
   relate   
 -----------
@@ -3113,11 +3024,8 @@ SELECT relate(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT relate(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
-  relate   
------------
- 1FFF0FFF2
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(geometry 'Point(1 1)', tnpoint 'Npoint(1, 0.5)@2000-01-01', 'T*****FF*');
  relate 
 --------
@@ -3137,11 +3045,8 @@ SELECT relate(geometry 'Point(1 1)', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint
 (1 row)
 
 SELECT relate(geometry 'Point(1 1)', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', 'T*****FF*');
- relate 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(geometry 'Point empty', tnpoint 'Npoint(1, 0.5)@2000-01-01', 'T*****FF*');
  relate 
 --------
@@ -3161,11 +3066,8 @@ SELECT relate(geometry 'Point empty', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoin
 (1 row)
 
 SELECT relate(geometry 'Point empty', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', 'T*****FF*');
- relate 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(npoint 'NPoint(2, 0.3)', tnpoint 'Npoint(1, 0.5)@2000-01-01', 'T*****FF*');
  relate 
 --------
@@ -3185,11 +3087,8 @@ SELECT relate(npoint 'NPoint(2, 0.3)', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoi
 (1 row)
 
 SELECT relate(npoint 'NPoint(2, 0.3)', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', 'T*****FF*');
- relate 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(tnpoint 'Npoint(1, 0.5)@2000-01-01',  geometry 'Point(1 1)', 'T*****FF*');
  relate 
 --------
@@ -3209,11 +3108,8 @@ SELECT relate(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT relate(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point(1 1)', 'T*****FF*');
- relate 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(tnpoint 'Npoint(1, 0.5)@2000-01-01',  geometry 'Point empty', 'T*****FF*');
  relate 
 --------
@@ -3233,11 +3129,8 @@ SELECT relate(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT relate(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  geometry 'Point empty', 'T*****FF*');
- relate 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(tnpoint 'Npoint(1, 0.5)@2000-01-01',  npoint 'NPoint(2, 0.3)', 'T*****FF*');
  relate 
 --------
@@ -3257,11 +3150,8 @@ SELECT relate(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT relate(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  npoint 'NPoint(2, 0.3)', 'T*****FF*');
- relate 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT relate(tnpoint 'Npoint(1, 0.5)@2000-01-01', tnpoint 'Npoint(1, 0.5)@2000-01-01', 'T*****FF*');
  relate 
 --------
@@ -3353,8 +3243,5 @@ SELECT relate(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT relate(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', 'T*****FF*');
- relate 
---------
- t
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'

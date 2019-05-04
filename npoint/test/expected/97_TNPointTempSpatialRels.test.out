@@ -2225,11 +2225,8 @@ SELECT relate(npoint 'NPoint(2, 0.3)', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoi
 (1 row)
 
 SELECT relate(npoint 'NPoint(2, 0.3)', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
-  relate   
------------
- FF0FFF102
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT trelate(tnpoint 'Npoint(1, 0.5)@2000-01-01',  geometry 'Point(1 1)');
               trelate               
 ------------------------------------
@@ -2297,11 +2294,8 @@ SELECT relate(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT relate(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  npoint 'NPoint(2, 0.3)');
-  relate   
------------
- FF1FF00F2
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT trelate(tnpoint 'Npoint(1, 0.5)@2000-01-01', tnpoint 'Npoint(1, 0.5)@2000-01-01');
               trelate               
 ------------------------------------
@@ -2465,11 +2459,8 @@ SELECT relate(npoint 'NPoint(2, 0.3)', tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoi
 (1 row)
 
 SELECT relate(npoint 'NPoint(2, 0.3)', tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}', 'T*****FF*');
- relate 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 2: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT trelate(tnpoint 'Npoint(1, 0.5)@2000-01-01',  geometry 'Point(1 1)', 'T*****FF*');
          trelate          
 --------------------------
@@ -2537,11 +2528,8 @@ SELECT relate(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 (1 row)
 
 SELECT relate(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  npoint 'NPoint(2, 0.3)', 'T*****FF*');
- relate 
---------
- f
-(1 row)
-
+ERROR:  Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+HINT:  Change argument 1: 'GEOMETRYCOLLECTION(POINT(27.2529167893545 77.6566612929513),LINESTRING(69.790...'
 SELECT trelate(tnpoint 'Npoint(1, 0.5)@2000-01-01', tnpoint 'Npoint(1, 0.5)@2000-01-01', 'T*****FF*');
          trelate          
 --------------------------
