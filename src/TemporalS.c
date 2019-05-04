@@ -23,16 +23,16 @@
 /* 
  * The memory structure of a TemporalS with, e.g., 2 sequences is as follows
  *
- *	------------------------------------------------------------------
+ *	--------------------------------------------------------
  *	( TemporalS | offset_0 | offset_1 | offset_2 )_ X | ...
- *	------------------------------------------------------------------
+ *	--------------------------------------------------------
  *	--------------------------------------------------------
  *	( TemporalSeq_0 )_X | ( TemporalSeq_1 )_X | ( bbox )_X | 
  *	--------------------------------------------------------
  *
  * where the X are unused bytes added for double padding, offset_0 and offset_1
  * are offsets for the corresponding sequences and offset_2 is the offset for the 
- * bounding box. Currently there is no precomputed trajectory for TemporalS.
+ * bounding box. There is no precomputed trajectory for TemporalS.
  */
 
 /* Pointer to the offset array of the TemporalS */
@@ -1861,7 +1861,8 @@ temporals_at_period(TemporalS *ts, Period *p)
 		pfree(sequences);
 		return NULL;		
 	}
-	
+	/* Since both the temporals and the period are normalized it is not 
+	   necessary to normalize the result of the projection */	
 	TemporalS *result = temporals_from_temporalseqarr(sequences, k, false);
 	for (int i = 0; i < l; i++)
 		pfree(tofree[i]);
@@ -1944,8 +1945,9 @@ temporals_at_periodset(TemporalS *ts, PeriodSet *ps)
 		pfree(sequences);
 		return NULL;
 	}
-
-	TemporalS *result = temporals_from_temporalseqarr(sequences, k, true);
+	/* Since both the temporals and the periodset are normalized it is not 
+	   necessary to normalize the result of the projection */
+	TemporalS *result = temporals_from_temporalseqarr(sequences, k, false);
 	for (int i = 0; i < k; i++)
 		pfree(sequences[i]);
 	pfree(sequences); 
@@ -2012,7 +2014,8 @@ temporals_minus_periodset(TemporalS *ts, PeriodSet *ps)
 		pfree(sequences);
 		return NULL;
 	}
-
+	/* Since both the temporals and the periodset are normalized it is not 
+	   necessary to normalize the result of the difference */
 	TemporalS *result = temporals_from_temporalseqarr(sequences, k, false);
 	for (int i = 0; i < k; i++)
 		pfree(sequences[i]);
