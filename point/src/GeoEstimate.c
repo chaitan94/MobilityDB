@@ -13,7 +13,6 @@
  *
  *****************************************************************************/
 
-#include <liblwgeom.h>
 #include "TemporalTypes.h"
 #include "TemporalPoint.h"
 

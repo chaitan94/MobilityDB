@@ -18,7 +18,6 @@
 #include <float.h>
 #include <fmgr.h>
 #include <funcapi.h>
-#include <liblwgeom.h>
 #include <math.h>
 #include <access/gist.h>
 #include <access/hash.h>
@@ -51,9 +50,11 @@
 #include "utils/syscache.h"
 #include <utils/timestamp.h>
 #include <utils/varlena.h>
+
 #include "TimeTypes.h"
 #include "OidCache.h"
 #include "TemporalSelFuncs.h"
+#include "PostGIS.h"
 
 #ifndef USE_FLOAT4_BYVAL
 #error Postgres needs to be configured with USE_FLOAT4_BYVAL
