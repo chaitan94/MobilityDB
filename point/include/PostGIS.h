@@ -396,7 +396,7 @@ extern LWGEOM *lwpoint_as_lwgeom(const LWPOINT *obj);
 * @param lwgeom geometry to convert to WKT
 * @param variant output format to use (WKT_ISO, WKT_SFSQL, WKT_EXTENDED)
 */
-extern char*   lwgeom_to_wkt(const LWGEOM *geom, uint8_t variant, int precision, size_t *size_out);
+extern char *lwgeom_to_wkt(const LWGEOM *geom, uint8_t variant, int precision, size_t *size_out);
 
 /**
 * Return the type name string associated with a type number
@@ -457,10 +457,6 @@ extern int lwgeom_is_trajectory(const LWGEOM *geom);
 extern void lwgeom_free(LWGEOM *geom);
 extern void lwpoint_free(LWPOINT *pt);
 extern void lwline_free(LWLINE *line);
-
-/* Memory management */
-extern void *lwalloc(size_t size);
-
 
 /***********************************************************************
 ** Utility functions for flag byte and srid_flag integer.
