@@ -419,7 +419,6 @@ extern POINT4D getPoint4d(const POINTARRAY *pa, uint32_t n);
  * will set point's z=0 (or NaN) if pa is 2d
  * NOTE: point is a real POINT3D *not* a pointer
  */
-extern POINT3DZ getPoint3dz(const POINTARRAY *pa, uint32_t n);
 extern POINT3DM getPoint3dm(const POINTARRAY *pa, uint32_t n);
 
 extern LWPOINT* lwline_get_lwpoint(const LWLINE *line, uint32_t where);
