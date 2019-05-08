@@ -116,8 +116,11 @@ extern char *wkt_out(Oid type, Datum value);
 extern char *ewkt_out(Oid type, Datum value);
 extern POINT2D gs_get_point2d(GSERIALIZED *gs);
 extern POINT3DZ gs_get_point3dz(GSERIALIZED *gs);
+extern POINT3DM gs_get_point3dm(GSERIALIZED *gs);
+extern POINT4D gs_get_point4d(GSERIALIZED *gs);
 extern POINT2D datum_get_point2d(Datum value);
 extern POINT3DZ datum_get_point3dz(Datum value);
+extern bool datum_point_eq(Datum geopoint1, Datum geopoint2);
 extern GSERIALIZED* geometry_serialize(LWGEOM* geom);
 
 /* Functions for output in WKT format */
