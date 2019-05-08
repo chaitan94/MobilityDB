@@ -127,6 +127,15 @@ CREATE FUNCTION tnpoints(tnpoint)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
+ * Append function
+ ******************************************************************************/
+
+CREATE FUNCTION appendInstant(tnpoint, tnpoint)
+	RETURNS tnpoint
+	AS 'MODULE_PATHNAME', 'temporal_append_instant'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************
  * Accessor functions
  ******************************************************************************/
 

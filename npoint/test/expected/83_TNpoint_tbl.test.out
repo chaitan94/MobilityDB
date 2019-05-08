@@ -134,6 +134,15 @@ SELECT DISTINCT temporalType(tnpoints(ts)) FROM tbl_tnpoints;
 (1 row)
 
 /******************************************************************************
+ * Append functions
+ ******************************************************************************/
+SELECT MAX(numInstants(appendInstant(temp, shift(endInstant(temp), '5 min')))) FROM tbl_tnpoint;
+ max 
+-----
+  57
+(1 row)
+
+/******************************************************************************
  * Cast functions
  ******************************************************************************/
 SELECT count(*) FROM tbl_tnpoint where temp::tgeompoint is not null;

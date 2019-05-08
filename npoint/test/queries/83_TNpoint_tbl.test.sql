@@ -47,6 +47,12 @@ SELECT DISTINCT temporalType(tnpointseq(ts)) FROM tbl_tnpoints WHERE numSequence
 SELECT DISTINCT temporalType(tnpoints(ts)) FROM tbl_tnpoints;
 
 /******************************************************************************
+ * Append functions
+ ******************************************************************************/
+
+SELECT MAX(numInstants(appendInstant(temp, shift(endInstant(temp), '5 min')))) FROM tbl_tnpoint;
+
+/******************************************************************************
  * Cast functions
  ******************************************************************************/
 

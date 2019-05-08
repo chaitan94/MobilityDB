@@ -24,36 +24,6 @@
  * This is typically the case when the datum is within a Temporal* that 
  * has been already detoasted with PG_GETARG_TEMPORAL*  
  */
-<<<<<<< HEAD
-char *
-wkt_out(Oid type, Datum value)
-{
-	GSERIALIZED *gs = (GSERIALIZED *)DatumGetPointer(value);
-	LWGEOM *geom = lwgeom_from_gserialized(gs);
-	size_t len;
-	char *wkt = lwgeom_to_wkt(geom, WKT_ISO, DBL_DIG, &len);
-	char *result = palloc(len);
-	strcpy(result, wkt);
-	lwgeom_free(geom);
-	pfree(wkt);
-	return result;
-}
-
-char *
-ewkt_out(Oid type, Datum value)
-{
-	GSERIALIZED *gs = (GSERIALIZED *)DatumGetPointer(value);
-	LWGEOM *geom = lwgeom_from_gserialized(gs);
-	size_t len;
-	char *wkt = lwgeom_to_wkt(geom, WKT_EXTENDED, DBL_DIG, &len);
-	char *result = palloc(len);
-	strcpy(result, wkt);
-	lwgeom_free(geom);
-	pfree(wkt);
-	return result;
-}
-=======
->>>>>>> master
 
 /* Get 2D point from a serialized geometry */
 
@@ -181,7 +151,7 @@ datum_setprecision(Datum value, Datum size)
  * The Oid argument is not used but is needed since the second argument of 
  * the functions temporal*_to_string is of type char *(*value_out)(Oid, Datum) 
  */
-static char *
+char *
 wkt_out(Oid type, Datum value)
 {
 	GSERIALIZED *gs = (GSERIALIZED *)DatumGetPointer(value);
@@ -195,7 +165,7 @@ wkt_out(Oid type, Datum value)
 	return result;
 }
 
-static char *
+char *
 ewkt_out(Oid type, Datum value)
 {
 	GSERIALIZED *gs = (GSERIALIZED *)DatumGetPointer(value);
