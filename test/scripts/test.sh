@@ -58,7 +58,7 @@ create_ext)
 		echo "CREATE EXTENSION postgis;" | $PSQL 2>&1 1>/dev/null | tee $WORKDIR/log/create_ext.log 
 	fi
 	cat $EXTFILE | sed -e "s|MODULE_PATHNAME|$SOFILE|g" -e "s|@extschema@|public|g" | $FAILPSQL 2>&1 1>/dev/null | tee -a $WORKDIR/log/create_ext.log 
-	$PG_RESTORE -Fc data.bin | tee -a $WORKDIR/log/load_tables.log
+	$PG_RESTORE -O -x -Fc data.bin | tee -a $WORKDIR/log/load_tables.log
 
 	exit 0
 	;;
