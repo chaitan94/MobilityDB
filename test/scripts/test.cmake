@@ -15,11 +15,11 @@ add_test(
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
 	COMMAND ${PROJECT_SOURCE_DIR}/test/scripts/test.sh create_ext ${CMAKE_BINARY_DIR} 
 )
-add_test(
-	NAME load_tables
-	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
-	COMMAND ${PROJECT_SOURCE_DIR}/test/scripts/test.sh run_passfail ${CMAKE_BINARY_DIR} load_tables "scripts/load.sql.xz"
-)
+#add_test(
+#	NAME load_tables
+#	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
+#	COMMAND ${PROJECT_SOURCE_DIR}/test/scripts/test.sh run_passfail ${CMAKE_BINARY_DIR} load_tables "scripts/load.sql.xz"
+#)
 add_test(
 	NAME teardown
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
@@ -30,8 +30,8 @@ set_tests_properties(setup PROPERTIES FIXTURES_SETUP DB)
 set_tests_properties(setup PROPERTIES RESOURCE_LOCK DB)
 set_tests_properties(create_extension PROPERTIES FIXTURES_SETUP DB)
 set_tests_properties(create_extension PROPERTIES DEPENDS setup)
-set_tests_properties(load_tables PROPERTIES FIXTURES_SETUP DB)
-set_tests_properties(load_tables PROPERTIES DEPENDS create_extension)
+#set_tests_properties(load_tables PROPERTIES FIXTURES_SETUP DB)
+#set_tests_properties(load_tables PROPERTIES DEPENDS create_extension)
 set_tests_properties(teardown PROPERTIES FIXTURES_CLEANUP DB)
 set_tests_properties(teardown PROPERTIES RESOURCE_LOCK DBLOCK)
 

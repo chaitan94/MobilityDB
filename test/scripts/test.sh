@@ -10,6 +10,7 @@ EXTFILE=$BUILDDIR/*--*.sql
 SOFILE=`echo $BUILDDIR/lib*.so`
 PSQL="psql -h $WORKDIR/lock -e --set ON_ERROR_STOP=0 postgres"
 FAILPSQL="psql -h $WORKDIR/lock -e --set ON_ERROR_STOP=1 postgres"
+PG_RESTORE="pg_restore -h $WORKDIR/lock -e -d postgres"
 DBDIR=$WORKDIR/db
 PGCTL="pg_ctl -w -D $DBDIR -l $WORKDIR/log/postgres.log -o -k -o $WORKDIR/lock -o -h -o ''" # -o -c -o enable_seqscan=off -o -c -o enable_bitmapscan=off -o -c -o enable_indexscan=on -o -c -o enable_indexonlyscan=on"
 
@@ -57,6 +58,7 @@ create_ext)
 		echo "CREATE EXTENSION postgis;" | $PSQL 2>&1 1>/dev/null | tee $WORKDIR/log/create_ext.log 
 	fi
 	cat $EXTFILE | sed -e "s|MODULE_PATHNAME|$SOFILE|g" -e "s|@extschema@|public|g" | $FAILPSQL 2>&1 1>/dev/null | tee -a $WORKDIR/log/create_ext.log 
+	$PG_RESTORE -Fc data.bin | tee -a $WORKDIR/log/load_tables.log
 
 	exit 0
 	;;
