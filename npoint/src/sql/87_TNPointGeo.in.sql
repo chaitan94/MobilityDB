@@ -123,11 +123,11 @@ CREATE FUNCTION nearestApproachDistance(tnpoint, geometry)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION NearestApproachDistance(npoint, tnpoint)
 	RETURNS float
-	AS 'libMobilityDB.so', 'NAD_npoint_tnpoint'
+	AS 'MODULE_PATHNAME', 'NAD_npoint_tnpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION NearestApproachDistance(tnpoint, npoint)
 	RETURNS float
-	AS 'libMobilityDB.so', 'NAD_tnpoint_npoint'
+	AS 'MODULE_PATHNAME', 'NAD_tnpoint_npoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION nearestApproachDistance(tnpoint, tnpoint)
 	RETURNS float
