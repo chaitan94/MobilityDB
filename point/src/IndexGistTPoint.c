@@ -264,36 +264,6 @@ gist_tpoint_consistent(PG_FUNCTION_ARGS)
 		if (!npoint_to_gbox_internal(&query, PG_GETARG_NPOINT(1)))
 			PG_RETURN_BOOL(false);
 	}
-	else if (subtype == TIMESTAMPTZOID)
-	{
-		if (PG_ARGISNULL(1))
-			PG_RETURN_BOOL(false);
-		TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-		timestamp_to_gbox_internal(&query, t);
-	}
-	else if (subtype == type_oid(T_TIMESTAMPSET))
-	{
-		TimestampSet *ts = PG_GETARG_TIMESTAMPSET(1);
-		if (ts == NULL)
-			PG_RETURN_BOOL(false);
-		timestampset_to_gbox_internal(&query, ts);
-		PG_FREE_IF_COPY(ts, 1);
-	}
-	else if (subtype == type_oid(T_PERIOD))
-	{
-		Period *p = PG_GETARG_PERIOD(1);
-		if (p == NULL)
-			PG_RETURN_BOOL(false);
-		period_to_gbox_internal(&query, p);
-	}
-	else if (subtype == type_oid(T_PERIODSET))
-	{
-		PeriodSet *ps = PG_GETARG_PERIODSET(1);
-		if (ps == NULL)
-			PG_RETURN_BOOL(false);
-		periodset_to_gbox_internal(&query, ps);
-		PG_FREE_IF_COPY(ps, 1);
-	}
 	else if (subtype == type_oid(T_GBOX))
 	{
 		GBOX *box = PG_GETARG_GBOX_P(1);
@@ -1182,34 +1152,6 @@ gist_tpoint_compress(PG_FUNCTION_ARGS)
 		PG_RETURN_POINTER(retval);
 	}
 	PG_RETURN_POINTER(entry);
-}
-
-/*****************************************************************************
- * Distance method
- *****************************************************************************/
-
-PG_FUNCTION_INFO_V1(gist_tpoint_distance);
-
-PGDLLEXPORT Datum
-gist_tpoint_distance(PG_FUNCTION_ARGS)
-{
-	GISTENTRY  *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
-	GBOX	   *key = (GBOX *)DatumGetPointer(entry->key);
-	
-	/* Oid subtype = PG_GETARG_OID(3); */
-	bool* recheck = (bool *) PG_GETARG_POINTER(4);
-	
-	/* Bounding box distance is always inexact. */
-	*recheck = true;
-	
-	Temporal *query = PG_GETARG_TEMPORAL(1);
-	if (query == NULL)
-		PG_RETURN_NULL();
-	GBOX box;
-	temporal_bbox(&box, query);
-	double result = distance_gbox_gbox_internal(key, &box);
-	PG_FREE_IF_COPY(query, 1);
-	PG_RETURN_FLOAT8(result);
 }
 
 /*****************************************************************************/

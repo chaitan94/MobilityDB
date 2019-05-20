@@ -46,19 +46,6 @@
 #define TYPMOD_SET_DURATION(typmod, durtype) ((typmod) = typmod << 4 | durtype)
 
 /*****************************************************************************
- * Indexing constants
- *****************************************************************************/
-
-/* Strategy number */
-
-#define GeoStrategyNumberGroup			23
-#define GBoxDStrategyNumberGroup		24
-#define TPointInstStrategyNumberGroup	25
-#define TPointIStrategyNumberGroup		26
-#define TPointSeqStrategyNumberGroup	27
-#define TPointSStrategyNumberGroup		28
-
-/*****************************************************************************
  * GBOX macros
  *****************************************************************************/
 
@@ -109,7 +96,7 @@ extern Datum tpoint_minus_values(PG_FUNCTION_ARGS);
 extern Datum tpoints_at_values(PG_FUNCTION_ARGS);
 
 /*****************************************************************************
- * Spatial functions defined in TemporalGeo.c
+ * Spatial functions defined in SpatialFuncs.c
  *****************************************************************************/
 
 extern char *wkt_out(Oid type, Datum value);
@@ -121,6 +108,14 @@ extern POINT4D gs_get_point4d(GSERIALIZED *gs);
 extern POINT2D datum_get_point2d(Datum value);
 extern POINT3DZ datum_get_point3dz(Datum value);
 extern bool datum_point_eq(Datum geopoint1, Datum geopoint2);
+extern void tpoint_same_srid(Temporal *temp1, Temporal *temp2);
+extern void tpoint_gs_same_srid(Temporal *temp, GSERIALIZED *gs);
+extern void tpoint_same_dimensionality(Temporal *temp1, Temporal *temp2);
+extern void tpoint_gs_same_dimensionality(Temporal *temp, GSERIALIZED *gs);
+extern void tpoint_check_Z_dimension(Temporal *temp1, Temporal *temp2);
+extern void tpoint_gs_check_Z_dimension(Temporal *temp, GSERIALIZED *gs);
+extern void gserialized_check_point(GSERIALIZED *gs);
+extern void gserialized_check_M_dimension(GSERIALIZED *gs);
 extern GSERIALIZED* geometry_serialize(LWGEOM* geom);
 
 /* Functions for output in WKT format */
@@ -138,6 +133,7 @@ extern Datum tpoint_srid(PG_FUNCTION_ARGS);
 extern Datum tpoint_set_srid(PG_FUNCTION_ARGS);
 extern Datum tgeompoint_transform(PG_FUNCTION_ARGS);
 
+extern Temporal* tpoint_set_srid_internal(Temporal* temp, int32 srid) ;
 extern int tpoint_srid_internal(Temporal *t);
 extern TemporalInst *tgeompointinst_transform(TemporalInst *inst, Datum srid);
 
@@ -158,7 +154,6 @@ extern Datum tpoint_trajectory(PG_FUNCTION_ARGS);
 extern Datum tpointseq_make_trajectory(TemporalInst **instants, int count);
 
 extern Datum geompoint_trajectory(Datum value1, Datum value2);
-extern Datum tgeompointseq_trajectory1(TemporalInst *inst1, TemporalInst *inst2);
 extern Datum tgeogpointseq_trajectory1(TemporalInst *inst1, TemporalInst *inst2);
 
 extern Datum tpointseq_trajectory(TemporalSeq *seq);
@@ -237,11 +232,9 @@ tpoints_tcentroid_transfn(FunctionCallInfo fcinfo, AggregateState *state,
 
 extern Datum geom_contains(Datum geom1, Datum geom2);
 extern Datum geom_containsproperly(Datum geom1, Datum geom2);
-extern Datum geom_containedproperlyby(Datum geom1, Datum geom2);
 extern Datum geom_covers(Datum geom1, Datum geom2);
 extern Datum geom_coveredby(Datum geom1, Datum geom2);
 extern Datum geom_crosses(Datum geom1, Datum geom2);
-extern Datum geom_crossedby(Datum geom1, Datum geom2);
 extern Datum geom_disjoint(Datum geom1, Datum geom2);
 extern Datum geom_equals(Datum geom1, Datum geom2);
 extern Datum geom_intersects2d(Datum geom1, Datum geom2);
@@ -409,7 +402,6 @@ extern GBOX *gbox_expand_spatial_internal(GBOX *box, double d);
 extern Datum geo_to_gbox(PG_FUNCTION_ARGS);
 extern Datum geo_timestamp_to_gbox(PG_FUNCTION_ARGS);
 extern Datum geo_period_to_gbox(PG_FUNCTION_ARGS);
-extern Datum tpoint_to_gbox(PG_FUNCTION_ARGS);
 
 extern bool geo_to_gbox_internal(GBOX *box, GSERIALIZED *gs);
 extern void timestamp_to_gbox_internal(GBOX *box, TimestampTz t);
@@ -421,27 +413,27 @@ extern bool geo_period_to_gbox_internal(GBOX *box, GSERIALIZED* geom, Period *p)
 
 /*****************************************************************************/
 
-extern Datum overlaps_bbox_geom_tpoint(PG_FUNCTION_ARGS);
+extern Datum overlaps_bbox_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum overlaps_bbox_gbox_tpoint(PG_FUNCTION_ARGS);
-extern Datum overlaps_bbox_tpoint_geom(PG_FUNCTION_ARGS);
+extern Datum overlaps_bbox_tpoint_geo(PG_FUNCTION_ARGS);
 extern Datum overlaps_bbox_tpoint_gbox(PG_FUNCTION_ARGS);
 extern Datum overlaps_bbox_tpoint_tpoint(PG_FUNCTION_ARGS);
 
-extern Datum contains_bbox_geom_tpoint(PG_FUNCTION_ARGS);
+extern Datum contains_bbox_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum contains_bbox_gbox_tpoint(PG_FUNCTION_ARGS);
-extern Datum contains_bbox_tpoint_geom(PG_FUNCTION_ARGS);
+extern Datum contains_bbox_tpoint_geo(PG_FUNCTION_ARGS);
 extern Datum contains_bbox_tpoint_gbox(PG_FUNCTION_ARGS);
 extern Datum contains_bbox_tpoint_tpoint(PG_FUNCTION_ARGS);
 
-extern Datum contained_bbox_geom_tpoint(PG_FUNCTION_ARGS);
+extern Datum contained_bbox_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum contained_bbox_gbox_tpoint(PG_FUNCTION_ARGS);
-extern Datum contained_bbox_tpoint_geom(PG_FUNCTION_ARGS);
+extern Datum contained_bbox_tpoint_geo(PG_FUNCTION_ARGS);
 extern Datum contained_bbox_tpoint_gbox(PG_FUNCTION_ARGS);
 extern Datum contained_bbox_tpoint_tpoint(PG_FUNCTION_ARGS);
 
-extern Datum same_bbox_geom_tpoint(PG_FUNCTION_ARGS);
+extern Datum same_bbox_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum same_bbox_gbox_tpoint(PG_FUNCTION_ARGS);
-extern Datum same_bbox_tpoint_geom(PG_FUNCTION_ARGS);
+extern Datum same_bbox_tpoint_geo(PG_FUNCTION_ARGS);
 extern Datum same_bbox_tpoint_gbox(PG_FUNCTION_ARGS);
 extern Datum same_bbox_tpoint_tpoint(PG_FUNCTION_ARGS);
 
@@ -582,7 +574,6 @@ extern Datum gist_tpoint_same(PG_FUNCTION_ARGS);
 extern Datum gist_tpoint_compress(PG_FUNCTION_ARGS);
 extern Datum gist_tpoint_decompress(PG_FUNCTION_ARGS);
 extern Datum gist_tpoint_distance(PG_FUNCTION_ARGS);
-extern Datum gist_tpoint_fetch(PG_FUNCTION_ARGS);
 
 /* The following functions are also called by IndexSpgistTPoint.c */
 extern bool index_tpoint_bbox_recheck(StrategyNumber strategy);

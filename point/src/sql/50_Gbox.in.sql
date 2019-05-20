@@ -50,27 +50,32 @@ CREATE TYPE gbox (
  * Constructors
  ******************************************************************************/
 
- CREATE OR REPLACE FUNCTION gbox(float8, float8, float8, float8)
+ CREATE FUNCTION gbox(float8, float8, float8, float8)
 	RETURNS gbox
 	AS 'MODULE_PATHNAME', 'gbox_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE OR REPLACE FUNCTION gbox(float8, float8, float8, float8, float8, float8)
+CREATE FUNCTION gbox(float8, float8, float8, float8, float8, float8)
 	RETURNS gbox
 	AS 'MODULE_PATHNAME', 'gbox_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE OR REPLACE FUNCTION gbox(float8, float8, float8, float8, float8, float8, float8, float8)
+CREATE FUNCTION gbox(float8, float8, float8, float8, float8, float8, float8, float8)
 	RETURNS gbox
 	AS 'MODULE_PATHNAME', 'gbox_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE OR REPLACE FUNCTION gbox3dm(float8, float8, float8, float8, float8, float8)
+CREATE FUNCTION gbox3dm(float8, float8, float8, float8, float8, float8)
 	RETURNS gbox
 	AS 'MODULE_PATHNAME', 'gbox3dm_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE OR REPLACE FUNCTION geodbox(float8, float8, float8, float8, float8, float8)
+CREATE FUNCTION geodbox(float8, float8, float8, float8, float8, float8)
+	RETURNS gbox
+	AS 'MODULE_PATHNAME', 'geodbox_constructor'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION geodbox(float8, float8, float8, float8, float8, float8, float8, float8)
 	RETURNS gbox
 	AS 'MODULE_PATHNAME', 'geodbox_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -87,6 +92,26 @@ CREATE FUNCTION gbox_ne(gbox, gbox)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME', 'gbox_ne'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION gbox_lt(gbox, gbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'gbox_lt'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION gbox_le(gbox, gbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'gbox_le'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION gbox_ge(gbox, gbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'gbox_ge'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION gbox_gt(gbox, gbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'gbox_gt'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION gbox_cmp(gbox, gbox)
+	RETURNS int4
+	AS 'MODULE_PATHNAME', 'gbox_cmp'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR = (
 	LEFTARG = gbox, RIGHTARG = gbox,
@@ -102,5 +127,38 @@ CREATE OPERATOR <> (
 	NEGATOR = =,
 	RESTRICT = neqsel, JOIN = neqjoinsel
 );
+CREATE OPERATOR < (
+	PROCEDURE = gbox_lt,
+	LEFTARG = gbox, RIGHTARG = gbox,
+	COMMUTATOR = >, NEGATOR = >=,
+	RESTRICT = areasel, JOIN = areajoinsel 
+);
+CREATE OPERATOR <= (
+	PROCEDURE = gbox_le,
+	LEFTARG = gbox, RIGHTARG = gbox,
+	COMMUTATOR = >=, NEGATOR = >,
+	RESTRICT = areasel, JOIN = areajoinsel 
+);
+CREATE OPERATOR >= (
+	PROCEDURE = gbox_ge,
+	LEFTARG = gbox, RIGHTARG = gbox,
+	COMMUTATOR = <=, NEGATOR = <,
+	RESTRICT = areasel, JOIN = areajoinsel
+);
+CREATE OPERATOR > (
+	PROCEDURE = gbox_gt,
+	LEFTARG = gbox, RIGHTARG = gbox,
+	COMMUTATOR = <, NEGATOR = <=,
+	RESTRICT = areasel, JOIN = areajoinsel
+);
+
+CREATE OPERATOR CLASS gbox_ops
+	DEFAULT FOR TYPE gbox USING btree AS
+	OPERATOR	1	< ,
+	OPERATOR	2	<= ,
+	OPERATOR	3	= ,
+	OPERATOR	4	>= ,
+	OPERATOR	5	> ,
+	FUNCTION	1	gbox_cmp(gbox, gbox);
 
 /*****************************************************************************/

@@ -1,40 +1,61 @@
 ﻿-------------------------------------------------------------------------------
--- Tests for timestamp set data type.
+-- Tests for timestampset data type.
 -- File TimestampSet.c
 -------------------------------------------------------------------------------
 
-select memSize(timestampset '{2000-01-01}');
-select memSize(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
+-------------------------------------------------------------------------------
+-- Constructor
+-------------------------------------------------------------------------------
 
-select timespan(timestampset '{2000-01-01}');
-select timespan(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
+SELECT timestampset(ARRAY [timestamptz '2000-01-01', '2000-01-02', '2000-01-03']);
+/* Errors */
+SELECT timestampset(ARRAY [timestamptz '2000-01-01', '2000-01-01', '2000-01-03']);
+SELECT timestampset('{}'::timestamptz[]);
 
-select numTimestamps(timestampset '{2000-01-01}');
-select numTimestamps(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
+-------------------------------------------------------------------------------
+-- Casting
+-------------------------------------------------------------------------------
 
-select startTimestamp(timestampset '{2000-01-01}');
-select startTimestamp(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
+SELECT timestampset(timestamptz '2000-01-01');
+SELECT timestamptz '2000-01-01'::timestampset;
 
-select endTimestamp(timestampset '{2000-01-01}');
-select endTimestamp(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
+-------------------------------------------------------------------------------
+-- Functions
+-------------------------------------------------------------------------------
 
-select timestampN(timestampset '{2000-01-01}', 1);
-select timestampN(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}', 1);
-select timestampN(timestampset '{2000-01-01}', 2);
-select timestampN(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}', 4);
+SELECT memSize(timestampset '{2000-01-01}');
+SELECT memSize(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
 
-select timestamps(timestampset '{2000-01-01}');
-select timestamps(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
+SELECT timespan(timestampset '{2000-01-01}');
+SELECT timespan(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
 
-select shift(timestampset '{2000-01-01}', '5 min');
-select shift(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}', '5 min');
+SELECT numTimestamps(timestampset '{2000-01-01}');
+SELECT numTimestamps(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
 
-select timestampset_cmp(timestampset '{2000-01-01}', timestampset '{2000-01-01, 2000-01-02, 2000-01-03}') = -1;
-select timestampset '{2000-01-01}' = timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
-select timestampset '{2000-01-01}' <> timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
-select timestampset '{2000-01-01}' < timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
-select timestampset '{2000-01-01}' <= timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
-select timestampset '{2000-01-01}' > timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
-select timestampset '{2000-01-01}' >= timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
+SELECT startTimestamp(timestampset '{2000-01-01}');
+SELECT startTimestamp(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
+
+SELECT endTimestamp(timestampset '{2000-01-01}');
+SELECT endTimestamp(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
+
+SELECT timestampN(timestampset '{2000-01-01}', 1);
+SELECT timestampN(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}', 1);
+SELECT timestampN(timestampset '{2000-01-01}', 2);
+SELECT timestampN(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}', 4);
+
+SELECT timestamps(timestampset '{2000-01-01}');
+SELECT timestamps(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}');
+
+SELECT shift(timestampset '{2000-01-01}', '5 min');
+SELECT shift(timestampset '{2000-01-01, 2000-01-02, 2000-01-03}', '5 min');
+
+SELECT timestampset_cmp(timestampset '{2000-01-01}', timestampset '{2000-01-01, 2000-01-02, 2000-01-03}') = -1;
+SELECT timestampset '{2000-01-01}' = timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
+SELECT timestampset '{2000-01-01}' <> timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
+SELECT timestampset '{2000-01-01}' < timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
+SELECT timestampset '{2000-01-01, 2000-01-02, 2000-01-03}' < timestampset '{2000-01-01}';
+SELECT timestampset '{2000-01-01}' <= timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
+SELECT timestampset '{2000-01-01}' > timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
+SELECT timestampset '{2000-01-01}' >= timestampset '{2000-01-01, 2000-01-02, 2000-01-03}';
 
 -------------------------------------------------------------------------------

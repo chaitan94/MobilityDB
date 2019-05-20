@@ -117,7 +117,7 @@ temporalinst_make(Datum value, TimestampTz t, Oid valuetypid)
 		memcpy(value_to, value_from, value_size);
 	}
 	/* Initialize fixed-size values */
-	result->type = TEMPORALINST;
+	result->duration = TEMPORALINST;
 	result->valuetypid = valuetypid;
 	result->t = t;
 	SET_VARSIZE(result, size);
@@ -142,15 +142,6 @@ temporalinst_copy(TemporalInst *inst)
 	TemporalInst *result = palloc0(VARSIZE(inst));
 	memcpy(result, inst, VARSIZE(inst));
 	return result;
-}
-
-/* Convert a temporal number into a float range */
-RangeType *
-tnumberinst_floatrange(TemporalInst *inst)
-{
-	Datum value = temporalinst_value(inst);
-	double d = datum_double(value, inst->valuetypid);
-	return range_make(d, d, true, true, FLOAT8OID);
 }
 
 /*****************************************************************************
@@ -190,6 +181,7 @@ temporalinst_write(TemporalInst *inst, StringInfo buf)
 	bytea *bt = call_send(TIMESTAMPTZOID, inst->t);
 	bytea *bv = call_send(inst->valuetypid, temporalinst_value(inst));
 	pq_sendbytes(buf, VARDATA(bt), VARSIZE(bt) - VARHDRSZ);
+	pq_sendint32(buf, VARSIZE(bv) - VARHDRSZ) ;
 	pq_sendbytes(buf, VARDATA(bv), VARSIZE(bv) - VARHDRSZ);
 }
 
@@ -200,7 +192,15 @@ TemporalInst *
 temporalinst_read(StringInfo buf, Oid valuetypid)
 {
 	TimestampTz t = call_recv(TIMESTAMPTZOID, buf);
-	Datum value = call_recv(valuetypid, buf);
+	int size = pq_getmsgint(buf, 4) ;
+	StringInfoData buf2 = {
+			.cursor = 0,
+			.len = size,
+			.maxlen = size,
+			.data = buf->data + buf->cursor
+	} ;	
+	Datum value = call_recv(valuetypid, &buf2);
+	buf->cursor += size ;
 	return temporalinst_make(value, t, valuetypid);
 }
 
@@ -444,7 +444,7 @@ tnumberinst_at_range(TemporalInst *inst, RangeType *range)
 {
 	/* Operations on range types require that they must be of the same type */
 	Datum d = Float8GetDatum(datum_double(temporalinst_value(inst), inst->valuetypid));
-	RangeType *range1 = numrange_to_floatrange_internal(range);
+	RangeType *range1 = numrange_to_floatrange(range);
 	TypeCacheEntry* typcache = lookup_type_cache(range1->rangetypid, TYPECACHE_RANGE_INFO);
 	bool contains = range_contains_elem_internal(typcache, range1, d);
 	pfree(range1);
@@ -460,7 +460,7 @@ tnumberinst_minus_range(TemporalInst *inst, RangeType *range)
 {
 	/* Operations on range types require that they must be of the same type */
 	Datum d = Float8GetDatum(datum_double(temporalinst_value(inst), inst->valuetypid));
-	RangeType *range1 = numrange_to_floatrange_internal(range);
+	RangeType *range1 = numrange_to_floatrange(range);
 	TypeCacheEntry* typcache = lookup_type_cache(range1->rangetypid, TYPECACHE_RANGE_INFO);
 	bool contains = range_contains_elem_internal(typcache, range1, d);
 	pfree(range1);
@@ -480,7 +480,7 @@ tnumberinst_at_ranges(TemporalInst *inst, RangeType **normranges, int count)
 	bool contains = false;
 	for (int i = 0; i < count; i++)
 	{
-		RangeType *range = numrange_to_floatrange_internal(normranges[i]);
+		RangeType *range = numrange_to_floatrange(normranges[i]);
 		TypeCacheEntry *typcache = lookup_type_cache(range->rangetypid, 
 			TYPECACHE_RANGE_INFO);
 		contains = range_contains_elem_internal(typcache, range, d);
@@ -502,7 +502,7 @@ tnumberinst_minus_ranges(TemporalInst *inst, RangeType **normranges, int count)
 	bool contains = false;
 	for (int i = 0; i < count; i++)
 	{
-		RangeType *range = numrange_to_floatrange_internal(normranges[i]);
+		RangeType *range = numrange_to_floatrange(normranges[i]);
 		TypeCacheEntry *typcache = lookup_type_cache(range->rangetypid, 
 			TYPECACHE_RANGE_INFO);
 		contains = range_contains_elem_internal(typcache, range, d);
@@ -656,14 +656,6 @@ temporalinst_intersects_periodset(TemporalInst *inst, PeriodSet *ps)
 		if (contains_period_timestamp_internal(periodset_per_n(ps, i), inst->t))
 			return true;
 	return false;
-}
-
-/* Does the temporal values intersect? */
-
-bool
-temporalinst_intersects_temporalinst(TemporalInst *inst1, TemporalInst *inst2)
-{
-	return timestamp_cmp_internal(inst1->t, inst2->t) == 0;
 }
 
 /*****************************************************************************

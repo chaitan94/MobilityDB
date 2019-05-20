@@ -24,6 +24,7 @@
  * 		GBOX M((1.0, 2.0, 3.0), (1.0, 2.0, 3.0))
  * 		GBOX ZM((1.0, 2.0, 3.0, 4.0), (1.0, 2.0, 3.0, 4.0))
  * 		GEODBOX((1.0, 2.0, 3.0), (1.0, 2.0, 3.0))
+ * 		GEODBOX M((1.0, 2.0, 3.0, 4.0), (1.0, 2.0, 3.0, 4.0))
  */
 PG_FUNCTION_INFO_V1(gbox_in);
 
@@ -42,16 +43,11 @@ char* gbox_to_string_mdb(const GBOX *gbox)
 {
 	static int sz = 256;
 	char *str = NULL;
-
-	if ( ! gbox )
-		return strdup("NULL POINTER");
-
 	str = (char *)palloc(sz);
-
 	if ( FLAGS_GET_GEODETIC(gbox->flags) )
 	{
 		if (FLAGS_GET_M(gbox->flags))
-			snprintf(str, sz, "GEODBOX((%.8g,%.8g,%.8g,%.8g),(%.8g,%.8g,%.8g,%.8g))", 
+			snprintf(str, sz, "GEODBOX M((%.8g,%.8g,%.8g,%.8g),(%.8g,%.8g,%.8g,%.8g))", 
 				gbox->xmin, gbox->ymin, gbox->zmin, gbox->mmin, 
 				gbox->xmax, gbox->ymax, gbox->zmax, gbox->mmax);
 		else
@@ -107,25 +103,25 @@ PG_FUNCTION_INFO_V1(gbox_constructor);
 PGDLLEXPORT Datum
 gbox_constructor(PG_FUNCTION_ARGS)
 {
-	double xmin, xmax, ymin, ymax, 
-		zmin = 0, zmax = 0, mmin = 0, mmax = 0, /* keep compiler quiet */
+	assert(PG_NARGS() == 4 || PG_NARGS() == 6 || PG_NARGS() == 8);
+	double zmin = 0, zmax = 0, mmin = 0, mmax = 0, /* keep compiler quiet */
 		tmp;
 	int hasz = 0, hasm = 0;
 
-	xmin = PG_GETARG_FLOAT8(0);
-	xmax = PG_GETARG_FLOAT8(1);
-	ymin = PG_GETARG_FLOAT8(2);
-	ymax = PG_GETARG_FLOAT8(3);
+	double xmin = PG_GETARG_FLOAT8(0);
+	double xmax = PG_GETARG_FLOAT8(1);
+	double ymin = PG_GETARG_FLOAT8(2);
+	double ymax = PG_GETARG_FLOAT8(3);
 
-	if ( PG_NARGS() == 4 )
+	if (PG_NARGS() == 4)
 		;
-	else if ( PG_NARGS() == 6 )
+	else if (PG_NARGS() == 6)
 	{
 		zmin = PG_GETARG_FLOAT8(4);
 		zmax = PG_GETARG_FLOAT8(5);
 		hasz = 1;
 	}
-	else if ( PG_NARGS() == 8 )
+	else if (PG_NARGS() == 8)
 	{
 		zmin = PG_GETARG_FLOAT8(4);
 		zmax = PG_GETARG_FLOAT8(5);
@@ -134,16 +130,11 @@ gbox_constructor(PG_FUNCTION_ARGS)
 		hasz = 1;
 		hasm = 1;
 	}
-	else
-	{
-		elog(ERROR, "Unsupported number of args: %d", PG_NARGS());
-		PG_RETURN_NULL();
-	}
 
 	GBOX *result = gbox_new(gflags(hasz, hasm, 0));
 	
 	/* Process X min/max */
-	if ( xmin > xmax )
+	if (xmin > xmax)
 	{
 		tmp = xmin;
 		xmin = xmax;
@@ -153,7 +144,7 @@ gbox_constructor(PG_FUNCTION_ARGS)
 	result->xmax = xmax;
 
 	/* Process Y min/max */
-	if ( ymin > ymax )
+	if (ymin > ymax)
 	{
 		tmp = ymin;
 		ymin = ymax;
@@ -163,24 +154,32 @@ gbox_constructor(PG_FUNCTION_ARGS)
 	result->ymax = ymax;
 
 	/* Process Z min/max */
-	if ( hasz != 0 && zmin > zmax )
+	if (hasz != 0)
 	{
-		tmp = zmin;
-		zmin = zmax;
-		zmax = tmp;
+		if (zmin > zmax)
+		{
+			tmp = zmin;
+			zmin = zmax;
+			zmax = tmp;
+		}
+		result->zmin = zmin;
+		result->zmax = zmax;
+		FLAGS_SET_Z(result->flags, true);
 	}
-	result->zmin = zmin;
-	result->zmax = zmax;
 
 	/* Process M min/max */
-	if ( hasm != 0 && mmin > mmax )
+	if (hasm != 0)
 	{
-		tmp = mmin;
-		mmin = mmax;
-		mmax = tmp;
+		if ( hasm != 0 && mmin > mmax )
+		{
+			tmp = mmin;
+			mmin = mmax;
+			mmax = tmp;
+		}
+		result->mmin = mmin;
+		result->mmax = mmax;
+		FLAGS_SET_M(result->flags, true);
 	}
-	result->mmin = mmin;
-	result->mmax = mmax;
 
 	PG_RETURN_POINTER(result);
 }
@@ -203,7 +202,7 @@ gbox3dm_constructor(PG_FUNCTION_ARGS)
 	GBOX *result = gbox_new(gflags(0, 1, 0));
 	
 	/* Process X min/max */
-	if ( xmin > xmax )
+	if (xmin > xmax)
 	{
 		tmp = xmin;
 		xmin = xmax;
@@ -213,7 +212,7 @@ gbox3dm_constructor(PG_FUNCTION_ARGS)
 	result->xmax = xmax;
 
 	/* Process Y min/max */
-	if ( ymin > ymax )
+	if (ymin > ymax)
 	{
 		tmp = ymin;
 		ymin = ymax;
@@ -223,7 +222,7 @@ gbox3dm_constructor(PG_FUNCTION_ARGS)
 	result->ymax = ymax;
 
 	/* Process M min/max */
-	if ( mmin > mmax )
+	if (mmin > mmax)
 	{
 		tmp = mmin;
 		mmin = mmax;
@@ -231,6 +230,7 @@ gbox3dm_constructor(PG_FUNCTION_ARGS)
 	}
 	result->mmin = mmin;
 	result->mmax = mmax;
+	FLAGS_SET_M(result->flags, true);
 
 	PG_RETURN_POINTER(result);
 }
@@ -240,19 +240,29 @@ PG_FUNCTION_INFO_V1(geodbox_constructor);
 PGDLLEXPORT Datum
 geodbox_constructor(PG_FUNCTION_ARGS)
 {
-	double xmin, xmax, ymin, ymax, zmin, zmax, tmp;
+	assert(PG_NARGS() == 6 || PG_NARGS() == 8);
+	double mmin, mmax, tmp;
+	int hasm = 0;
 
-	xmin = PG_GETARG_FLOAT8(0);
-	xmax = PG_GETARG_FLOAT8(1);
-	ymin = PG_GETARG_FLOAT8(2);
-	ymax = PG_GETARG_FLOAT8(3);
-	zmin = PG_GETARG_FLOAT8(4);
-	zmax = PG_GETARG_FLOAT8(5);
+	double xmin = PG_GETARG_FLOAT8(0);
+	double xmax = PG_GETARG_FLOAT8(1);
+	double ymin = PG_GETARG_FLOAT8(2);
+	double ymax = PG_GETARG_FLOAT8(3);
+	double zmin = PG_GETARG_FLOAT8(4);
+	double zmax = PG_GETARG_FLOAT8(5);
+	if (PG_NARGS() == 6)
+		;
+	else if (PG_NARGS() == 8)
+	{
+		mmin = PG_GETARG_FLOAT8(6);
+		mmax = PG_GETARG_FLOAT8(7);
+		hasm = 1;
+	}
 
-	GBOX *result = gbox_new(gflags(1, 0, 1));
+	GBOX *result = gbox_new(gflags(1, hasm, 1));
 	
 	/* Process X min/max */
-	if ( xmin > xmax )
+	if (xmin > xmax)
 	{
 		tmp = xmin;
 		xmin = xmax;
@@ -262,7 +272,7 @@ geodbox_constructor(PG_FUNCTION_ARGS)
 	result->xmax = xmax;
 
 	/* Process Y min/max */
-	if ( ymin > ymax )
+	if (ymin > ymax)
 	{
 		tmp = ymin;
 		ymin = ymax;
@@ -272,7 +282,7 @@ geodbox_constructor(PG_FUNCTION_ARGS)
 	result->ymax = ymax;
 
 	/* Process Z min/max */
-	if ( zmin > zmax )
+	if (zmin > zmax)
 	{
 		tmp = zmin;
 		zmin = zmax;
@@ -280,52 +290,24 @@ geodbox_constructor(PG_FUNCTION_ARGS)
 	}
 	result->zmin = zmin;
 	result->zmax = zmax;
+	FLAGS_SET_Z(result->flags, true);
+
+	if (hasm)
+	{
+		/* Process M min/max */
+		if ( mmin > mmax )
+		{
+			tmp = mmin;
+			mmin = mmax;
+			mmax = tmp;
+		}
+		result->mmin = mmin;
+		result->mmax = mmax;
+		FLAGS_SET_M(result->flags, true);
+	}
+
 
 	PG_RETURN_POINTER(result);
-}
-
-/*****************************************************************************/
-
-/*
- * Does the first box contains the second one?
- */
-int 
-gbox_contains(const GBOX *g1, const GBOX *g2)
-{
-	/* Make sure our boxes are consistent */
-	if ( FLAGS_GET_GEODETIC(g1->flags) != FLAGS_GET_GEODETIC(g2->flags) )
-		elog(ERROR, "gbox_contains: cannot compare geodetic and non-geodetic boxes");
-
-	/* Check X/Y first */
-	if ( ( g2->xmin < g1->xmin ) || ( g2->xmax > g1->xmax ) ||
-		 ( g2->ymin < g1->ymin ) || ( g2->ymax > g1->ymax ) )
-		return LW_FALSE;
-
-	/* Deal with the geodetic case special: we only compare the geodetic boxes (x/y/z) */
-	/* Never the M dimension */
-	if ( FLAGS_GET_GEODETIC(g1->flags) && FLAGS_GET_GEODETIC(g2->flags) )
-	{
-		if ( g2->zmin < g1->zmin || g2->zmax > g1->zmax )
-			return LW_FALSE;
-		else
-			return LW_TRUE;
-	}
-
-	/* If both geodetic or both have Z, check Z */
-	if ( FLAGS_GET_Z(g1->flags) && FLAGS_GET_Z(g2->flags) )
-	{
-		if ( g2->zmin < g1->zmin || g2->zmax > g1->zmax )
-			return LW_FALSE;
-	}
-
-	/* If both have M, check M */
-	if ( FLAGS_GET_M(g1->flags) && FLAGS_GET_M(g2->flags) )
-	{
-		if ( g2->mmin < g1->mmin || g2->mmax > g1->mmax )
-			return LW_FALSE;
-	}
-
-	return LW_TRUE;
 }
 
 /*
@@ -384,6 +366,76 @@ gbox_cmp_internal(const GBOX *g1, const GBOX *g2)
 	return 0;
 }
 
+PG_FUNCTION_INFO_V1(gbox_cmp);
+
+PGDLLEXPORT Datum
+gbox_cmp(PG_FUNCTION_ARGS)
+{
+	GBOX *box1 = PG_GETARG_GBOX_P(0);
+	GBOX *box2 = PG_GETARG_GBOX_P(1);
+	int	cmp = gbox_cmp_internal(box1, box2);
+	PG_RETURN_INT32(cmp);
+}
+
+PG_FUNCTION_INFO_V1(gbox_lt);
+
+PGDLLEXPORT Datum
+gbox_lt(PG_FUNCTION_ARGS)
+{
+	GBOX *box1 = PG_GETARG_GBOX_P(0);
+	GBOX *box2 = PG_GETARG_GBOX_P(1);
+	int	cmp = gbox_cmp_internal(box1, box2);
+	PG_RETURN_BOOL(cmp < 0);
+}
+
+PG_FUNCTION_INFO_V1(gbox_le);
+
+PGDLLEXPORT Datum
+gbox_le(PG_FUNCTION_ARGS)
+{
+	GBOX *box1 = PG_GETARG_GBOX_P(0);
+	GBOX *box2 = PG_GETARG_GBOX_P(1);
+	int	cmp = gbox_cmp_internal(box1, box2);
+	PG_RETURN_BOOL(cmp <= 0);
+}
+
+PG_FUNCTION_INFO_V1(gbox_ge);
+
+PGDLLEXPORT Datum
+gbox_ge(PG_FUNCTION_ARGS)
+{
+	GBOX *box1 = PG_GETARG_GBOX_P(0);
+	GBOX *box2 = PG_GETARG_GBOX_P(1);
+	int	cmp = gbox_cmp_internal(box1, box2);
+	PG_RETURN_BOOL(cmp >= 0);
+}
+
+PG_FUNCTION_INFO_V1(gbox_gt);
+
+PGDLLEXPORT Datum
+gbox_gt(PG_FUNCTION_ARGS)
+{
+	GBOX *box1 = PG_GETARG_GBOX_P(0);
+	GBOX *box2 = PG_GETARG_GBOX_P(1);
+	int	cmp = gbox_cmp_internal(box1, box2);
+	PG_RETURN_BOOL(cmp > 0);
+}
+
+/*
+ * Equality and inequality of two boxes
+ */
+bool
+gbox_eq_internal(const GBOX *box1, const GBOX *box2)
+{
+	if (box1->xmin != box2->xmin || box1->ymin != box2->ymin ||
+		box1->zmin != box2->zmin || box1->mmin != box2->mmin ||
+		box1->xmax != box2->xmax || box1->ymax != box2->ymax ||
+		box1->zmax != box2->zmax || box1->mmax != box2->mmax)
+		return false;
+	/* The two boxes are equal */
+	return true;
+}
+
 PG_FUNCTION_INFO_V1(gbox_eq);
 
 PGDLLEXPORT Datum
@@ -391,11 +443,7 @@ gbox_eq(PG_FUNCTION_ARGS)
 {
 	GBOX *box1 = PG_GETARG_GBOX_P(0);
 	GBOX *box2 = PG_GETARG_GBOX_P(1);
-	int cmp = gbox_cmp_internal(box1, box2);
-	if (cmp == 0)
-		PG_RETURN_BOOL(true);
-	else
-		PG_RETURN_BOOL(false);
+	PG_RETURN_BOOL(gbox_eq_internal(box1, box2));
 }
 
 PG_FUNCTION_INFO_V1(gbox_ne);
@@ -405,11 +453,7 @@ gbox_ne(PG_FUNCTION_ARGS)
 {
 	GBOX *box1 = PG_GETARG_GBOX_P(0);
 	GBOX *box2 = PG_GETARG_GBOX_P(1);
-	int cmp = gbox_cmp_internal(box1, box2);
-	if (cmp != 0)
-		PG_RETURN_BOOL(true);
-	else
-		PG_RETURN_BOOL(false);
+	PG_RETURN_BOOL(! gbox_eq_internal(box1, box2));
 }
 
 /*****************************************************************************/

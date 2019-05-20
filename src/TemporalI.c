@@ -88,9 +88,7 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 {
 	Oid valuetypid = instants[0]->valuetypid;
 	/* Test the validity of the instants */
-	if (count < 1)
-		ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
-			errmsg("A temporal instant set must have at least one temporal instant")));
+	assert(count > 0);
 #ifdef WITH_POSTGIS
 	bool isgeo = false, hasz;
 	int srid;
@@ -133,7 +131,7 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 	SET_VARSIZE(result, pdata + memsize);
 	result->count = count;
 	result->valuetypid = valuetypid;
-	result->type = TEMPORALI;
+	result->duration = TEMPORALI;
 #ifdef WITH_POSTGIS
 	if (isgeo)
 		MOBDB_FLAGS_SET_Z(result->flags, hasz);
@@ -210,17 +208,6 @@ temporalinstarr_find_timestamp(TemporalInst **array, int from, int count,
 		middle = (first + last)/2;
 	}
 	return middle;
-}
-
-/* Range of a Temporali expressed as a floatrange */
-
-RangeType *
-tnumberi_floatrange(TemporalI *ti)
-{
-	BOX *box = temporali_bbox_ptr(ti);
-	Datum min = Float8GetDatum(box->low.x);
-	Datum max = Float8GetDatum(box->high.x);
-	return range_make(min, max, true, true, FLOAT8OID);
 }
 
 /*****************************************************************************
@@ -515,7 +502,8 @@ RangeType *
 tnumberi_value_range(TemporalI *ti)
 {
 	BOX *box = temporali_bbox_ptr(ti);
-	Datum min, max;
+	Datum min = 0, max = 0;
+	temporal_number_is_valid(ti->valuetypid);
 	if (ti->valuetypid == INT4OID)
 	{
 		min = Int32GetDatum((int)(box->low.x));
@@ -526,9 +514,6 @@ tnumberi_value_range(TemporalI *ti)
 		min = Float8GetDatum(box->low.x);
 		max = Float8GetDatum(box->high.x);
 	}
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return range_make(min, max, true, true, ti->valuetypid);
 }
 
@@ -596,19 +581,6 @@ temporali_max_value(TemporalI *ti)
 		}
 		return temporalinst_value(temporali_inst_n(ti, idx));
 	}
-}
-
-/* Set of instants on which the temporal value is defined */
-
-TimestampSet *
-temporali_time(TemporalI *ti)
-{
-	TimestampTz *times = palloc(sizeof(Timestamp) * ti->count);
-	for (int i = 0; i < ti->count; i++) 
-		times[i] = (temporali_inst_n(ti, i))->t;
-	TimestampSet *result = timestampset_from_timestamparr_internal(times, ti->count);
-	pfree(times);
-	return result;
 }
 
 /* Bounding period on which the temporal value is defined */
@@ -727,14 +699,19 @@ temporali_always_equals(TemporalI *ti, Datum value)
 TemporalI *
 temporali_shift(TemporalI *ti, Interval *interval)
 {
-	TemporalI *result = temporali_copy(ti);
+   	TemporalI *result = temporali_copy(ti);
+	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
 	for (int i = 0; i < ti->count; i++)
 	{
-		TemporalInst *inst = temporali_inst_n(result, i);
+		TemporalInst *inst = instants[i] = temporali_inst_n(result, i);
 		inst->t = DatumGetTimestampTz(
 			DirectFunctionCall2(timestamptz_pl_interval,
 			TimestampTzGetDatum(inst->t), PointerGetDatum(interval)));
 	}
+	/* Recompute the bounding box */
+    void *bbox = temporali_bbox_ptr(result); 
+    temporali_make_bbox(bbox, instants, ti->count);
+    pfree(instants);
 	return result;
 }
 
@@ -761,9 +738,8 @@ temporali_at_value(TemporalI *ti, Datum value)
 	/* Singleton instant set */
 	if (ti->count == 1)
 	{
-		TemporalInst *inst = temporalinst_at_value(temporali_inst_n(ti, 0), 
-			value);
-		if (inst == NULL)
+		if (datum_ne(value, temporalinst_value(temporali_inst_n(ti, 0)), 
+			valuetypid))
 			return NULL;
 		return temporali_copy(ti);
 	}
@@ -802,9 +778,8 @@ temporali_minus_value(TemporalI *ti, Datum value)
 	/* Singleton instant set */
 	if (ti->count == 1)
 	{
-		TemporalInst *inst = temporalinst_minus_value(temporali_inst_n(ti, 0), 
-			value);
-		if (inst == NULL)
+		if (datum_eq(value, temporalinst_value(temporali_inst_n(ti, 0)), 
+			valuetypid))
 			return NULL;
 		return temporali_copy(ti);
 	}
@@ -915,7 +890,7 @@ tnumberi_at_range(TemporalI *ti, RangeType *range)
 	/* Bounding box test */
 	BOX box1, box2;
 	temporali_bbox(&box1, ti);
-	range_to_box(&box2, range);
+	range_to_box_internal(&box2, range);
 	if (!overlaps_box_box_internal(&box1, &box2))
 		return NULL;
 
@@ -954,7 +929,7 @@ tnumberi_minus_range(TemporalI *ti, RangeType *range)
 	/* Bounding box test */
 	BOX box1, box2;
 	temporali_bbox(&box1, ti);
-	range_to_box(&box2, range);
+	range_to_box_internal(&box2, range);
 	if (!overlaps_box_box_internal(&box1, &box2))
 		return temporali_copy(ti);
 
@@ -1202,7 +1177,7 @@ temporali_at_timestampset(TemporalI *ti, TimestampSet *ts)
 	if (!overlaps_period_period_internal(&p1, p2))
 		return NULL;
 
-	/* Singleton instant set */
+	/* Singleton timestamp set */
 	if (ti->count == 1)
 	{
 		TemporalInst *inst = temporali_inst_n(ti, 0);
@@ -1358,6 +1333,10 @@ temporali_at_periodset(TemporalI *ti, PeriodSet *ps)
 	if (!overlaps_period_period_internal(&p1, p2))
 		return NULL;
 
+	/* Singleton period set */
+	if (ps->count == 1)
+		return temporali_at_period(ti, periodset_per_n(ps, 0));
+
 	/* Singleton instant set */
 	if (ti->count == 1)
 	{
@@ -1396,6 +1375,10 @@ temporali_minus_periodset(TemporalI *ti, PeriodSet *ps)
 	Period *p2 = periodset_bbox(ps);
 	if (!overlaps_period_period_internal(&p1, p2))
 		return temporali_copy(ti);
+
+	/* Singleton period set */
+	if (ps->count == 1)
+		return temporali_minus_period(ti, periodset_per_n(ps, 0));
 
 	/* Singleton instant set */
 	if (ti->count == 1)
@@ -1472,26 +1455,6 @@ temporali_intersects_periodset(TemporalI *ti, PeriodSet *ps)
 	for (int i = 0; i < ps->count; i++)
 		if (temporali_intersects_period(ti, periodset_per_n(ps, i))) 
 			return true;
-	return false;
-}
-
-/* Does the two temporal values intersect on the time dimension? */
-
-bool
-temporali_intersects_temporalinst(TemporalI *ti, TemporalInst *inst)
-{
-	return temporali_intersects_timestamp(ti, inst->t);
-}
-
-bool
-temporali_intersects_temporali(TemporalI *ti1, TemporalI *ti2)
-{
-	for (int i = 0; i < ti2->count; i++)
-	{
-		TemporalInst *inst = temporali_inst_n(ti2, i);
-		if (temporali_intersects_timestamp(ti1, inst->t)) 
-			return true;
-	}
 	return false;
 }
 

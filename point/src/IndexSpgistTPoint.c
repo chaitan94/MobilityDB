@@ -64,7 +64,7 @@
  * that we don't yet have as infinity.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
- * 		Universit� Libre de Bruxelles
+ * 		Universite Libre de Bruxelles
  * Portions Copyright (c) 1996-2016, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
@@ -586,18 +586,6 @@ spgist_tpoint_inner_consistent(PG_FUNCTION_ARGS)
 		else if (subtype == type_oid(T_NPOINT))
 			npoint_to_gbox_internal(&queries[i], 
 				DatumGetNpoint(in->scankeys[i].sk_argument));
-		else if (subtype == TIMESTAMPTZOID)
-			timestamp_to_gbox_internal(&queries[i],
-				DatumGetTimestamp(in->scankeys[i].sk_argument));
-		else if (subtype == type_oid(T_TIMESTAMPSET))
-			timestampset_to_gbox_internal(&queries[i],
-				DatumGetTimestampSet(in->scankeys[i].sk_argument));
-		else if (subtype == type_oid(T_PERIOD))
-			period_to_gbox_internal(&queries[i],
-				DatumGetPeriod(in->scankeys[i].sk_argument));
-		else if (subtype == type_oid(T_PERIODSET))
-			periodset_to_gbox_internal(&queries[i],
-				DatumGetPeriodSet(in->scankeys[i].sk_argument));
 		else if (subtype == type_oid(T_GBOX))
 			memcpy(&queries[i], DatumGetGboxP(in->scankeys[i].sk_argument), sizeof(GBOX));
 		else if (temporal_oid(subtype))
@@ -763,30 +751,6 @@ spgist_tpoint_leaf_consistent(PG_FUNCTION_ARGS)
 				res = false;
 			else
 				res = index_leaf_consistent_gbox(key, &query, strategy);
-		}
-		else if (subtype == TIMESTAMPTZOID)
-		{
-			TimestampTz t = DatumGetTimestamp(in->scankeys[i].sk_argument);
-			timestamp_to_gbox_internal(&query, t);
-			res = index_leaf_consistent_gbox(key, &query, strategy);
-		}
-		else if (subtype == type_oid(T_TIMESTAMPSET))
-		{
-			TimestampSet *ts = DatumGetTimestampSet(in->scankeys[i].sk_argument);
-			timestampset_to_gbox_internal(&query, ts);
-			res = index_leaf_consistent_gbox(key, &query, strategy);
-		}
-		else if (subtype == type_oid(T_PERIOD))
-		{
-			Period *p = DatumGetPeriod(in->scankeys[i].sk_argument);
-			period_to_gbox_internal(&query, p);
-			res = index_leaf_consistent_gbox(key, &query, strategy);
-		}
-		else if (subtype == type_oid(T_PERIODSET))
-		{
-			PeriodSet *ps = DatumGetPeriodSet(in->scankeys[i].sk_argument);
-			periodset_to_gbox_internal(&query, ps);
-			res = index_leaf_consistent_gbox(key, &query, strategy);
 		}
 		else if (subtype == type_oid(T_GBOX))
 		{

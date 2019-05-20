@@ -969,9 +969,9 @@ CREATE FUNCTION isContinuousInTime(ttext)
 	AS 'MODULE_PATHNAME', 'temporals_continuous_time'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-/******************************************************************************
- * Restriction functions
- ******************************************************************************/
+-------------------------------------------------------------------------------
+-- Restriction functions
+-------------------------------------------------------------------------------
 
 CREATE FUNCTION atValue(tbool, boolean)
 	RETURNS tbool

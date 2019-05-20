@@ -63,9 +63,7 @@ Period *
 periodset_bbox(PeriodSet *ps) 
 {
 	size_t *offsets = periodset_offsets_ptr(ps);
-	if (offsets[ps->count] == 0)
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("The period set has no bounding box")));
+	assert(offsets[ps->count] != 0);
 	return (Period *)(periodset_data_ptr(ps) + offsets[ps->count]);
 }
 
@@ -170,22 +168,6 @@ periodset_find_timestamp(PeriodSet *ps, TimestampTz t, int *pos)
 	return false;
 }
 
-/* Duration of the PeriodSet as a double */
-
-double
-periodset_duration_time(PeriodSet *ps)
-{
-	double result = 0;
-	for (int i = 0; i < ps->count; i++)
-	{
-		Period *p = periodset_per_n(ps, i);
-		double lower = (double)(p->lower);
-		double upper = (double)(p->upper);
-		result += (upper - lower);
-	}
-	return result;
-}
-
 /*****************************************************************************
  * Input/output functions
  *****************************************************************************/
@@ -200,7 +182,8 @@ periodset_in(PG_FUNCTION_ARGS)
 	char *input = PG_GETARG_CSTRING(0);
 	PeriodSet *result = periodset_parse(&input);
 	if (result == 0)
-		PG_RETURN_NULL();
+		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
+			errmsg("Could not parse period set")));
 	PG_RETURN_POINTER(result);
 }
 

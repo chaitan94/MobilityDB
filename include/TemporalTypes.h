@@ -26,6 +26,7 @@
 #include <access/htup_details.h>
 #include <access/spgist.h>
 #include <access/stratnum.h>
+#include <assert.h>
 #include <catalog/namespace.h>
 #include <catalog/pg_operator.h>
 #include <catalog/pg_type.h>
@@ -64,7 +65,7 @@
 #endif
 
 /*****************************************************************************
- * Type of the temporal types
+ * Duration of temporal types
  *****************************************************************************/
 
 #define TEMPORAL			0
@@ -101,10 +102,8 @@ struct temporaltype_struct
 #define RTOverBackStrategyNumber		35		/* for /&> */
 
 /*****************************************************************************
- * Struct definitions
+ * Macros for manipulating the 'flags' element
  *****************************************************************************/
-
-/* Macros for manipulating the 'flags' element. */
 
 #define MOBDB_FLAGS_GET_CONTINUOUS(flags) 		((flags) & 0x01)
 /* Only for TemporalInst */
@@ -127,14 +126,18 @@ struct temporaltype_struct
 #define MOBDB_FLAGS_SET_GEODETIC(flags, value) \
 	((flags) = (value) ? ((flags) | 0x10) : ((flags) & 0xEF))
 
+/*****************************************************************************
+ * Struct definitions
+ *****************************************************************************/
+
 /* Temporal */
  
 typedef struct 
 {
 	int32		vl_len_;		/* varlena header (do not touch directly!) */
-	int16		type;			/* type */
+	int16		duration;		/* duration */
 	int16		flags;			/* flags */
-	Oid 		valuetypid;		/* base type's OID */
+	Oid 		valuetypid;		/* base type's OID (4 bytes) */
 	/* variable-length data follows, if any */
 } Temporal;
 
@@ -143,9 +146,9 @@ typedef struct
 typedef struct 
 {
 	int32		vl_len_;		/* varlena header (do not touch directly!) */
-	int16		type;			/* type */
+	int16		duration;		/* duration */
 	int16		flags;			/* flags */
-	Oid 		valuetypid;		/* base type's OID */
+	Oid 		valuetypid;		/* base type's OID  (4 bytes) */
 	TimestampTz t;				/* time span */
 	/* variable-length data follows */
 } TemporalInst;
@@ -155,9 +158,9 @@ typedef struct
 typedef struct 
 {
 	int32		vl_len_;		/* varlena header (do not touch directly!) */
-	int16		type;			/* type */
+	int16		duration;		/* duration */
 	int16		flags;			/* flags */
-	Oid 		valuetypid;		/* base type's OID */
+	Oid 		valuetypid;		/* base type's OID (4 bytes) */
 	int32 		count;			/* number of TemporalInst elements */
 	/* variable-length data follows */
 } TemporalI;
@@ -167,11 +170,11 @@ typedef struct
 typedef struct 
 {
 	int32		vl_len_;		/* varlena header (do not touch directly!) */
-	int16		type;			/* type */
+	int16		duration;		/* duration */
 	int16		flags;			/* flags */
-	Oid 		valuetypid;		/* base type's OID */
+	Oid 		valuetypid;		/* base type's OID (4 bytes) */
 	int32 		count;			/* number of TemporalInst elements */
-	Period 		period;			/* time span */
+	Period 		period;			/* time span (24 bytes) */
 	/* variable-length data follows */
 } TemporalSeq;
 
@@ -180,9 +183,9 @@ typedef struct
 typedef struct 
 {
 	int32		vl_len_;		/* varlena header (do not touch directly!) */
-	int16		type;			/* type */
+	int16		duration;		/* duration */
 	int16		flags;			/* flags */
-	Oid 		valuetypid;		/* base type's OID */
+	Oid 		valuetypid;		/* base type's OID (4 bytes) */
 	int32 		count;			/* number of TemporalSeq elements */
 	int32 		totalcount;		/* total number of TemporalInst elements in all TemporalSeq elements */
 	/* variable-length data follows */
@@ -226,6 +229,8 @@ typedef struct double4
 typedef struct AggregateState
 {
 	int 		size;
+	void*		extra;
+	size_t      extrasize ;
 	Temporal 	*values[];
 } AggregateState;
 
@@ -314,7 +319,10 @@ extern Datum fill_opcache(PG_FUNCTION_ARGS);
 
 extern void _PG_init(void);
 extern void debugstr(char *msg);
-extern size_t int4_pad(size_t size);
+extern void temporal_duration_is_valid(int16 type);
+extern void temporal_number_is_valid(Oid type);
+extern void temporal_numrange_is_valid(Oid type);
+extern void temporal_point_is_valid(Oid type);
 extern size_t double_pad(size_t size);
 extern bool type_is_continuous(Oid type);
 extern bool type_byval_fast(Oid type);
@@ -357,9 +365,6 @@ extern ArrayType *temporalarr_to_array(Temporal **temporals, int count);
 
 extern void datum_sort(Datum *values, int count, Oid valuetypid);
 extern void timestamp_sort(TimestampTz *values, int count);
-extern void double2_sort(double2 **doubles, int count);
-extern void double3_sort(double3 **triples, int count);
-extern void double4_sort(double4 **quadruples, int count);
 extern void periodarr_sort(Period **periods, int count);
 extern void rangearr_sort(RangeType **ranges, int count);
 extern void temporalinstarr_sort(TemporalInst **instants, int count);
@@ -402,10 +407,7 @@ extern Datum datum2_ge2(Datum l, Datum r, Oid typel, Oid typer);
 
 extern Oid range_oid_from_base(Oid valuetypid);
 extern Oid temporal_oid_from_base(Oid valuetypid);
-
-extern Oid base_oid_from_range(Oid temptypid);
 extern Oid base_oid_from_temporal(Oid temptypid);
-
 extern bool temporal_oid(Oid temptypid);
 
 /* Catalog functions */
@@ -429,9 +431,8 @@ extern RangeType *range_make(Datum from, Datum to, bool lower_inc, bool upper_in
 extern RangeType **rangearr_normalize(RangeType **ranges, int *count);
 
 extern Datum intrange_canonical(PG_FUNCTION_ARGS);
-extern Datum numrange_to_floatrange(PG_FUNCTION_ARGS);
 
-extern RangeType *numrange_to_floatrange_internal(RangeType *range);
+extern RangeType *numrange_to_floatrange(RangeType *range);
 
 extern Datum range_left_elem(PG_FUNCTION_ARGS);
 extern Datum range_overleft_elem(PG_FUNCTION_ARGS);
@@ -490,7 +491,6 @@ extern Datum gbox_constructor(PG_FUNCTION_ARGS);
 extern Datum gbox_constructor3dm(PG_FUNCTION_ARGS);
 extern Datum geodbox_constructor(PG_FUNCTION_ARGS);
 
-extern int gbox_contains(const GBOX *g1, const GBOX *g2);
 extern int gbox_cmp_internal(const GBOX *g1, const GBOX *g2);
 
 /*****************************************************************************
@@ -499,7 +499,6 @@ extern int gbox_cmp_internal(const GBOX *g1, const GBOX *g2);
 
 /* Internal functions */
 
-extern char dump_toupper(int in);
 extern Temporal *temporal_copy(Temporal *temp);
 extern Temporal *pg_getarg_temporal(Temporal *temp);
 extern bool intersection_temporal_temporal(Temporal *temp1, Temporal *temp2, 
@@ -592,14 +591,12 @@ extern Datum temporal_intersects_timestamp(PG_FUNCTION_ARGS);
 extern Datum temporal_intersects_timestampset(PG_FUNCTION_ARGS);
 extern Datum temporal_intersects_period(PG_FUNCTION_ARGS);
 extern Datum temporal_intersects_periodset(PG_FUNCTION_ARGS);
-extern Datum temporal_intersects_temporal(PG_FUNCTION_ARGS);
  
 extern Temporal *temporal_at_min_internal(Temporal *temp);
 extern TemporalInst *temporal_at_timestamp_internal(Temporal *temp, TimestampTz t);
 extern void temporal_timespan_internal(Period *p, Temporal *temp);
 extern char *temporal_to_string(Temporal *temp, char *(*value_out)(Oid, Datum));
 extern void temporal_bbox(void *box, const Temporal *temp);
-extern bool temporal_intersects_temporal_internal(Temporal *temp1, Temporal *temp2);
 	
 extern Datum temporal_lt(PG_FUNCTION_ARGS);
 extern Datum temporal_le(PG_FUNCTION_ARGS);
@@ -620,7 +617,6 @@ extern TemporalInst *temporalinst_copy(TemporalInst *inst);
 extern Datum* temporalinst_value_ptr(TemporalInst *inst);
 extern Datum temporalinst_value(TemporalInst *inst);
 extern Datum temporalinst_value_copy(TemporalInst *inst);
-extern RangeType *tnumberinst_floatrange(TemporalInst *inst);
 
 /* Input/output functions */
 
@@ -690,7 +686,6 @@ extern bool temporalinst_intersects_timestamp(TemporalInst *inst, TimestampTz t)
 extern bool temporalinst_intersects_timestampset(TemporalInst *inst, TimestampSet *ts);
 extern bool temporalinst_intersects_period(TemporalInst *inst, Period *p);
 extern bool temporalinst_intersects_periodset(TemporalInst *inst, PeriodSet *ps);
-extern bool temporalinst_intersects_temporalinst(TemporalInst *inst1, TemporalInst *inst2);
 
 /* Functions for defining B-tree index */
 
@@ -713,7 +708,6 @@ extern int temporalinstarr_find_timestamp(TemporalInst **array, int from,
 extern TemporalI *temporali_from_temporalinstarr(TemporalInst **instants, 
 	int count);
 extern TemporalI *temporali_copy(TemporalI *ti);
-extern RangeType *tnumberi_floatrange(TemporalI *ti);
 
 /* Intersection functions */
 
@@ -757,7 +751,6 @@ extern void temporali_bbox(void *box, TemporalI *ti);
 extern RangeType *tnumberi_value_range(TemporalI *ti);
 extern Datum temporali_min_value(TemporalI *ti);
 extern Datum temporali_max_value(TemporalI *ti);
-extern TimestampSet *temporali_time(TemporalI *ti);
 extern void temporali_timespan(Period *p, TemporalI *ti);
 extern TemporalInst **temporali_instantarr(TemporalI *ti);
 extern ArrayType *temporali_instants(TemporalI *ti);
@@ -795,8 +788,6 @@ extern bool temporali_intersects_timestamp(TemporalI *ti, TimestampTz t);
 extern bool temporali_intersects_timestampset(TemporalI *ti, TimestampSet *ts);
 extern bool temporali_intersects_period(TemporalI *ti, Period *p);
 extern bool temporali_intersects_periodset(TemporalI *ti, PeriodSet *ps);
-extern bool temporali_intersects_temporalinst(TemporalI *ti, TemporalInst *inst);
-extern bool temporali_intersects_temporali(TemporalI *ti1, TemporalI *ti2);
 
 /* Local aggregate functions */
 
@@ -858,7 +849,6 @@ extern bool tpointseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst 
 	TemporalInst *start2, TemporalInst *end2, TimestampTz *t);
 extern bool temporalseq_intersect_at_timestamp(TemporalInst *start1, 
 	TemporalInst *end1, TemporalInst *start2, TemporalInst *end2, TimestampTz *inter);
-extern RangeType *tnumberseq_floatrange(TemporalSeq *seq);
 
 /* Input/output functions */
 
@@ -962,9 +952,6 @@ extern bool temporalseq_intersects_timestamp(TemporalSeq *seq, TimestampTz t);
 extern bool temporalseq_intersects_timestampset(TemporalSeq *seq, TimestampSet *t);
 extern bool temporalseq_intersects_period(TemporalSeq *seq, Period *p);
 extern bool temporalseq_intersects_periodset(TemporalSeq *seq, PeriodSet *ps);
-extern bool temporalseq_intersects_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2);
-extern bool temporalseq_intersects_temporalinst(TemporalSeq *seq, TemporalInst *inst);
-extern bool temporalseq_intersects_temporali(TemporalSeq *seq, TemporalI *ti);
 
 /* Local aggregate functions */
 
@@ -1000,7 +987,6 @@ extern bool temporals_find_timestamp(TemporalS *ts, TimestampTz t, int *pos);
 extern bool temporals_intersects_period(TemporalS *ts, Period *p);
 extern double temporals_duration_time(TemporalS *ts);
 extern bool temporals_contains_timestamp(TemporalS *ts, TimestampTz t, int *n);
-extern RangeType *tnumbers_floatrange(TemporalS *ts);
 
 /* Intersection functions */
 
@@ -1114,10 +1100,6 @@ extern bool temporals_intersects_timestamp(TemporalS *ts, TimestampTz t);
 extern bool temporals_intersects_timestampset(TemporalS *ts, TimestampSet *ts1);
 extern bool temporals_intersects_period(TemporalS *ts, Period *p);
 extern bool temporals_intersects_periodset(TemporalS *ts, PeriodSet *ps);
-extern bool temporals_intersects_temporalinst(TemporalS *ts, TemporalInst *inst);
-extern bool temporals_intersects_temporali(TemporalS *ts, TemporalI *ti);
-extern bool temporals_intersects_temporalseq(TemporalS *ts, TemporalSeq *seq);
-extern bool temporals_intersects_temporals(TemporalS *ts1, TemporalS *ts2);
 
 /* Local aggregate functions */
 
@@ -1252,6 +1234,8 @@ extern Datum datum_sum_double3(Datum l, Datum r);
 extern Datum datum_sum_double4(Datum l, Datum r);
 
 extern AggregateState *aggstate_make(FunctionCallInfo fcinfo, int size, Temporal **values);
+extern void aggstate_set_extra(FunctionCallInfo fcinfo, AggregateState* state, void* data, size_t size);
+extern void aggstate_move_extra(AggregateState* dest, AggregateState* src) ;
 
 extern AggregateState *temporalinst_tagg_transfn(FunctionCallInfo fcinfo, AggregateState *state,
 	TemporalInst *inst, Datum (*operator)(Datum, Datum));
@@ -1396,6 +1380,17 @@ extern Datum overafter_temporal_temporal(PG_FUNCTION_ARGS);
  * File BoundBoxOps.c
  *****************************************************************************/
 
+extern void base_to_box(BOX *box, Datum value, Oid valuetypid);
+extern void range_to_box_internal(BOX *box, RangeType *r);
+extern void int_to_box_internal(BOX *box, int i);
+extern void float_to_box_internal(BOX *box, double d);
+extern void intrange_to_box_internal(BOX *box, RangeType *range);
+extern void floatrange_to_box_internal(BOX *box, RangeType *range);
+extern void timestamp_to_box_internal(BOX *box, TimestampTz t);
+extern void timestampset_to_box_internal(BOX *box, TimestampSet *ts);
+extern void period_to_box_internal(BOX *box, Period *p);
+extern void periodset_to_box_internal(BOX *box, PeriodSet *ps);
+
 extern bool overlaps_box_box_internal(const BOX *box1, const BOX *box2);
 extern bool contained_box_box_internal(const BOX *box1, const BOX *box2);
 extern bool contains_box_box_internal(const BOX *box1, const BOX *box2);
@@ -1411,18 +1406,6 @@ extern bool temporalseq_make_bbox(void *bbox, TemporalInst** inst, int count,
 	bool lower_inc, bool upper_inc);
 extern bool temporals_make_bbox(void *bbox, TemporalSeq **seqs, int count);
 
-extern Period *box_to_period_internal(BOX *box);
-
-extern bool contains_box_datum_internal(BOX *box, Datum d, Oid valuetypid);
-extern bool contained_box_datum_internal(BOX *box, Datum d, Oid valuetypid);
-extern bool overlaps_box_datum_internal(BOX *box, Datum d, Oid valuetypid);
-extern bool same_box_datum_internal(BOX *box, Datum d, Oid valuetypid);
-
-extern bool contains_box_range_internal(BOX *box, RangeType *range, Oid valuetypid);
-extern bool contained_box_range_internal(BOX *box, RangeType *range, Oid valuetypid);
-extern bool overlaps_box_range_internal(BOX *box, RangeType *range, Oid valuetypid);
-extern bool same_box_range_internal(BOX *box, RangeType *range, Oid valuetypid);
-
 extern bool contains_box_timestamp_internal(BOX *box, TimestampTz t);
 extern bool contained_box_timestamp_internal(BOX *box, TimestampTz t);
 extern bool overlaps_box_timestamp_internal(BOX *box, TimestampTz t);
@@ -1433,22 +1416,23 @@ extern bool contained_box_period_internal(BOX *box, Period *p);
 extern bool overlaps_box_period_internal(BOX *box, Period *p);
 extern bool same_box_period_internal(BOX *box, Period *p);
 
-extern void base_to_box(BOX *box, Datum value, Oid valuetypid);
-extern void range_to_box(BOX *box, RangeType *r);
-extern void timestamp_to_box(BOX *box, TimestampTz t);
-extern void timestampset_to_box(BOX *box, TimestampSet *ts);
-extern void period_to_box(BOX *box, Period *p);
-extern void periodset_to_box(BOX *box, PeriodSet *ps);
-
-extern Datum base_timestamp_to_box(PG_FUNCTION_ARGS);
-extern Datum base_period_to_box(PG_FUNCTION_ARGS);
-extern Datum range_timestamp_to_box(PG_FUNCTION_ARGS);
-extern Datum range_period_to_box(PG_FUNCTION_ARGS);
-
-extern BOX *base_timestamp_to_box_internal(Datum value, TimestampTz t, Oid valuetypid);
-extern BOX *base_period_to_box_internal(Datum value, Period *p, Oid valuetypid);
-extern BOX *range_timestamp_to_box_internal(RangeType *range, TimestampTz t);
-extern BOX *range_period_to_box_internal(RangeType *range, Period *p);
+extern Datum int_to_box(PG_FUNCTION_ARGS);
+extern Datum float_to_box(PG_FUNCTION_ARGS);
+extern Datum numeric_to_box(PG_FUNCTION_ARGS);
+extern Datum intrange_to_box(PG_FUNCTION_ARGS);
+extern Datum floatrange_to_box(PG_FUNCTION_ARGS);
+extern Datum timestamp_to_box(PG_FUNCTION_ARGS);
+extern Datum period_to_box(PG_FUNCTION_ARGS);
+extern Datum timestampset_to_box(PG_FUNCTION_ARGS);
+extern Datum periodset_to_box(PG_FUNCTION_ARGS);
+extern Datum int_timestamp_to_box(PG_FUNCTION_ARGS);
+extern Datum float_timestamp_to_box(PG_FUNCTION_ARGS);
+extern Datum int_period_to_box(PG_FUNCTION_ARGS);
+extern Datum float_period_to_box(PG_FUNCTION_ARGS);
+extern Datum intrange_timestamp_to_box(PG_FUNCTION_ARGS);
+extern Datum floatrange_timestamp_to_box(PG_FUNCTION_ARGS);
+extern Datum intrange_period_to_box(PG_FUNCTION_ARGS);
+extern Datum floatrange_period_to_box(PG_FUNCTION_ARGS);
 
 extern Datum overlaps_bbox_timestamp_temporal(PG_FUNCTION_ARGS);
 extern Datum overlaps_bbox_timestampset_temporal(PG_FUNCTION_ARGS);
@@ -1627,6 +1611,7 @@ sync_tfunc3_temporals_temporali(TemporalS *ts, TemporalI *ti,
 extern TemporalI *
 sync_tfunc3_temporali_temporals(TemporalI *ti, TemporalS *ts,
 	Datum param, Datum (*operator)(Datum, Datum, Datum), Datum valuetypid);
+/* These functions are currently not used
 extern TemporalSeq *
 sync_tfunc3_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	Datum param, Datum (*operator)(Datum, Datum, Datum), Datum valuetypid,
@@ -1643,7 +1628,7 @@ extern TemporalS *
 sync_tfunc3_temporals_temporals(TemporalS *ts1, TemporalS *ts2, 
 	Datum param, Datum (*operator)(Datum, Datum, Datum), Datum valuetypid,
 	bool (*interpoint)(TemporalInst *, TemporalInst *, TemporalInst *, TemporalInst *, TimestampTz *));
-
+*/
 extern Temporal *
 sync_tfunc3_temporal_temporal(Temporal *temp1, Temporal *temp2,
 	Datum param, Datum (*operator)(Datum, Datum, Datum), Datum valuetypid,
@@ -1766,11 +1751,12 @@ extern TemporalInst *tfunc3_temporalinst_base(TemporalInst *inst, Datum value, D
 	Datum (*operator)(Datum, Datum, Datum), Oid valuetypid, bool invert);
 extern TemporalI *tfunc3_temporali_base(TemporalI *ti, Datum value, Datum param, 
 	Datum (*operator)(Datum, Datum, Datum), Oid valuetypid, bool invert);
+/* These functions are not currently used
 extern TemporalSeq *tfunc3_temporalseq_base(TemporalSeq *seq, Datum value, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), Oid valuetypid, bool invert);
 extern TemporalS *tfunc3_temporals_base(TemporalS *ts, Datum value, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), Oid valuetypid, bool invert);	
-	
+*/
 extern TemporalInst *tfunc3_temporalinst_temporalinst(TemporalInst *inst1, TemporalInst *inst2, 
 	Datum dist, Datum (*operator)(Datum, Datum, Datum), Oid valuetypid);
 extern TemporalI *tfunc3_temporali_temporali(TemporalI *ti1, TemporalI *ti2, Datum dist, 
@@ -1857,8 +1843,6 @@ extern Datum gist_tnumberi_compress(PG_FUNCTION_ARGS);
 extern Datum gist_tnumberseq_compress(PG_FUNCTION_ARGS);
 extern Datum gist_tnumbers_compress(PG_FUNCTION_ARGS);
 extern Datum gist_tnumber_compress(PG_FUNCTION_ARGS);
-extern Datum gist_tintinst_fetch(PG_FUNCTION_ARGS);
-extern Datum gist_tfloatinst_fetch(PG_FUNCTION_ARGS);
 
 /* The following functions are also called by IndexSpgistTnumber.c */
 extern bool index_leaf_consistent_box(BOX *key, BOX *query, StrategyNumber strategy);
