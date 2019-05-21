@@ -67,7 +67,8 @@ temporal_numrange_is_valid(Oid type)
 void 
 temporal_point_is_valid(Oid type)
 {
-	assert(type == type_oid(T_GEOMETRY) || type == type_oid(T_GEOGRAPHY));
+	assert(type == type_oid(T_GEOMETRY) || type == type_oid(T_GEOGRAPHY) ||
+		type == type_oid(T_NPOINT));
 }
 
 /* Align to double */

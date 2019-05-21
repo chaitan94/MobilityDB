@@ -8,13 +8,13 @@ SELECT max(st_npoints(st_astext(trajectory(temp)))) FROM tbl_tnpoint;
 SELECT count(*) FROM tbl_tnpoint t1, tbl_geomcollection t2 WHERE atGeometry(t1.temp, t2.g) IS NOT NULL;
  count 
 -------
-  2624
+  2780
 (1 row)
 
 SELECT count(*) FROM tbl_tnpoint t1, tbl_geomcollection t2 WHERE minusGeometry(t1.temp, t2.g) IS NOT NULL;
  count 
 -------
-  9717
+  9707
 (1 row)
 
 SELECT MAX(length(temp)) FROM tbl_tnpoint;
