@@ -1918,25 +1918,25 @@ SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0
  t
 (1 row)
 
-SELECT timestamp '2000-01-01' <<# tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestamptz '2000-01-01' <<# tnpoint 'NPoint(1,0.5)@2000-01-01';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT timestamp '2000-01-01' <<# tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestamptz '2000-01-01' <<# tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT timestamp '2000-01-01' <<# tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestamptz '2000-01-01' <<# tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT timestamp '2000-01-01' <<# tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT timestamptz '2000-01-01' <<# tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
  ?column? 
 ----------
  f
@@ -2014,25 +2014,25 @@ SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' <<# tnpoint
  f
 (1 row)
 
-SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <<# timestamp '2000-01-01';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <<# timestamptz '2000-01-01';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <<# timestamp '2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' <<# timestamptz '2000-01-01';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <<# timestamp '2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' <<# timestamptz '2000-01-01';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <<# timestamp '2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' <<# timestamptz '2000-01-01';
  ?column? 
 ----------
  f
@@ -2206,25 +2206,25 @@ SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0
  f
 (1 row)
 
-SELECT timestamp '2000-01-01' #>> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestamptz '2000-01-01' #>> tnpoint 'NPoint(1,0.5)@2000-01-01';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT timestamp '2000-01-01' #>> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestamptz '2000-01-01' #>> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT timestamp '2000-01-01' #>> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestamptz '2000-01-01' #>> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT timestamp '2000-01-01' #>> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT timestamptz '2000-01-01' #>> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
  ?column? 
 ----------
  f
@@ -2302,25 +2302,25 @@ SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' #>> tnpoint
  f
 (1 row)
 
-SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' #>> timestamp '2000-01-01';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' #>> timestamptz '2000-01-01';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' #>> timestamp '2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' #>> timestamptz '2000-01-01';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' #>> timestamp '2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' #>> timestamptz '2000-01-01';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' #>> timestamp '2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' #>> timestamptz '2000-01-01';
  ?column? 
 ----------
  f
@@ -2494,25 +2494,25 @@ SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0
  f
 (1 row)
 
-SELECT timestamp '2000-01-01' &<# tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestamptz '2000-01-01' &<# tnpoint 'NPoint(1,0.5)@2000-01-01';
  ?column? 
 ----------
  t
 (1 row)
 
-SELECT timestamp '2000-01-01' &<# tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestamptz '2000-01-01' &<# tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
  ?column? 
 ----------
  t
 (1 row)
 
-SELECT timestamp '2000-01-01' &<# tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestamptz '2000-01-01' &<# tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
  ?column? 
 ----------
  t
 (1 row)
 
-SELECT timestamp '2000-01-01' &<# tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT timestamptz '2000-01-01' &<# tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
  ?column? 
 ----------
  t
@@ -2590,25 +2590,25 @@ SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' &<# tnpoint
  t
 (1 row)
 
-SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' &<# timestamp '2000-01-01';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' &<# timestamptz '2000-01-01';
  ?column? 
 ----------
  t
 (1 row)
 
-SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' &<# timestamp '2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' &<# timestamptz '2000-01-01';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' &<# timestamp '2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' &<# timestamptz '2000-01-01';
  ?column? 
 ----------
  f
 (1 row)
 
-SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' &<# timestamp '2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' &<# timestamptz '2000-01-01';
  ?column? 
 ----------
  f
@@ -2782,25 +2782,25 @@ SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0
  t
 (1 row)
 
-SELECT timestamp '2000-01-01' #&> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT timestamptz '2000-01-01' #&> tnpoint 'NPoint(1,0.5)@2000-01-01';
  ?column? 
 ----------
  t
 (1 row)
 
-SELECT timestamp '2000-01-01' #&> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
+SELECT timestamptz '2000-01-01' #&> tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}';
  ?column? 
 ----------
  t
 (1 row)
 
-SELECT timestamp '2000-01-01' #&> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
+SELECT timestamptz '2000-01-01' #&> tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
  ?column? 
 ----------
  t
 (1 row)
 
-SELECT timestamp '2000-01-01' #&> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
+SELECT timestamptz '2000-01-01' #&> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
  ?column? 
 ----------
  t
@@ -2878,25 +2878,25 @@ SELECT periodset '{[2000-01-01,2000-01-02],[2000-01-03,2000-01-04]}' #&> tnpoint
  t
 (1 row)
 
-SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' #&> timestamp '2000-01-01';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' #&> timestamptz '2000-01-01';
  ?column? 
 ----------
  t
 (1 row)
 
-SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' #&> timestamp '2000-01-01';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' #&> timestamptz '2000-01-01';
  ?column? 
 ----------
  t
 (1 row)
 
-SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' #&> timestamp '2000-01-01';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' #&> timestamptz '2000-01-01';
  ?column? 
 ----------
  t
 (1 row)
 
-SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' #&> timestamp '2000-01-01';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' #&> timestamptz '2000-01-01';
  ?column? 
 ----------
  t

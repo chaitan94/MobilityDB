@@ -33,7 +33,7 @@ INSERT 0 1
 SELECT '<<|', 'geomcollection', 'tnpoint', count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g <<| temp;
  ?column? |    ?column?    | ?column? | count 
 ----------+----------------+----------+-------
- <<|      | geomcollection | tnpoint  |   762
+ <<|      | geomcollection | tnpoint  |   682
 (1 row)
 
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)

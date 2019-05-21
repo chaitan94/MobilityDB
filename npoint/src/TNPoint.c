@@ -139,17 +139,17 @@ tnpoints_as_tgeompoints(TemporalS *ts)
 Temporal *
 tnpoint_as_tgeompoint_internal(Temporal *temp)
 {
+	Temporal *result = NULL;
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST) 
-		return (Temporal *)tnpointinst_as_tgeompointinst((TemporalInst *)temp);
+		result = (Temporal *)tnpointinst_as_tgeompointinst((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
-		return (Temporal *)tnpointi_as_tgeompointi((TemporalI *)temp);
+		result = (Temporal *)tnpointi_as_tgeompointi((TemporalI *)temp);
 	else if (temp->duration == TEMPORALSEQ) 
-		return (Temporal *)tnpointseq_as_tgeompointseq((TemporalSeq *)temp);
+		result = (Temporal *)tnpointseq_as_tgeompointseq((TemporalSeq *)temp);
 	else if (temp->duration == TEMPORALS) 
-		return (Temporal *)tnpoints_as_tgeompoints((TemporalS *)temp);
-    else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Bad temporal type")));
+		result = (Temporal *)tnpoints_as_tgeompoints((TemporalS *)temp);
+	return result;
 }
 
 PG_FUNCTION_INFO_V1(tnpoint_as_tgeompoint);
@@ -258,7 +258,8 @@ PGDLLEXPORT Datum
 tgeompoint_as_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Temporal *result;
+	Temporal *result = NULL;
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tgeompointinst_as_tnpointinst((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -267,9 +268,6 @@ tgeompoint_as_tnpoint(PG_FUNCTION_ARGS)
 		result = (Temporal *)tgeompointseq_as_tnpointseq((TemporalSeq *)temp);
 	else if (temp->duration == TEMPORALS) 
 		result = (Temporal *)tgeompoints_as_tnpoints((TemporalS *)temp);
-    else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Bad temporal type")));
 	PG_FREE_IF_COPY(temp, 0);
 	if (result == NULL)
 		PG_RETURN_NULL();
@@ -371,7 +369,8 @@ PGDLLEXPORT Datum
 tnpoint_positions(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	ArrayType *result = NULL; /* initialized to make the compiler quiet */
+	ArrayType *result = NULL; /* make the compiler quiet */
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = tnpointinst_positions((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -380,9 +379,6 @@ tnpoint_positions(PG_FUNCTION_ARGS)
 		result = tnpointseq_positions((TemporalSeq *)temp);
 	else if (temp->duration == TEMPORALS) 
 		result = tnpoints_positions((TemporalS *)temp);
-	else 
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Bad temporal type")));	
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
@@ -466,7 +462,8 @@ PGDLLEXPORT Datum
 tnpoint_routes(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	ArrayType *result = NULL; /* initialized to make the compiler quiet */
+	ArrayType *result = NULL; /* make the compiler quiet */
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = tnpointinst_routes((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -475,9 +472,6 @@ tnpoint_routes(PG_FUNCTION_ARGS)
 		result = tnpointseq_routes((TemporalSeq *)temp);
 	else if (temp->duration == TEMPORALS) 
 		result = tnpoints_routes((TemporalS *)temp);
-	else 
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Bad temporal type")));	
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }

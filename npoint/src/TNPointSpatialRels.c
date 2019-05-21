@@ -309,6 +309,7 @@ spatialrel_tnpoint_geo(Temporal *temp, Datum geom,
 	Datum (*operator)(Datum, Datum), bool invert)
 {
 	bool result = false;
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = spatialrel_tnpointinst_geo((TemporalInst *)temp, geom,
 			operator, invert);
@@ -321,9 +322,6 @@ spatialrel_tnpoint_geo(Temporal *temp, Datum geom,
 	else if (temp->duration == TEMPORALS)
 		result = spatialrel_tnpoints_geo((TemporalS *)temp, geom,
 			operator, invert);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return result;
 }
 
@@ -332,6 +330,7 @@ spatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
 	Datum (*operator)(Datum, Datum))
 {
 	bool result = false;
+	temporal_duration_is_valid(temp1->duration);
 	if (temp1->duration == TEMPORALINST) 
 		result = spatialrel_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, operator);
@@ -344,9 +343,6 @@ spatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
 	else if (temp1->duration == TEMPORALS)
 		result = spatialrel_tnpoints_tnpoints(
 			(TemporalS *)temp1, (TemporalS *)temp2, operator);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return result;
 }
 
@@ -356,6 +352,7 @@ static text *
 relate_tnpoint_geo_internal(Temporal *temp, Datum geo, bool invert)
 {
 	text *result = NULL;
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = relate_tnpointinst_geo((TemporalInst *)temp, geo, invert);
 	else if (temp->duration == TEMPORALI)
@@ -364,9 +361,6 @@ relate_tnpoint_geo_internal(Temporal *temp, Datum geo, bool invert)
 		result = relate_tnpointseq_geo((TemporalSeq *)temp, geo, invert);
 	else if (temp->duration == TEMPORALS)
 		result = relate_tnpoints_geo((TemporalS *)temp, geo, invert);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return result;
 }
 
@@ -377,6 +371,7 @@ spatialrel3_tnpoint_geo(Temporal *temp, Datum geom, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
 	bool result = false;
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = spatialrel3_tnpointinst_geo((TemporalInst *)temp, geom, param,
 			operator, invert);
@@ -389,9 +384,6 @@ spatialrel3_tnpoint_geo(Temporal *temp, Datum geom, Datum param,
 	else if (temp->duration == TEMPORALS)
 		result = spatialrel3_tnpoints_geo((TemporalS *)temp, geom, param,
 			operator, invert);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return result;
 }
 
@@ -400,6 +392,7 @@ spatialrel3_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2, Datum param,
 	Datum (*operator)(Datum, Datum, Datum))
 {
 	bool result = false;
+	temporal_duration_is_valid(temp1->duration);
 	if (temp1->duration == TEMPORALINST) 
 		result = spatialrel3_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, param, operator);
@@ -412,9 +405,6 @@ spatialrel3_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2, Datum param,
 	else if (temp1->duration == TEMPORALS) 
 		result = spatialrel3_tnpoints_tnpoints(
 			(TemporalS *)temp1, (TemporalS *)temp2, param, operator);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return result;
 }
 
@@ -1432,6 +1422,7 @@ relate_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	}
 	
 	text *result = NULL;
+	temporal_duration_is_valid(inter1->duration);
 	if (inter1->duration == TEMPORALINST)
 		result = relate_tnpointinst_tnpointinst(
 			(TemporalInst *)inter1, (TemporalInst *)inter2);
@@ -1444,9 +1435,6 @@ relate_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	else if (inter1->duration == TEMPORALS)
 		result = relate_tnpoints_tnpoints(
 			(TemporalS *)inter1, (TemporalS *)inter2);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 
  	pfree(inter1); pfree(inter2); 
 	PG_FREE_IF_COPY(temp1, 0);

@@ -1424,6 +1424,7 @@ tspatialrel_tnpoint_geo(Temporal *temp, Datum geo,
 	Datum (*operator)(Datum, Datum), Oid valuetypid, bool invert)
 {
 	Temporal *result = NULL;
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp, geo,
 			operator, valuetypid, invert);
@@ -1436,9 +1437,6 @@ tspatialrel_tnpoint_geo(Temporal *temp, Datum geo,
 	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)tspatialrel_tnpoints_geo((TemporalS *)temp, geo,
 			operator, valuetypid, invert);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return result;
 }
 
@@ -1447,6 +1445,7 @@ tspatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
 	Datum (*operator)(Datum, Datum), Oid valuetypid)
 {
 	Temporal *result = NULL;
+	temporal_duration_is_valid(temp1->duration);
 	if (temp1->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, operator, 
@@ -1463,9 +1462,6 @@ tspatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
 		result = (Temporal *)tspatialrel_tnpoints_tnpoints(
 			(TemporalS *)temp1, (TemporalS *)temp2, operator, 
 			valuetypid);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return result;
 }
 
@@ -1476,6 +1472,7 @@ tspatialrel3_tnpoint_geo(Temporal *temp, Datum geo, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
 	Temporal *result = NULL;
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tspatialrel3_tnpointinst_geo((TemporalInst *)temp, geo, param,
 			operator, BOOLOID, invert);
@@ -1488,9 +1485,6 @@ tspatialrel3_tnpoint_geo(Temporal *temp, Datum geo, Datum param,
 	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)tspatialrel3_tnpoints_geo((TemporalS *)temp, geo, param,
 			operator, BOOLOID, invert);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return result;
 }
 
@@ -1499,6 +1493,7 @@ tspatialrel3_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2, Datum param,
 	Datum (*operator)(Datum, Datum, Datum))
 {
 	Temporal *result = NULL;
+	temporal_duration_is_valid(temp1->duration);
 	if (temp1->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel3_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, param, operator, 
@@ -1515,9 +1510,6 @@ tspatialrel3_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2, Datum param,
 		result = (Temporal *)tspatialrel3_tnpoints_tnpoints(
 			(TemporalS *)temp1, (TemporalS *)temp2, param, operator, 
 			BOOLOID);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return result;
 }
 
@@ -1528,6 +1520,7 @@ tdwithin_tnpoint_geo_internal(Temporal *temp, Datum geo, Datum param,
 	Datum (*operator)(Datum, Datum, Datum))
 {
 	Temporal *result = NULL;
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tspatialrel3_tnpointinst_geo((TemporalInst *)temp, 
 			geo, param,	operator, BOOLOID, false);
@@ -1546,9 +1539,6 @@ tdwithin_tnpoint_geo_internal(Temporal *temp, Datum geo, Datum param,
 		result = (Temporal *)tdwithin_tpoints_geo(ts, geo, param);
 		pfree(ts);
 	}
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return result;
 }
 
@@ -1557,6 +1547,7 @@ tdwithin_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2, Datum param,
 	Datum (*operator)(Datum, Datum, Datum))
 {
 	Temporal *result = NULL;
+	temporal_duration_is_valid(temp1->duration);
 	if (temp1->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel3_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, param, operator, 
@@ -1571,9 +1562,6 @@ tdwithin_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2, Datum param,
 	else if (temp1->duration == TEMPORALS)
 		result = (Temporal *)tdwithin_tnpoints_tnpoints(
 			(TemporalS *)temp1, (TemporalS *)temp2, param);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	return result;
 }
 

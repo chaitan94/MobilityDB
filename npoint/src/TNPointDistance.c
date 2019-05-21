@@ -365,6 +365,7 @@ distance_geo_tnpoint(PG_FUNCTION_ARGS)
 
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Temporal *result = NULL; 
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
@@ -379,9 +380,6 @@ distance_geo_tnpoint(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
 			PointerGetDatum(gs));
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
@@ -396,8 +394,8 @@ distance_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
-
 	Temporal *result = NULL; 
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
@@ -412,9 +410,6 @@ distance_npoint_tnpoint(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
 			PointerGetDatum(gs));
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
@@ -440,6 +435,7 @@ distance_tnpoint_geo(PG_FUNCTION_ARGS)
 
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result = NULL; 
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp, 
 			PointerGetDatum(gs), &geom_distance2d, 
@@ -454,9 +450,6 @@ distance_tnpoint_geo(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
 			PointerGetDatum(gs));
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
 	PG_RETURN_POINTER(result);
@@ -473,6 +466,7 @@ distance_tnpoint_npoint(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 
 	Temporal *result = NULL; 
+	temporal_duration_is_valid(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
@@ -487,9 +481,6 @@ distance_tnpoint_npoint(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
 			PointerGetDatum(gs));
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
@@ -505,7 +496,8 @@ distance_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2)
 	if (!synchronize_temporal_temporal(temp1, temp2, &sync1, &sync2, true))
 		return NULL;
 	
-	Temporal *result;
+	Temporal *result = NULL;
+	temporal_duration_is_valid(sync1->duration);
 	if (sync1->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_tnpointinst(
 			(TemporalInst *)sync1, (TemporalInst *)sync2, 
@@ -520,9 +512,6 @@ distance_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2)
 	else if (sync1->duration == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_tnpoints(
 			(TemporalS *)sync1, (TemporalS *)sync2);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-			errmsg("Operation not supported")));
 
 	pfree(sync1); pfree(sync2);
 	return result;

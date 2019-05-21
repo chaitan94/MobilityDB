@@ -29,6 +29,7 @@ tnpoint_tcentroid_transfn(PG_FUNCTION_ARGS)
 
     AggregateState *state2 = aggstate_make_tcentroid(fcinfo, temp);
 	AggregateState *result;
+	temporal_duration_is_valid(temp->duration);
     if(temp->duration == TEMPORALINST || temp->duration == TEMPORALI)
         result = temporalinst_tagg_combinefn(fcinfo, state, state2, &datum_sum_double3);
     if(temp->duration == TEMPORALSEQ || temp->duration == TEMPORALS)
