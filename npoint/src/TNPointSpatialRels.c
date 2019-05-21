@@ -309,16 +309,16 @@ spatialrel_tnpoint_geo(Temporal *temp, Datum geom,
 	Datum (*operator)(Datum, Datum), bool invert)
 {
 	bool result = false;
-	if (temp->type == TEMPORALINST)
+	if (temp->duration == TEMPORALINST)
 		result = spatialrel_tnpointinst_geo((TemporalInst *)temp, geom,
 			operator, invert);
-	else if (temp->type == TEMPORALI)
+	else if (temp->duration == TEMPORALI)
 		result = spatialrel_tnpointi_geo((TemporalI *)temp, geom,
 			operator, invert);
-	else if (temp->type == TEMPORALSEQ)
+	else if (temp->duration == TEMPORALSEQ)
 		result = spatialrel_tnpointseq_geo((TemporalSeq *)temp, geom,
 			operator, invert);
-	else if (temp->type == TEMPORALS)
+	else if (temp->duration == TEMPORALS)
 		result = spatialrel_tnpoints_geo((TemporalS *)temp, geom,
 			operator, invert);
 	else
@@ -332,16 +332,16 @@ spatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
 	Datum (*operator)(Datum, Datum))
 {
 	bool result = false;
-	if (temp1->type == TEMPORALINST) 
+	if (temp1->duration == TEMPORALINST) 
 		result = spatialrel_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, operator);
-	else if (temp1->type == TEMPORALI) 
+	else if (temp1->duration == TEMPORALI) 
 		result = spatialrel_tnpointi_tnpointi(
 			(TemporalI *)temp1, (TemporalI *)temp2, operator);
-	else if (temp1->type == TEMPORALSEQ)
+	else if (temp1->duration == TEMPORALSEQ)
 		result = spatialrel_tnpointseq_tnpointseq(
 			(TemporalSeq *)temp1, (TemporalSeq *)temp2, operator);
-	else if (temp1->type == TEMPORALS)
+	else if (temp1->duration == TEMPORALS)
 		result = spatialrel_tnpoints_tnpoints(
 			(TemporalS *)temp1, (TemporalS *)temp2, operator);
 	else
@@ -356,13 +356,13 @@ static text *
 relate_tnpoint_geo_internal(Temporal *temp, Datum geo, bool invert)
 {
 	text *result = NULL;
-	if (temp->type == TEMPORALINST)
+	if (temp->duration == TEMPORALINST)
 		result = relate_tnpointinst_geo((TemporalInst *)temp, geo, invert);
-	else if (temp->type == TEMPORALI)
+	else if (temp->duration == TEMPORALI)
 		result = relate_tnpointi_geo((TemporalI *)temp, geo, invert);
-	else if (temp->type == TEMPORALSEQ)
+	else if (temp->duration == TEMPORALSEQ)
 		result = relate_tnpointseq_geo((TemporalSeq *)temp, geo, invert);
-	else if (temp->type == TEMPORALS)
+	else if (temp->duration == TEMPORALS)
 		result = relate_tnpoints_geo((TemporalS *)temp, geo, invert);
 	else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
@@ -377,16 +377,16 @@ spatialrel3_tnpoint_geo(Temporal *temp, Datum geom, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
 	bool result = false;
-	if (temp->type == TEMPORALINST)
+	if (temp->duration == TEMPORALINST)
 		result = spatialrel3_tnpointinst_geo((TemporalInst *)temp, geom, param,
 			operator, invert);
-	else if (temp->type == TEMPORALI)
+	else if (temp->duration == TEMPORALI)
 		result = spatialrel3_tnpointi_geo((TemporalI *)temp, geom, param,
 			operator, invert);
-	else if (temp->type == TEMPORALSEQ)
+	else if (temp->duration == TEMPORALSEQ)
 		result = spatialrel3_tnpointseq_geo((TemporalSeq *)temp, geom, param,
 			operator, invert);
-	else if (temp->type == TEMPORALS)
+	else if (temp->duration == TEMPORALS)
 		result = spatialrel3_tnpoints_geo((TemporalS *)temp, geom, param,
 			operator, invert);
 	else
@@ -400,16 +400,16 @@ spatialrel3_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2, Datum param,
 	Datum (*operator)(Datum, Datum, Datum))
 {
 	bool result = false;
-	if (temp1->type == TEMPORALINST) 
+	if (temp1->duration == TEMPORALINST) 
 		result = spatialrel3_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, param, operator);
-	else if (temp1->type == TEMPORALI) 
+	else if (temp1->duration == TEMPORALI) 
 		result = spatialrel3_tnpointi_tnpointi(
 			(TemporalI *)temp1, (TemporalI *)temp2, param, operator);
-	else if (temp1->type == TEMPORALSEQ) 
+	else if (temp1->duration == TEMPORALSEQ) 
 		result = spatialrel3_tnpointseq_tnpointseq(
 			(TemporalSeq *)temp1, (TemporalSeq *)temp2, param, operator);
-	else if (temp1->type == TEMPORALS) 
+	else if (temp1->duration == TEMPORALS) 
 		result = spatialrel3_tnpoints_tnpoints(
 			(TemporalS *)temp1, (TemporalS *)temp2, param, operator);
 	else
@@ -1432,16 +1432,16 @@ relate_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	}
 	
 	text *result = NULL;
-	if (inter1->type == TEMPORALINST)
+	if (inter1->duration == TEMPORALINST)
 		result = relate_tnpointinst_tnpointinst(
 			(TemporalInst *)inter1, (TemporalInst *)inter2);
-	else if (inter1->type == TEMPORALI)
+	else if (inter1->duration == TEMPORALI)
 		result = relate_tnpointi_tnpointi(
 			(TemporalI *)inter1, (TemporalI *)inter2);
-	else if (inter1->type == TEMPORALSEQ)
+	else if (inter1->duration == TEMPORALSEQ)
 		result = relate_tnpointseq_tnpointseq(
 			(TemporalSeq *)inter1, (TemporalSeq *)inter2);
-	else if (inter1->type == TEMPORALS)
+	else if (inter1->duration == TEMPORALS)
 		result = relate_tnpoints_tnpoints(
 			(TemporalS *)inter1, (TemporalS *)inter2);
 	else

@@ -139,13 +139,13 @@ tnpoints_as_tgeompoints(TemporalS *ts)
 Temporal *
 tnpoint_as_tgeompoint_internal(Temporal *temp)
 {
-	if (temp->type == TEMPORALINST) 
+	if (temp->duration == TEMPORALINST) 
 		return (Temporal *)tnpointinst_as_tgeompointinst((TemporalInst *)temp);
-	else if (temp->type == TEMPORALI) 
+	else if (temp->duration == TEMPORALI) 
 		return (Temporal *)tnpointi_as_tgeompointi((TemporalI *)temp);
-	else if (temp->type == TEMPORALSEQ) 
+	else if (temp->duration == TEMPORALSEQ) 
 		return (Temporal *)tnpointseq_as_tgeompointseq((TemporalSeq *)temp);
-	else if (temp->type == TEMPORALS) 
+	else if (temp->duration == TEMPORALS) 
 		return (Temporal *)tnpoints_as_tgeompoints((TemporalS *)temp);
     else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
@@ -259,13 +259,13 @@ tgeompoint_as_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result;
-	if (temp->type == TEMPORALINST) 
+	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tgeompointinst_as_tnpointinst((TemporalInst *)temp);
-	else if (temp->type == TEMPORALI) 
+	else if (temp->duration == TEMPORALI) 
 		result = (Temporal *)tgeompointi_as_tnpointi((TemporalI *)temp);
-	else if (temp->type == TEMPORALSEQ) 
+	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)tgeompointseq_as_tnpointseq((TemporalSeq *)temp);
-	else if (temp->type == TEMPORALS) 
+	else if (temp->duration == TEMPORALS) 
 		result = (Temporal *)tgeompoints_as_tnpoints((TemporalS *)temp);
     else
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
@@ -372,13 +372,13 @@ tnpoint_positions(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	ArrayType *result = NULL; /* initialized to make the compiler quiet */
-	if (temp->type == TEMPORALINST) 
+	if (temp->duration == TEMPORALINST) 
 		result = tnpointinst_positions((TemporalInst *)temp);
-	else if (temp->type == TEMPORALI) 
+	else if (temp->duration == TEMPORALI) 
 		result = tnpointi_positions((TemporalI *)temp);
-	else if (temp->type == TEMPORALSEQ) 
+	else if (temp->duration == TEMPORALSEQ) 
 		result = tnpointseq_positions((TemporalSeq *)temp);
-	else if (temp->type == TEMPORALS) 
+	else if (temp->duration == TEMPORALS) 
 		result = tnpoints_positions((TemporalS *)temp);
 	else 
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
@@ -397,7 +397,7 @@ PGDLLEXPORT Datum
 tnpointinst_route(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	if (temp->type != TEMPORALINST)
+	if (temp->duration != TEMPORALINST)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 			errmsg("Input must be a temporal instant")));
 
@@ -467,13 +467,13 @@ tnpoint_routes(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	ArrayType *result = NULL; /* initialized to make the compiler quiet */
-	if (temp->type == TEMPORALINST) 
+	if (temp->duration == TEMPORALINST) 
 		result = tnpointinst_routes((TemporalInst *)temp);
-	else if (temp->type == TEMPORALI) 
+	else if (temp->duration == TEMPORALI) 
 		result = tnpointi_routes((TemporalI *)temp);
-	else if (temp->type == TEMPORALSEQ) 
+	else if (temp->duration == TEMPORALSEQ) 
 		result = tnpointseq_routes((TemporalSeq *)temp);
-	else if (temp->type == TEMPORALS) 
+	else if (temp->duration == TEMPORALS) 
 		result = tnpoints_routes((TemporalS *)temp);
 	else 
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 

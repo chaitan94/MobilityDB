@@ -52,7 +52,7 @@ distance_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2,
 		Datum vertex2 = call_function2(LWGEOM_pointn_linestring, traj, Int32GetDatum(i + 1));
 		double fraction0 = DatumGetFloat8(call_function2(LWGEOM_line_locate_point, traj, vertex2));
 		TimestampTz time2 = (TimestampTz)(inst1->t + (inst2->t - inst1->t) * fraction0);
-		Datum line = call_function2(LWGEOM_makeline, vertex1, vertex2);
+		Datum line = geompoint_trajectory(vertex1, vertex2);
 
 		/* If distance has a local minimum */
 		double fraction = DatumGetFloat8(call_function2(LWGEOM_line_locate_point, line, geo));
@@ -365,18 +365,18 @@ distance_geo_tnpoint(PG_FUNCTION_ARGS)
 
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Temporal *result = NULL; 
-	if (temp->type == TEMPORALINST)
+	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, true);
-	else if (temp->type == TEMPORALI)
+	else if (temp->duration == TEMPORALI)
 		result = (Temporal *)tspatialrel_tnpointi_geo((TemporalI *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, true);
-	else if (temp->type == TEMPORALSEQ)
+	else if (temp->duration == TEMPORALSEQ)
 		result = (Temporal *)distance_tnpointseq_geo((TemporalSeq *)temp, 
 			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALS)
+	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
 			PointerGetDatum(gs));
 	else
@@ -398,18 +398,18 @@ distance_npoint_tnpoint(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 
 	Temporal *result = NULL; 
-	if (temp->type == TEMPORALINST)
+	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, true);
-	else if (temp->type == TEMPORALI)
+	else if (temp->duration == TEMPORALI)
 		result = (Temporal *)tspatialrel_tnpointi_geo((TemporalI *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, true);
-	else if (temp->type == TEMPORALSEQ)
+	else if (temp->duration == TEMPORALSEQ)
 		result = (Temporal *)distance_tnpointseq_geo((TemporalSeq *)temp, 
 			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALS)
+	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
 			PointerGetDatum(gs));
 	else
@@ -440,18 +440,18 @@ distance_tnpoint_geo(PG_FUNCTION_ARGS)
 
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result = NULL; 
-	if (temp->type == TEMPORALINST)
+	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp, 
 			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, false);
-	else if (temp->type == TEMPORALI)
+	else if (temp->duration == TEMPORALI)
 		result = (Temporal *)tspatialrel_tnpointi_geo((TemporalI *)temp, 
 			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, false);
-	else if (temp->type == TEMPORALSEQ)
+	else if (temp->duration == TEMPORALSEQ)
 		result = (Temporal *)distance_tnpointseq_geo((TemporalSeq *)temp, 
 			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALS)
+	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
 			PointerGetDatum(gs));
 	else
@@ -473,18 +473,18 @@ distance_tnpoint_npoint(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 
 	Temporal *result = NULL; 
-	if (temp->type == TEMPORALINST)
+	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, true);
-	else if (temp->type == TEMPORALI)
+	else if (temp->duration == TEMPORALI)
 		result = (Temporal *)tspatialrel_tnpointi_geo((TemporalI *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
 			FLOAT8OID, true);
-	else if (temp->type == TEMPORALSEQ)
+	else if (temp->duration == TEMPORALSEQ)
 		result = (Temporal *)distance_tnpointseq_geo((TemporalSeq *)temp, 
 			PointerGetDatum(gs));
-	else if (temp->type == TEMPORALS)
+	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_geo((TemporalS *)temp, 
 			PointerGetDatum(gs));
 	else
@@ -506,18 +506,18 @@ distance_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2)
 		return NULL;
 	
 	Temporal *result;
-	if (sync1->type == TEMPORALINST)
+	if (sync1->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_tnpointinst(
 			(TemporalInst *)sync1, (TemporalInst *)sync2, 
 			&geom_distance2d, FLOAT8OID);
-	else if (sync1->type == TEMPORALI)
+	else if (sync1->duration == TEMPORALI)
 		result = (Temporal *)tspatialrel_tnpointi_tnpointi(
 			(TemporalI *)sync1, (TemporalI *)sync2, 
 			&geom_distance2d, FLOAT8OID);
-	else if (sync1->type == TEMPORALSEQ)
+	else if (sync1->duration == TEMPORALSEQ)
 		result = (Temporal *)distance_tnpointseq_tnpointseq(
 			(TemporalSeq *)sync1, (TemporalSeq *)sync2);
-	else if (sync1->type == TEMPORALS)
+	else if (sync1->duration == TEMPORALS)
 		result = (Temporal *)distance_tnpoints_tnpoints(
 			(TemporalS *)sync1, (TemporalS *)sync2);
 	else

@@ -25,23 +25,24 @@ tnpoint_tcentroid_transfn(PG_FUNCTION_ARGS)
 		PG_RETURN_POINTER(state);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Temporal *temp1 = tnpoint_as_tgeompoint_internal(temp);
+	geoaggstate_check_t(state, temp);
+
+    AggregateState *state2 = aggstate_make_tcentroid(fcinfo, temp);
 	AggregateState *result;
-	if (temp->type == TEMPORALINST)
-		result = tpointinst_tcentroid_transfn(fcinfo, state, (TemporalInst *)temp1,
-			&datum_sum_double3);
-	else if (temp->type == TEMPORALI)
-		result = tpointi_tcentroid_transfn(fcinfo, state, (TemporalI *)temp1,
-			&datum_sum_double3);
-	else if (temp->type == TEMPORALSEQ)
-		result = tpointseq_tcentroid_transfn(fcinfo, state, (TemporalSeq *)temp1,
-			&datum_sum_double3);
-	else if (temp->type == TEMPORALS)
-		result = tpoints_tcentroid_transfn(fcinfo, state, (TemporalS *)temp1,
-			&datum_sum_double3);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("Operation not supported")));
-			
+    if(temp->duration == TEMPORALINST || temp->duration == TEMPORALI)
+        result = temporalinst_tagg_combinefn(fcinfo, state, state2, &datum_sum_double3);
+    if(temp->duration == TEMPORALSEQ || temp->duration == TEMPORALS)
+        result = temporalseq_tagg_combinefn(fcinfo, state, state2, &datum_sum_double3, false);
+
+    assert(result != NULL) ;
+
+    if (result != state)
+        pfree(state);
+    if (result != state2)
+        pfree(state2);
+
+    aggstate_move_extra(result, state2) ;
+
 	pfree(temp1);
     PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);

@@ -1424,16 +1424,16 @@ tspatialrel_tnpoint_geo(Temporal *temp, Datum geo,
 	Datum (*operator)(Datum, Datum), Oid valuetypid, bool invert)
 {
 	Temporal *result = NULL;
-	if (temp->type == TEMPORALINST) 
+	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp, geo,
 			operator, valuetypid, invert);
-	else if (temp->type == TEMPORALI) 
+	else if (temp->duration == TEMPORALI) 
 		result = (Temporal *)tspatialrel_tnpointi_geo((TemporalI *)temp, geo,
 			operator, valuetypid, invert);
-	else if (temp->type == TEMPORALSEQ) 
+	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)tspatialrel_tnpointseq_geo((TemporalSeq *)temp, geo,
 			operator, valuetypid, invert);
-	else if (temp->type == TEMPORALS)
+	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)tspatialrel_tnpoints_geo((TemporalS *)temp, geo,
 			operator, valuetypid, invert);
 	else
@@ -1447,19 +1447,19 @@ tspatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
 	Datum (*operator)(Datum, Datum), Oid valuetypid)
 {
 	Temporal *result = NULL;
-	if (temp1->type == TEMPORALINST)
+	if (temp1->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, operator, 
 			valuetypid);
-	else if (temp1->type == TEMPORALI)
+	else if (temp1->duration == TEMPORALI)
 		result = (Temporal *)tspatialrel_tnpointi_tnpointi(
 			(TemporalI *)temp1, (TemporalI *)temp2, operator, 
 			valuetypid);
-	else if (temp1->type == TEMPORALSEQ)
+	else if (temp1->duration == TEMPORALSEQ)
 		result = (Temporal *)tspatialrel_tnpointseq_tnpointseq(
 			(TemporalSeq *)temp1, (TemporalSeq *)temp2, operator, 
 			valuetypid);
-	else if (temp1->type == TEMPORALS)
+	else if (temp1->duration == TEMPORALS)
 		result = (Temporal *)tspatialrel_tnpoints_tnpoints(
 			(TemporalS *)temp1, (TemporalS *)temp2, operator, 
 			valuetypid);
@@ -1476,16 +1476,16 @@ tspatialrel3_tnpoint_geo(Temporal *temp, Datum geo, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
 	Temporal *result = NULL;
-	if (temp->type == TEMPORALINST) 
+	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tspatialrel3_tnpointinst_geo((TemporalInst *)temp, geo, param,
 			operator, BOOLOID, invert);
-	else if (temp->type == TEMPORALI) 
+	else if (temp->duration == TEMPORALI) 
 		result = (Temporal *)tspatialrel3_tnpointi_geo((TemporalI *)temp, geo, param,
 			operator, BOOLOID, invert);
-	else if (temp->type == TEMPORALSEQ) 
+	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)tspatialrel3_tnpointseq_geo((TemporalSeq *)temp, geo, param,
 			operator, BOOLOID, invert);
-	else if (temp->type == TEMPORALS)
+	else if (temp->duration == TEMPORALS)
 		result = (Temporal *)tspatialrel3_tnpoints_geo((TemporalS *)temp, geo, param,
 			operator, BOOLOID, invert);
 	else
@@ -1499,19 +1499,19 @@ tspatialrel3_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2, Datum param,
 	Datum (*operator)(Datum, Datum, Datum))
 {
 	Temporal *result = NULL;
-	if (temp1->type == TEMPORALINST)
+	if (temp1->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel3_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, param, operator, 
 			BOOLOID);
-	else if (temp1->type == TEMPORALI)
+	else if (temp1->duration == TEMPORALI)
 		result = (Temporal *)tspatialrel3_tnpointi_tnpointi(
 			(TemporalI *)temp1, (TemporalI *)temp2, param, operator, 
 			BOOLOID);
-	else if (temp1->type == TEMPORALSEQ)
+	else if (temp1->duration == TEMPORALSEQ)
 		result = (Temporal *)tspatialrel3_tnpointseq_tnpointseq(
 			(TemporalSeq *)temp1, (TemporalSeq *)temp2, param, operator, 
 			BOOLOID);
-	else if (temp1->type == TEMPORALS)
+	else if (temp1->duration == TEMPORALS)
 		result = (Temporal *)tspatialrel3_tnpoints_tnpoints(
 			(TemporalS *)temp1, (TemporalS *)temp2, param, operator, 
 			BOOLOID);
@@ -1528,19 +1528,19 @@ tdwithin_tnpoint_geo_internal(Temporal *temp, Datum geo, Datum param,
 	Datum (*operator)(Datum, Datum, Datum))
 {
 	Temporal *result = NULL;
-	if (temp->type == TEMPORALINST) 
+	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tspatialrel3_tnpointinst_geo((TemporalInst *)temp, 
 			geo, param,	operator, BOOLOID, false);
-	else if (temp->type == TEMPORALI) 
+	else if (temp->duration == TEMPORALI) 
 		result = (Temporal *)tspatialrel3_tnpointi_geo((TemporalI *)temp, 
 			geo, param,	operator, BOOLOID, false);
-	else if (temp->type == TEMPORALSEQ) 
+	else if (temp->duration == TEMPORALSEQ) 
 	{
 		TemporalSeq *seq = tnpointseq_as_tgeompointseq((TemporalSeq *)temp);
 		result = (Temporal *)tdwithin_tpointseq_geo(seq, geo, param);
 		pfree(seq);
 	}
-	else if (temp->type == TEMPORALS)
+	else if (temp->duration == TEMPORALS)
 	{
 		TemporalS *ts = tnpoints_as_tgeompoints((TemporalS *)temp);
 		result = (Temporal *)tdwithin_tpoints_geo(ts, geo, param);
@@ -1557,18 +1557,18 @@ tdwithin_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2, Datum param,
 	Datum (*operator)(Datum, Datum, Datum))
 {
 	Temporal *result = NULL;
-	if (temp1->type == TEMPORALINST)
+	if (temp1->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel3_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, param, operator, 
 			BOOLOID);
-	else if (temp1->type == TEMPORALI)
+	else if (temp1->duration == TEMPORALI)
 		result = (Temporal *)tspatialrel3_tnpointi_tnpointi(
 			(TemporalI *)temp1, (TemporalI *)temp2, param, operator, 
 			BOOLOID);
-	else if (temp1->type == TEMPORALSEQ)
+	else if (temp1->duration == TEMPORALSEQ)
 		result = (Temporal *)tdwithin_tnpointseq_tnpointseq(
 			(TemporalSeq *)temp1, (TemporalSeq *)temp2, param);
-	else if (temp1->type == TEMPORALS)
+	else if (temp1->duration == TEMPORALS)
 		result = (Temporal *)tdwithin_tnpoints_tnpoints(
 			(TemporalS *)temp1, (TemporalS *)temp2, param);
 	else
