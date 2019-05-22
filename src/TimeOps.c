@@ -13,7 +13,20 @@
 #include <TemporalTypes.h>
 
 /*****************************************************************************/
-/* Functions used for indexes */
+
+/* 
+ * Is the Oid a time type ?
+ */
+bool
+time_type_oid(Oid timetypid)
+{
+	if (timetypid == type_oid(T_TIMESTAMPSET) || 
+		timetypid == type_oid(T_PERIOD) || timetypid == type_oid(T_PERIODSET))
+		return true;
+	return false;
+}
+
+/*****************************************************************************/
 
 PG_FUNCTION_INFO_V1(timestampset_to_period);
 
@@ -2921,7 +2934,11 @@ intersection_timestampset_period_internal(TimestampSet *ts, Period *p)
 		if (contains_period_timestamp_internal(p, t))
 			times[k++] = t;
 	}
-	/* k != 0 due to the bounding box text above */
+	if (k == 0)
+	{
+		pfree(times);
+		return NULL;
+	}
 	TimestampSet *result = timestampset_from_timestamparr_internal(times, k);
 	pfree(times);
 	return result;

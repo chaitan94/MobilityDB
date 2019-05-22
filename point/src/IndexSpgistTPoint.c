@@ -588,7 +588,7 @@ spgist_tpoint_inner_consistent(PG_FUNCTION_ARGS)
 				DatumGetNpoint(in->scankeys[i].sk_argument));
 		else if (subtype == type_oid(T_GBOX))
 			memcpy(&queries[i], DatumGetGboxP(in->scankeys[i].sk_argument), sizeof(GBOX));
-		else if (temporal_oid(subtype))
+		else if (temporal_type_oid(subtype))
 			temporal_bbox(&queries[i],
 				DatumGetTemporal(in->scankeys[i].sk_argument));
 		else
@@ -758,7 +758,7 @@ spgist_tpoint_leaf_consistent(PG_FUNCTION_ARGS)
 			memcpy(&query, box, sizeof(GBOX));
 			res = index_leaf_consistent_gbox(key, &query, strategy);
 		}
-		else if (temporal_oid(subtype))
+		else if (temporal_type_oid(subtype))
 		{
 			temporal_bbox(&query,
 				DatumGetTemporal(in->scankeys[i].sk_argument));

@@ -217,13 +217,12 @@ tpoint_tcentroid_combinefn(PG_FUNCTION_ARGS)
 	Datum (*func)(Datum, Datum) = hasz ?
 		&datum_sum_double4 : &datum_sum_double3;
 	AggregateState *result = NULL ;
+	assert(state1->values[0]->duration == TEMPORALINST ||
+		state1->values[0]->duration == TEMPORALSEQ);
 	if (state1->values[0]->duration == TEMPORALINST) 
 		result = temporalinst_tagg_combinefn(fcinfo, state1, state2, func);
 	else if (state1->values[0]->duration == TEMPORALSEQ) 
 		result = temporalseq_tagg_combinefn(fcinfo, state1, state2, func, false);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("Operation not supported")));
 
 	aggstate_move_extra(result, state1) ;
 
@@ -241,7 +240,9 @@ tpointinst_tcentroid_finalfn(TemporalInst **instants, int count)
 	for (int i = 0; i < count; i++)
 	{
 		TemporalInst *inst = instants[i];
-		Datum value;
+		Datum value = 0;
+		assert(inst->valuetypid == type_oid(T_DOUBLE4) || 
+			inst->valuetypid == type_oid(T_DOUBLE3));
 		if (inst->valuetypid == type_oid(T_DOUBLE4))
 		{
 			double4 *value4 = (double4 *)DatumGetPointer(temporalinst_value(inst));
@@ -259,10 +260,6 @@ tpointinst_tcentroid_finalfn(TemporalInst **instants, int count)
 			value = call_function2(LWGEOM_makepoint, Float8GetDatum(valuea),
 				Float8GetDatum(valueb));
 		}
-		else
-			ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-				errmsg("Operation not supported")));
-				
 		newinstants[i] = temporalinst_make(value, inst->t, type_oid(T_GEOMETRY));
 		pfree(DatumGetPointer(value));
 	}
@@ -286,7 +283,9 @@ tpointseq_tcentroid_finalfn(TemporalSeq **sequences, int count)
 		for (int j = 0; j < seq->count; j++)
 		{
 			TemporalInst *inst = temporalseq_inst_n(seq, j);
-			Datum value;
+			Datum value = 0;
+			assert(inst->valuetypid == type_oid(T_DOUBLE4) || 
+				inst->valuetypid == type_oid(T_DOUBLE3));
 			if (inst->valuetypid == type_oid(T_DOUBLE4))
 			{
 				double4 *value4 = (double4 *)DatumGetPointer(temporalinst_value(inst));
@@ -304,10 +303,6 @@ tpointseq_tcentroid_finalfn(TemporalSeq **sequences, int count)
 				value = call_function2(LWGEOM_makepoint, Float8GetDatum(valuea),
 					Float8GetDatum(valueb));
 			}
-			else
-				ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR), 
-					errmsg("Operation not supported")));
-
 			instants[j] = temporalinst_make(value, inst->t, type_oid(T_GEOMETRY));
 			pfree(DatumGetPointer(value));
 		}
@@ -338,16 +333,14 @@ tpoint_tcentroid_finalfn(PG_FUNCTION_ARGS)
 	if (state->size == 0)
 		PG_RETURN_NULL();
 	Temporal *result = NULL;
+	assert(state->values[0]->duration == TEMPORALINST ||
+		state->values[0]->duration == TEMPORALSEQ);
 	if (state->values[0]->duration == TEMPORALINST)
 		result = (Temporal *)tpointinst_tcentroid_finalfn(
 			(TemporalInst **)state->values, state->size);
 	else if (state->values[0]->duration == TEMPORALSEQ)
 		result = (Temporal *)tpointseq_tcentroid_finalfn(
 			(TemporalSeq **)state->values, state->size);
-	else
-		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("Operation not supported")));
-
 	int32_t srid = ((struct GeoAggregateState*) state->extra)->srid ;
 	Temporal* sridresult = tpoint_set_srid_internal(result, srid) ;
 	pfree(result) ;

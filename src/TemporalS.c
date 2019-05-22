@@ -120,7 +120,7 @@ temporals_from_temporalseqarr(TemporalSeq **sequences, int count,
 		{
 			if (tpoint_srid_internal((Temporal *)sequences[i]) != srid)
 				ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
-					errmsg("All geometries composing a temporal point must be of the same srid")));
+					errmsg("All geometries composing a temporal point must be of the same SRID")));
 			if (MOBDB_FLAGS_GET_Z(sequences[i]->flags) != hasz)
 				ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
 					errmsg("All geometries composing a temporal point must be of the same dimensionality")));
@@ -969,9 +969,6 @@ temporals_num_instants(TemporalS *ts)
 TemporalInst *
 temporals_instant_n(TemporalS *ts, int n)
 {
-	if (n < 1) 
-		return NULL;
-	
 	TemporalInst *result = NULL;
 	int i = 0, count = 0, prevcount = 0;
 	while (i < ts->count && prevcount < n)
@@ -1183,13 +1180,14 @@ temporals_always_equals(TemporalS *ts, Datum value)
 	/* Bounding box test */
 	if (ts->valuetypid == INT4OID || ts->valuetypid == FLOAT8OID)
 	{
-		BOX box1, box2;
-		temporals_bbox(&box1, ts);
-		base_to_box(&box2, value, ts->valuetypid);
-		if (same_box_box_internal(&box1, &box2))
-			return true;
+		BOX box;
+		temporals_bbox(&box, ts);
+		if (ts->valuetypid == INT4OID)
+			return box.low.x == box.high.x &&
+				(int)(box.high.x) == DatumGetInt32(value);
 		else
-			return false;
+			return box.low.x == box.high.x &&
+				box.high.x == DatumGetFloat8(value);
 	}
 
 	for (int i = 0; i < ts->count; i++) 
@@ -1593,7 +1591,7 @@ temporalseqarr_remove_duplicates(TemporalSeq **sequences, int count)
 		return 0;
 	int newcount = 0;
 	for (int i = 1; i < count; i++) 
-		if (temporalseq_ne(sequences[newcount], sequences[i]))
+		if (! temporalseq_eq(sequences[newcount], sequences[i]))
 			sequences[++ newcount] = sequences[i];
 		else 
 			pfree(sequences[i]);
@@ -2191,16 +2189,6 @@ temporals_eq(TemporalS *ts1, TemporalS *ts2)
 			return false;
 	}
 	return true;
-}
-
-/* 
- * Inequality operator
- * The internal B-tree comparator is not used to increase efficiency 
- */
-bool
-temporals_ne(TemporalS *ts1, TemporalS *ts2)
-{
-	return !temporals_eq(ts1, ts2);
 }
 
 /* 
