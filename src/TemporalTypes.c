@@ -897,6 +897,7 @@ base_type_oid(Oid valuetypid)
 #ifdef WITH_POSTGIS
 		|| valuetypid == type_oid(T_GEOMETRY)
 		|| valuetypid == type_oid(T_GEOGRAPHY)
+		|| valuetypid == type_oid(T_NPOINT)
 #endif
 		)
 		return true;
@@ -914,6 +915,7 @@ continuous_base_type_oid(Oid valuetypid)
 #ifdef WITH_POSTGIS
 		|| valuetypid == type_oid(T_GEOMETRY)
 		|| valuetypid == type_oid(T_GEOGRAPHY)
+		|| valuetypid == type_oid(T_NPOINT)
 #endif
 		)
 		return true;
