@@ -123,7 +123,7 @@ add_base_temporal(PG_FUNCTION_ARGS)
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	temporal_duration_is_valid(temp->duration);
-	temporal_number_is_valid(datumtypid);
+	number_base_type_oid(datumtypid);
 	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
  		result = tfunc4_temporal_base(temp, value, 
@@ -153,7 +153,7 @@ add_temporal_base(PG_FUNCTION_ARGS)
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	temporal_duration_is_valid(temp->duration);
-	temporal_number_is_valid(datumtypid);
+	number_base_type_oid(datumtypid);
 	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
  		result = tfunc4_temporal_base(temp, value,
@@ -227,7 +227,7 @@ sub_base_temporal(PG_FUNCTION_ARGS)
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	temporal_duration_is_valid(temp->duration);
-	temporal_number_is_valid(datumtypid);
+	number_base_type_oid(datumtypid);
 	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
  		result = tfunc4_temporal_base(temp, value,
@@ -256,7 +256,7 @@ sub_temporal_base(PG_FUNCTION_ARGS)
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	temporal_duration_is_valid(temp->duration);
-	temporal_number_is_valid(datumtypid);
+	number_base_type_oid(datumtypid);
 	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
  		result = tfunc4_temporal_base(temp, value,
@@ -330,7 +330,7 @@ mult_base_temporal(PG_FUNCTION_ARGS)
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	temporal_duration_is_valid(temp->duration);
-	temporal_number_is_valid(datumtypid);
+	number_base_type_oid(datumtypid);
 	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
  		result = tfunc4_temporal_base(temp, value,
@@ -359,7 +359,7 @@ mult_temporal_base(PG_FUNCTION_ARGS)
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	temporal_duration_is_valid(temp->duration);
-	temporal_number_is_valid(datumtypid);
+	number_base_type_oid(datumtypid);
 	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
  		result = tfunc4_temporal_base(temp, value,
@@ -449,7 +449,7 @@ div_base_temporal(PG_FUNCTION_ARGS)
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	temporal_duration_is_valid(temp->duration);
-	temporal_number_is_valid(datumtypid);
+	number_base_type_oid(datumtypid);
 	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
  		result = tfunc4_temporal_base(temp, value,
@@ -483,7 +483,7 @@ div_temporal_base(PG_FUNCTION_ARGS)
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	temporal_duration_is_valid(temp->duration);
-	temporal_number_is_valid(datumtypid);
+	number_base_type_oid(datumtypid);
 	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
  		result = tfunc4_temporal_base(temp, value,

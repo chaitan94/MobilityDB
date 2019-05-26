@@ -1,7 +1,8 @@
 /*****************************************************************************
  *
- * TempSelFuncs.c
- *	  Functions for selectivity estimation of operators on temporal types
+ * TNPointSelFuncs.c
+ *      Functions for selectivity estimation of operators on temporal network 
+ *      point types
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
  * 		Universite Libre de Bruxelles
@@ -12,7 +13,7 @@
  *
  *****************************************************************************/
  
-#include "TemporalPoint.h"
+#include "TemporalTypes.h"
 
 /*
  *	Selectivity functions for temporal types operators.  These are bogus -- 
@@ -42,50 +43,50 @@
  * equals is a tighter constrain tha contains and contained.
  */
 
-PG_FUNCTION_INFO_V1(tpoint_overlaps_sel);
+PG_FUNCTION_INFO_V1(tnpoint_overlaps_sel);
 
 PGDLLEXPORT Datum
-tpoint_overlaps_sel(PG_FUNCTION_ARGS)
+tnpoint_overlaps_sel(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_FLOAT8(0.005);
 }
 
-PG_FUNCTION_INFO_V1(tpoint_overlaps_joinsel);
+PG_FUNCTION_INFO_V1(tnpoint_overlaps_joinsel);
 
 PGDLLEXPORT Datum
-tpoint_overlaps_joinsel(PG_FUNCTION_ARGS)
+tnpoint_overlaps_joinsel(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_FLOAT8(0.005);
 }
 
-PG_FUNCTION_INFO_V1(tpoint_contains_sel);
+PG_FUNCTION_INFO_V1(tnpoint_contains_sel);
 
 PGDLLEXPORT Datum
-tpoint_contains_sel(PG_FUNCTION_ARGS)
+tnpoint_contains_sel(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_FLOAT8(0.002);
 }
 
-PG_FUNCTION_INFO_V1(tpoint_contains_joinsel);
+PG_FUNCTION_INFO_V1(tnpoint_contains_joinsel);
 
 PGDLLEXPORT Datum
-tpoint_contains_joinsel(PG_FUNCTION_ARGS)
+tnpoint_contains_joinsel(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_FLOAT8(0.002);
 }
 
-PG_FUNCTION_INFO_V1(tpoint_same_sel);
+PG_FUNCTION_INFO_V1(tnpoint_same_sel);
 
 PGDLLEXPORT Datum
-tpoint_same_sel(PG_FUNCTION_ARGS)
+tnpoint_same_sel(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_FLOAT8(0.001);
 }
 
-PG_FUNCTION_INFO_V1(tpoint_same_joinsel);
+PG_FUNCTION_INFO_V1(tnpoint_same_joinsel);
 
 PGDLLEXPORT Datum
-tpoint_same_joinsel(PG_FUNCTION_ARGS)
+tnpoint_same_joinsel(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_FLOAT8(0.001);
 }
@@ -94,22 +95,24 @@ tpoint_same_joinsel(PG_FUNCTION_ARGS)
 
 /*
  * Selectivity for operators for relative position box operators, i.e., 
- * left (<<), overleft (&<), right (>>), overright (&>), before (<<#), 
- * overbefore (&<#), after (#>>), overafter (#&>). 
+ * left (<<), overleft (&<), right (>>), overright (&>), 
+ * below (<<|), overbelow (&<|), above (|>>), overabove (|&>), 
+ * front (<</), overfront (&</), back (/>>), overfront (/&>), 
+ * before (<<#), overbefore (&<#), after (#>>), overafter (#&>). 
  */
 
-PG_FUNCTION_INFO_V1(tpoint_position_sel);
+PG_FUNCTION_INFO_V1(tnpoint_position_sel);
 
 PGDLLEXPORT Datum
-tpoint_position_sel(PG_FUNCTION_ARGS)
+tnpoint_position_sel(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_FLOAT8(0.001);
 }
 
-PG_FUNCTION_INFO_V1(tpoint_position_joinsel);
+PG_FUNCTION_INFO_V1(tnpoint_position_joinsel);
 
 PGDLLEXPORT Datum
-tpoint_position_joinsel(PG_FUNCTION_ARGS)
+tnpoint_position_joinsel(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_FLOAT8(0.001);
 }

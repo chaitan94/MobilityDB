@@ -35,6 +35,11 @@ CREATE FUNCTION temporal_send(tnpoint)
 	AS 'MODULE_PATHNAME' 
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tnpoint_analyze(internal)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+
 CREATE TYPE tnpoint (
 	internallength = variable,
 	input = tnpoint_in,
@@ -44,8 +49,8 @@ CREATE TYPE tnpoint (
 	typmod_in = temporal_typmod_in,
 	typmod_out = temporal_typmod_out,
 	storage = extended,
-	alignment = double
---    , analyze = temporal_analyze
+	alignment = double,
+	analyze = temporal_analyze
 );
 
 -- Special cast for enforcing the typmod restrictions
@@ -287,27 +292,27 @@ CREATE FUNCTION timestamps(tnpoint)
 
 CREATE FUNCTION numSequences(tnpoint)
 	RETURNS integer
-	AS 'MODULE_PATHNAME', 'temporals_num_sequences'
+	AS 'MODULE_PATHNAME', 'temporal_num_sequences'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION startSequence(tnpoint)
 	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'temporals_start_sequence'
+	AS 'MODULE_PATHNAME', 'temporal_start_sequence'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION endSequence(tnpoint)
 	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'temporals_end_sequence'
+	AS 'MODULE_PATHNAME', 'temporal_end_sequence'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION sequenceN(tnpoint, integer)
 	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'temporals_sequence_n'
+	AS 'MODULE_PATHNAME', 'temporal_sequence_n'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION sequences(tnpoint)
 	RETURNS tnpoint[]
-	AS 'MODULE_PATHNAME', 'temporals_sequences'
+	AS 'MODULE_PATHNAME', 'temporal_sequences'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
