@@ -215,6 +215,7 @@ continuous_base_type_oid(Oid valuetypid)
 #ifdef WITH_POSTGIS
 		|| valuetypid == type_oid(T_GEOMETRY)
 		|| valuetypid == type_oid(T_GEOGRAPHY)
+		|| valuetypid == type_oid(T_NPOINT)
 #endif
 		);
 }
@@ -271,6 +272,8 @@ temporal_oid_from_base(Oid valuetypid)
 		result = type_oid(T_TGEOMPOINT);
 	if (valuetypid == type_oid(T_GEOGRAPHY)) 
 		result = type_oid(T_TGEOGPOINT);
+	if (valuetypid == type_oid(T_NPOINT)) 
+		result = type_oid(T_TNPOINT);
 #endif			
 	return result;
 }
