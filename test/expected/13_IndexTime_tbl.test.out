@@ -376,8 +376,6 @@ SELECT count(*) FROM tbl_period_big WHERE p #&> timestamptz '2001-01-01';
  11880
 (1 row)
 
-<<<<<<< HEAD
-=======
 SELECT count(*) FROM tbl_period_big WHERE p && timestampset '{2001-01-01, 2001-07-01}';
  count 
 -------
@@ -420,7 +418,6 @@ SELECT count(*) FROM tbl_period_big WHERE p #&> timestampset '{2001-01-01, 2001-
  11880
 (1 row)
 
->>>>>>> 7ff29754f54b4c0b5e0da2c125013737cf57daae
 SELECT count(*) FROM tbl_period_big WHERE p && period '[2001-01-01, 2001-07-01]';
  count 
 -------
