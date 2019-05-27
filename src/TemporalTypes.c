@@ -307,6 +307,7 @@ temporal_type_oid(Oid temptypid)
 #ifdef WITH_POSTGIS
 		|| temptypid == type_oid(T_TGEOMPOINT)
 		|| temptypid == type_oid(T_TGEOGPOINT)
+		|| temptypid == type_oid(T_TNPOINT)
 #endif
 		)
 		return true;
