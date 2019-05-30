@@ -7,7 +7,7 @@ src/BooleanOps.c
 src/BoundBoxOps.c
 src/ComparisonOps.c
 src/DoubleN.c
-src/indexesstat.c
+src/debug/indexesstat.c
 src/IndexGistTemporal.c
 src/IndexGistTime.c
 src/IndexGistTnumber.c
@@ -19,23 +19,23 @@ src/MathematicalFuncs.c
 src/OidCache.c
 src/Parser.c
 src/Period.c
-src/PeriodSelfuncs.c
 src/PeriodSet.c
 src/Range.c
 src/RelativePosOps.c
-src/TemporalAnalyze.c
 src/Temporal.c
+src/TemporalAnalyze.c
 src/TemporalI.c
 src/TemporalInst.c
 src/TemporalS.c
 src/TemporalSelFuncs.c
 src/TemporalSeq.c
 src/TemporalTypes.c
-src/TempSelFuncs.c
+src/TextFuncs.c
 src/TimeOps.c
 src/TimeSelFuncs.c
 src/TimestampSet.c
 src/TimeTypanalyze.c
+src/TnumberSelFuncs.c
 src/WAggregateFuncs.c
 )
 
@@ -52,8 +52,8 @@ src/sql/20_DoubleN.in.sql
 src/sql/22_Temporal.in.sql
 src/sql/24_MathematicalFuncs.in.sql
 src/sql/26_BooleanOps.in.sql
-src/sql/28_ComparisonOps.in.sql
-src/sql/30_TempSelFuncs.in.sql
+src/sql/28_TextFuncs.in.sql
+src/sql/30_ComparisonOps.in.sql
 src/sql/32_BoundBoxOps.in.sql
 src/sql/34_RelativePosOps.in.sql
 src/sql/36_AggregateFuncs.in.sql
@@ -85,6 +85,10 @@ include_directories("include")
 add_definitions(-Wall -Wextra -std=gnu1x -Wno-unused-parameter)
 if(CMAKE_COMPILER_IS_GNUCC)
 	add_definitions(-Wno-misleading-indentation)
+	if(WITH_COVERAGE)
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+		set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage")
+	endif()
 endif()
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")

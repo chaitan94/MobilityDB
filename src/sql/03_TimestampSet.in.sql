@@ -20,17 +20,14 @@ CREATE FUNCTION timestampset_in(cstring)
 	RETURNS timestampset
 	AS 'MODULE_PATHNAME', 'timestampset_in'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE FUNCTION timestampset_out(timestampset)
 	RETURNS cstring
 	AS 'MODULE_PATHNAME'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE FUNCTION timestampset_recv(internal)
 	RETURNS timestampset
 	AS 'MODULE_PATHNAME', 'timestampset_recv'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE FUNCTION timestampset_send(timestampset)
 	RETURNS bytea
 	AS 'MODULE_PATHNAME'
@@ -39,7 +36,7 @@ CREATE FUNCTION timestampset_send(timestampset)
 CREATE FUNCTION timestampset_typanalyze(internal)
 	RETURNS boolean
 	AS 'MODULE_PATHNAME'
-	LANGUAGE C IMMUTABLE STRICT;
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE TYPE timestampset (
 	internallength = variable,
@@ -70,8 +67,13 @@ CREATE FUNCTION timestampset(timestamptz)
 	RETURNS timestampset
 	AS 'MODULE_PATHNAME', 'timestamp_as_timestampset'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION period(timestampset)
+	RETURNS period
+	AS 'MODULE_PATHNAME', 'timestampset_to_period'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (timestamptz AS timestampset) WITH FUNCTION timestampset(timestamptz);
+CREATE CAST (timestampset AS period) WITH FUNCTION period(timestampset) AS IMPLICIT;
 
 /******************************************************************************
  * Functions

@@ -81,7 +81,7 @@ timestampset_from_timestamparr_internal(TimestampTz *times, int count)
 				errmsg("Invalid value for timestamp set")));
 	}
 
-	size_t memsize = double_pad(sizeof(TimestampTz) * count + int4_pad(sizeof(Period)));
+	size_t memsize = double_pad(sizeof(TimestampTz) * count + double_pad(sizeof(Period)));
 	/* Array of pointers containing the pointers to the component timestamps,
 	   and a pointer to the bbox */
 	size_t pdata = double_pad(sizeof(TimestampSet) + (count + 1) * sizeof(size_t));
@@ -102,7 +102,7 @@ timestampset_from_timestamparr_internal(TimestampTz *times, int count)
 	period_set(&bbox, times[0], times[count-1], true, true);
 	offsets[count] = pos;
 	memcpy(((char *) result) + pdata + pos, &bbox, sizeof(Period));
-	pos += int4_pad(sizeof(Period));
+	pos += double_pad(sizeof(Period));
 	return result;
 }
 
@@ -168,8 +168,6 @@ timestampset_in(PG_FUNCTION_ARGS)
 {
 	char *input = PG_GETARG_CSTRING(0);
 	TimestampSet *result = timestampset_parse(&input);
-	if (result == 0)
-		PG_RETURN_NULL();
 	PG_RETURN_POINTER(result);
 }
 
@@ -353,13 +351,6 @@ timestampset_num_timestamps(PG_FUNCTION_ARGS)
 
 /* Start timestamptz */
 
-TimestampTz
-timestampset_start_timestamp_internal(TimestampSet *ts)
-{
-	TimestampTz t = timestampset_time_n(ts, 0);
-	return t;
-}
-
 PG_FUNCTION_INFO_V1(timestampset_start_timestamp);
 
 PGDLLEXPORT Datum
@@ -372,13 +363,6 @@ timestampset_start_timestamp(PG_FUNCTION_ARGS)
 }
 
 /* End timestamptz */
-
-TimestampTz
-timestampset_end_timestamp_internal(TimestampSet *ts)
-{
-	TimestampTz t = timestampset_time_n(ts, ts->count - 1);
-	return t;
-}
 
 PG_FUNCTION_INFO_V1(timestampset_end_timestamp);
 

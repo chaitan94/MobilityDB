@@ -60,6 +60,7 @@ extern Datum within(PG_FUNCTION_ARGS);
 extern Datum relate_full(PG_FUNCTION_ARGS);
 extern Datum relate_pattern(PG_FUNCTION_ARGS);
 extern Datum geomunion(PG_FUNCTION_ARGS);
+extern Datum ST_Scale(PG_FUNCTION_ARGS);
 extern Datum ST_Snap(PG_FUNCTION_ARGS);
 extern Datum ST_UnaryUnion(PG_FUNCTION_ARGS);
 
@@ -94,14 +95,12 @@ extern Datum LWGEOM_length_linestring(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_line_locate_point(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_line_interpolate_point(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_line_substring(PG_FUNCTION_ARGS);
-extern Datum LWGEOM_makeline(PG_FUNCTION_ARGS);
-extern Datum LWGEOM_makeline_garray(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_makepoint(PG_FUNCTION_ARGS);
-extern Datum LWGEOM_makepoint3dm(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_npoints(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_numgeometries_collection(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_numpoints_linestring(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_pointn_linestring(PG_FUNCTION_ARGS);
+extern Datum LWGEOM_setpoint_linestring(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_shortestline2d(PG_FUNCTION_ARGS); /* For 2D */
 extern Datum LWGEOM_shortestline3d(PG_FUNCTION_ARGS); /* For 3D */
 extern Datum LWGEOM_reverse(PG_FUNCTION_ARGS);

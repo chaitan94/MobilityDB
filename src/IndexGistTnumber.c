@@ -84,7 +84,7 @@ index_leaf_consistent_box(BOX *key, BOX *query, StrategyNumber strategy)
 }
 		
 /*****************************************************************************
- * Internal-page consistent method for temporal points using a box.
+ * Internal-page consistent method for temporal numbers using a box.
  *
  * Should return false if for all data items x below entry, the predicate 
  * x op query must be false, where op is the oper corresponding to strategy 
@@ -166,49 +166,21 @@ gist_tnumber_consistent(PG_FUNCTION_ARGS)
 	 * Transform the query into a box initializing the dimensions that must
 	 * not be taken into account by the operators to infinity.
 	 */
-	if (subtype == INT4OID || subtype == FLOAT8OID)
-	{
-		if (PG_ARGISNULL(1))
-			PG_RETURN_BOOL(false);
-		base_to_box(&query, PG_GETARG_DATUM(1), subtype);
-	}
-	else if (subtype == type_oid(T_INTRANGE) || subtype == type_oid(T_FLOATRANGE))
+	if (subtype == type_oid(T_INTRANGE))
 	{
 		RangeType *range = PG_GETARG_RANGE_P(1);
 		if (range == NULL)
 			PG_RETURN_BOOL(false);
-		range_to_box(&query, range);
+		intrange_to_box_internal(&query, range);
 		PG_FREE_IF_COPY(range, 1);
 	}
-	else if (subtype == TIMESTAMPTZOID)
+	else if (subtype == type_oid(T_FLOATRANGE))
 	{
-		if (PG_ARGISNULL(1))
+		RangeType *range = PG_GETARG_RANGE_P(1);
+		if (range == NULL)
 			PG_RETURN_BOOL(false);
-		TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-		timestamp_to_box(&query, t);
-	}
-	else if (subtype == type_oid(T_TIMESTAMPSET))
-	{
-		TimestampSet *ts = PG_GETARG_TIMESTAMPSET(1);
-		if (ts == NULL)
-			PG_RETURN_BOOL(false);
-		timestampset_to_box(&query, ts);
-		PG_FREE_IF_COPY(ts, 1);
-	}
-	else if (subtype == type_oid(T_PERIOD))
-	{
-		Period *period = PG_GETARG_PERIOD(1);
-		if (period == NULL)
-			PG_RETURN_BOOL(false);
-		period_to_box(&query, period);
-	}
-	else if (subtype == type_oid(T_PERIODSET))
-	{
-		PeriodSet *ps = PG_GETARG_PERIODSET(1);
-		if (ps == NULL)
-			PG_RETURN_BOOL(false);
-		periodset_to_box(&query, ps);
-		PG_FREE_IF_COPY(ps, 1);
+		floatrange_to_box_internal(&query, range);
+		PG_FREE_IF_COPY(range, 1);
 	}
 	else if (subtype == BOXOID)
 	{
@@ -217,7 +189,7 @@ gist_tnumber_consistent(PG_FUNCTION_ARGS)
 			PG_RETURN_BOOL(false);
 		query = *box;
 	}
-	else if (temporal_oid(subtype))
+	else if (temporal_type_oid(subtype))
 	{
 		Temporal *temp = PG_GETARG_TEMPORAL(1);
 		if (temp == NULL)
@@ -257,54 +229,6 @@ gist_tnumber_compress(PG_FUNCTION_ARGS)
 		PG_RETURN_POINTER(retval);
 	}
 	PG_RETURN_POINTER(entry);
-}
-
-/*****************************************************************************
- * Fetch methods for temporal numbers (only for tintinst and tfloatinst)
- * Get point coordinates from its bounding box coordinates and form new
- * gistentry.
- *****************************************************************************/
-
-PG_FUNCTION_INFO_V1(gist_tintinst_fetch);
-
-PGDLLEXPORT Datum
-gist_tintinst_fetch(PG_FUNCTION_ARGS)
-{
-	GISTENTRY  *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
-	BOX		   *in = DatumGetBoxP(entry->key);
-	TemporalInst *inst;
-	
-	GISTENTRY  *retval = palloc(sizeof(GISTENTRY));
-	
-	inst = temporalinst_make(Int32GetDatum((int)in->high.x),
-		in->high.y, INT4OID);
-	
-	gistentryinit(*retval, PointerGetDatum(inst),
-				  entry->rel, entry->page,
-				  entry->offset, false);
-	
-	PG_RETURN_POINTER(retval);
-}
-
-PG_FUNCTION_INFO_V1(gist_tfloatinst_fetch);
-
-PGDLLEXPORT Datum
-gist_tfloatinst_fetch(PG_FUNCTION_ARGS)
-{
-	GISTENTRY  *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
-	BOX		   *in = DatumGetBoxP(entry->key);
-	TemporalInst *inst;
-	GISTENTRY  *retval = palloc(sizeof(GISTENTRY));
-	
-	inst = temporalinst_make(Float8GetDatum(in->high.x), in->high.y, 
-		FLOAT8OID);
-	
-	gistentryinit(*retval, PointerGetDatum(inst),
-				  entry->rel, entry->page,
-				  entry->offset, false);
-	
-	pfree(inst);
-	PG_RETURN_POINTER(retval);
 }
 
 /*****************************************************************************/

@@ -16,17 +16,14 @@ CREATE FUNCTION period_in(cstring)
 	RETURNS period
 	AS 'MODULE_PATHNAME'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
-
 CREATE FUNCTION period_out(period)
 	RETURNS cstring
 	AS 'MODULE_PATHNAME'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
-
 CREATE FUNCTION period_recv(internal)
 	RETURNS period
 	AS 'MODULE_PATHNAME'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
-
 CREATE FUNCTION period_send(period)
 	RETURNS bytea
 	AS 'MODULE_PATHNAME'
@@ -71,14 +68,14 @@ CREATE FUNCTION period(timestamptz)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
 CREATE FUNCTION period(tstzrange)
 	RETURNS period
-	AS 'MODULE_PATHNAME', 'range_as_period'
+	AS 'MODULE_PATHNAME', 'tstzrange_as_period'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
 CREATE FUNCTION tstzrange(period)
 	RETURNS tstzrange
-	AS 'MODULE_PATHNAME', 'period_as_range'
+	AS 'MODULE_PATHNAME', 'period_as_tstzrange'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
 
-CREATE CAST (timestamptz AS period) WITH FUNCTION period(timestamptz);
+CREATE CAST (timestamptz AS period) WITH FUNCTION period(timestamptz) AS IMPLICIT;
 CREATE CAST (tstzrange AS period) WITH FUNCTION period(tstzrange);
 CREATE CAST (period AS tstzrange) WITH FUNCTION tstzrange(period);
 	
@@ -120,31 +117,6 @@ CREATE FUNCTION periodsel(internal, oid, internal, integer)
 	RETURNS float
 	AS 'MODULE_PATHNAME'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
-
-
-/*****************************************************************************
- * Selectivity functions
- *****************************************************************************/
-
-CREATE FUNCTION overlaps_bbox_sel(internal, oid, internal, integer)
-	RETURNS float
-	AS 'MODULE_PATHNAME', 'overlaps_bbox_sel'
-	LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION contains_bbox_sel(internal, oid, internal, integer)
-	RETURNS float
-	AS 'MODULE_PATHNAME', 'contains_bbox_sel'
-	LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION contained_bbox_sel(internal, oid, internal, integer)
-	RETURNS float
-	AS 'MODULE_PATHNAME', 'contained_bbox_sel'
-	LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION same_bbox_sel(internal, oid, internal, integer)
-	RETURNS float
-	AS 'MODULE_PATHNAME', 'same_bbox_sel'
-	LANGUAGE C IMMUTABLE STRICT;
 
 /******************************************************************************
  * Operators
@@ -225,9 +197,16 @@ CREATE OPERATOR CLASS period_ops
 	OPERATOR	5	> ,
 	FUNCTION	1	period_cmp(period, period);
 
+/******************************************************************************/
+
 CREATE FUNCTION period_hash(period)
 	RETURNS integer
 	AS 'MODULE_PATHNAME', 'period_hash'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+
+CREATE FUNCTION period_hash_extended(period)
+	RETURNS integer
+	AS 'MODULE_PATHNAME', 'period_hash_extended'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
 
 CREATE OPERATOR CLASS hash_period_ops

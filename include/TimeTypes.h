@@ -27,36 +27,34 @@ typedef struct
 {
 	TimestampTz	lower;			/* the lower bound value */
 	TimestampTz	upper;			/* the upper bound value */
-	char 		lower_inc;		/* the lower bound is inclusive (vs exclusive) */
-	char 		upper_inc;		/* the upper bound is inclusive (vs exclusive) */
+	bool lower_inc;				/* the lower bound is inclusive (vs exclusive) */
+	bool upper_inc;				/* the upper bound is inclusive (vs exclusive) */
 } Period;
 
 /* Internal representation of either bound of a period (not what's on disk) */
 typedef struct
 {
 	TimestampTz val;			/* the bound value */
-	bool		inclusive;		/* bound is inclusive (vs exclusive) */
-	bool		lower;			/* this is the lower (vs upper) bound */
+	bool inclusive;				/* bound is inclusive (vs exclusive) */
+	bool lower;					/* this is the lower (vs upper) bound */
 } PeriodBound;
 
 typedef struct 
 {
-	int32		vl_len_;		/* varlena header (do not touch directly!) */
-	int32		count;			/* number of Period elements */
+	int32 vl_len_;				/* varlena header (do not touch directly!) */
+	int32 count;				/* number of Period elements */
  	/* variable-length data follows */
 } PeriodSet;
 
 typedef struct 
 {
-	int32		vl_len_;		/* varlena header (do not touch directly!) */
-	int32		count;			/* number of Period elements */
-	double		padding1;		/* Test for solving index problems */
-	double		padding2;		/* Test for solving index problems */
+	int32 vl_len_;				/* varlena header (do not touch directly!) */
+	int32 count;				/* number of Period elements */
  	/* variable-length data follows */
 } TimestampSet;
 
 /*
- * fmgr macros for period objects
+ * fmgr macros for time types
  */
 
 #define DatumGetTimestampSet(X)		((TimestampSet *) DatumGetPointer(X))
@@ -151,8 +149,6 @@ extern bool period_gt_internal(Period *p1, Period *p2);
 /* Assorted support functions */
 
 extern void period_deserialize(Period *p, PeriodBound *lower, PeriodBound *upper);
-extern bool periodarr_find_timestamp(Period **array, int from, int count,
-	TimestampTz t, int *pos, bool ignorebounds);
 extern int period_cmp_bounds(TimestampTz t1, TimestampTz t2, bool lower1, 
 	bool lower2, bool inclusive1, bool inclusive2);
 extern bool period_bounds_adjacent(TimestampTz t1, TimestampTz t2, 
@@ -163,7 +159,6 @@ extern void period_set(Period *p, TimestampTz lower, TimestampTz upper,
 	bool lower_inc, bool upper_inc);
 extern Period *period_copy(Period *p);
 extern float8 period_duration_secs(TimestampTz t1, TimestampTz t2);
-extern double period_duration_time(Period *p);
 extern Interval *period_duration_internal(Period *p);
 extern Period **periodarr_normalize(Period **periods, int count, int *newcount);
 	
@@ -213,8 +208,6 @@ extern Datum timestampset_timestamps(PG_FUNCTION_ARGS);
 extern Datum timestampset_shift(PG_FUNCTION_ARGS);
 
 extern void timestampset_timespan_internal(Period *p, TimestampSet *ts);
-extern TimestampTz timestampset_start_timestamp_internal(TimestampSet *ts);
-extern TimestampTz timestampset_end_timestamp_internal(TimestampSet *ts);
 extern TimestampTz *timestampset_timestamps_internal(TimestampSet *ts);
 extern TimestampSet *timestampset_shift_internal(TimestampSet *ts, Interval *interval);
 
@@ -244,7 +237,6 @@ extern PeriodSet *periodset_from_periodarr_internal(Period **periods,
 	int count, bool normalize);
 extern PeriodSet *periodset_copy(PeriodSet *ps);
 extern bool periodset_find_timestamp(PeriodSet *ps, TimestampTz t, int *pos);
-extern double periodset_duration_time(PeriodSet *ps);
 
 /* Input/output functions */
 
@@ -308,9 +300,12 @@ extern bool periodset_ne_internal(PeriodSet *ps1, PeriodSet *ps2);
  * Prototypes for functions defined in TimeTypesOps.c
  *****************************************************************************/
 
-/* Function needed for GIST index */
+/* Miscellaneous */
 
-extern Datum timestamp_to_period(PG_FUNCTION_ARGS);
+extern Datum timestampset_to_period(PG_FUNCTION_ARGS);
+extern Datum periodset_to_period(PG_FUNCTION_ARGS);
+
+extern void time_type_oid(Oid timetypid);
 
 /* contains? */
 

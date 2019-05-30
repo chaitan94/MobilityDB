@@ -92,262 +92,6 @@ overafter_box_box_internal(BOX *box1, BOX *box2)
 }
 
 /*****************************************************************************/
-/* Datum op Temporal */
-
-PG_FUNCTION_INFO_V1(left_datum_temporal);
-
-PGDLLEXPORT Datum
-left_datum_temporal(PG_FUNCTION_ARGS)
-{
-	Datum d = PG_GETARG_DATUM(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid	valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-	BOX box1, box2;
-	base_to_box(&box1, d, valuetypid);
-	temporal_bbox(&box2, temp);
-	bool result = left_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overleft_datum_temporal);
-
-PGDLLEXPORT Datum
-overleft_datum_temporal(PG_FUNCTION_ARGS)
-{
-	Datum d = PG_GETARG_DATUM(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid	valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-	BOX box1, box2;
-	base_to_box(&box1, d, valuetypid);
-	temporal_bbox(&box2, temp);
-	bool result = overleft_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(right_datum_temporal);
-
-PGDLLEXPORT Datum
-right_datum_temporal(PG_FUNCTION_ARGS)
-{
-	Datum d = PG_GETARG_DATUM(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid	valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-	BOX box1, box2;
-	base_to_box(&box1, d, valuetypid);
-	temporal_bbox(&box2, temp);
-	bool result = right_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overright_datum_temporal);
-
-PGDLLEXPORT Datum
-overright_datum_temporal(PG_FUNCTION_ARGS)
-{
-	Datum d = PG_GETARG_DATUM(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid	valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-	BOX box1, box2;
-	base_to_box(&box1, d, valuetypid);
-	temporal_bbox(&box2, temp);
-	bool result = overright_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-/*****************************************************************************/
-/* RangeType op Temporal */
-
-PG_FUNCTION_INFO_V1(left_range_temporal);
-
-PGDLLEXPORT Datum
-left_range_temporal(PG_FUNCTION_ARGS)
-{
-	RangeType *range = PG_GETARG_RANGE_P(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	BOX box1, box2;
-	range_to_box(&box1, range);
-	temporal_bbox(&box2, temp);
-	bool result = left_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(range, 0);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overleft_range_temporal);
-
-PGDLLEXPORT Datum
-overleft_range_temporal(PG_FUNCTION_ARGS)
-{
-	RangeType *range = PG_GETARG_RANGE_P(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	BOX box1, box2;
-	range_to_box(&box1, range);
-	temporal_bbox(&box2, temp);
-	bool result = overleft_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(range, 0);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(right_range_temporal);
-
-PGDLLEXPORT Datum
-right_range_temporal(PG_FUNCTION_ARGS)
-{
-	RangeType *range = PG_GETARG_RANGE_P(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	BOX box1, box2;
-	range_to_box(&box1, range);
-	temporal_bbox(&box2, temp);
-	bool result = right_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(range, 0);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overright_range_temporal);
-
-PGDLLEXPORT Datum
-overright_range_temporal(PG_FUNCTION_ARGS)
-{
-	RangeType *range = PG_GETARG_RANGE_P(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	BOX box1, box2;
-	range_to_box(&box1, range);
-	temporal_bbox(&box2, temp);
-	bool result = overright_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(range, 0);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-/*****************************************************************************/
-/* TimestampTz op Temporal */
-
-PG_FUNCTION_INFO_V1(before_timestamp_temporal);
-
-PGDLLEXPORT Datum
-before_timestamp_temporal(PG_FUNCTION_ARGS)
-{
-	TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = before_timestamp_period_internal(t, &p);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overbefore_timestamp_temporal);
-
-PGDLLEXPORT Datum
-overbefore_timestamp_temporal(PG_FUNCTION_ARGS)
-{
-	TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overbefore_timestamp_period_internal(t, &p);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(after_timestamp_temporal);
-
-PGDLLEXPORT Datum
-after_timestamp_temporal(PG_FUNCTION_ARGS)
-{
-	TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = after_timestamp_period_internal(t, &p);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overafter_timestamp_temporal);
-
-PGDLLEXPORT Datum
-overafter_timestamp_temporal(PG_FUNCTION_ARGS)
-{
-	TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overafter_timestamp_period_internal(t, &p);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-/*****************************************************************************/
-/* TimestampSet op Temporal */
-
-PG_FUNCTION_INFO_V1(before_timestampset_temporal);
-
-PGDLLEXPORT Datum
-before_timestampset_temporal(PG_FUNCTION_ARGS)
-{
-	TimestampSet *ts = PG_GETARG_TIMESTAMPSET(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = before_timestampset_period_internal(ts, &p);
-	PG_FREE_IF_COPY(ts, 0);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overbefore_timestampset_temporal);
-
-PGDLLEXPORT Datum
-overbefore_timestampset_temporal(PG_FUNCTION_ARGS)
-{
-	TimestampSet *ts = PG_GETARG_TIMESTAMPSET(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overbefore_timestampset_period_internal(ts, &p);
-	PG_FREE_IF_COPY(ts, 0);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(after_timestampset_temporal);
-
-PGDLLEXPORT Datum
-after_timestampset_temporal(PG_FUNCTION_ARGS)
-{
-	TimestampSet *ts = PG_GETARG_TIMESTAMPSET(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = after_timestampset_period_internal(ts, &p);
-	PG_FREE_IF_COPY(ts, 0);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overafter_timestampset_temporal);
-
-PGDLLEXPORT Datum
-overafter_timestampset_temporal(PG_FUNCTION_ARGS)
-{
-	TimestampSet *ts = PG_GETARG_TIMESTAMPSET(0);
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overafter_timestampset_period_internal(ts, &p);
-	PG_FREE_IF_COPY(ts, 0);
-	PG_FREE_IF_COPY(temp, 1);
-	PG_RETURN_BOOL(result);
-}
-
-/*****************************************************************************/
 /* Period op Temporal */
 
 PG_FUNCTION_INFO_V1(before_period_temporal);
@@ -407,64 +151,68 @@ overafter_period_temporal(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************/
-/* PeriodSet op Temporal */
+/* RangeType op Temporal */
 
-PG_FUNCTION_INFO_V1(before_periodset_temporal);
+PG_FUNCTION_INFO_V1(left_range_temporal);
 
 PGDLLEXPORT Datum
-before_periodset_temporal(PG_FUNCTION_ARGS)
+left_range_temporal(PG_FUNCTION_ARGS)
 {
-	PeriodSet *ps = PG_GETARG_PERIODSET(0);
+	RangeType *range = PG_GETARG_RANGE_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = before_periodset_period_internal(ps, &p);
-	PG_FREE_IF_COPY(ps, 0);
+	BOX box1, box2;
+	range_to_box_internal(&box1, range);
+	temporal_bbox(&box2, temp);
+	bool result = left_box_box_internal(&box1, &box2);
+	PG_FREE_IF_COPY(range, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
 
-PG_FUNCTION_INFO_V1(overbefore_periodset_temporal);
+PG_FUNCTION_INFO_V1(overleft_range_temporal);
 
 PGDLLEXPORT Datum
-overbefore_periodset_temporal(PG_FUNCTION_ARGS)
+overleft_range_temporal(PG_FUNCTION_ARGS)
 {
-	PeriodSet *ps = PG_GETARG_PERIODSET(0);
+	RangeType *range = PG_GETARG_RANGE_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overbefore_periodset_period_internal(ps, &p);
-	PG_FREE_IF_COPY(ps, 0);
+	BOX box1, box2;
+	range_to_box_internal(&box1, range);
+	temporal_bbox(&box2, temp);
+	bool result = overleft_box_box_internal(&box1, &box2);
+	PG_FREE_IF_COPY(range, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
 
-PG_FUNCTION_INFO_V1(after_periodset_temporal);
+PG_FUNCTION_INFO_V1(right_range_temporal);
 
 PGDLLEXPORT Datum
-after_periodset_temporal(PG_FUNCTION_ARGS)
+right_range_temporal(PG_FUNCTION_ARGS)
 {
-	PeriodSet *ps = PG_GETARG_PERIODSET(0);
+	RangeType *range = PG_GETARG_RANGE_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = after_periodset_period_internal(ps, &p);
-	PG_FREE_IF_COPY(ps, 0);
+	BOX box1, box2;
+	range_to_box_internal(&box1, range);
+	temporal_bbox(&box2, temp);
+	bool result = right_box_box_internal(&box1, &box2);
+	PG_FREE_IF_COPY(range, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
 
-PG_FUNCTION_INFO_V1(overafter_periodset_temporal);
+PG_FUNCTION_INFO_V1(overright_range_temporal);
 
 PGDLLEXPORT Datum
-overafter_periodset_temporal(PG_FUNCTION_ARGS)
+overright_range_temporal(PG_FUNCTION_ARGS)
 {
-	PeriodSet *ps = PG_GETARG_PERIODSET(0);
+	RangeType *range = PG_GETARG_RANGE_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overafter_periodset_period_internal(ps, &p);
-	PG_FREE_IF_COPY(ps, 0);
+	BOX box1, box2;
+	range_to_box_internal(&box1, range);
+	temporal_bbox(&box2, temp);
+	bool result = overright_box_box_internal(&box1, &box2);
+	PG_FREE_IF_COPY(range, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -482,7 +230,7 @@ left_box_temporal(PG_FUNCTION_ARGS)
 	BOX box1;
 	temporal_bbox(&box1, temp);
 	bool result = left_box_box_internal(box, &box1);
-	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
 
@@ -496,7 +244,7 @@ overleft_box_temporal(PG_FUNCTION_ARGS)
 	BOX box1;
 	temporal_bbox(&box1, temp);
 	bool result = overleft_box_box_internal(box, &box1);
-	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
 
@@ -510,7 +258,7 @@ right_box_temporal(PG_FUNCTION_ARGS)
 	BOX box1;
 	temporal_bbox(&box1, temp);
 	bool result = right_box_box_internal(box, &box1);
-	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
 
@@ -524,7 +272,7 @@ overright_box_temporal(PG_FUNCTION_ARGS)
 	BOX box1;
 	temporal_bbox(&box1, temp);
 	bool result = overright_box_box_internal(box, &box1);
-	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
 
@@ -538,7 +286,7 @@ before_box_temporal(PG_FUNCTION_ARGS)
 	BOX box1;
 	temporal_bbox(&box1, temp);
 	bool result = before_box_box_internal(box, &box1);
-	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
 
@@ -552,7 +300,7 @@ overbefore_box_temporal(PG_FUNCTION_ARGS)
 	BOX box1;
 	temporal_bbox(&box1, temp);
 	bool result = overbefore_box_box_internal(box, &box1);
-	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
 
@@ -566,7 +314,7 @@ after_box_temporal(PG_FUNCTION_ARGS)
 	BOX box1;
 	temporal_bbox(&box1, temp);
 	bool result = after_box_box_internal(box, &box1);
-	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
 
@@ -580,261 +328,7 @@ overafter_box_temporal(PG_FUNCTION_ARGS)
 	BOX box1;
 	temporal_bbox(&box1, temp);
 	bool result = overafter_box_box_internal(box, &box1);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
-}
-
-/*****************************************************************************/
-/* Temporal op Datum */
-
-PG_FUNCTION_INFO_V1(left_temporal_datum);
-
-PGDLLEXPORT Datum
-left_temporal_datum(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum d = PG_GETARG_DATUM(1);
-	Oid	valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	BOX box1, box2;
-	temporal_bbox(&box1, temp);
-	base_to_box(&box2, d, valuetypid);
-	bool result = left_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overleft_temporal_datum);
-
-PGDLLEXPORT Datum
-overleft_temporal_datum(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum d = PG_GETARG_DATUM(1);
-	Oid	valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	BOX box1, box2;
-	temporal_bbox(&box1, temp);
-	base_to_box(&box2, d, valuetypid);
-	bool result = overleft_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(right_temporal_datum);
-
-PGDLLEXPORT Datum
-right_temporal_datum(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum d = PG_GETARG_DATUM(1);
-	Oid	valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	BOX box1, box2;
-	temporal_bbox(&box1, temp);
-	base_to_box(&box2, d, valuetypid);
-	bool result = right_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overright_temporal_datum);
-
-PGDLLEXPORT Datum
-overright_temporal_datum(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum d = PG_GETARG_DATUM(1);
-	Oid	valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	BOX box1, box2;
-	temporal_bbox(&box1, temp);
-	base_to_box(&box2, d, valuetypid);
-	bool result = overright_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
-}
-
-/*****************************************************************************/
-/* Temporal op Range */
-
-PG_FUNCTION_INFO_V1(left_temporal_range);
-
-PGDLLEXPORT Datum
-left_temporal_range(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	RangeType *range = PG_GETARG_RANGE_P(1);
-	BOX box1, box2;
-	temporal_bbox(&box1, temp);
-	range_to_box(&box2, range);
-	bool result = left_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(range, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overleft_temporal_range);
-
-PGDLLEXPORT Datum
-overleft_temporal_range(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	RangeType *range = PG_GETARG_RANGE_P(1);
-	BOX box1, box2;
-	temporal_bbox(&box1, temp);
-	range_to_box(&box2, range);
-	bool result = overleft_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(range, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(right_temporal_range);
-
-PGDLLEXPORT Datum
-right_temporal_range(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	RangeType *range = PG_GETARG_RANGE_P(1);
-	BOX box1, box2;
-	temporal_bbox(&box1, temp);
-	range_to_box(&box2, range);
-	bool result = right_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(range, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overright_temporal_range);
-
-PGDLLEXPORT Datum
-overright_temporal_range(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	RangeType *range = PG_GETARG_RANGE_P(1);
-	BOX box1, box2;
-	temporal_bbox(&box1, temp);
-	range_to_box(&box2, range);
-	bool result = overright_box_box_internal(&box1, &box2);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(range, 1);
-	PG_RETURN_BOOL(result);
-}
-
-
-PG_FUNCTION_INFO_V1(before_temporal_timestamp);
-
-PGDLLEXPORT Datum
-before_temporal_timestamp(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = before_period_timestamp_internal(&p, t);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overbefore_temporal_timestamp);
-
-PGDLLEXPORT Datum
-overbefore_temporal_timestamp(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overbefore_period_timestamp_internal(&p, t);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(after_temporal_timestamp);
-
-PGDLLEXPORT Datum
-after_temporal_timestamp(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = after_period_timestamp_internal(&p, t);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overafter_temporal_timestamp);
-
-PGDLLEXPORT Datum
-overafter_temporal_timestamp(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overafter_period_timestamp_internal(&p, t);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_BOOL(result);
-}
-
-/*****************************************************************************/
-/* Temporal op TimestampSet */
-
-PG_FUNCTION_INFO_V1(before_temporal_timestampset);
-
-PGDLLEXPORT Datum
-before_temporal_timestampset(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	TimestampSet *ts = PG_GETARG_TIMESTAMPSET(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = before_period_timestampset_internal(&p, ts);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(ts, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overbefore_temporal_timestampset);
-
-PGDLLEXPORT Datum
-overbefore_temporal_timestampset(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	TimestampSet *ts = PG_GETARG_TIMESTAMPSET(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overbefore_period_timestampset_internal(&p, ts);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(ts, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(after_temporal_timestampset);
-
-PGDLLEXPORT Datum
-after_temporal_timestampset(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	TimestampSet *ts = PG_GETARG_TIMESTAMPSET(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = after_period_timestampset_internal(&p, ts);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(ts, 1);
-	PG_RETURN_BOOL(result);
-}
-
-PG_FUNCTION_INFO_V1(overafter_temporal_timestampset);
-
-PGDLLEXPORT Datum
-overafter_temporal_timestampset(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	TimestampSet *ts = PG_GETARG_TIMESTAMPSET(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overafter_period_timestampset_internal(&p, ts);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(ts, 1);
+	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
 
@@ -898,65 +392,69 @@ overafter_temporal_period(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************/
-/* Temporal op PeriodSet */
+/* Temporal op Range */
 
-PG_FUNCTION_INFO_V1(before_temporal_periodset);
+PG_FUNCTION_INFO_V1(left_temporal_range);
 
 PGDLLEXPORT Datum
-before_temporal_periodset(PG_FUNCTION_ARGS)
+left_temporal_range(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	PeriodSet *ps = PG_GETARG_PERIODSET(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = before_period_periodset_internal(&p, ps);
+	RangeType *range = PG_GETARG_RANGE_P(1);
+	BOX box1, box2;
+	temporal_bbox(&box1, temp);
+	range_to_box_internal(&box2, range);
+	bool result = left_box_box_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(ps, 1);
+	PG_FREE_IF_COPY(range, 1);
 	PG_RETURN_BOOL(result);
 }
 
-PG_FUNCTION_INFO_V1(overbefore_temporal_periodset);
+PG_FUNCTION_INFO_V1(overleft_temporal_range);
 
 PGDLLEXPORT Datum
-overbefore_temporal_periodset(PG_FUNCTION_ARGS)
+overleft_temporal_range(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	PeriodSet *ps = PG_GETARG_PERIODSET(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overbefore_period_periodset_internal(&p, ps);
+	RangeType *range = PG_GETARG_RANGE_P(1);
+	BOX box1, box2;
+	temporal_bbox(&box1, temp);
+	range_to_box_internal(&box2, range);
+	bool result = overleft_box_box_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(ps, 1);
+	PG_FREE_IF_COPY(range, 1);
 	PG_RETURN_BOOL(result);
 }
 
-PG_FUNCTION_INFO_V1(after_temporal_periodset);
+PG_FUNCTION_INFO_V1(right_temporal_range);
 
 PGDLLEXPORT Datum
-after_temporal_periodset(PG_FUNCTION_ARGS)
+right_temporal_range(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	PeriodSet *ps = PG_GETARG_PERIODSET(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = after_period_periodset_internal(&p, ps);
+	RangeType *range = PG_GETARG_RANGE_P(1);
+	BOX box1, box2;
+	temporal_bbox(&box1, temp);
+	range_to_box_internal(&box2, range);
+	bool result = right_box_box_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(ps, 1);
+	PG_FREE_IF_COPY(range, 1);
 	PG_RETURN_BOOL(result);
 }
 
-PG_FUNCTION_INFO_V1(overafter_temporal_periodset);
+PG_FUNCTION_INFO_V1(overright_temporal_range);
 
 PGDLLEXPORT Datum
-overafter_temporal_periodset(PG_FUNCTION_ARGS)
+overright_temporal_range(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	PeriodSet *ps = PG_GETARG_PERIODSET(1);
-	Period p;
-	temporal_timespan_internal(&p, temp);
-	bool result = overafter_period_periodset_internal(&p, ps);
+	RangeType *range = PG_GETARG_RANGE_P(1);
+	BOX box1, box2;
+	temporal_bbox(&box1, temp);
+	range_to_box_internal(&box2, range);
+	bool result = overright_box_box_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_FREE_IF_COPY(ps, 1);
+	PG_FREE_IF_COPY(range, 1);
 	PG_RETURN_BOOL(result);
 }
 
