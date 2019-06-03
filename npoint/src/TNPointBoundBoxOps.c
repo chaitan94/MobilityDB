@@ -85,6 +85,9 @@ tnpointinstarr_cont_to_stbox(STBOX *box, TemporalInst **instants, int count)
 								 
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 	geo_to_stbox_internal(box, gs);
+	box->tmin = tmin;
+	box->tmax = tmax;
+	MOBDB_FLAGS_SET_T(box->flags, true);
 	pfree(DatumGetPointer(line));
 	pfree(DatumGetPointer(geom));
 	return;
