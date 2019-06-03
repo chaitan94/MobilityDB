@@ -627,19 +627,19 @@ CREATE FUNCTION temporal_overabove(tnpoint, tnpoint)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_before(tnpoint, tnpoint)
 	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'before_temporal_temporal'
+	AS 'MODULE_PATHNAME', 'before_tpoint_tpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overbefore(tnpoint, tnpoint)
 	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overbefore_temporal_temporal'
+	AS 'MODULE_PATHNAME', 'overbefore_tpoint_tpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_after(tnpoint, tnpoint)
 	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'after_temporal_temporal'
+	AS 'MODULE_PATHNAME', 'after_tpoint_tpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overafter(tnpoint, tnpoint)
 	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overafter_temporal_temporal'
+	AS 'MODULE_PATHNAME', 'overafter_tpoint_tpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR << (
