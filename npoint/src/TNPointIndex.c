@@ -26,7 +26,7 @@ gist_tnpoint_compress(PG_FUNCTION_ARGS)
     {
         GISTENTRY *retval = palloc(sizeof(GISTENTRY));
    		Temporal *temp = DatumGetTemporal(entry->key);
-		GBOX *box = palloc0(sizeof(GBOX));
+		STBOX *box = palloc0(sizeof(STBOX));
 		temporal_bbox(box, temp);
 		gistentryinit(*retval, PointerGetDatum(box), entry->rel, entry->page, 
 			entry->offset, false);
@@ -45,10 +45,10 @@ PGDLLEXPORT Datum
 spgist_tnpoint_compress(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	GBOX *result = palloc0(sizeof(GBOX));
+	STBOX *result = palloc0(sizeof(STBOX));
 	temporal_bbox(result, temp);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_GBOX_P(result);
+	PG_RETURN_STBOX_P(result);
 }
 
 /*****************************************************************************/

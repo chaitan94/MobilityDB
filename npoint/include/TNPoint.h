@@ -231,16 +231,16 @@ extern Temporal *distance_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *te
  * TNPointBoundBoxOps.c
  *****************************************************************************/
 
-extern Datum npoint_to_gbox(PG_FUNCTION_ARGS);
-extern Datum npoint_timestamp_to_gbox(PG_FUNCTION_ARGS);
-extern Datum npoint_period_to_gbox(PG_FUNCTION_ARGS);
-extern Datum tnpoint_to_gbox(PG_FUNCTION_ARGS);
+extern Datum npoint_to_stbox(PG_FUNCTION_ARGS);
+extern Datum npoint_timestamp_to_stbox(PG_FUNCTION_ARGS);
+extern Datum npoint_period_to_stbox(PG_FUNCTION_ARGS);
+extern Datum tnpoint_to_stbox(PG_FUNCTION_ARGS);
 
-extern bool npoint_to_gbox_internal(GBOX *box, npoint *np);
-extern void tnpointinst_make_gbox(GBOX *box, Datum value, TimestampTz t);
-extern void tnpointinstarr_disc_to_gbox(GBOX *box, TemporalInst **inst, int count);
-extern void tnpointinstarr_cont_to_gbox(GBOX *box, TemporalInst **inst, int count);
-extern void tnpointseqarr_to_gbox(GBOX *box, TemporalSeq **seq, int count);
+extern bool npoint_to_stbox_internal(STBOX *box, npoint *np);
+extern void tnpointinst_make_stbox(STBOX *box, Datum value, TimestampTz t);
+extern void tnpointinstarr_disc_to_stbox(STBOX *box, TemporalInst **inst, int count);
+extern void tnpointinstarr_cont_to_stbox(STBOX *box, TemporalInst **inst, int count);
+extern void tnpointseqarr_to_stbox(STBOX *box, TemporalSeq **seq, int count);
 
 extern Datum npoint_expand_spatial(PG_FUNCTION_ARGS);
 

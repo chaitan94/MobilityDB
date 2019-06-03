@@ -69,7 +69,7 @@ SELECT DISTINCT temporalType(temp) FROM tbl_tnpoint ORDER BY 1;
 SELECT MAX(memSize(temp)) FROM tbl_tnpoint;
 
 /*
-SELECT gbox(temp) FROM tbl_tnpoint;
+SELECT stbox(temp) FROM tbl_tnpoint;
 */
 
 SELECT getValue(inst) FROM tbl_tnpointinst ORDER BY getValue(inst) LIMIT 1;

@@ -63,13 +63,13 @@ INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
 SELECT '~=', 'periodset', 'tnpoint', count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps ~= temp;
 
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'gbox', 'tnpoint', count(*) FROM tbl_gbox, tbl_tnpoint WHERE b && temp;
+SELECT '&&', 'stbox', 'tnpoint', count(*) FROM tbl_stbox, tbl_tnpoint WHERE b && temp;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'gbox', 'tnpoint', count(*) FROM tbl_gbox, tbl_tnpoint WHERE b @> temp;
+SELECT '@>', 'stbox', 'tnpoint', count(*) FROM tbl_stbox, tbl_tnpoint WHERE b @> temp;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'gbox', 'tnpoint', count(*) FROM tbl_gbox, tbl_tnpoint WHERE b <@ temp;
+SELECT '<@', 'stbox', 'tnpoint', count(*) FROM tbl_stbox, tbl_tnpoint WHERE b <@ temp;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'gbox', 'tnpoint', count(*) FROM tbl_gbox, tbl_tnpoint WHERE b ~= temp;
+SELECT '~=', 'stbox', 'tnpoint', count(*) FROM tbl_stbox, tbl_tnpoint WHERE b ~= temp;
 
 /*****************************************************************************/
 --  tnpoint op <type>
@@ -120,13 +120,13 @@ INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
 SELECT '~=', 'tnpoint', 'periodset', count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp ~= ps;
 
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'tnpoint', 'gbox', count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp && b;
+SELECT '&&', 'tnpoint', 'stbox', count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp && b;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'tnpoint', 'gbox', count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp @> b;
+SELECT '@>', 'tnpoint', 'stbox', count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp @> b;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'tnpoint', 'gbox', count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp <@ b;
+SELECT '<@', 'tnpoint', 'stbox', count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp <@ b;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'tnpoint', 'gbox', count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp ~= b;
+SELECT '~=', 'tnpoint', 'stbox', count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp ~= b;
 
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
 SELECT '&&', 'tnpoint', 'tnpoint', count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp && t2.temp;
@@ -210,17 +210,17 @@ SET gistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps ~= temp
 WHERE op = '~=' and leftarg = 'periodset' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b && temp )
-WHERE op = '&&' and leftarg = 'gbox' and rightarg = 'tnpoint';
+SET gistidx = ( SELECT count(*) FROM tbl_stbox, tbl_tnpoint WHERE b && temp )
+WHERE op = '&&' and leftarg = 'stbox' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b @> temp )
-WHERE op = '@>' and leftarg = 'gbox' and rightarg = 'tnpoint';
+SET gistidx = ( SELECT count(*) FROM tbl_stbox, tbl_tnpoint WHERE b @> temp )
+WHERE op = '@>' and leftarg = 'stbox' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b <@ temp )
-WHERE op = '<@' and leftarg = 'gbox' and rightarg = 'tnpoint';
+SET gistidx = ( SELECT count(*) FROM tbl_stbox, tbl_tnpoint WHERE b <@ temp )
+WHERE op = '<@' and leftarg = 'stbox' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b ~= temp )
-WHERE op = '~=' and leftarg = 'gbox' and rightarg = 'tnpoint';
+SET gistidx = ( SELECT count(*) FROM tbl_stbox, tbl_tnpoint WHERE b ~= temp )
+WHERE op = '~=' and leftarg = 'stbox' and rightarg = 'tnpoint';
 
 /*****************************************************************************/
 -- tnpoint op <type>
@@ -291,17 +291,17 @@ SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp ~= ps
 WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'periodset';
 
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp && b )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'gbox';
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp && b )
+WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'stbox';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp @> b )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'gbox';
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp @> b )
+WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'stbox';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp <@ b )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'gbox';
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp <@ b )
+WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'stbox';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp ~= b )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'gbox';
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp ~= b )
+WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'stbox';
 
 UPDATE test_tnpointboundboxops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp && t2.temp )
@@ -391,17 +391,17 @@ SET spgistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps ~= te
 WHERE op = '~=' and leftarg = 'periodset' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b && temp )
-WHERE op = '&&' and leftarg = 'gbox' and rightarg = 'tnpoint';
+SET spgistidx = ( SELECT count(*) FROM tbl_stbox, tbl_tnpoint WHERE b && temp )
+WHERE op = '&&' and leftarg = 'stbox' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b @> temp )
-WHERE op = '@>' and leftarg = 'gbox' and rightarg = 'tnpoint';
+SET spgistidx = ( SELECT count(*) FROM tbl_stbox, tbl_tnpoint WHERE b @> temp )
+WHERE op = '@>' and leftarg = 'stbox' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b <@ temp )
-WHERE op = '<@' and leftarg = 'gbox' and rightarg = 'tnpoint';
+SET spgistidx = ( SELECT count(*) FROM tbl_stbox, tbl_tnpoint WHERE b <@ temp )
+WHERE op = '<@' and leftarg = 'stbox' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_gbox, tbl_tnpoint WHERE b ~= temp )
-WHERE op = '~=' and leftarg = 'gbox' and rightarg = 'tnpoint';
+SET spgistidx = ( SELECT count(*) FROM tbl_stbox, tbl_tnpoint WHERE b ~= temp )
+WHERE op = '~=' and leftarg = 'stbox' and rightarg = 'tnpoint';
 
 /*****************************************************************************/
 -- tnpoint op <type>
@@ -472,17 +472,17 @@ SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_periodset WHERE temp ~= 
 WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'periodset';
 
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp && b )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'gbox';
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp && b )
+WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'stbox';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp @> b )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'gbox';
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp @> b )
+WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'stbox';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp <@ b )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'gbox';
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp <@ b )
+WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'stbox';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_gbox WHERE temp ~= b )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'gbox';
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_stbox WHERE temp ~= b )
+WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'stbox';
 
 UPDATE test_tnpointboundboxops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp && t2.temp )

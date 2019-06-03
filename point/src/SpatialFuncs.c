@@ -157,7 +157,7 @@ tpoint_check_Z_dimension(Temporal *temp1, Temporal *temp2)
 void
 tpoint_gs_check_Z_dimension(Temporal *temp, GSERIALIZED *gs)
 {
-	if (! FLAGS_GET_Z(gs->flags) || ! MOBDB_FLAGS_GET_Z(temp->flags))
+	if (! MOBDB_FLAGS_GET_Z(temp->flags) || ! FLAGS_GET_Z(gs->flags))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), 
 			errmsg("The temporal point and the geometry must have Z dimension")));
 }
@@ -1925,7 +1925,7 @@ tpointseq_at_geometry(TemporalSeq *seq, Datum geom)
 }
 
 static TemporalS *
-tpoints_at_geometry(TemporalS *ts, GSERIALIZED *gs, GBOX *box2)
+tpoints_at_geometry(TemporalS *ts, GSERIALIZED *gs, STBOX *box2)
 {
 	/* palloc0 used due to the bounding box test in the for loop below */
 	TemporalSeq ***sequences = palloc0(sizeof(TemporalSeq *) * ts->count);
@@ -1935,8 +1935,8 @@ tpoints_at_geometry(TemporalS *ts, GSERIALIZED *gs, GBOX *box2)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
 		/* Bounding box test */
-		GBOX *box1 = temporalseq_bbox_ptr(seq);
-		if (overlaps_gbox_gbox_internal(box1, box2))
+		STBOX *box1 = temporalseq_bbox_ptr(seq);
+		if (overlaps_stbox_stbox_internal(box1, box2))
 		{
 			sequences[i] = tpointseq_at_geometry2(seq, PointerGetDatum(gs), 
 				&countseqs[i]);
@@ -1985,11 +1985,11 @@ tpoint_at_geometry(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	}
 	/* Bounding box test */
-	GBOX box1, box2;
+	STBOX box1 = {0}, box2 = {0};
 	temporal_bbox(&box1, temp);
 	/* Non-empty geometries have a bounding box */
-	assert(geo_to_gbox_internal(&box2, gs));
-	if (!overlaps_gbox_gbox_internal(&box1, &box2))
+	assert(geo_to_stbox_internal(&box2, gs));
+	if (!overlaps_stbox_stbox_internal(&box1, &box2))
 	{
 		PG_FREE_IF_COPY(temp, 0);
 		PG_FREE_IF_COPY(gs, 1);
@@ -2104,7 +2104,7 @@ tpointseq_minus_geometry(TemporalSeq *seq, Datum geom)
 }
 
 static TemporalS *
-tpoints_minus_geometry(TemporalS *ts, GSERIALIZED *gs, GBOX *box2)
+tpoints_minus_geometry(TemporalS *ts, GSERIALIZED *gs, STBOX *box2)
 {
 	/* Singleton sequence set */
 	if (ts->count == 1)
@@ -2118,8 +2118,8 @@ tpoints_minus_geometry(TemporalS *ts, GSERIALIZED *gs, GBOX *box2)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
 		/* Bounding box test */
-		GBOX *box1 = temporalseq_bbox_ptr(seq);
-		if (!overlaps_gbox_gbox_internal(box1, box2))
+		STBOX *box1 = temporalseq_bbox_ptr(seq);
+		if (!overlaps_stbox_stbox_internal(box1, box2))
 		{
 			sequences[i] = palloc(sizeof(TemporalSeq *));
 			sequences[i][0] = temporalseq_copy(seq);
@@ -2167,8 +2167,8 @@ tpoint_minus_geometry(PG_FUNCTION_ARGS)
 	tpoint_gs_same_srid(temp, gs);
 	tpoint_gs_same_dimensionality(temp, gs);
 	/* Bounding box test */
-	GBOX box1, box2;
-	if (!geo_to_gbox_internal(&box2, gs))
+	STBOX box1 = {0}, box2 = {0};
+	if (!geo_to_stbox_internal(&box2, gs))
 	{
 		Temporal* copy = temporal_copy(temp) ;
 		PG_FREE_IF_COPY(temp, 0);
@@ -2176,7 +2176,7 @@ tpoint_minus_geometry(PG_FUNCTION_ARGS)
 		PG_RETURN_POINTER(copy);
 	}
 	temporal_bbox(&box1, temp);
-	if (!overlaps_gbox_gbox_internal(&box1, &box2))
+	if (!overlaps_stbox_stbox_internal(&box1, &box2))
 	{
 		Temporal* copy = temporal_copy(temp) ;
 		PG_FREE_IF_COPY(temp, 0);
@@ -2308,8 +2308,8 @@ NAI_tpointseq_geo(TemporalSeq *seq, Datum geo, Datum (*func)(Datum, Datum))
 
 	double mindist = DBL_MAX;
 	Datum minpoint = 0; /* keep compiler quiet */
-	TimestampTz mint = 0; /* keep compiler quiet */
-	bool mintofree =  false; /* keep compiler quiet */
+	TimestampTz tmin = 0; /* keep compiler quiet */
+	bool tminofree =  false; /* keep compiler quiet */
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
 	for (int i = 0; i < seq->count-1; i++)
 	{
@@ -2322,15 +2322,15 @@ NAI_tpointseq_geo(TemporalSeq *seq, Datum geo, Datum (*func)(Datum, Datum))
 		{
 			mindist = dist;
 			minpoint = point;
-			mint = t;
-			mintofree = tofree;
+			tmin = t;
+			tminofree = tofree;
 		}
 		else if (tofree)
 			pfree(DatumGetPointer(point)); 			
 		inst1 = inst2;
 	}
-	TemporalInst *result = temporalinst_make(minpoint, mint, seq->valuetypid);
-	if (mintofree)
+	TemporalInst *result = temporalinst_make(minpoint, tmin, seq->valuetypid);
+	if (tminofree)
 		pfree(DatumGetPointer(minpoint)); 
 	return result;
 }
@@ -2788,8 +2788,8 @@ shortestline_tpointi_tpointi(TemporalI *ti1, TemporalI *ti2,
 	/* Compute the distance */
 	TemporalI *dist = sync_tfunc2_temporali_temporali(ti1, ti2, func, 
 		FLOAT8OID);
-	Datum minvalue = temporali_min_value(dist);
-	TemporalI *mindistance = temporali_at_value(dist, minvalue);
+	Datum xmin = temporali_min_value(dist);
+	TemporalI *mindistance = temporali_at_value(dist, xmin);
 	TimestampTz t = temporali_start_timestamp(mindistance);
 	TemporalInst *inst1 = temporali_at_timestamp(ti1, t);
 	TemporalInst *inst2 = temporali_at_timestamp(ti2, t);

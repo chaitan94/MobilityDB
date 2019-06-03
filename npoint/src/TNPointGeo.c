@@ -1143,7 +1143,7 @@ tnpointseq_minus_geometry(TemporalSeq *seq, Datum geom)
 }
 
 static TemporalS *
-tnpoints_minus_geometry(TemporalS *ts, GSERIALIZED *gs, GBOX *box2)
+tnpoints_minus_geometry(TemporalS *ts, GSERIALIZED *gs, STBOX *box2)
 {
 	/* Singleton sequence set */
 	if (ts->count == 1)
@@ -1157,8 +1157,8 @@ tnpoints_minus_geometry(TemporalS *ts, GSERIALIZED *gs, GBOX *box2)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
 		/* Bounding box test */
-		GBOX *box1 = temporalseq_bbox_ptr(seq);
-		if (!overlaps_gbox_gbox_internal(box1, box2))
+		STBOX *box1 = temporalseq_bbox_ptr(seq);
+		if (!overlaps_stbox_stbox_internal(box1, box2))
 		{
 			sequences[i] = palloc(sizeof(TemporalSeq *));
 			sequences[i][0] = temporalseq_copy(seq);
@@ -1205,8 +1205,8 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
 
 	/* Bounding box test */
-	GBOX box1, box2;
-	if (!geo_to_gbox_internal(&box2, gs))
+	STBOX box1, box2;
+	if (!geo_to_stbox_internal(&box2, gs))
 	{
 		Temporal* copy = temporal_copy(temp) ;
 		PG_FREE_IF_COPY(temp, 0);
@@ -1214,7 +1214,7 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 		PG_RETURN_POINTER(copy);
 	}
 	temporal_bbox(&box1, temp);
-	if (!overlaps_gbox_gbox_internal(&box1, &box2))
+	if (!overlaps_stbox_stbox_internal(&box1, &box2))
 	{
 		Temporal* copy = temporal_copy(temp) ;
 		PG_FREE_IF_COPY(temp, 0);
