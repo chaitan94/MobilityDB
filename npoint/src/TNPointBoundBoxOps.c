@@ -52,7 +52,7 @@ tnpointinstarr_disc_to_stbox(STBOX *box, TemporalInst **instants, int count)
 	tnpointinst_make_stbox(box, value, instants[0]->t);
 	for (int i = 1; i < count; i++)
 	{
-		STBOX box1;
+		STBOX box1 = {0};
 		value = temporalinst_value(instants[i]);
 		tnpointinst_make_stbox(&box1, value, instants[i]->t);
 		stbox_expand(box, &box1);
@@ -99,7 +99,7 @@ tnpointseqarr_to_stbox(STBOX *box, TemporalSeq **sequences, int count)
 	temporalseq_bbox(box, sequences[0]);
 	for (int i = 1; i < count; i++)
 	{
-		STBOX box1;
+		STBOX box1 = {0};
 		temporalseq_bbox(&box1, sequences[i]);
 		stbox_expand(box, &box1);
 	}
@@ -186,7 +186,7 @@ npoint_expand_spatial(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	double d = PG_GETARG_FLOAT8(1);
-	STBOX box;
+	STBOX box = {0};
 	npoint_to_stbox_internal(&box, np);
 	STBOX *result = stbox_expand_spatial_internal(&box, d);
 	PG_RETURN_POINTER(result);
@@ -203,7 +203,7 @@ overlaps_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	STBOX box1, box2;
+	STBOX box1 = {0}, box2 = {0};
 	if (!npoint_to_stbox_internal(&box1, np))
 	{
 		PG_FREE_IF_COPY(temp, 1);
@@ -222,7 +222,7 @@ overlaps_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	STBOX box1, box2;
+	STBOX box1 = {0}, box2 = {0};
 	temporal_bbox(&box1, temp);
 	if (!npoint_to_stbox_internal(&box2, np))
 	{
@@ -245,7 +245,7 @@ contains_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	STBOX box1, box2;
+	STBOX box1 = {0}, box2 = {0};
 	if (!npoint_to_stbox_internal(&box1, np))
 	{
 		PG_FREE_IF_COPY(temp, 1);
@@ -264,7 +264,7 @@ contains_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	STBOX box1, box2;
+	STBOX box1 = {0}, box2 = {0};
 	if (!npoint_to_stbox_internal(&box2, np))
 	{
 		PG_FREE_IF_COPY(temp, 0);
@@ -287,7 +287,7 @@ contained_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	STBOX box1, box2;
+	STBOX box1 = {0}, box2 = {0};
 	if (!npoint_to_stbox_internal(&box1, np))
 	{
 		PG_FREE_IF_COPY(temp, 1);
@@ -306,7 +306,7 @@ contained_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	STBOX box1, box2;
+	STBOX box1 = {0}, box2 = {0};
 	if (!npoint_to_stbox_internal(&box2, np))
 	{
 		PG_FREE_IF_COPY(temp, 0);
@@ -329,7 +329,7 @@ same_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	STBOX box1, box2;
+	STBOX box1 = {0}, box2 = {0};
 	if (!npoint_to_stbox_internal(&box1, np))
 	{
 		PG_FREE_IF_COPY(temp, 1);
@@ -348,7 +348,7 @@ same_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	STBOX box1, box2;
+	STBOX box1 = {0}, box2 = {0};
 	if (!npoint_to_stbox_internal(&box2, np))
 	{
 		PG_FREE_IF_COPY(temp, 0);
