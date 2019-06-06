@@ -431,10 +431,12 @@ extern LWPOINT* lwline_get_lwpoint(const LWLINE *line, uint32_t where);
 extern LWCOLLECTION* lwcollection_construct(uint8_t type, int srid, GBOX *bbox, uint32_t ngeoms, LWGEOM **geoms);
 
 /* Other constructors */
+extern LWPOINT *lwpoint_construct_empty(int srid, char hasz, char hasm);
 extern LWPOINT *lwpoint_make2d(int srid, double x, double y);
 extern LWPOINT *lwpoint_make3dz(int srid, double x, double y, double z);
 extern LWPOINT *lwpoint_make3dm(int srid, double x, double y, double m);
 extern LWPOINT *lwpoint_make4d(int srid, double x, double y, double z, double m);
+extern LWLINE *lwline_construct_empty(int srid, char hasz, char hasm);
 extern LWLINE *lwline_from_lwgeom_array(int srid, uint32_t ngeoms, LWGEOM **geoms);
 extern LWLINE *lwline_from_ptarray(int srid, uint32_t npoints, LWPOINT **points); /* TODO: deprecate */
 
