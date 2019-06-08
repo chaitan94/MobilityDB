@@ -19,7 +19,7 @@
 #include <float.h>
 #else
 #include <utils/float.h>
-#include <access/tablem.h>
+#include <access/tableam.h>
 #endif
 #include <fmgr.h>
 #include <funcapi.h>
