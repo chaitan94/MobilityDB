@@ -387,9 +387,9 @@ call_function1(PGFunction func, Datum arg1)
 #if POSTGIS_PGSQL_VERSION < 120
     FunctionCallInfoData fcinfo;
     FmgrInfo flinfo;
-    memset(&flinfo, 0, sizeof(flinfo)) ;
+    memset(&flinfo, 0, sizeof(flinfo));
     flinfo.fn_mcxt = CurrentMemoryContext;
-    InitFunctionCallInfoData(fcinfo, fcinfo.flinfo, 1, InvalidOid, NULL, NULL);
+    InitFunctionCallInfoData(fcinfo, NULL, 1, DEFAULT_COLLATION_OID, NULL, NULL);
     fcinfo.flinfo = &flinfo;
     fcinfo.arg[0] = arg1;
     fcinfo.argnull[0] = false;
@@ -398,7 +398,7 @@ call_function1(PGFunction func, Datum arg1)
         elog(ERROR, "function %p returned NULL", (void *) func);
 #else
     LOCAL_FCINFO(fcinfo, 1); /* Could be optimized */
-	InitFunctionCallInfoData(*fcinfo, NULL, 1, InvalidOid, NULL, NULL);
+	InitFunctionCallInfoData(*fcinfo, NULL, 1, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo->args[0].isnull = false;
 	fcinfo->args[0].value = arg1;
 	result = (*func) (fcinfo);
@@ -417,7 +417,7 @@ call_function2(PGFunction func, Datum arg1, Datum arg2)
     FmgrInfo flinfo;
     memset(&flinfo, 0, sizeof(flinfo)) ;
     flinfo.fn_mcxt = CurrentMemoryContext;
-    InitFunctionCallInfoData(fcinfo, NULL, 2, InvalidOid, NULL, NULL);
+    InitFunctionCallInfoData(fcinfo, NULL, 2, DEFAULT_COLLATION_OID, NULL, NULL);
     fcinfo.flinfo = &flinfo;
     fcinfo.arg[0] = arg1;
     fcinfo.argnull[0] = false;
@@ -428,7 +428,7 @@ call_function2(PGFunction func, Datum arg1, Datum arg2)
         elog(ERROR, "function %p returned NULL", (void *) func);
 #else
     LOCAL_FCINFO(fcinfo, 2); /* Could be optimized */
-	InitFunctionCallInfoData(*fcinfo, NULL, 2, InvalidOid, NULL, NULL);
+	InitFunctionCallInfoData(*fcinfo, NULL, 2, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo->args[0].isnull = false;
 	fcinfo->args[0].value = arg1;
 	fcinfo->args[1].isnull = false;
@@ -449,7 +449,7 @@ call_function3(PGFunction func, Datum arg1, Datum arg2, Datum arg3)
     FmgrInfo flinfo;
     memset(&flinfo, 0, sizeof(flinfo)) ;
     flinfo.fn_mcxt = CurrentMemoryContext;
-    InitFunctionCallInfoData(fcinfo, NULL, 3, InvalidOid, NULL, NULL);
+    InitFunctionCallInfoData(fcinfo, NULL, 3, DEFAULT_COLLATION_OID, NULL, NULL);
     fcinfo.flinfo = &flinfo;
     fcinfo.arg[0] = arg1;
     fcinfo.argnull[0] = false;
@@ -462,7 +462,7 @@ call_function3(PGFunction func, Datum arg1, Datum arg2, Datum arg3)
         elog(ERROR, "function %p returned NULL", (void *) func);
 #else
     LOCAL_FCINFO(fcinfo, 3); /* Could be optimized */
-	InitFunctionCallInfoData(*fcinfo, NULL, 3, InvalidOid, NULL, NULL);
+	InitFunctionCallInfoData(*fcinfo, NULL, 3, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo->args[0].isnull = false;
 	fcinfo->args[0].value = arg1;
 	fcinfo->args[1].isnull = false;
@@ -485,7 +485,7 @@ call_function4(PGFunction func, Datum arg1, Datum arg2, Datum arg3, Datum arg4)
     FmgrInfo flinfo;
     memset(&flinfo, 0, sizeof(flinfo)) ;
     flinfo.fn_mcxt = CurrentMemoryContext;
-    InitFunctionCallInfoData(fcinfo, NULL, 4, InvalidOid, NULL, NULL);
+    InitFunctionCallInfoData(fcinfo, NULL, 4, DEFAULT_COLLATION_OID, NULL, NULL);
     fcinfo.flinfo = &flinfo;
     fcinfo.arg[0] = arg1;
     fcinfo.argnull[0] = false;
@@ -500,7 +500,7 @@ call_function4(PGFunction func, Datum arg1, Datum arg2, Datum arg3, Datum arg4)
         elog(ERROR, "function %p returned NULL", (void *) func);
 #else
     LOCAL_FCINFO(fcinfo, 4); /* Could be optimized */
-	InitFunctionCallInfoData(*fcinfo, NULL, 4, InvalidOid, NULL, NULL);
+	InitFunctionCallInfoData(*fcinfo, NULL, 4, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo->args[0].isnull = false;
 	fcinfo->args[0].value = arg1;
 	fcinfo->args[1].isnull = false;
