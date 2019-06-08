@@ -581,9 +581,9 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 	for (int i = 0; i < newcount; i++)
 		memsize += double_pad(VARSIZE(newinstants[i]));
 	/* Precompute the trajectory */
-#ifdef WITH_POSTGIS
 	bool trajectory = false; /* keep compiler quiet */
 	Datum traj = 0; /* keep compiler quiet */
+#ifdef WITH_POSTGIS
 	if (isgeo)
 	{
 		trajectory = type_has_precomputed_trajectory(valuetypid);  

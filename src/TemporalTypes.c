@@ -383,32 +383,34 @@ call_recv(Oid type, StringInfo buf)
 Datum
 call_function1(PGFunction func, Datum arg1)
 {
-	FunctionCallInfoData fcinfo;
-	FmgrInfo flinfo;
-	memset(&flinfo, 0, sizeof(flinfo)) ;
-	flinfo.fn_mcxt = CurrentMemoryContext;
 	Datum result;
+#if POSTGIS_PGSQL_VERSION < 120
+	FunctionCallInfoData fcinfo;
 	InitFunctionCallInfoData(fcinfo, NULL, 1, InvalidOid, NULL, NULL);
-	InitFunctionCallInfoData(fcinfo, NULL, 1, DEFAULT_COLLATION_OID, NULL, NULL);
-	fcinfo.flinfo = &flinfo;
 	fcinfo.arg[0] = arg1;
 	fcinfo.argnull[0] = false;
 	result = (*func) (&fcinfo);
 	if (fcinfo.isnull)
-		elog(ERROR, "Function %p returned NULL", (void *) func);
+		elog(ERROR, "function %p returned NULL", (void *) func);
+#else
+	LOCAL_FCINFO(fcinfo, 1); /* Could be optimized */
+	InitFunctionCallInfoData(*fcinfo, NULL, 1, InvalidOid, NULL, NULL);
+	fcinfo->args[0].isnull = false;
+	fcinfo->args[0].value = arg1;
+	result = (*func) (fcinfo);
+	if (fcinfo->isnull)
+		elog(ERROR, "function %p returned NULL", (void *) func);
+#endif
 	return result;
 }
 
 Datum
 call_function2(PGFunction func, Datum arg1, Datum arg2)
 {
-	FunctionCallInfoData fcinfo;
-	FmgrInfo flinfo;
-	memset(&flinfo, 0, sizeof(flinfo)) ;
-	flinfo.fn_mcxt = CurrentMemoryContext;
 	Datum result;
-	InitFunctionCallInfoData(fcinfo, NULL, 2, DEFAULT_COLLATION_OID, NULL, NULL);
-	fcinfo.flinfo = &flinfo;
+#if POSTGIS_PGSQL_VERSION < 120
+	FunctionCallInfoData fcinfo;
+	InitFunctionCallInfoData(fcinfo, NULL, 2, InvalidOid, NULL, NULL);
 	fcinfo.arg[0] = arg1;
 	fcinfo.argnull[0] = false;
 	fcinfo.arg[1] = arg2;
@@ -416,55 +418,87 @@ call_function2(PGFunction func, Datum arg1, Datum arg2)
 	result = (*func) (&fcinfo);
 	if (fcinfo.isnull)
 		elog(ERROR, "function %p returned NULL", (void *) func);
+#else
+	LOCAL_FCINFO(fcinfo, 2); /* Could be optimized */
+	InitFunctionCallInfoData(*fcinfo, NULL, 2, InvalidOid, NULL, NULL);
+	fcinfo->args[0].isnull = false;
+	fcinfo->args[0].value = arg1;
+	fcinfo->args[1].isnull = false;
+	fcinfo->args[1].value = arg2;
+	result = (*func) (fcinfo);
+	if (fcinfo->isnull)
+		elog(ERROR, "function %p returned NULL", (void *) func);
+#endif
 	return result;
 }
 
 Datum
 call_function3(PGFunction func, Datum arg1, Datum arg2, Datum arg3)
 {
-   FunctionCallInfoData fcinfo;
-   FmgrInfo flinfo;
-	memset(&flinfo, 0, sizeof(flinfo)) ;
-   flinfo.fn_mcxt = CurrentMemoryContext;
-   Datum result;
-   InitFunctionCallInfoData(fcinfo, NULL, 3, InvalidOid, NULL, NULL);
-   fcinfo.flinfo = &flinfo;
-   fcinfo.arg[0] = arg1;
-   fcinfo.argnull[0] = false;
-   fcinfo.arg[1] = arg2;
-   fcinfo.argnull[1] = false;
-   fcinfo.arg[2] = arg3;
-   fcinfo.argnull[2] = false;
-   result = (*func) (&fcinfo);
-   if (fcinfo.isnull)
-	   elog(ERROR, "function %p returned NULL", (void *) func);
-   return result;
+	Datum result;
+#if POSTGIS_PGSQL_VERSION < 120
+	FunctionCallInfoData fcinfo;
+	InitFunctionCallInfoData(fcinfo, NULL, 3, InvalidOid, NULL, NULL);
+	fcinfo.arg[0] = arg1;
+	fcinfo.argnull[0] = false;
+	fcinfo.arg[1] = arg2;
+	fcinfo.argnull[1] = false;
+	fcinfo.arg[2] = arg3;
+	fcinfo.argnull[2] = false;
+	result = (*func) (&fcinfo);
+	if (fcinfo.isnull)
+		elog(ERROR, "function %p returned NULL", (void *) func);
+#else
+	LOCAL_FCINFO(fcinfo, 3); /* Could be optimized */
+	InitFunctionCallInfoData(*fcinfo, NULL, 3, InvalidOid, NULL, NULL);
+	fcinfo->args[0].isnull = false;
+	fcinfo->args[0].value = arg1;
+	fcinfo->args[1].isnull = false;
+	fcinfo->args[1].value = arg2;
+	fcinfo->args[2].isnull = false;
+	fcinfo->args[2].value = arg3;
+	result = (*func) (fcinfo);
+	if (fcinfo->isnull)
+		elog(ERROR, "function %p returned NULL", (void *) func);
+#endif
+	return result;
 }
 
 Datum
 call_function4(PGFunction func, Datum arg1, Datum arg2, Datum arg3, Datum arg4)
 {
-   FunctionCallInfoData fcinfo;
-   FmgrInfo flinfo;
-	memset(&flinfo, 0, sizeof(flinfo)) ;
-   flinfo.fn_mcxt = CurrentMemoryContext;
-   Datum result;
-   InitFunctionCallInfoData(fcinfo, NULL, 4, InvalidOid, NULL, NULL);
-   fcinfo.flinfo = &flinfo;
-   fcinfo.arg[0] = arg1;
-   fcinfo.argnull[0] = false;
-   fcinfo.arg[1] = arg2;
-   fcinfo.argnull[1] = false;
-   fcinfo.arg[2] = arg3;
-   fcinfo.argnull[2] = false;
-   fcinfo.arg[3] = arg4;
-   fcinfo.argnull[3] = false;
-   result = (*func) (&fcinfo);
-   if (fcinfo.isnull)
-	   elog(ERROR, "function %p returned NULL", (void *) func);
-   return result;
+	Datum result;
+#if POSTGIS_PGSQL_VERSION < 120
+	FunctionCallInfoData fcinfo;
+	InitFunctionCallInfoData(fcinfo, NULL, 4, InvalidOid, NULL, NULL);
+	fcinfo.arg[0] = arg1;
+	fcinfo.argnull[0] = false;
+	fcinfo.arg[1] = arg2;
+	fcinfo.argnull[1] = false;
+	fcinfo.arg[2] = arg3;
+	fcinfo.argnull[2] = false;
+	fcinfo.arg[3] = arg4;
+	fcinfo.argnull[3] = false;
+	result = (*func) (&fcinfo);
+	if (fcinfo.isnull)
+	 elog(ERROR, "function %p returned NULL", (void *) func);
+#else
+	LOCAL_FCINFO(fcinfo, 4); /* Could be optimized */
+	InitFunctionCallInfoData(*fcinfo, NULL, 4, InvalidOid, NULL, NULL);
+	fcinfo->args[0].isnull = false;
+	fcinfo->args[0].value = arg1;
+	fcinfo->args[1].isnull = false;
+	fcinfo->args[1].value = arg2;
+	fcinfo->args[2].isnull = false;
+	fcinfo->args[2].value = arg3;
+	fcinfo->args[3].isnull = false;
+	fcinfo->args[3].value = arg4;
+	result = (*func) (fcinfo);
+	if (fcinfo->isnull)
+		elog(ERROR, "function %p returned NULL", (void *) func);
+#endif
+	return result;
 }
-
 /*****************************************************************************
  * Array functions
  *****************************************************************************/
@@ -927,15 +961,28 @@ temporal_typinfo(Oid temptypid, Oid* valuetypid)
 	ScanKeyData scandata;
 	ScanKeyInit(&scandata, 1, BTEqualStrategyNumber, F_OIDEQ, 
 		ObjectIdGetDatum(temptypid));
-	HeapScanDesc scan = heap_beginscan_catalog(rel, 1, &scandata);
-	HeapTuple tuple = heap_getnext(scan, ForwardScanDirection);
-	bool isnull = false;
-	if (HeapTupleIsValid(tuple)) 
-		*valuetypid = DatumGetObjectId(heap_getattr(tuple, 2, tupDesc, &isnull));
-	heap_endscan(scan);
-	heap_close(rel, AccessShareLock);
-	if (! HeapTupleIsValid(tuple) || isnull) 
-		elog(ERROR, "type %u is not a temporal type", temptypid);
+
+	#if POSTGIS_PGSQL_VERSION < 120
+		HeapScanDesc scan = heap_beginscan_catalog(rel, 1, &scandata);
+		HeapTuple tuple = heap_getnext(scan, ForwardScanDirection);
+		bool isnull = false;
+		if (HeapTupleIsValid(tuple))
+		 *valuetypid = DatumGetObjectId(heap_getattr(tuple, 2, tupDesc, &isnull));
+		heap_endscan(scan);
+		heap_close(rel, AccessShareLock);
+		if (! HeapTupleIsValid(tuple) || isnull)
+			elog(ERROR, "type %u is not a temporal type", temptypid);
+	#else
+		TableScanDesc scan = table_beginscan_catalog(rel, 1, &scandata);
+		HeapTuple tuple = heap_getnext(scan, ForwardScanDirection);
+		bool isnull = false;
+		if (HeapTupleIsValid(tuple))
+			*valuetypid = DatumGetObjectId(heap_getattr(tuple, 2, tupDesc, &isnull));
+		table_endscan(scan);
+		table_close(rel, AccessShareLock);
+		if (! HeapTupleIsValid(tuple) || isnull)
+			elog(ERROR, "type %u is not a temporal type", temptypid);
+	#endif
 }
 
 /*****************************************************************************

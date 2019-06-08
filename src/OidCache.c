@@ -154,19 +154,36 @@ populate_oidcache()
 		Relation rel = heap_open(catalog, AccessShareLock);
 		TupleDesc tupDesc = rel->rd_att;
 		ScanKeyData scandata;
-		HeapScanDesc scan = heap_beginscan_catalog(rel, 0, &scandata);
-		HeapTuple tuple = heap_getnext(scan, ForwardScanDirection);
-		while (HeapTupleIsValid(tuple))
-		{
-			bool isnull = false;
-			int32 i = DatumGetInt32(heap_getattr(tuple, 1, tupDesc, &isnull));
-			int32 j = DatumGetInt32(heap_getattr(tuple, 2, tupDesc, &isnull));
-			int32 k = DatumGetInt32(heap_getattr(tuple, 3, tupDesc, &isnull));
-			_op_oids[i][j][k] = DatumGetObjectId(heap_getattr(tuple, 4, tupDesc, &isnull));
-			tuple = heap_getnext(scan, ForwardScanDirection);
-		}
-		heap_endscan(scan);
-		heap_close(rel, AccessShareLock);
+
+		#if POSTGIS_PGSQL_VERSION < 120
+			HeapScanDesc scan = heap_beginscan_catalog(rel, 0, &scandata);
+			HeapTuple tuple = heap_getnext(scan, ForwardScanDirection);
+			while (HeapTupleIsValid(tuple))
+			{
+				bool isnull = false;
+				int32 i = DatumGetInt32(heap_getattr(tuple, 1, tupDesc, &isnull));
+				int32 j = DatumGetInt32(heap_getattr(tuple, 2, tupDesc, &isnull));
+				int32 k = DatumGetInt32(heap_getattr(tuple, 3, tupDesc, &isnull));
+				_op_oids[i][j][k] = DatumGetObjectId(heap_getattr(tuple, 4, tupDesc, &isnull));
+				tuple = heap_getnext(scan, ForwardScanDirection);
+			}
+			heap_endscan(scan);
+			heap_close(rel, AccessShareLock);
+		#else
+			TableScanDesc scan = table_beginscan_catalog(rel, 0, &scandata);
+			HeapTuple tuple = heap_getnext(scan, ForwardScanDirection);
+			while (HeapTupleIsValid(tuple))
+			{
+				bool isnull = false;
+				int32 i = DatumGetInt32(heap_getattr(tuple, 1, tupDesc, &isnull));
+				int32 j = DatumGetInt32(heap_getattr(tuple, 2, tupDesc, &isnull));
+				int32 k = DatumGetInt32(heap_getattr(tuple, 3, tupDesc, &isnull));
+				_op_oids[i][j][k] = DatumGetObjectId(heap_getattr(tuple, 4, tupDesc, &isnull));
+				tuple = heap_getnext(scan, ForwardScanDirection);
+			}
+			table_endscan(scan);
+			table_close(rel, AccessShareLock);
+		#endif
 		_ready = true;
 
 		PopOverrideSearchPath() ;

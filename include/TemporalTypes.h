@@ -15,7 +15,12 @@
 
 #include <postgres.h>
 #include <c.h>
+#if POSTGIS_PGSQL_VERSION < 120
 #include <float.h>
+#else
+#include <utils/float.h>
+#include <access/tablem.h>
+#endif
 #include <fmgr.h>
 #include <funcapi.h>
 #include <math.h>
