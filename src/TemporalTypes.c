@@ -752,10 +752,10 @@ timestamp_remove_duplicates(TimestampTz *values, int count)
 int
 text_cmp(text *arg1, text *arg2, Oid collid)
 {
-    char	   *a1p,
-            *a2p;
-    int			len1,
-            len2;
+	char		*a1p,
+				*a2p;
+	int			len1,
+				len2;
 
     a1p = VARDATA_ANY(arg1);
     a2p = VARDATA_ANY(arg2);
