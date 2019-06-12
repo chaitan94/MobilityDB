@@ -384,7 +384,7 @@ Datum
 call_function1(PGFunction func, Datum arg1)
 {
     Datum result;
-#if POSTGIS_PGSQL_VERSION < 120
+#if MOBILITYDB_PG_VERSION < 120000
     FunctionCallInfoData fcinfo;
     FmgrInfo flinfo;
     memset(&flinfo, 0, sizeof(flinfo));
@@ -412,7 +412,7 @@ Datum
 call_function2(PGFunction func, Datum arg1, Datum arg2)
 {
     Datum result;
-#if POSTGIS_PGSQL_VERSION < 120
+#if MOBILITYDB_PG_VERSION < 120000
     FunctionCallInfoData fcinfo;
     FmgrInfo flinfo;
     memset(&flinfo, 0, sizeof(flinfo)) ;
@@ -444,7 +444,7 @@ Datum
 call_function3(PGFunction func, Datum arg1, Datum arg2, Datum arg3)
 {
     Datum result;
-#if POSTGIS_PGSQL_VERSION < 120
+#if MOBILITYDB_PG_VERSION < 120000
     FunctionCallInfoData fcinfo;
     FmgrInfo flinfo;
     memset(&flinfo, 0, sizeof(flinfo)) ;
@@ -480,7 +480,7 @@ Datum
 call_function4(PGFunction func, Datum arg1, Datum arg2, Datum arg3, Datum arg4)
 {
     Datum result;
-#if POSTGIS_PGSQL_VERSION < 120
+#if MOBILITYDB_PG_VERSION < 120000
     FunctionCallInfoData fcinfo;
     FmgrInfo flinfo;
     memset(&flinfo, 0, sizeof(flinfo)) ;
@@ -978,7 +978,7 @@ temporal_typinfo(Oid temptypid, Oid* valuetypid)
     ScanKeyInit(&scandata, 1, BTEqualStrategyNumber, F_OIDEQ,
                 ObjectIdGetDatum(temptypid));
 
-#if POSTGIS_PGSQL_VERSION < 120
+#if MOBILITYDB_PG_VERSION < 120000
     HeapScanDesc scan = heap_beginscan_catalog(rel, 1, &scandata);
     HeapTuple tuple = heap_getnext(scan, ForwardScanDirection);
     bool isnull = false;

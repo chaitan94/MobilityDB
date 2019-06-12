@@ -15,11 +15,12 @@
 
 #include <postgres.h>
 #include <c.h>
-#if POSTGIS_PGSQL_VERSION < 120
-#include <float.h>
+#if MOBILITYDB_PG_VERSION < 120000
+	#include <float.h>
 #else
-#include <utils/float.h>
-#include <access/tableam.h>
+	#include <float.h>
+	#include <utils/float.h>
+	#include <access/tableam.h>
 #endif
 #include <fmgr.h>
 #include <funcapi.h>

@@ -69,6 +69,8 @@ include(CTest)
 enable_testing()
 
 set(PG_REQUIRED_VERSION "PostgreSQL 11")
+#set(PG_REQUIRED_VERSION "PostgreSQL 12beta")
+add_definitions(-DMOBILITYDB_PG_VERSION=PG_VERSION_NUM)
 
 find_program(PGCONFIG pg_config)
 if(NOT PGCONFIG)

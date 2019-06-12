@@ -85,9 +85,6 @@ extern double calc_period_hist_selectivity_adjacent(PeriodBound *lower,
 
 extern void get_const_bounds(Node *other, BBoxBounds *bBoxBounds, bool *numeric,
 	double *lower, double *upper, bool *temporal, Period **period);
-extern double ineq_histogram_selectivity(PlannerInfo *root, VariableStatData *vardata,
-	FmgrInfo *opproc, bool isgt, bool iseq, Datum constval, Oid consttype,
-	StatisticsStrategy strategy);
 
 #define STATISTIC_KIND_BOUNDS_HISTOGRAM_FIRST_DIM  500;
 #define STATISTIC_KIND_BOUNDS_HISTOGRAM_SECOND_DIM 501;

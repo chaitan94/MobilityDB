@@ -155,7 +155,7 @@ populate_oidcache()
 		TupleDesc tupDesc = rel->rd_att;
 		ScanKeyData scandata;
 
-		#if POSTGIS_PGSQL_VERSION < 120
+		#if MOBILITYDB_PG_VERSION < 120000
 			HeapScanDesc scan = heap_beginscan_catalog(rel, 0, &scandata);
 			HeapTuple tuple = heap_getnext(scan, ForwardScanDirection);
 			while (HeapTupleIsValid(tuple))
