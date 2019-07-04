@@ -15,10 +15,8 @@
 
 #include <postgres.h>
 #include <c.h>
-#if MOBILITYDB_PG_VERSION < 120000
-	#include <float.h>
-#else
-	#include <float.h>
+#include <float.h>
+#if MOBILITYDB_PG_VERSION >= 120000
 	#include <utils/float.h>
 	#include <access/tableam.h>
 #endif
