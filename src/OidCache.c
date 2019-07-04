@@ -142,10 +142,8 @@ populate_oidcache()
 
 	PG_TRY();
 	{
-
 		populate_types();
 		bzero(_op_oids, sizeof(_op_oids));
-
 		/*
 		 * This fetches the pre-computed operator cache from the catalog where
 		 * it is stored in a table. See the fill_opcache function below.
