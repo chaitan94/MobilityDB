@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * GeomAggFuncs.c
- *	  Aggregate functions for temporal points.
+ * GeoAggFuncs.c
+ *	Aggregate functions for temporal points.
  *
  * The only function currently provided is temporal centroid.
  *
@@ -12,7 +12,16 @@
  *
  *****************************************************************************/
 
+#include "GeoAggFuncs.h"
+
+#include <assert.h>
+
+#include "TemporalTypes.h"
+#include "OidCache.h"
+#include "TemporalUtil.h"
+#include "DoubleN.h"
 #include "TemporalPoint.h"
+#include "SpatialFuncs.h"
 
 /*****************************************************************************
  * Generic functions
@@ -42,7 +51,7 @@ static void geoaggstate_check_as(AggregateState *state1, AggregateState *state2)
 		geoaggstate_check(state1, extra2->srid, extra2->has_z);
 }
 
-static void geoaggstate_check_t(AggregateState *state, Temporal *t)
+void geoaggstate_check_t(AggregateState *state, Temporal *t)
 {
 	geoaggstate_check(state, tpoint_srid_internal(t), MOBDB_FLAGS_GET_Z(t->flags) != 0);
 }
@@ -119,7 +128,7 @@ tpoints_transform_tcentroid(TemporalS *ts)
  * Aggregate functions
  *****************************************************************************/
 
-static AggregateState *
+AggregateState *
 aggstate_make_tcentroid(FunctionCallInfo fcinfo, Temporal *temp)
 {
     AggregateState *result = NULL;

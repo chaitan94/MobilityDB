@@ -16,7 +16,18 @@
  *
  *****************************************************************************/
 
+#include "TNPointTempSpatialRels.h"
+
+#include <liblwgeom.h>
+
+#include "TemporalTypes.h"
+#include "OidCache.h"
+#include "TemporalUtil.h"
+#include "LiftingFuncs.h"
+#include "SpatialRels.h"
+#include "TempSpatialRels.h"
 #include "TNPoint.h"
+#include "StaticObjects.h"
 
 /*****************************************************************************
  * Intersection functions

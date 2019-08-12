@@ -10,10 +10,16 @@
  *
  *****************************************************************************/
 
+#include "Parser.h"
+
+#include <utils/timestamp.h>
+
+#include "PeriodSet.h"
+#include "Period.h"
+#include "TimestampSet.h"
 #include "TemporalTypes.h"
-#ifdef WITH_POSTGIS
-#include "TemporalPoint.h"
-#endif
+#include "TemporalUtil.h"
+
 
 /*****************************************************************************/
 
@@ -273,7 +279,7 @@ timestamp_parse(char **str)
 	Datum result = call_input(TIMESTAMPTZOID, *str);
 	(*str)[delim] = bak;
 	*str += delim;
-	return DatumGetTimestamp(result);
+	return DatumGetTimestampTz(result);
 }
 
 Period *

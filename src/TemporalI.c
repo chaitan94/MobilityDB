@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * TemporalI.c
- *	  Basic functions for temporal instants.
+ *	  Basic functions for temporal instant sets.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
  * 		Universite Libre de Bruxelles
@@ -10,10 +10,27 @@
  *
  *****************************************************************************/
 
-#include <TemporalTypes.h>
+#include "TemporalI.h"
+
+#include <assert.h>
+#include <libpq/pqformat.h>
+#include <utils/builtins.h>
+#include <utils/timestamp.h>
+
+#include "TimeTypes.h"
+#include "TimestampSet.h"
+#include "Period.h"
+#include "PeriodSet.h"
+#include "TimeOps.h"
+#include "TemporalTypes.h"
+#include "OidCache.h"
+#include "TemporalUtil.h"
+#include "BoundBoxOps.h"
+#include "Range.h"
 
 #ifdef WITH_POSTGIS
 #include "TemporalPoint.h"
+#include "SpatialFuncs.h"
 #endif
 
 /*****************************************************************************
@@ -600,7 +617,7 @@ tnumberi_value_range(TemporalI *ti)
 {
 	TBOX *box = temporali_bbox_ptr(ti);
 	Datum min = 0, max = 0;
-	number_base_type_oid(ti->valuetypid);
+	numeric_base_type_oid(ti->valuetypid);
 	if (ti->valuetypid == INT4OID)
 	{
 		min = Int32GetDatum((int)(box->xmin));
@@ -749,7 +766,7 @@ temporali_ever_equals(TemporalI *ti, Datum value)
 	/* Bounding box test */
 	if (ti->valuetypid == INT4OID || ti->valuetypid == FLOAT8OID)
 	{
-		TBOX box1 = {0}, box2 = {0};
+		TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 		temporali_bbox(&box1, ti);
 		base_to_tbox(&box2, value, ti->valuetypid);
 		if (!contains_tbox_tbox_internal(&box1, &box2))
@@ -773,7 +790,7 @@ temporali_always_equals(TemporalI *ti, Datum value)
 	/* Bounding box test */
 	if (ti->valuetypid == INT4OID || ti->valuetypid == FLOAT8OID)
 	{
-		TBOX box = {0};
+		TBOX box = {0,0,0,0,0};
 		temporali_bbox(&box, ti);
 		if (ti->valuetypid == INT4OID)
 			return box.xmin == box.xmax &&
@@ -826,7 +843,7 @@ temporali_at_value(TemporalI *ti, Datum value)
 	/* Bounding box test */
 	if (valuetypid == INT4OID || valuetypid == FLOAT8OID)
 	{
-		TBOX box1 = {0}, box2 = {0};
+		TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 		temporali_bbox(&box1, ti);
 		base_to_tbox(&box2, value, valuetypid);
 		if (!contains_tbox_tbox_internal(&box1, &box2))
@@ -866,7 +883,7 @@ temporali_minus_value(TemporalI *ti, Datum value)
 	/* Bounding box test */
 	if (valuetypid == INT4OID || valuetypid == FLOAT8OID)
 	{
-		TBOX box1 = {0}, box2 = {0};
+		TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 		temporali_bbox(&box1, ti);
 		base_to_tbox(&box2, value, valuetypid);
 		if (!contains_tbox_tbox_internal(&box1, &box2))
@@ -986,7 +1003,7 @@ TemporalI *
 tnumberi_at_range(TemporalI *ti, RangeType *range)
 {
 	/* Bounding box test */
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	temporali_bbox(&box1, ti);
 	range_to_tbox_internal(&box2, range);
 	if (!overlaps_tbox_tbox_internal(&box1, &box2))
@@ -1025,7 +1042,7 @@ TemporalI *
 tnumberi_minus_range(TemporalI *ti, RangeType *range)
 {
 	/* Bounding box test */
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	temporali_bbox(&box1, ti);
 	range_to_tbox_internal(&box2, range);
 	if (!overlaps_tbox_tbox_internal(&box1, &box2))

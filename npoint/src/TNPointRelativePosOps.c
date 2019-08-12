@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * RelativePosOpsM.c
- *	  Relative position operators for temporal geometry points.
+ * TNPointRelativePosOps.c
+ *	  Relative position operators for temporal network points.
  *
  * The following operators are defined for the spatial dimension:
  * - left, overleft, right, overright, below, overbelow, above, overabove,
@@ -21,7 +21,12 @@
  *
  *****************************************************************************/
 
+#include "TNPointRelativePosOps.h"
+
+#include "GeoBoundBoxOps.h"
+#include "GeoRelativePosOps.h"
 #include "TNPoint.h"
+#include "StaticObjects.h"
 
 /*****************************************************************************/
 /* stbox op Temporal */

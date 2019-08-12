@@ -10,7 +10,20 @@
  *
  *****************************************************************************/
 
+#include "TNPointGeo.h"
+
+#include <float.h>
+
+#include "PeriodSet.h"
+#include "TimeOps.h"
+#include "TemporalTypes.h"
+#include "OidCache.h"
+#include "TemporalUtil.h"
+#include "SpatialFuncs.h"
+#include "GeoBoundBoxOps.h"
+#include "TempDistance.h"
 #include "TNPoint.h"
+#include "StaticObjects.h"
 
 /*****************************************************************************
  * Trajectory functions

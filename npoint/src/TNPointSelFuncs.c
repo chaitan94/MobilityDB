@@ -2,7 +2,7 @@
  *
  * TNPointSelFuncs.c
  *      Functions for selectivity estimation of operators on temporal network 
- *      point types
+ *      points
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
  * 		Universite Libre de Bruxelles
@@ -13,7 +13,7 @@
  *
  *****************************************************************************/
  
-#include "TemporalTypes.h"
+#include "TNPointSelFuncs.h"
 
 /*
  *	Selectivity functions for temporal types operators.  These are bogus -- 

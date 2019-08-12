@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * BoundingBoxOps.c
+ * BoundBoxOps.c
  *	  Bounding box operators for temporal types.
  *
  * The bounding box of temporal values are 
@@ -20,9 +20,27 @@
  *
  *****************************************************************************/
 
+#include "BoundBoxOps.h"
+
+#include <assert.h>
+#include <utils/builtins.h>
+#include <utils/timestamp.h>
+
+#include "TimestampSet.h"
+#include "Period.h"
+#include "PeriodSet.h"
+#include "TimeOps.h"
 #include "TemporalTypes.h"
+#include "OidCache.h"
+#include "TemporalUtil.h"
+#include "Range.h"
+#include "Tbox.h"
 #ifdef WITH_POSTGIS
 #include "TNPoint.h"
+#include "TemporalPoint.h"
+#include "STbox.h"
+#include "GeoBoundBoxOps.h"
+#include "StaticObjects.h"
 #endif
 
 /*****************************************************************************
@@ -256,7 +274,7 @@ tnumberinstarr_to_tbox(TBOX *box, TemporalInst **instants, int count)
 	temporalinst_make_bbox(box, value, instants[0]->t, valuetypid);
 	for (int i = 1; i < count; i++)
 	{
-		TBOX box1 = {0};
+		TBOX box1 = {0,0,0,0,0};;
 		value = temporalinst_value(instants[i]);
 		temporalinst_make_bbox(&box1, value, instants[i]->t, valuetypid);
 		tbox_expand(box, &box1);
@@ -393,7 +411,7 @@ static void
 tnumber_expand_tbox(TBOX *box, Temporal *temp, TemporalInst *inst)
 {
 	temporal_bbox(box, temp);
-	TBOX box1 = {0};
+	TBOX box1 = {0,0,0,0,0};;
 	temporalinst_bbox(&box1, inst);
 	tbox_expand(box, &box1);
 	return;
@@ -487,7 +505,7 @@ temporals_expand_bbox(void *box, TemporalS *ts, TemporalInst *inst)
 void
 base_to_tbox(TBOX *box, Datum value, Oid valuetypid)
 {
-	number_base_type_oid(valuetypid);
+	numeric_base_type_oid(valuetypid);
 	if (valuetypid == INT4OID)
 		box->xmin = box->xmax = (double)(DatumGetInt32(value));
 	else if (valuetypid == FLOAT8OID)
@@ -1065,7 +1083,7 @@ contains_bbox_range_tnumber(PG_FUNCTION_ARGS)
 {
 	RangeType *range = PG_GETARG_RANGE_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	range_to_tbox_internal(&box1, range);
 	temporal_bbox(&box2, temp);
 	bool result = contains_tbox_tbox_internal(&box1, &box2);
@@ -1081,7 +1099,7 @@ contains_bbox_tnumber_range(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	RangeType *range = PG_GETARG_RANGE_P(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	temporal_bbox(&box1, temp);
 	range_to_tbox_internal(&box2, range);
 	bool result = contains_tbox_tbox_internal(&box1, &box2);
@@ -1097,7 +1115,7 @@ contains_bbox_tbox_tnumber(PG_FUNCTION_ARGS)
 {
 	TBOX *box = PG_GETARG_TBOX_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0};
+	TBOX box1 = {0,0,0,0,0};;
 	temporal_bbox(&box1, temp);
 	bool result = contains_tbox_tbox_internal(box, &box1);
 	PG_FREE_IF_COPY(temp, 1);
@@ -1111,7 +1129,7 @@ contains_bbox_tnumber_tbox(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	TBOX *box = PG_GETARG_TBOX_P(1);
-	TBOX box1 = {0};
+	TBOX box1 = {0,0,0,0,0};;
 	temporal_bbox(&box1, temp);
 	bool result = contains_tbox_tbox_internal(&box1, box);
 	PG_FREE_IF_COPY(temp, 0);
@@ -1125,7 +1143,7 @@ contains_bbox_tnumber_tnumber(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	temporal_bbox(&box1, temp1);
 	temporal_bbox(&box2, temp2);
 	bool result = contains_tbox_tbox_internal(&box1, &box2);
@@ -1143,7 +1161,7 @@ contained_bbox_range_tnumber(PG_FUNCTION_ARGS)
 {
 	RangeType *range = PG_GETARG_RANGE_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	range_to_tbox_internal(&box1, range);
 	temporal_bbox(&box2, temp);
 	bool result = contained_tbox_tbox_internal(&box1, &box2);
@@ -1159,7 +1177,7 @@ contained_bbox_tnumber_range(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	RangeType *range = PG_GETARG_RANGE_P(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	temporal_bbox(&box1, temp);
 	range_to_tbox_internal(&box2, range);
 	bool result = contained_tbox_tbox_internal(&box1, &box2);
@@ -1175,7 +1193,7 @@ contained_bbox_tbox_tnumber(PG_FUNCTION_ARGS)
 {
 	TBOX *box = PG_GETARG_TBOX_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0};
+	TBOX box1 = {0,0,0,0,0};;
 	temporal_bbox(&box1, temp);
 	bool result = contained_tbox_tbox_internal(box, &box1);
 	PG_FREE_IF_COPY(temp, 1);
@@ -1189,7 +1207,7 @@ contained_bbox_tnumber_tbox(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	TBOX *box = PG_GETARG_TBOX_P(1);
-	TBOX box1 = {0};
+	TBOX box1 = {0,0,0,0,0};;
 	temporal_bbox(&box1, temp);
 	bool result = contained_tbox_tbox_internal(&box1, box);
 	PG_FREE_IF_COPY(temp, 0);
@@ -1203,7 +1221,7 @@ contained_bbox_tnumber_tnumber(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	temporal_bbox(&box1, temp1);
 	temporal_bbox(&box2, temp2);
 	bool result = contained_tbox_tbox_internal(&box1, &box2);
@@ -1221,7 +1239,7 @@ overlaps_bbox_range_tnumber(PG_FUNCTION_ARGS)
 {
 	RangeType *range = PG_GETARG_RANGE_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	range_to_tbox_internal(&box1, range);
 	temporal_bbox(&box2, temp);
 	bool result = overlaps_tbox_tbox_internal(&box1, &box2);
@@ -1237,7 +1255,7 @@ overlaps_bbox_tnumber_range(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	RangeType *range = PG_GETARG_RANGE_P(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	temporal_bbox(&box1, temp);
 	range_to_tbox_internal(&box2, range);
 	bool result = overlaps_tbox_tbox_internal(&box1, &box2);
@@ -1253,7 +1271,7 @@ overlaps_bbox_tbox_tnumber(PG_FUNCTION_ARGS)
 {
 	TBOX *box = PG_GETARG_TBOX_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0};
+	TBOX box1 = {0,0,0,0,0};;
 	temporal_bbox(&box1, temp);
 	bool result = overlaps_tbox_tbox_internal(box, &box1);
 	PG_FREE_IF_COPY(temp, 1);
@@ -1267,7 +1285,7 @@ overlaps_bbox_tnumber_tbox(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	TBOX *box = PG_GETARG_TBOX_P(1);
-	TBOX box1 = {0};
+	TBOX box1 = {0,0,0,0,0};;
 	temporal_bbox(&box1, temp);
 	bool result = overlaps_tbox_tbox_internal(&box1, box);
 	PG_FREE_IF_COPY(temp, 0);
@@ -1281,7 +1299,7 @@ overlaps_bbox_tnumber_tnumber(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	temporal_bbox(&box1, temp1);
 	temporal_bbox(&box2, temp2);
 	bool result = overlaps_tbox_tbox_internal(&box1, &box2);
@@ -1299,7 +1317,7 @@ same_bbox_tnumber_range(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	RangeType *range = PG_GETARG_RANGE_P(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	temporal_bbox(&box1, temp);
 	range_to_tbox_internal(&box2, range);
 	bool result = same_tbox_tbox_internal(&box1, &box2);
@@ -1315,7 +1333,7 @@ same_bbox_range_tnumber(PG_FUNCTION_ARGS)
 {
 	RangeType *range = PG_GETARG_RANGE_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	range_to_tbox_internal(&box1, range);
 	temporal_bbox(&box2, temp);
 	bool result = same_tbox_tbox_internal(&box1, &box2);
@@ -1331,7 +1349,7 @@ same_bbox_tbox_tnumber(PG_FUNCTION_ARGS)
 {
 	TBOX *box = PG_GETARG_TBOX_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0};
+	TBOX box1 = {0,0,0,0,0};;
 	temporal_bbox(&box1, temp);
 	bool result = same_tbox_tbox_internal(box, &box1);
 	PG_FREE_IF_COPY(temp, 1);
@@ -1345,7 +1363,7 @@ same_bbox_tnumber_tbox(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	TBOX *box = PG_GETARG_TBOX_P(1);
-	TBOX box1 = {0};
+	TBOX box1 = {0,0,0,0,0};;
 	temporal_bbox(&box1, temp);
 	bool result = same_tbox_tbox_internal(&box1, box);
 	PG_FREE_IF_COPY(temp, 0);
@@ -1359,7 +1377,7 @@ same_bbox_tnumber_tnumber(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
-	TBOX box1 = {0}, box2 = {0};
+	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
 	temporal_bbox(&box1, temp1);
 	temporal_bbox(&box2, temp2);
 	bool result = same_tbox_tbox_internal(&box1, &box2);

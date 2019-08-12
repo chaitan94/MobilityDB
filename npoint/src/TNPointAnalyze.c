@@ -1,21 +1,21 @@
 /*****************************************************************************
  *
- * TempPointAnalyze.c
- *	  Functions for gathering statistics from temporal columns
+ * TNPointAnalyze.c
+ *	Functions for gathering statistics from temporal network point columns
  *
  * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
- * * IDENTIFICATION
- *	include/TemporalAnalyze.c
  *
  *****************************************************************************/
-#include <TemporalTypes.h>
-#include <TemporalAnalyze.h>
+
+#include "TNPointAnalyze.h"
+
 /*****************************************************************************/
 
 
 PG_FUNCTION_INFO_V1(tnpoint_analyze);
-Datum
+
+PGDLLEXPORT Datum
 tnpoint_analyze(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_BOOL(true);

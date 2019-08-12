@@ -18,7 +18,12 @@
  *
  *****************************************************************************/
 
+#include "TNPointSpatialRels.h"
+
+#include "LiftingFuncs.h"
+#include "SpatialRels.h"
 #include "TNPoint.h"
+#include "StaticObjects.h"
 
 /*****************************************************************************
  * Generic binary functions for tnpoint <rel> geo

@@ -10,7 +10,14 @@
  *
  *****************************************************************************/
 
+#include "TNPointDistance.h"
+
+#include "TemporalTypes.h"
+#include "TemporalUtil.h"
+#include "SpatialFuncs.h"
+#include "TempDistance.h"
 #include "TNPoint.h"
+#include "StaticObjects.h"
 
 /*****************************************************************************
  * Generic distance functions when temporal npoints are moving

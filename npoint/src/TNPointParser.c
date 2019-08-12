@@ -10,7 +10,12 @@
  *
  *****************************************************************************/
 
+#include "TNPointParser.h"
+
+#include "TemporalTypes.h"
+#include "Parser.h"
 #include "TNPoint.h"
+#include "StaticObjects.h"
 
 /*****************************************************************************/
 

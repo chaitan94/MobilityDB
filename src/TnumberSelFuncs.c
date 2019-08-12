@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
- * TempSelFuncs.c
- *	  Functions for selectivity estimation of operators on temporal types
+ * TnumberSelFuncs.c
+ *	  Functions for selectivity estimation of operators on temporal numeric types
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
  * 		Universite Libre de Bruxelles
@@ -11,8 +11,8 @@
  *	These functions are only stubs, they need to be written TODO
  *
  *****************************************************************************/
- 
-#include "TemporalTypes.h"
+
+#include "TnumberSelFuncs.h"
 
 /*
  *	Selectivity functions for temporal types operators.  These are bogus -- 

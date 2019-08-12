@@ -19,7 +19,14 @@
  *
  *****************************************************************************/
 
+#include "TNPointBoundBoxOps.h"
+
+#include "TemporalTypes.h"
+#include "TemporalUtil.h"
+#include "STbox.h"
+#include "GeoBoundBoxOps.h"
 #include "TNPoint.h"
+#include "StaticObjects.h"
 
 /*****************************************************************************
  * Transform a temporal npoint to a STBOX

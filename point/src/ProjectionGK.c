@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * ProjectionOps.c
+ * ProjectionGK.c
  *	  Implementation of the Gauss Krueger projection that is used in Secondo
  * 
  * This projection does not correspond to any standard projection in
@@ -13,7 +13,14 @@
  *
  *****************************************************************************/
 
+#include "ProjectionGK.h"
+
+#include <liblwgeom.h>
+#include "TemporalTypes.h"
+#include "OidCache.h"
+#include "PostGIS.h"
 #include "TemporalPoint.h"
+#include "SpatialFuncs.h"
 
 double Pi   = 3.1415926535897932384626433832795028841971693993751058209749445923078164;
 double awgs = 6378137.0;

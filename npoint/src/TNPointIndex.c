@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * TPointIndex.c
+ * TNPointIndex.c
  *	  R-tree GiST and SP-GiST indexes for temporal network points.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li
@@ -10,6 +10,10 @@
  *
  *****************************************************************************/
 
+#include "TNPointIndex.h"
+
+#include <access/gist.h>
+#include "TemporalPoint.h"
 #include "TNPoint.h"
 
 /*****************************************************************************

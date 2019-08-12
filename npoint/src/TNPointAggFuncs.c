@@ -12,7 +12,15 @@
  *
  *****************************************************************************/
 
+#include "TNPointAggFuncs.h"
+
+#include <assert.h>
+
+#include "AggregateFuncs.h"
+#include "GeoAggFuncs.h"
 #include "TNPoint.h"
+
+/*****************************************************************************/
 
 PG_FUNCTION_INFO_V1(tnpoint_tcentroid_transfn);
 

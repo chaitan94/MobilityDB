@@ -10,7 +10,18 @@
  *
  *****************************************************************************/
 
+#include "StaticObjects.h"
+
+#include <libpq/pqformat.h>
+#include <executor/spi.h>
+#include <liblwgeom.h>
+
+#include "TemporalTypes.h"
+#include "OidCache.h"
+#include "TemporalUtil.h"
+#include "TempPointOut.h"
 #include "TNPoint.h"
+#include "TNPointParser.h"
 
 /*****************************************************************************
  * Miscellaneous functions

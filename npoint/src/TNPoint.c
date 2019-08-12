@@ -12,6 +12,12 @@
 
 #include "TNPoint.h"
 
+#include "TemporalTypes.h"
+#include "OidCache.h"
+#include "TemporalUtil.h"
+#include "StaticObjects.h"
+#include "TNPointParser.h"
+
 /*****************************************************************************
  * Input/output functions
  *****************************************************************************/
