@@ -26,9 +26,9 @@
 
 #ifdef WITH_POSTGIS
 #include "TemporalPoint.h"
-#include "TNPoint.h"
+#include "tnpoint.h"
 #include "SpatialFuncs.h"
-#include "StaticObjects.h"
+#include "tnpoint_static.h"
 #endif
 
 #ifdef PG_MODULE_MAGIC

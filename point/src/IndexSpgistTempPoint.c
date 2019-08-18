@@ -70,7 +70,7 @@
  *
  *****************************************************************************/
 
-#include "TNPoint.h"
+#include "tnpoint.h"
 #include "IndexSpgistTempPoint.h"
 
 #include <access/spgist.h>
@@ -81,7 +81,7 @@
 #include "TemporalPoint.h"
 #include "GeoBoundBoxOps.h"
 #include "IndexGistTempPoint.h"
-#include "StaticObjects.h"
+#include "tnpoint_static.h"
 
 /*****************************************************************************/
 

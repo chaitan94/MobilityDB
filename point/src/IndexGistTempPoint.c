@@ -10,7 +10,7 @@
  *
  *****************************************************************************/
 
-#include "TNPoint.h"
+#include "tnpoint.h"
 #include "IndexGistTempPoint.h"
 
 #include <access/gist.h>
@@ -20,7 +20,7 @@
 #include "TemporalPoint.h"
 #include "GeoBoundBoxOps.h"
 #include "GeoRelativePosOps.h"
-#include "StaticObjects.h"
+#include "tnpoint_static.h"
 
 /* Minimum accepted ratio of split */
 #define LIMIT_RATIO 0.3

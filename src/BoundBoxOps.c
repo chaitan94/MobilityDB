@@ -36,11 +36,11 @@
 #include "Range.h"
 #include "Tbox.h"
 #ifdef WITH_POSTGIS
-#include "TNPoint.h"
+#include "tnpoint.h"
 #include "TemporalPoint.h"
 #include "STbox.h"
 #include "GeoBoundBoxOps.h"
-#include "StaticObjects.h"
+#include "tnpoint_static.h"
 #endif
 
 /*****************************************************************************

@@ -29,8 +29,8 @@
 #include "Range.h"
 
 #ifdef WITH_POSTGIS
-#include "TNPoint.h"
-#include "StaticObjects.h"
+#include "tnpoint.h"
+#include "tnpoint_static.h"
 #include "TemporalPoint.h"
 #include "SpatialFuncs.h"
 #include "GeoBoundBoxOps.h"
