@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * tnpoint_relposops.sql
+ * tnpoint_posops.sql
  *	  Relative position operators for temporal network points.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li,

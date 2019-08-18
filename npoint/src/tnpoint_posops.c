@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * tnpoint_relposops.c
+ * tnpoint_posops.c
  *	  Relative position operators for temporal network points.
  *
  * The following operators are defined for the spatial dimension:
@@ -21,7 +21,7 @@
  *
  *****************************************************************************/
 
-#include "tnpoint_relposops.h"
+#include "tnpoint_posops.h"
 
 #include "GeoBoundBoxOps.h"
 #include "GeoRelativePosOps.h"

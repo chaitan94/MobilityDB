@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * tnpoint_relposops.c
+ * tnpoint_posops.c
  *	  Relative position operators for temporal network points.
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
@@ -10,8 +10,8 @@
  *
  *****************************************************************************/
 
-#ifndef __TNPOINT_RELPOSOPS_H__
-#define __TNPOINT_RELPOSOPS_H__
+#ifndef __TNPOINT_POSOPS_H__
+#define __TNPOINT_POSOPS_H__
 
 #include <postgres.h>
 #include <catalog/pg_type.h>
