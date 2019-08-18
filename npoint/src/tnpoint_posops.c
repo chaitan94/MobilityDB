@@ -23,8 +23,8 @@
 
 #include "tnpoint_posops.h"
 
-#include "GeoBoundBoxOps.h"
-#include "GeoRelativePosOps.h"
+#include "tpoint_boxops.h"
+#include "tpoint_posops.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
 

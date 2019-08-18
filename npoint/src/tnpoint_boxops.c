@@ -21,10 +21,10 @@
 
 #include "tnpoint_boxops.h"
 
-#include "TemporalTypes.h"
-#include "TemporalUtil.h"
-#include "STbox.h"
-#include "GeoBoundBoxOps.h"
+#include "temporaltypes.h"
+#include "temporal_util.h"
+#include "stbox.h"
+#include "tpoint_boxops.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
 

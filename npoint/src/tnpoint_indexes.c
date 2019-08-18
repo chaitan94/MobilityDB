@@ -13,7 +13,7 @@
 #include "tnpoint_indexes.h"
 
 #include <access/gist.h>
-#include "TemporalPoint.h"
+#include "tpoint.h"
 #include "tnpoint.h"
 
 /*****************************************************************************

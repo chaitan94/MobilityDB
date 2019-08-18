@@ -12,10 +12,10 @@
 
 #include "tnpoint_distance.h"
 
-#include "TemporalTypes.h"
-#include "TemporalUtil.h"
-#include "SpatialFuncs.h"
-#include "TempDistance.h"
+#include "temporaltypes.h"
+#include "temporal_util.h"
+#include "tpoint_spatialfuncs.h"
+#include "tpoint_distance.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
 

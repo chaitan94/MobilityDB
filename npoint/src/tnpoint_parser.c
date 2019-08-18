@@ -12,8 +12,8 @@
 
 #include "tnpoint_parser.h"
 
-#include "TemporalTypes.h"
-#include "Parser.h"
+#include "temporaltypes.h"
+#include "temporal_parser.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
 

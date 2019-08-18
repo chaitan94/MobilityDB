@@ -20,12 +20,12 @@
 
 #include <liblwgeom.h>
 
-#include "TemporalTypes.h"
-#include "OidCache.h"
-#include "TemporalUtil.h"
-#include "LiftingFuncs.h"
-#include "SpatialRels.h"
-#include "TempSpatialRels.h"
+#include "temporaltypes.h"
+#include "oidcache.h"
+#include "temporal_util.h"
+#include "lifting.h"
+#include "tpoint_spatialrels.h"
+#include "tpoint_tempspatialrels.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
 

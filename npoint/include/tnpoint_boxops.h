@@ -16,7 +16,7 @@
 #include <postgres.h>
 #include <catalog/pg_type.h>
 
-#include "Temporal.h"
+#include "temporal.h"
 #include "tnpoint.h"
 
 /*****************************************************************************/

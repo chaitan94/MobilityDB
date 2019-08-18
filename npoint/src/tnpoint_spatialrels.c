@@ -20,8 +20,8 @@
 
 #include "tnpoint_spatialrels.h"
 
-#include "LiftingFuncs.h"
-#include "SpatialRels.h"
+#include "lifting.h"
+#include "tpoint_spatialrels.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
 

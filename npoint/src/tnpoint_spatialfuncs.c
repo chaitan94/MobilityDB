@@ -14,14 +14,14 @@
 
 #include <float.h>
 
-#include "PeriodSet.h"
-#include "TimeOps.h"
-#include "TemporalTypes.h"
-#include "OidCache.h"
-#include "TemporalUtil.h"
-#include "SpatialFuncs.h"
-#include "GeoBoundBoxOps.h"
-#include "TempDistance.h"
+#include "periodset.h"
+#include "timeops.h"
+#include "temporaltypes.h"
+#include "oidcache.h"
+#include "temporal_util.h"
+#include "tpoint_spatialfuncs.h"
+#include "tpoint_boxops.h"
+#include "tpoint_distance.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
 

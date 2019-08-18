@@ -13,7 +13,7 @@
 #ifndef __TNPOINT_PARSER_H__
 #define __TNPOINT_PARSER_H__
 
-#include "Temporal.h"
+#include "temporal.h"
 #include "tnpoint.h"
 
 /*****************************************************************************/

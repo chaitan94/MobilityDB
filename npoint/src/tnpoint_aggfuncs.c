@@ -16,8 +16,8 @@
 
 #include <assert.h>
 
-#include "AggregateFuncs.h"
-#include "GeoAggFuncs.h"
+#include "temporal_aggfuncs.h"
+#include "tpoint_aggfuncs.h"
 #include "tnpoint.h"
 
 /*****************************************************************************/
