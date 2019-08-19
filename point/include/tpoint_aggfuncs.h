@@ -18,14 +18,21 @@
 
 #include "temporal_aggfuncs.h"
 
+
+struct GeoAggregateState
+{
+	int32_t srid;
+	bool hasz;
+};
+
 /*****************************************************************************/
 
 extern Datum tpoint_tcentroid_transfn(PG_FUNCTION_ARGS);
 extern Datum tpoint_tcentroid_combinefn(PG_FUNCTION_ARGS);
 extern Datum tpoint_tcentroid_finalfn(PG_FUNCTION_ARGS);
 
-extern void geoaggstate_check_t(AggregateState *state, Temporal *t);
-extern AggregateState *aggstate_make_tcentroid(FunctionCallInfo fcinfo, Temporal *temp);
+extern void geoaggstate_check_t(SkipList *state, Temporal *t);
+extern Temporal **tpoint_transform_tcentroid(Temporal *temp, int *count);
 
 /*****************************************************************************/
 

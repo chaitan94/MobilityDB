@@ -202,7 +202,7 @@ SELECT numSequences(wcount(ts, '1 hour')) FROM tbl_tnpoints;
 SELECT numSequences(tcentroid(ts)) FROM tbl_tnpoints;
  numsequences 
 --------------
-          490
+          494
 (1 row)
 
 SELECT k%10, numSequences(tcount(ts)) FROM tbl_tnpoints GROUP BY k%10 ORDER BY k%10;
@@ -232,7 +232,7 @@ SELECT k%10, numSequences(tcentroid(ts)) FROM tbl_tnpoints GROUP BY k%10 ORDER B
         2 |           51
         3 |           43
         4 |           51
-        5 |           34
+        5 |           35
         6 |           48
         7 |           58
         8 |           57
