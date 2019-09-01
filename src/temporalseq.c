@@ -114,8 +114,8 @@ static bool
 float_collinear(double x1, double x2, double x3,
 	TimestampTz t1, TimestampTz t2, TimestampTz t3)
 {
-	double duration1 = (double)t2 - (double)t1;
-	double duration2 = (double)t3 - (double)t2;
+	double duration1 = (double) (t2 - t1);
+	double duration2 = (double) (t3 - t2);
 	if (duration1 < duration2)
 	{
 		double ratio = duration1 / duration2;
@@ -135,8 +135,8 @@ static bool
 double2_collinear(double2 *x1, double2 *x2, double2 *x3,
 	TimestampTz t1, TimestampTz t2, TimestampTz t3)
 {
-	double duration1 = (double)t2 - (double)t1;
-	double duration2 = (double)t3 - (double)t2;
+	double duration1 = (double) (t2 - t1);
+	double duration2 = (double) (t3 - t2);
 	double2 *x1new, *x3new;
 	if (duration1 < duration2)
 	{
@@ -173,8 +173,8 @@ static bool
 point_collinear(Datum value1, Datum value2, Datum value3,
 	TimestampTz t1, TimestampTz t2, TimestampTz t3, bool hasz)
 {
-	double duration1 = (double)t2 - (double)t1;
-	double duration2 = (double)t3 - (double)t2;
+	double duration1 = (double) (t2 - t1);
+	double duration2 = (double) (t3 - t2);
 	void *tofree = NULL;
 	if (duration1 < duration2)
 	{
@@ -229,8 +229,8 @@ static bool
 double3_collinear(double3 *x1, double3 *x2, double3 *x3,
 	TimestampTz t1, TimestampTz t2, TimestampTz t3)
 {
-	double duration1 = (double)t2 - (double)t1;
-	double duration2 = (double)t3 - (double)t2;
+	double duration1 = (double) (t2 - t1);
+	double duration2 = (double) (t3 - t2);
 	double3 *x1new, *x3new;
 	if (duration1 < duration2)
 	{
@@ -271,8 +271,8 @@ static bool
 double4_collinear(double4 *x1, double4 *x2, double4 *x3,
 	TimestampTz t1, TimestampTz t2, TimestampTz t3)
 {
-	double duration1 = (double)t2 - (double)t1;
-	double duration2 = (double)t3 - (double)t2;
+	double duration1 = (double) (t2 - t1);
+	double duration2 = (double) (t3 - t2);
 	double4 *x1new, *x3new;
 	if (duration1 < duration2)
 	{
@@ -707,8 +707,8 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 		if (trajectory)
 		{
 			geo_to_stbox_internal(bbox, (GSERIALIZED *)DatumGetPointer(traj));
-			((STBOX *)bbox)->tmin = (double)(result->period.lower);
-			((STBOX *)bbox)->tmax = (double)(result->period.upper);
+			((STBOX *)bbox)->tmin = result->period.lower;
+			((STBOX *)bbox)->tmax = result->period.upper;
 			MOBDB_FLAGS_SET_T(((STBOX *)bbox)->flags, true);
 		}
 		else
@@ -1184,7 +1184,7 @@ tnumberseq_mult_maxmin_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 		/* Minimum/maximum occurs out of the period */
 		return false;
 
-	double duration = (double)(end1->t) - (double)(start1->t);
+	double duration = (double) (end1->t - start1->t);
 	*t = (double)(start1->t) + (duration * fraction);
 	return true;	
 }
@@ -1221,8 +1221,8 @@ tnumberseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 		/* Intersection occurs out of the period */
 		return false;
 
-	double duration = (double)(end1->t) - (double)(start1->t);
-	*t = (double)(start1->t) + (duration * fraction);
+	double duration = (double) (end1->t - start1->t);
+	*t = (double) (start1->t) + (duration * fraction);
 	return true;	
 }
 
@@ -1296,8 +1296,8 @@ tpointseq_min_dist_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 	}
 	if (fraction <= EPSILON || fraction >= (1.0 - EPSILON))
 		return false;
-	double duration = (double)(end1->t) - (double)(start1->t);
-	*t = (double)(start1->t) + (duration * fraction);
+	double duration = (double)(end1->t - start1->t);
+	*t = (double) (start1->t) + (duration * fraction);
 	return true;
 }
 
@@ -1367,9 +1367,7 @@ temporalseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 static double
 temporalseq_duration_double(TemporalSeq *seq)
 {
-	double lower = (double)(seq->period.lower);
-	double upper = (double)(seq->period.upper);
-	return (upper - lower);
+	return (double) (seq->period.upper - seq->period.lower);
 }
 
 /*****************************************************************************
@@ -1742,7 +1740,7 @@ temporalseq_instants_array(TemporalSeq *seq)
 
 /* Start timestamptz */
 
-Timestamp
+TimestampTz
 temporalseq_start_timestamp(TemporalSeq *seq)
 {
 	return (temporalseq_inst_n(seq, 0))->t;
@@ -1750,7 +1748,7 @@ temporalseq_start_timestamp(TemporalSeq *seq)
 
 /* End timestamptz */
 
-Timestamp
+TimestampTz
 temporalseq_end_timestamp(TemporalSeq *seq)
 {
 	return (temporalseq_inst_n(seq, seq->count - 1))->t;
@@ -1908,7 +1906,7 @@ temporalseq_shift(TemporalSeq *seq, Interval *interval)
  *****************************************************************************/
 
 /*
- * Timestamp at which a temporal continuous segment takes a value.
+ * TimestampTz at which a temporal continuous segment takes a value.
  * The function supposes that the value is between the range defined by
  * the values of inst1 and inst2 (both exclusive). 
  */
@@ -2019,8 +2017,8 @@ tempcontseq_timestamp_at_value(TemporalInst *inst1, TemporalInst *inst2,
 
 	if (fabs(fraction) < EPSILON || fabs(fraction-1.0) < EPSILON)
 		return false;
-	double duration = (double)inst2->t - (double)inst1->t;
-	*t = (double)inst1->t + duration * fraction;
+	double duration = (double) (inst2->t - inst1->t);
+	*t = (double) (inst1->t) + duration * fraction;
 	return true;
 }
  
@@ -2910,8 +2908,8 @@ temporalseq_value_at_timestamp1(TemporalInst *inst1, TemporalInst *inst2,
 		return temporalinst_value_copy(inst2);
 	
 	/* Interpolation for continuous types */
-	double duration = (double)inst2->t - (double)inst1->t;	
-	double partial = (double)t - (double)inst1->t;
+	double duration = (double) (inst2->t - inst1->t);
+	double partial = (double) (t - inst1->t);
 	double ratio = partial / duration;
 	Datum result = 0;
 	continuous_base_type_all_oid(valuetypid);
@@ -3572,8 +3570,8 @@ tintseq_integral(TemporalSeq *seq)
 	for (int i = 1; i < seq->count; i++)
 	{
 		TemporalInst *inst2 = temporalseq_inst_n(seq, i);
-		double duration = (double)(inst2->t) - (double)(inst1->t);
-		result += (double)DatumGetInt32(temporalinst_value(inst1)) * duration;
+		double duration = (double) (inst2->t - inst1->t);
+		result += (double) DatumGetInt32(temporalinst_value(inst1)) * duration;
 		inst1 = inst2;
 	}
 	return result;
@@ -3593,7 +3591,7 @@ tfloatseq_integral(TemporalSeq *seq)
 			DatumGetFloat8(temporalinst_value(inst2)));
 		double max = Max(DatumGetFloat8(temporalinst_value(inst1)), 
 			DatumGetFloat8(temporalinst_value(inst2)));
-		double duration = (double)(inst2->t) - (double)(inst1->t);
+		double duration = (double) (inst2->t - inst1->t);
 		result += (max + min) * duration / 2.0;
 		inst1 = inst2;
 	}
@@ -3608,7 +3606,7 @@ tintseq_twavg(TemporalSeq *seq)
 	double duration = temporalseq_duration_double(seq);
 	double result;
 	if (duration == 0)
-		result = (double)DatumGetInt32(temporalinst_value(temporalseq_inst_n(seq, 0)));
+		result = (double) DatumGetInt32(temporalinst_value(temporalseq_inst_n(seq, 0)));
 	else
 		result = tintseq_integral(seq) / duration;
 	return result;

@@ -230,7 +230,7 @@ temporalinst_make_bbox(void *box, Datum value, TimestampTz t, Oid valuetypid)
 		double dvalue = datum_double(value, valuetypid);
 		TBOX *result = (TBOX *)box;
 		result->xmin = result->xmax = dvalue;
-		result->tmin = result->tmax = (double)t;
+		result->tmin = result->tmax = t;
 		MOBDB_FLAGS_SET_X(result->flags, true);
 		MOBDB_FLAGS_SET_T(result->flags, true);
 	}
@@ -646,7 +646,7 @@ floatrange_to_tbox(PG_FUNCTION_ARGS)
 void
 timestamp_to_tbox_internal(TBOX *box, TimestampTz t)
 {
-	box->tmin = box->tmax = (double)t;
+	box->tmin = box->tmax = t;
 	MOBDB_FLAGS_SET_X(box->flags, false);
 	MOBDB_FLAGS_SET_T(box->flags, true);
 	return;
@@ -669,8 +669,8 @@ void
 timestampset_to_tbox_internal(TBOX *box, TimestampSet *ts)
 {
 	Period *p = timestampset_bbox(ts);
-	box->tmin = (double)(p->lower);
-	box->tmax = (double)(p->upper);
+	box->tmin = p->lower;
+	box->tmax = p->upper;
 	MOBDB_FLAGS_SET_X(box->flags, false);
 	MOBDB_FLAGS_SET_T(box->flags, true);
 	return;
@@ -693,8 +693,8 @@ timestampset_to_tbox(PG_FUNCTION_ARGS)
 void
 period_to_tbox_internal(TBOX *box, Period *p)
 {
-	box->tmin = (double)(p->lower);
-	box->tmax = (double)(p->upper);
+	box->tmin = p->lower;
+	box->tmax = p->upper;
 	MOBDB_FLAGS_SET_X(box->flags, false);
 	MOBDB_FLAGS_SET_T(box->flags, true);
 	return;
@@ -717,8 +717,8 @@ void
 periodset_to_tbox_internal(TBOX *box, PeriodSet *ps)
 {
 	Period *p = periodset_bbox(ps);
-	box->tmin = (double)(p->lower);
-	box->tmax = (double)(p->upper);
+	box->tmin = p->lower;
+	box->tmax = p->upper;
 	MOBDB_FLAGS_SET_X(box->flags, false);
 	MOBDB_FLAGS_SET_T(box->flags, true);
 	return;
@@ -749,7 +749,7 @@ int_timestamp_to_tbox(PG_FUNCTION_ARGS)
 	TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
 	TBOX *result = palloc0(sizeof(TBOX));
 	result->xmin = result->xmax = (double)i;
-	result->tmin = result->tmax = (double)t;
+	result->tmin = result->tmax = t;
 	MOBDB_FLAGS_SET_X(result->flags, true);
 	MOBDB_FLAGS_SET_T(result->flags, true);
 	PG_RETURN_POINTER(result);
@@ -766,7 +766,7 @@ float_timestamp_to_tbox(PG_FUNCTION_ARGS)
 	TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
 	TBOX *result = palloc0(sizeof(TBOX));
 	result->xmin = result->xmax = d;
-	result->tmin = result->tmax = (double)t;
+	result->tmin = result->tmax = t;
 	MOBDB_FLAGS_SET_X(result->flags, true);
 	MOBDB_FLAGS_SET_T(result->flags, true);
 	PG_RETURN_POINTER(result);
@@ -783,8 +783,8 @@ int_period_to_tbox(PG_FUNCTION_ARGS)
 	Period *p = PG_GETARG_PERIOD(1);
 	TBOX *result = palloc0(sizeof(TBOX));
 	result->xmin = result->xmax = (double)i;
-	result->tmin = (double)(p->lower);
-	result->tmax = (double)(p->upper);
+	result->tmin = p->lower;
+	result->tmax = p->upper;
 	MOBDB_FLAGS_SET_X(result->flags, true);
 	MOBDB_FLAGS_SET_T(result->flags, true);
 	PG_RETURN_POINTER(result);
@@ -801,8 +801,8 @@ float_period_to_tbox(PG_FUNCTION_ARGS)
 	Period *p = PG_GETARG_PERIOD(1);
 	TBOX *result = palloc0(sizeof(TBOX));
 	result->xmin = result->xmax = d;
-	result->tmin = (double)(p->lower);
-	result->tmax = (double)(p->upper);
+	result->tmin = p->lower;
+	result->tmax = p->upper;
 	MOBDB_FLAGS_SET_X(result->flags, true);
 	MOBDB_FLAGS_SET_T(result->flags, true);
 	PG_RETURN_POINTER(result);
@@ -820,7 +820,7 @@ intrange_timestamp_to_tbox(PG_FUNCTION_ARGS)
 	TBOX *result = palloc0(sizeof(TBOX));
 	result->xmin = (double)(DatumGetInt32(lower_datum(range)));
 	result->xmax = (double)(DatumGetInt32(upper_datum(range)));
-	result->tmin = result->tmax = (double)t;
+	result->tmin = result->tmax = t;
 	MOBDB_FLAGS_SET_X(result->flags, true);
 	MOBDB_FLAGS_SET_T(result->flags, true);
 	PG_FREE_IF_COPY(range, 0);
@@ -839,7 +839,7 @@ floatrange_timestamp_to_tbox(PG_FUNCTION_ARGS)
 	TBOX *result = palloc0(sizeof(TBOX));
 	result->xmin = DatumGetFloat8(lower_datum(range));
 	result->xmax = DatumGetFloat8(upper_datum(range));
-	result->tmin = result->tmax = (double)t;
+	result->tmin = result->tmax = t;
 	MOBDB_FLAGS_SET_X(result->flags, true);
 	MOBDB_FLAGS_SET_T(result->flags, true);
 	PG_FREE_IF_COPY(range, 0);
@@ -858,8 +858,8 @@ intrange_period_to_tbox(PG_FUNCTION_ARGS)
 	TBOX *result = palloc0(sizeof(TBOX));
 	result->xmin = (double)(DatumGetInt32(lower_datum(range)));
 	result->xmax = (double)(DatumGetInt32(upper_datum(range)));
-	result->tmin = (double)(p->lower);
-	result->tmax = (double)(p->upper);
+	result->tmin = p->lower;
+	result->tmax = p->upper;
 	MOBDB_FLAGS_SET_X(result->flags, true);
 	MOBDB_FLAGS_SET_T(result->flags, true);
 	PG_FREE_IF_COPY(range, 0);
@@ -878,8 +878,8 @@ floatrange_period_to_tbox(PG_FUNCTION_ARGS)
 	TBOX *result = palloc0(sizeof(TBOX));
 	result->xmin = DatumGetFloat8(lower_datum(range));
 	result->xmax = DatumGetFloat8(upper_datum(range));
-	result->tmin = (double)(p->lower);
-	result->tmax = (double)(p->upper);
+	result->tmin = p->lower;
+	result->tmax = p->upper;
 	MOBDB_FLAGS_SET_X(result->flags, true);
 	MOBDB_FLAGS_SET_T(result->flags, true);
 	PG_FREE_IF_COPY(range, 0);
