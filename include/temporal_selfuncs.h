@@ -32,9 +32,6 @@
  * Internal selectivity functions for Temporal types.
  *****************************************************************************/
 
-extern Selectivity scalarineqsel(PlannerInfo *root, Oid operator, 
-	bool isgt, bool iseq, VariableStatData *vardata, Datum constval, 
-	Oid consttype);
 extern Selectivity temporal_bbox_sel(PlannerInfo *root, VariableStatData *vardata,
 	Period *period, CachedOp cachedOp);
 extern Selectivity temporal_position_sel(PlannerInfo *root, VariableStatData *vardata,
@@ -45,13 +42,6 @@ extern Selectivity temporalinst_sel(PlannerInfo *root, VariableStatData *vardata
 extern Selectivity temporals_sel(PlannerInfo *root, VariableStatData *vardata,
 	Period *period, CachedOp cachedOp);
 
-
-/*****************************************************************************
- * Some other helper functions.
- *****************************************************************************/
-
-extern double var_eq_const(VariableStatData *vardata, Oid operator,
-	Datum constval, bool constisnull, bool varonleft, bool negate);
 
 /*****************************************************************************/
 
