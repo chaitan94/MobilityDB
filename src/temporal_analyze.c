@@ -119,8 +119,8 @@
 TemporalAnalyzeExtraData *temporal_extra_data;
 
 /*****************************************************************************
- * Functions copied from files analyze.c and rangetypes_typanalyze.c since
- * they are not exported.
+ * Functions copied/modified from files analyze.c and rangetypes_typanalyze.c
+ * since they are not exported.
  *****************************************************************************/
 
 /*

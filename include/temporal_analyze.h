@@ -103,5 +103,4 @@ extern Datum tnumber_analyze(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 
-#endif 
-
+#endif							/* __TEMPORAL_ANALYZE_H__ */
