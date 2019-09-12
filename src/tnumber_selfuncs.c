@@ -800,7 +800,7 @@ tnumberinst_sel(PlannerInfo *root, VariableStatData *vardata, TBOX *box,
 		 * v < box->xmin OR ... 
 		 */
 
-		/* Enable the addition of the selectivity of the value and time 
+		/* Enable the multiplication of the selectivity of the value and time 
 		 * dimensions since either may be missing */
 		selec = 0.0; 
 
@@ -941,8 +941,21 @@ tnumberinst_sel(PlannerInfo *root, VariableStatData *vardata, TBOX *box,
 }
 
 /*
- * Compute selectivity for columns of durations distinct from TemporalInst,
- * including columns containing temporal values of mixed durations.
+ * Compute selectivity for columns of durations TemporalInst.
+ */
+Selectivity
+tnumberi_sel(PlannerInfo *root, VariableStatData *vardata,
+	Datum value, CachedOp cachedOp, Oid valuetypid)
+{
+	double selec = 0.0;
+	/* TODO */
+	selec = default_tnumber_selectivity(cachedOp);
+	return selec;
+}
+
+/*
+ * Compute selectivity for columns of durations TemporalSeq, TemporalS,
+ * and Temporal (columns containing temporal values of mixed duration).
  */
 Selectivity
 tnumbers_sel(PlannerInfo *root, VariableStatData *vardata, TBOX *box, 
@@ -1123,9 +1136,22 @@ tnumber_sel(PG_FUNCTION_ARGS)
 	int duration = TYPMOD_GET_DURATION(vardata.atttypmod);
 	temporal_duration_all_is_valid(duration);
 
+
 	/* Dispatch based on duration */
 	if (duration == TEMPORALINST)
 		selec = tnumberinst_sel(root, &vardata, &constBox, cachedOp, valuetypid);
+	else if (duration == TEMPORALI)
+	{
+		Oid consttype = ((Const *) other)->consttype;
+		Datum value = ((Const *) other)->constvalue;
+		int constduration = 0;
+		if (temporal_type_oid(consttype))
+			constduration = TYPMOD_GET_DURATION(DatumGetTemporal(value)->flags);
+		if (consttype == type_oid(T_TIMESTAMPSET) || constduration == TEMPORALI)
+			selec = tnumberi_sel(root, &vardata, ((Const *) other)->constvalue, cachedOp, valuetypid);
+		else
+			selec = DEFAULT_TEMP_SELECTIVITY;
+	} 
 	else
 		selec = tnumbers_sel(root, &vardata, &constBox, cachedOp, valuetypid);
 

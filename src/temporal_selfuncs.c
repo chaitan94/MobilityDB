@@ -253,8 +253,21 @@ temporalinst_sel(PlannerInfo *root, VariableStatData *vardata,
 }
 
 /*
- * Compute selectivity for columns of durations distinct from TemporalInst,
- * including columns containing temporal values of mixed durations.
+ * Compute selectivity for columns of durations TemporalInst.
+ */
+Selectivity
+temporali_sel(PlannerInfo *root, VariableStatData *vardata,
+	Datum constvalue, CachedOp cachedOp)
+{
+	double selec = 0.0;
+	/* TODO */
+	selec = default_temporal_selectivity(cachedOp);
+	return selec;
+}
+
+/*
+ * Compute selectivity for columns of durations TemporalSeq, TemporalS,
+ * and Temporal (columns containing temporal values of mixed duration).
  */
 Selectivity
 temporals_sel(PlannerInfo *root, VariableStatData *vardata,
@@ -295,6 +308,37 @@ temporals_sel(PlannerInfo *root, VariableStatData *vardata,
 		selec = default_temporal_selectivity(cachedOp);
 	}
 	return selec;
+}
+
+/*****************************************************************************/
+
+double
+temporal_joinsel_inner(Oid operator, CachedOp cachedOp, VariableStatData *vardata1, 
+	VariableStatData *vardata2, int duration1, int duration2)
+{
+	if (duration1 == TEMPORALINST && duration2 == TEMPORALINST &&
+		cachedOp  == EQ_OP)
+	{
+		Oid operator1 = oper_oid(EQ_OP, T_TIMESTAMPTZ, T_TIMESTAMPTZ);
+		return eqjoinsel_inner(operator1, vardata1, vardata2);
+	}
+
+	return DEFAULT_TEMP_SELECTIVITY;
+}
+
+double
+temporal_joinsel_semi(Oid operator,CachedOp cachedOp,  VariableStatData *vardata1, 
+	VariableStatData *vardata2, RelOptInfo *inner_rel, 
+	int duration1, int duration2)
+{
+	if (duration1 == TEMPORALINST && duration2 == TEMPORALINST &&
+		cachedOp  == EQ_OP)
+	{
+		Oid operator1 = oper_oid(EQ_OP, T_TIMESTAMPTZ, T_TIMESTAMPTZ);
+		return eqjoinsel_semi(operator1, vardata1, vardata2, inner_rel);
+	}
+
+	return DEFAULT_TEMP_SELECTIVITY;
 }
 
 /*****************************************************************************/
@@ -385,6 +429,18 @@ temporal_sel(PG_FUNCTION_ARGS)
 	/* Dispatch based on duration */
 	if (duration == TEMPORALINST)
 		selec = temporalinst_sel(root, &vardata, &constperiod, cachedOp);
+	else if (duration == TEMPORALI)
+	{
+		Oid consttype = ((Const *) other)->consttype;
+		Datum constvalue = ((Const *) other)->constvalue;
+		int constduration = 0;
+		if (temporal_type_oid(consttype))
+			constduration = TYPMOD_GET_DURATION(DatumGetTemporal(constvalue)->flags);
+		if (consttype == type_oid(T_TIMESTAMPSET) || constduration == TEMPORALI)
+			selec = temporali_sel(root, &vardata, constvalue, cachedOp);
+		else
+			selec = DEFAULT_TEMP_SELECTIVITY;
+	}
 	else
 		selec = temporals_sel(root, &vardata, &constperiod, cachedOp);
 
@@ -398,7 +454,96 @@ PG_FUNCTION_INFO_V1(temporal_joinsel);
 PGDLLEXPORT Datum
 temporal_joinsel(PG_FUNCTION_ARGS)
 {
-	PG_RETURN_FLOAT8(DEFAULT_TEMP_SELECTIVITY);
+	PlannerInfo *root = (PlannerInfo *) PG_GETARG_POINTER(0);
+	Oid			operator = PG_GETARG_OID(1);
+	List	   *args = (List *) PG_GETARG_POINTER(2);
+
+#ifdef NOT_USED
+	JoinType	jointype = (JoinType) PG_GETARG_INT16(3);
+#endif
+	SpecialJoinInfo *sjinfo = (SpecialJoinInfo *) PG_GETARG_POINTER(4);
+	double		selec;
+	VariableStatData vardata1;
+	VariableStatData vardata2;
+	bool		join_is_reversed;
+	RelOptInfo *inner_rel;
+	int 		duration1, duration2 = -1;
+	CachedOp	cachedOp;
+
+	/*
+	 * Get enumeration value associated to the operator
+	 */
+	bool found = temporal_cachedop(operator, &cachedOp);
+	/* In the case of unknown operator */
+	if (!found)
+		PG_RETURN_FLOAT8(DEFAULT_TEMP_SELECTIVITY);
+
+	get_join_variables(root, args, sjinfo,
+					   &vardata1, &vardata2, &join_is_reversed);
+
+	/* Get the duration of the left temporal column */
+	duration1 = TYPMOD_GET_DURATION(vardata1.atttypmod);
+	temporal_duration_all_is_valid(duration1);
+
+	/* The right column may be a temporal type or a period */
+	if (temporal_type_oid(vardata2.atttype))
+	{
+		/* If the right column is a temporal type get the duration */
+		duration2 = TYPMOD_GET_DURATION(vardata2.atttypmod);
+		temporal_duration_all_is_valid(duration2);
+	}
+	else if (vardata2.atttype != type_oid(T_PERIOD))
+		/* other values not expected here */
+		elog(ERROR, "unrecognized type for join column: %d", vardata2.atttype);
+
+	switch (sjinfo->jointype)
+	{
+		case JOIN_INNER:
+		case JOIN_LEFT:
+		case JOIN_FULL:
+			selec = temporal_joinsel_inner(operator, cachedOp, &vardata1, 
+				&vardata2, duration1, duration2);
+			break;
+		case JOIN_SEMI:
+		case JOIN_ANTI:
+
+			/*
+			 * Look up the join's inner relation.  min_righthand is sufficient
+			 * information because neither SEMI nor ANTI joins permit any
+			 * reassociation into or out of their RHS, so the righthand will
+			 * always be exactly that set of rels.
+			 */
+			inner_rel = find_join_input_rel(root, sjinfo->min_righthand);
+
+			if (!join_is_reversed)
+				selec = temporal_joinsel_semi(operator, cachedOp, &vardata1, &vardata2,
+					inner_rel, duration1, duration2);
+			else
+			{
+				operator = get_commutator(operator);
+				found = temporal_cachedop(operator, &cachedOp);
+				/* In the case of unknown operator */
+				if (!found)
+					PG_RETURN_FLOAT8(DEFAULT_TEMP_SELECTIVITY);
+
+				selec = temporal_joinsel_semi(operator, cachedOp,
+					&vardata2, &vardata1, inner_rel, duration1, duration2);
+			}
+			break;
+		default:
+			/* other values not expected here */
+			elog(ERROR, "unrecognized join type: %d",
+				 (int) sjinfo->jointype);
+			selec = 0;			/* keep compiler quiet */
+			break;
+	}
+
+	ReleaseVariableStats(vardata1);
+	ReleaseVariableStats(vardata2);
+
+	CLAMP_PROBABILITY(selec);
+
+	PG_RETURN_FLOAT8((float8) selec);
 }
 
 /*****************************************************************************/
