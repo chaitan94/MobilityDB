@@ -16,6 +16,7 @@
 #include <access/htup_details.h>
 #include <nodes/relation.h>
 #include <utils/builtins.h>
+#include <utils/array_selfuncs.h>
 #include <utils/rangetypes_selfuncs.h>
 #include <utils/selfuncs.h>
 #include <temporal_boxops.h>
@@ -25,7 +26,7 @@
 #include "oidcache.h"
 #include "tbox.h"
 #include "time_selfuncs.h"
-#include "temporal.h"
+#include "temporaltypes.h"
 #include "temporal_analyze.h"
 #include "temporal_selfuncs.h"
 
@@ -360,11 +361,79 @@ tnumberinst_sel(PlannerInfo *root, VariableStatData *vardata, TBOX *box,
  */
 Selectivity
 tnumberi_sel(PlannerInfo *root, VariableStatData *vardata,
-	Datum value, CachedOp cachedOp, Oid valuetypid)
+	Node *other, CachedOp cachedOp)
 {
+	TemporalI *ti = DatumGetTemporalI(((Const *) other)->constvalue);
+	ArrayType *values, *timestamps;
+	Oid operator;
 	double selec = 0.0;
-	/* TODO */
-	selec = default_tnumber_selectivity(cachedOp);
+
+	/* If not a temporal constant we cannot do much. Indeed, all other types
+	 * of constants, including TimestampSet, are automatically casted to Period
+	 * for the bounding box operators */
+	if (! temporal_type_oid(((Const *) other)->consttype))
+		return DEFAULT_TEMP_SELECTIVITY;
+
+	/* Get the arrays of values and timestamps of the TemporalI */
+	values = temporali_values(ti);
+	timestamps = temporali_timestamps(ti);
+
+	/*
+	 * There is no ~= operator for time types and thus it is necessary to
+	 * take care of this operator here.
+	 */
+	if (cachedOp == SAME_OP)
+	{
+		/* TODO */
+		selec = default_tnumber_selectivity(cachedOp);
+	}
+	else if (cachedOp == OVERLAPS_OP)
+	{
+		operator = OID_ARRAY_OVERLAP_OP;
+		selec = calc_arraycontsel(vardata, PointerGetDatum(values),
+				 ti->valuetypid, operator);
+		selec *= calc_arraycontsel(vardata, PointerGetDatum(timestamps),
+				 TIMESTAMPTZOID, operator);
+	}
+	else if (cachedOp == CONTAINS_OP)
+	{
+		operator = OID_ARRAY_CONTAINS_OP;
+		selec = calc_arraycontsel(vardata, PointerGetDatum(values),
+				 ti->valuetypid, operator);
+		selec *= calc_arraycontsel(vardata, PointerGetDatum(timestamps),
+				  TIMESTAMPTZOID, operator);
+	}
+	else if (cachedOp == CONTAINED_OP)
+	{
+		operator = OID_ARRAY_CONTAINED_OP;
+		selec = calc_arraycontsel(vardata, PointerGetDatum(values),
+				 ti->valuetypid, operator);
+		selec *= calc_arraycontsel(vardata, PointerGetDatum(timestamps),
+				  TIMESTAMPTZOID, operator);
+	}
+	else if (cachedOp == BEFORE_OP || cachedOp == AFTER_OP || 
+		cachedOp == OVERBEFORE_OP || cachedOp == OVERAFTER_OP) 
+	{
+		/* TODO */
+		selec = default_tnumber_selectivity(cachedOp);
+	}
+	else if (cachedOp == LT_OP || cachedOp == LE_OP || 
+		cachedOp == GT_OP || cachedOp == GE_OP) 
+	{
+		/* For b-tree comparisons, temporal values are first compared wrt 
+		 * their bounding boxes, and if these are equal, other criteria apply.
+		 * For selectivity estimation we approximate by taking into account
+		 * only the bounding boxes. In the case here the bounding box is a
+		 * period and thus we can use the period selectivity estimation */
+		/* TODO */
+		selec = default_tnumber_selectivity(cachedOp);
+	}
+	else /* Unknown operator */
+	{
+		selec = default_tnumber_selectivity(cachedOp);
+	}
+	pfree(values);
+	pfree(timestamps);
 	return selec;
 }
 
@@ -556,17 +625,7 @@ tnumber_sel(PG_FUNCTION_ARGS)
 	if (duration == TEMPORALINST)
 		selec = tnumberinst_sel(root, &vardata, &constBox, cachedOp, valuetypid);
 	else if (duration == TEMPORALI)
-	{
-		Oid consttype = ((Const *) other)->consttype;
-		Datum value = ((Const *) other)->constvalue;
-		int constduration = 0;
-		if (temporal_type_oid(consttype))
-			constduration = TYPMOD_GET_DURATION(DatumGetTemporal(value)->flags);
-		if (consttype == type_oid(T_TIMESTAMPSET) || constduration == TEMPORALI)
-			selec = tnumberi_sel(root, &vardata, ((Const *) other)->constvalue, cachedOp, valuetypid);
-		else
-			selec = DEFAULT_TEMP_SELECTIVITY;
-	} 
+		selec = tnumberi_sel(root, &vardata, other, cachedOp);
 	else
 		selec = tnumbers_sel(root, &vardata, &constBox, cachedOp, valuetypid);
 

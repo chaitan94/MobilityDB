@@ -273,7 +273,7 @@ temporali_sel(PlannerInfo *root, VariableStatData *vardata,
 	if (! temporal_type_oid(((Const *) other)->consttype))
 		return DEFAULT_TEMP_SELECTIVITY;
 
-	/* Get the timespan of the TemporalI as an array of timestamps */
+	/* Get the array of timestamps of the TemporalI */
 	timestamps = temporali_timestamps(ti);
 
 	/*
