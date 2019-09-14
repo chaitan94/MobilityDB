@@ -359,7 +359,7 @@ temporal_sel(PG_FUNCTION_ARGS)
 	VariableStatData vardata;
 	Node *other;
 	bool varonleft;
-	Selectivity selec = DEFAULT_TEMP_SELECTIVITY;
+	Selectivity selec;
 	CachedOp cachedOp;
 	Period constperiod;
 
@@ -457,7 +457,6 @@ temporal_joinsel(PG_FUNCTION_ARGS)
 	PlannerInfo *root = (PlannerInfo *) PG_GETARG_POINTER(0);
 	Oid			operator = PG_GETARG_OID(1);
 	List	   *args = (List *) PG_GETARG_POINTER(2);
-
 #ifdef NOT_USED
 	JoinType	jointype = (JoinType) PG_GETARG_INT16(3);
 #endif
