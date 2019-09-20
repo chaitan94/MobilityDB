@@ -376,7 +376,7 @@ temporal_oid_from_base(Oid valuetypid)
 		result = type_oid(T_TFLOAT);
 	if (valuetypid == TEXTOID) 
 		result = type_oid(T_TTEXT);
-	if (valuetypid == type_oid(T_TEXTARRAY)) 
+	if (valuetypid == type_oid(T_TEXTARR)) 
 		return type_oid(T_TTEXTARR);
 #ifdef WITH_POSTGIS
 	if (valuetypid == type_oid(T_GEOMETRY)) 
