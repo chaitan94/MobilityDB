@@ -43,12 +43,14 @@ const char *_type_names[] =
 	"tdouble3",
 	"tdouble4",
 	"text",
+	"_text",
 	"tfloat",
 	"timestampset",
 	"timestamptz",
 	"tint",
 	"tstzrange",
-	"ttext"
+	"ttext",
+	"ttextarr"
 #ifdef WITH_POSTGIS
 	,"geometry",
 	"geography",

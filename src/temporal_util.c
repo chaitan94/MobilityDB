@@ -82,7 +82,8 @@ get_typbyval_fast(Oid type)
 	if (type == BOOLOID || type == INT4OID || type == FLOAT8OID || 
 		type == TIMESTAMPTZOID)
 		result = true;
-	else if (type == type_oid(T_DOUBLE2) || type == TEXTOID)
+	else if (type == type_oid(T_DOUBLE2) || type == TEXTOID || 
+		type == type_oid(T_TEXTARRAY))
 		result = false;
 #ifdef WITH_POSTGIS
 	else if (type == type_oid(T_GEOMETRY) || type == type_oid(T_GEOGRAPHY) ||
@@ -112,7 +113,7 @@ get_typlen_fast(Oid type)
 		result = 8;
 	else if (type == type_oid(T_DOUBLE2))
 		result = 16;
-	else if (type == TEXTOID)
+	else if (type == TEXTOID || type == type_oid(T_TEXTARRAY))
 		result = -1;
 #ifdef WITH_POSTGIS
 	else if (type == type_oid(T_GEOMETRY) || type == type_oid(T_GEOGRAPHY))
@@ -572,6 +573,8 @@ datum_eq(Datum l, Datum r, Oid type)
 		result = double3_eq((double3 *)DatumGetPointer(l), (double3 *)DatumGetPointer(r));
 	else if (type == type_oid(T_DOUBLE4))
 		result = double4_eq((double4 *)DatumGetPointer(l), (double4 *)DatumGetPointer(r));
+	else if (type == type_oid(T_TEXTARRAY)) 
+		return DatumGetBool(call_func_binary(array_eq, l, r));
 #ifdef WITH_POSTGIS
 	else if (type == type_oid(T_GEOMETRY))
 		//	result = DatumGetBool(call_function2(lwgeom_eq, l, r));
@@ -602,6 +605,8 @@ datum_lt(Datum l, Datum r, Oid type)
 		result = DatumGetFloat8(l) < DatumGetFloat8(r);
 	else if (type == TEXTOID)
 		result = text_cmp(DatumGetTextP(l), DatumGetTextP(r), DEFAULT_COLLATION_OID) < 0;
+	else if (type == type_oid(T_TEXTARRAY)) 
+		return DatumGetBool(call_func_binary(array_lt, l, r));
 #ifdef WITH_POSTGIS
 	else if (type == type_oid(T_GEOMETRY))
 		result = DatumGetBool(call_function2(lwgeom_lt, l, r));
@@ -653,6 +658,8 @@ datum_eq2(Datum l, Datum r, Oid typel, Oid typer)
 	else if (typel == TEXTOID && typer == TEXTOID)
 		result = text_cmp(DatumGetTextP(l), DatumGetTextP(r), DEFAULT_COLLATION_OID) == 0;
 		/* This function is never called with doubleN */
+	else if (typel == type_oid(T_TEXTARRAY) && typer == type_oid(T_TEXTARRAY)) 
+		return DatumGetBool(call_func_binary(array_eq, l, r));
 #ifdef WITH_POSTGIS
 	else if (typel == type_oid(T_GEOMETRY) && typer == type_oid(T_GEOMETRY))
 		//	result = DatumGetBool(call_function2(lwgeom_eq, l, r));

@@ -149,7 +149,8 @@ same_tbox_tbox(PG_FUNCTION_ARGS)
 size_t
 temporal_bbox_size(Oid valuetypid) 
 {
-	if (valuetypid == BOOLOID || valuetypid == TEXTOID)
+	if (valuetypid == BOOLOID || valuetypid == TEXTOID ||
+		valuetypid == type_oid(T_TEXTARRAY))
 		return sizeof(Period);
 	if (valuetypid == INT4OID || valuetypid == FLOAT8OID)
 		return sizeof(TBOX);
@@ -217,7 +218,8 @@ temporalinst_make_bbox(void *box, Datum value, TimestampTz t, Oid valuetypid)
 {
 	/* Only external types have bounding box */
 	base_type_oid(valuetypid);
-	if (valuetypid == BOOLOID || valuetypid == TEXTOID)
+	if (valuetypid == BOOLOID || valuetypid == TEXTOID || 
+		valuetypid == type_oid(T_TEXTARRAY))
 		period_set((Period *)box, t, t, true, true);
 	else if (valuetypid == INT4OID || valuetypid == FLOAT8OID) 
 	{

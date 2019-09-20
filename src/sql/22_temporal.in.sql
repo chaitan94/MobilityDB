@@ -14,11 +14,13 @@ CREATE TYPE tbool;
 CREATE TYPE tint;
 CREATE TYPE tfloat;
 CREATE TYPE ttext;
+CREATE TYPE ttextarr;
 
 SELECT register_temporal('tbool', 'bool') ;
 SELECT register_temporal('tint', 'int4') ;
 SELECT register_temporal('tfloat', 'float8') ;
 SELECT register_temporal('ttext', 'text') ;
+SELECT register_temporal('ttextarr', '_text') ;
 
 /******************************************************************************
  * Input/Output
@@ -40,6 +42,10 @@ CREATE FUNCTION ttext_in(cstring, oid, integer)
 	RETURNS ttext
 	AS 'MODULE_PATHNAME', 'temporal_in'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ttextarr_in(cstring, oid, integer)
+	RETURNS ttextarr
+	AS 'MODULE_PATHNAME', 'temporal_in'
+	LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION temporal_out(tbool)
 	RETURNS cstring
@@ -57,6 +63,10 @@ CREATE FUNCTION temporal_out(ttext)
 	RETURNS cstring
 	AS 'MODULE_PATHNAME'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION temporal_out(ttextarr)
+	RETURNS cstring
+	AS 'MODULE_PATHNAME'
+	LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION tbool_recv(internal, oid, integer)
 	RETURNS tbool
@@ -74,6 +84,10 @@ CREATE FUNCTION ttext_recv(internal, oid, integer)
 	RETURNS ttext
 	AS 'MODULE_PATHNAME', 'temporal_recv'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ttextarr_recv(internal, oid, integer)
+	RETURNS ttextarr
+	AS 'MODULE_PATHNAME', 'temporal_recv'
+	LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION temporal_send(tbool)
 	RETURNS bytea
@@ -91,6 +105,10 @@ CREATE FUNCTION temporal_send(ttext)
 	RETURNS bytea
 	AS 'MODULE_PATHNAME'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION temporal_send(ttextarr)
+	RETURNS bytea
+	AS 'MODULE_PATHNAME'
+	LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION temporal_typmod_in(cstring[])
 	RETURNS integer
@@ -159,6 +177,14 @@ CREATE TYPE ttext (
 	alignment = double,
     analyze = temporal_analyze
 );
+CREATE TYPE ttextarr (
+	internallength = variable,
+	input = ttextarr_in,
+	output = temporal_out,
+	receive = ttextarr_recv,
+	send = temporal_send,
+	alignment = double
+);
 
 -- Special cast for enforcing the typmod restrictions
 CREATE FUNCTION tbool(tbool, integer)
@@ -177,11 +203,16 @@ CREATE FUNCTION ttext(ttext, integer)
 	RETURNS ttext
 	AS 'MODULE_PATHNAME','temporal_enforce_typmod'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ttextarr(ttextarr, integer)
+	RETURNS ttextarr
+	AS 'MODULE_PATHNAME','temporal_enforce_typmod'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (tbool AS tbool) WITH FUNCTION tbool(tbool, integer) AS IMPLICIT;
 CREATE CAST (tint AS tint) WITH FUNCTION tint(tint, integer) AS IMPLICIT;
 CREATE CAST (tfloat AS tfloat) WITH FUNCTION tfloat(tfloat, integer) AS IMPLICIT;
 CREATE CAST (ttext AS ttext) WITH FUNCTION ttext(ttext, integer) AS IMPLICIT;
+CREATE CAST (ttextarr AS ttextarr) WITH FUNCTION ttextarr(ttextarr, integer) AS IMPLICIT;
 
 /******************************************************************************
  * Constructors
@@ -205,6 +236,10 @@ CREATE FUNCTION ttextinst(val text, t timestamptz)
 	RETURNS ttext
 	AS 'MODULE_PATHNAME', 'temporal_make_temporalinst'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ttextarrinst(val _text, t timestamptz)
+	RETURNS ttextarr
+	AS 'MODULE_PATHNAME', 'temporal_make_temporalinst'
+	LANGUAGE C IMMUTABLE STRICT;
 
 /* Temporal instant set */
 
@@ -222,6 +257,10 @@ CREATE FUNCTION tfloati(tfloat[])
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION ttexti(ttext[])
 	RETURNS ttext
+	AS 'MODULE_PATHNAME', 'temporal_make_temporali'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ttextarri(ttextarr[])
+	RETURNS ttextarr
 	AS 'MODULE_PATHNAME', 'temporal_make_temporali'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
@@ -247,6 +286,11 @@ CREATE FUNCTION ttextseq(ttext[], lower_inc boolean DEFAULT true,
 	RETURNS ttext
 	AS 'MODULE_PATHNAME', 'temporal_make_temporalseq'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ttextarrseq(ttextarr[], lower_inc boolean DEFAULT true, 
+	upper_inc boolean DEFAULT true)
+	RETURNS ttextarr
+	AS 'MODULE_PATHNAME', 'temporal_make_temporalseq'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /* Temporal sequence set */
 	
@@ -264,6 +308,10 @@ CREATE FUNCTION tfloats(tfloat[])
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION ttexts(ttext[])
 	RETURNS ttext
+	AS 'MODULE_PATHNAME', 'temporal_make_temporals'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ttextarrs(ttextarr[])
+	RETURNS ttextarr
 	AS 'MODULE_PATHNAME', 'temporal_make_temporals'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
@@ -285,6 +333,10 @@ CREATE FUNCTION appendInstant(tfloat, tfloat)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION appendInstant(ttext, ttext)
 	RETURNS ttext
+	AS 'MODULE_PATHNAME', 'temporal_append_instant'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION appendInstant(ttextarr, ttextarr)
+	RETURNS ttextarr
 	AS 'MODULE_PATHNAME', 'temporal_append_instant'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
@@ -368,6 +420,23 @@ CREATE FUNCTION ttextseq(ttext)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION ttexts(ttext)
 	RETURNS ttext
+	AS 'MODULE_PATHNAME', 'temporal_as_temporals'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+	
+CREATE FUNCTION ttextarrinst(ttextarr)
+	RETURNS ttextarr
+	AS 'MODULE_PATHNAME', 'temporal_as_temporalinst'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ttextarri(ttextarr)
+	RETURNS ttextarr
+	AS 'MODULE_PATHNAME', 'temporal_as_temporali'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ttextarrseq(ttextarr)
+	RETURNS ttextarr
+	AS 'MODULE_PATHNAME', 'temporal_as_temporalseq'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ttextarrs(ttextarr)
+	RETURNS ttextarr
 	AS 'MODULE_PATHNAME', 'temporal_as_temporals'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 	
