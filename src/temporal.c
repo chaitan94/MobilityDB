@@ -485,7 +485,8 @@ void
 base_type_oid(Oid valuetypid)
 {
 	if (valuetypid != BOOLOID && valuetypid != INT4OID && 
-		valuetypid != FLOAT8OID && valuetypid != TEXTOID
+		valuetypid != FLOAT8OID && valuetypid != TEXTOID && 
+		valuetypid != type_oid(T_TEXTARR)
 #ifdef WITH_POSTGIS
 		&& valuetypid != type_oid(T_GEOMETRY)
 		&& valuetypid != type_oid(T_GEOGRAPHY)
@@ -499,12 +500,8 @@ void
 base_type_all_oid(Oid valuetypid)
 {
 	if (valuetypid != BOOLOID && valuetypid != INT4OID && 
-		/* The next line is needed since the base type for tint must be 
-		 * changed to INT8OID in function scalar_compute_stats for 
-		 * collecting statistics */
-		// Is this still needed ???
-		// valuetypid != INT8OID && 
-		valuetypid != FLOAT8OID && valuetypid != TEXTOID &&
+		valuetypid != FLOAT8OID && valuetypid != TEXTOID  && 
+		valuetypid != type_oid(T_TEXTARR) &&
 		valuetypid != TIMESTAMPTZOID && valuetypid !=  type_oid(T_DOUBLE2)
 #ifdef WITH_POSTGIS
 		&& valuetypid != type_oid(T_GEOMETRY)
