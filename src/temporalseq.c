@@ -46,7 +46,7 @@
  * a precomputed trajectory is as follows
  *
  *	-------------------------------------------------------------------
- *	( TemporalSeq | offset_0 | offset_1 | offset_2 | offset_3 )_X | ...
+ *	( TemporalSeq )_X | offset_0 | offset_1 | offset_2 | offset_3 | ...
  *	-------------------------------------------------------------------
  *	------------------------------------------------------------------------
  *	( TemporalInst_0 )_X | ( TemporalInst_1 )_X | ( bbox )_X | ( Traj )_X  |
@@ -59,30 +59,14 @@
  * duration.
  */
 
-/* Pointer to the offset array of a TemporalSeq */
-
-size_t *
-temporalseq_offsets_ptr(TemporalSeq *seq)
-{
-	return (size_t *) (((char *)seq) + sizeof(TemporalSeq));
-}
-
-/* Pointer to the first TemporalInst */
-
-char * 
-temporalseq_data_ptr(TemporalSeq *seq)
-{
-	return (char *)seq + double_pad(sizeof(TemporalSeq) + 
-		sizeof(size_t) * (seq->count+2));
-}
-
 /* N-th TemporalInst of a TemporalSeq */
 
 TemporalInst *
 temporalseq_inst_n(TemporalSeq *seq, int index)
 {
-	size_t *offsets = temporalseq_offsets_ptr(seq);
-	return (TemporalInst *) (temporalseq_data_ptr(seq) + offsets[index]);
+	return (TemporalInst *)(
+		(char *)(&seq->offsets[seq->count + 2]) + 	/* start of data */
+			seq->offsets[index]);					/* offset */
 }
 
 /* Pointer to the bounding box of a TemporalSeq */
@@ -90,8 +74,8 @@ temporalseq_inst_n(TemporalSeq *seq, int index)
 void * 
 temporalseq_bbox_ptr(TemporalSeq *seq) 
 {
-	size_t *offsets = temporalseq_offsets_ptr(seq);
-	return temporalseq_data_ptr(seq) + offsets[seq->count];
+	return (char *)(&seq->offsets[seq->count + 2]) +  	/* start of data */
+		seq->offsets[seq->count];						/* offset */
 }
 
 /* Copy the bounding box of a TemporalSeq in the first argument */
@@ -609,12 +593,13 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 #ifdef WITH_POSTGIS
 	bool isgeo = (valuetypid == type_oid(T_GEOMETRY) ||
 		valuetypid == type_oid(T_GEOGRAPHY));
-	bool hasz = false;
+	bool hasz = false, isgeodetic = false;
 	int srid;
 	if (isgeo)
 	{
 		hasz = MOBDB_FLAGS_GET_Z(instants[0]->flags);
-		srid = tpoint_srid_internal((Temporal *)instants[0]);
+		isgeodetic = MOBDB_FLAGS_GET_GEODETIC(instants[0]->flags);
+		srid = tpoint_srid_internal((Temporal *) instants[0]);
 	}
 #endif
 	for (int i = 1; i < count; i++)
@@ -668,8 +653,9 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 		}
 	}
 #endif
-	/* Add the size of the struct and the offset array */
-	size_t pdata = double_pad(sizeof(TemporalSeq) + (newcount + 2) * sizeof(size_t));
+	/* Add the size of the struct and the offset array 
+	 * Notice that the first offset is already declared in the struct */
+	size_t pdata = double_pad(sizeof(TemporalSeq)) + (newcount + 1) * sizeof(size_t);
 	/* Create the TemporalSeq */
 	TemporalSeq *result = palloc0(pdata + memsize);
 	SET_VARSIZE(result, pdata + memsize);
@@ -681,16 +667,18 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 	MOBDB_FLAGS_SET_CONTINUOUS(result->flags, continuous);
 #ifdef WITH_POSTGIS
 	if (isgeo)
+	{
 		MOBDB_FLAGS_SET_Z(result->flags, hasz);
+		MOBDB_FLAGS_SET_GEODETIC(result->flags, isgeodetic);
+	}
 #endif
 	/* Initialization of the variable-length part */
-	size_t *offsets = temporalseq_offsets_ptr(result);
 	size_t pos = 0;
 	for (int i = 0; i < newcount; i++)
 	{
 		memcpy(((char *)result) + pdata + pos, newinstants[i], 
 			VARSIZE(newinstants[i]));
-		offsets[i] = pos;
+		result->offsets[i] = pos;
 		pos += double_pad(VARSIZE(newinstants[i]));
 	}
 	/*
@@ -715,13 +703,13 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 #endif
 			temporalseq_make_bbox(bbox, newinstants, newcount, 
 				lower_inc, upper_inc);
-		offsets[newcount] = pos;
+		result->offsets[newcount] = pos;
 		pos += double_pad(bboxsize);
 	}
 #ifdef WITH_POSTGIS
 	if (isgeo && trajectory)
 	{
-		offsets[newcount + 1] = pos;
+		result->offsets[newcount + 1] = pos;
 		memcpy(((char *) result) + pdata + pos, DatumGetPointer(traj),
 			VARSIZE(DatumGetPointer(traj)));
 		pfree(DatumGetPointer(traj));
@@ -795,7 +783,7 @@ temporalseq_append_instant(TemporalSeq *seq, TemporalInst *inst)
 	size_t bboxsize = temporal_bbox_size(valuetypid);
 	size_t memsize = double_pad(bboxsize);
 	/* Add the size of composing instants */
-	for (int i = 0; i < newcount; i++)
+	for (int i = 0; i < newcount - 1; i++)
 		memsize += double_pad(VARSIZE(temporalseq_inst_n(seq, i)));
 	memsize += double_pad(VARSIZE(inst));
 	/* Expand the trajectory */
@@ -813,8 +801,9 @@ temporalseq_append_instant(TemporalSeq *seq, TemporalInst *inst)
 		}
 	}
 #endif
-	/* Add the size of the struct and the offset array */
-	size_t pdata = double_pad(sizeof(TemporalSeq) + (newcount + 2) * sizeof(size_t));
+	/* Add the size of the struct and the offset array 
+	 * Notice that the first offset is already declared in the struct */
+	size_t pdata = double_pad(sizeof(TemporalSeq)) + (newcount + 1) * sizeof(size_t);
 	/* Create the TemporalSeq */
 	TemporalSeq *result = palloc0(pdata + memsize);
 	SET_VARSIZE(result, pdata + memsize);
@@ -829,30 +818,29 @@ temporalseq_append_instant(TemporalSeq *seq, TemporalInst *inst)
 		MOBDB_FLAGS_SET_Z(result->flags, MOBDB_FLAGS_GET_Z(seq->flags));
 #endif
 	/* Initialization of the variable-length part */
-	size_t *offsets = temporalseq_offsets_ptr(result);
 	size_t pos = 0;
 	for (int i = 0; i < newcount - 1; i++)
 	{
 		inst1 = temporalseq_inst_n(seq, i);
 		memcpy(((char *)result) + pdata + pos, inst1, VARSIZE(inst1));
-		offsets[i] = pos;
+		result->offsets[i] = pos;
 		pos += double_pad(VARSIZE(inst1));
 	}
 	/* Append the instant */
 	memcpy(((char *)result) + pdata + pos, inst, VARSIZE(inst));
-	offsets[newcount - 1] = pos;
+	result->offsets[newcount - 1] = pos;
 	pos += double_pad(VARSIZE(inst));
 	/* Expand the bounding box */
 	if (bboxsize != 0) 
 	{
 		void *bbox = ((char *) result) + pdata + pos;
 		temporalseq_expand_bbox(bbox, seq, inst);
-		offsets[newcount] = pos;
+		result->offsets[newcount] = pos;
 	}
 #ifdef WITH_POSTGIS
 	if (isgeo && trajectory)
 	{
-		offsets[newcount + 1] = pos;
+		result->offsets[newcount + 1] = pos;
 		memcpy(((char *) result) + pdata + pos, DatumGetPointer(traj),
 			VARSIZE(DatumGetPointer(traj)));
 		pfree(DatumGetPointer(traj));
@@ -1809,9 +1797,11 @@ temporalseq_ever_equals(TemporalSeq *seq, Datum value)
 	/* Bounding box test */
 	if (seq->valuetypid == INT4OID || seq->valuetypid == FLOAT8OID)
 	{
-		TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
+		TBOX box1, box2;
+		memset(&box1, 0, sizeof(TBOX));
+		memset(&box2, 0, sizeof(TBOX));
 		temporalseq_bbox(&box1, seq);
-		base_to_tbox(&box2, value, seq->valuetypid);
+		number_to_box(&box2, value, seq->valuetypid);
 		if (!contains_tbox_tbox_internal(&box1, &box2))
 			return false;
 	}
@@ -1850,7 +1840,8 @@ temporalseq_always_equals(TemporalSeq *seq, Datum value)
 	/* Bounding box test */
 	if (seq->valuetypid == INT4OID || seq->valuetypid == FLOAT8OID)
 	{
-		TBOX box = {0,0,0,0,0};
+		TBOX box;
+		memset(&box, 0, sizeof(TBOX));
 		temporalseq_bbox(&box, seq);
 		if (seq->valuetypid == INT4OID)
 			return box.xmin == box.xmax &&
@@ -2109,9 +2100,11 @@ temporalseq_at_value2(TemporalSeq **result, TemporalSeq *seq, Datum value)
 	/* Bounding box test */
 	if (valuetypid == INT4OID || valuetypid == FLOAT8OID)
 	{
-		TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
+		TBOX box1, box2;
+		memset(&box1, 0, sizeof(TBOX));
+		memset(&box2, 0, sizeof(TBOX));
 		temporalseq_bbox(&box1, seq);
-		base_to_tbox(&box2, value, valuetypid);
+		number_to_box(&box2, value, valuetypid);
 		if (!contains_tbox_tbox_internal(&box1, &box2))
 			return 0;			
 	}
@@ -2247,9 +2240,11 @@ temporalseq_minus_value2(TemporalSeq **result, TemporalSeq *seq, Datum value)
 	/* Bounding box test */
 	if (valuetypid == INT4OID || valuetypid == FLOAT8OID)
 	{
-		TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
+		TBOX box1, box2;
+		memset(&box1, 0, sizeof(TBOX));
+		memset(&box2, 0, sizeof(TBOX));
 		temporalseq_bbox(&box1, seq);
-		base_to_tbox(&box2, value, valuetypid);
+		number_to_box(&box2, value, valuetypid);
 		if (!contains_tbox_tbox_internal(&box1, &box2))
 		{
 			result[0] = temporalseq_copy(seq);
@@ -2567,7 +2562,9 @@ int
 tnumberseq_at_range2(TemporalSeq **result, TemporalSeq *seq, RangeType *range)
 {
 	/* Bounding box test */
-	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
+	TBOX box1, box2;
+	memset(&box1, 0, sizeof(TBOX));
+	memset(&box2, 0, sizeof(TBOX));
 	temporalseq_bbox(&box1, seq);
 	range_to_tbox_internal(&box2, range);
 	if (!overlaps_tbox_tbox_internal(&box1, &box2))
@@ -2621,7 +2618,9 @@ int
 tnumberseq_minus_range1(TemporalSeq **result, TemporalSeq *seq, RangeType *range)
 {
 	/* Bounding box test */
-	TBOX box1 = {0,0,0,0,0}, box2 = {0,0,0,0,0};
+	TBOX box1, box2;
+	memset(&box1, 0, sizeof(TBOX));
+	memset(&box2, 0, sizeof(TBOX));
 	temporalseq_bbox(&box1, seq);
 	range_to_tbox_internal(&box2, range);
 	if (!overlaps_tbox_tbox_internal(&box1, &box2))
@@ -3641,7 +3640,7 @@ temporalseq_eq(TemporalSeq *seq1, TemporalSeq *seq2)
 {
 	/* If number of sequences or the periods are not equal */
 	if (seq1->count != seq2->count || 
-			!period_eq_internal(&seq1->period, &seq2->period)) 
+			! period_eq_internal(&seq1->period, &seq2->period)) 
 		return false;
 
 	/* If bounding boxes are not equal */
@@ -3667,8 +3666,15 @@ temporalseq_eq(TemporalSeq *seq1, TemporalSeq *seq2)
 int
 temporalseq_cmp(TemporalSeq *seq1, TemporalSeq *seq2)
 {
+	/* Compare bounding boxes */
+	void *box1 = temporalseq_bbox_ptr(seq1);
+	void *box2 = temporalseq_bbox_ptr(seq2);
+	int result = temporal_bbox_cmp(seq1->valuetypid, box1, box2);
+	if (result)
+		return result;
+
+	/* Compare composing instants */
 	int count = Min(seq1->count, seq2->count);
-	int result;
 	for (int i = 0; i < count; i++)
 	{
 		TemporalInst *inst1 = temporalseq_inst_n(seq1, i);
@@ -3677,13 +3683,12 @@ temporalseq_cmp(TemporalSeq *seq1, TemporalSeq *seq2)
 		if (result) 
 			return result;
 	}
-	/* The first count instants of both TemporalSeq values are equal */
+	/* The first count instants of seq1 and seq2 are equal */
 	if (seq1->count < seq2->count) /* seq1 has less instants than seq2 */
 		return -1;
 	else if (seq2->count < seq1->count) /* seq2 has less instants than seq1 */
 		return 1;
-	else /* compare the time spans of seq1 and seq2 */
-		return period_cmp_internal(&seq1->period, &seq2->period);
+	return 0;
 }
 
 /*****************************************************************************
