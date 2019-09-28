@@ -145,7 +145,6 @@ populate_oidcache()
 	OverrideSearchPath* overridePath = GetOverrideSearchPath(CurrentMemoryContext);
 	overridePath->schemas = lcons_oid(namespaceId, overridePath->schemas);
 	PushOverrideSearchPath(overridePath);
-
 	PG_TRY();
 	{
 		populate_types();
