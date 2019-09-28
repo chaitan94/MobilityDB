@@ -42,9 +42,9 @@ PG_MODULE_MAGIC;
 void
 _PG_init(void)
 {
-    /* elog(WARNING, "This is MobilityDB."); */
+	/* elog(WARNING, "This is MobilityDB."); */
 #ifdef WITH_POSTGIS
-    temporalgeom_init();
+	temporalgeom_init();
 #endif
 }
 
@@ -53,7 +53,7 @@ _PG_init(void)
 void
 debugstr(char *msg)
 {
-    ereport(WARNING, (errcode(ERRCODE_WARNING), errmsg("DEBUG: %s", msg)));
+	ereport(WARNING, (errcode(ERRCODE_WARNING), errmsg("DEBUG: %s", msg)));
 }
 
 /* Align to double */
@@ -61,10 +61,10 @@ debugstr(char *msg)
 size_t
 double_pad(size_t size)
 {
-    if (size % 8)
-        return size + (8 - size % 8);
-    else
-        return size;
+	if (size % 8)
+		return size + (8 - size % 8);
+	else
+		return size;
 }
 
 /* 
@@ -89,7 +89,7 @@ get_typbyval_fast(Oid type)
 			 type == type_oid(T_DOUBLE3) || type == type_oid(T_DOUBLE4))
 		result = false;
 #endif
-    return result;
+	return result;
 }
 
 /* 
@@ -115,14 +115,14 @@ get_typlen_fast(Oid type)
 	else if (type == TEXTOID)
 		result = -1;
 #ifdef WITH_POSTGIS
-    else if (type == type_oid(T_GEOMETRY) || type == type_oid(T_GEOGRAPHY))
-        result = -1;
-    else if (type == type_oid(T_DOUBLE3))
-        result = 24;
-    else if (type == type_oid(T_DOUBLE4))
-        result = 32;
+	else if (type == type_oid(T_GEOMETRY) || type == type_oid(T_GEOGRAPHY))
+		result = -1;
+	else if (type == type_oid(T_DOUBLE3))
+		result = 24;
+	else if (type == type_oid(T_DOUBLE4))
+		result = 32;
 #endif
-    return result;
+	return result;
 }
 
 /* Copy a Datum if it is passed by reference */
@@ -162,12 +162,12 @@ datum_double(Datum d, Oid valuetypid)
 Datum
 call_input(Oid type, char *str)
 {
-    Oid infunc;
-    Oid basetype;
-    FmgrInfo infuncinfo;
-    getTypeInputInfo(type, &infunc, &basetype);
-    fmgr_info(infunc, &infuncinfo);
-    return InputFunctionCall(&infuncinfo, str, basetype, -1);
+	Oid infunc;
+	Oid basetype;
+	FmgrInfo infuncinfo;
+	getTypeInputInfo(type, &infunc, &basetype);
+	fmgr_info(infunc, &infuncinfo);
+	return InputFunctionCall(&infuncinfo, str, basetype, -1);
 }
 
 /* Call output function of the base type of a temporal type */
@@ -175,12 +175,12 @@ call_input(Oid type, char *str)
 char *
 call_output(Oid type, Datum value)
 {
-    Oid outfunc;
-    bool isvarlena;
-    FmgrInfo outfuncinfo;
-    getTypeOutputInfo(type, &outfunc, &isvarlena);
-    fmgr_info(outfunc, &outfuncinfo);
-    return OutputFunctionCall(&outfuncinfo, value);
+	Oid outfunc;
+	bool isvarlena;
+	FmgrInfo outfuncinfo;
+	getTypeOutputInfo(type, &outfunc, &isvarlena);
+	fmgr_info(outfunc, &outfuncinfo);
+	return OutputFunctionCall(&outfuncinfo, value);
 }
 
 /* Call send function of the base type of a temporal type */
@@ -188,12 +188,12 @@ call_output(Oid type, Datum value)
 bytea *
 call_send(Oid type, Datum value)
 {
-    Oid sendfunc;
-    bool isvarlena;
-    FmgrInfo sendfuncinfo;
-    getTypeBinaryOutputInfo(type, &sendfunc, &isvarlena);
-    fmgr_info(sendfunc, &sendfuncinfo);
-    return SendFunctionCall(&sendfuncinfo, value);
+	Oid sendfunc;
+	bool isvarlena;
+	FmgrInfo sendfuncinfo;
+	getTypeBinaryOutputInfo(type, &sendfunc, &isvarlena);
+	fmgr_info(sendfunc, &sendfuncinfo);
+	return SendFunctionCall(&sendfuncinfo, value);
 }
 
 /* Call receive function of the base type of a temporal type */
@@ -201,12 +201,12 @@ call_send(Oid type, Datum value)
 Datum
 call_recv(Oid type, StringInfo buf)
 {
-    Oid recvfunc;
-    Oid basetype;
-    FmgrInfo recvfuncinfo;
-    getTypeBinaryInputInfo(type, &recvfunc, &basetype);
-    fmgr_info(recvfunc, &recvfuncinfo);
-    return ReceiveFunctionCall(&recvfuncinfo, buf, basetype, -1);
+	Oid recvfunc;
+	Oid basetype;
+	FmgrInfo recvfuncinfo;
+	getTypeBinaryInputInfo(type, &recvfunc, &basetype);
+	fmgr_info(recvfunc, &recvfuncinfo);
+	return ReceiveFunctionCall(&recvfuncinfo, buf, basetype, -1);
 }
 
 /* Call PostgreSQL function with 1 to 4 arguments */
@@ -214,21 +214,21 @@ call_recv(Oid type, StringInfo buf)
 Datum
 call_function1(PGFunction func, Datum arg1)
 {
-    Datum result;
+	Datum result;
 #if MOBILITYDB_PG_VERSION < 120000
-    FunctionCallInfoData fcinfo;
-    FmgrInfo flinfo;
-    memset(&flinfo, 0, sizeof(flinfo));
-    flinfo.fn_mcxt = CurrentMemoryContext;
-    InitFunctionCallInfoData(fcinfo, NULL, 1, DEFAULT_COLLATION_OID, NULL, NULL);
-    fcinfo.flinfo = &flinfo;
-    fcinfo.arg[0] = arg1;
-    fcinfo.argnull[0] = false;
-    result = (*func) (&fcinfo);
-    if (fcinfo.isnull)
-        elog(ERROR, "function %p returned NULL", (void *) func);
+	FunctionCallInfoData fcinfo;
+	FmgrInfo flinfo;
+	memset(&flinfo, 0, sizeof(flinfo));
+	flinfo.fn_mcxt = CurrentMemoryContext;
+	InitFunctionCallInfoData(fcinfo, NULL, 1, DEFAULT_COLLATION_OID, NULL, NULL);
+	fcinfo.flinfo = &flinfo;
+	fcinfo.arg[0] = arg1;
+	fcinfo.argnull[0] = false;
+	result = (*func) (&fcinfo);
+	if (fcinfo.isnull)
+		elog(ERROR, "function %p returned NULL", (void *) func);
 #else
-    LOCAL_FCINFO(fcinfo, 1); /* Could be optimized */
+	LOCAL_FCINFO(fcinfo, 1); /* Could be optimized */
 	InitFunctionCallInfoData(*fcinfo, NULL, 1, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo->args[0].isnull = false;
 	fcinfo->args[0].value = arg1;
@@ -236,29 +236,29 @@ call_function1(PGFunction func, Datum arg1)
 	if (fcinfo->isnull)
 		elog(ERROR, "function %p returned NULL", (void *) func);
 #endif
-    return result;
+	return result;
 }
 
 Datum
 call_function2(PGFunction func, Datum arg1, Datum arg2)
 {
-    Datum result;
+	Datum result;
 #if MOBILITYDB_PG_VERSION < 120000
-    FunctionCallInfoData fcinfo;
-    FmgrInfo flinfo;
-    memset(&flinfo, 0, sizeof(flinfo)) ;
-    flinfo.fn_mcxt = CurrentMemoryContext;
-    InitFunctionCallInfoData(fcinfo, NULL, 2, DEFAULT_COLLATION_OID, NULL, NULL);
-    fcinfo.flinfo = &flinfo;
-    fcinfo.arg[0] = arg1;
-    fcinfo.argnull[0] = false;
-    fcinfo.arg[1] = arg2;
-    fcinfo.argnull[1] = false;
-    result = (*func) (&fcinfo);
-    if (fcinfo.isnull)
-        elog(ERROR, "function %p returned NULL", (void *) func);
+	FunctionCallInfoData fcinfo;
+	FmgrInfo flinfo;
+	memset(&flinfo, 0, sizeof(flinfo)) ;
+	flinfo.fn_mcxt = CurrentMemoryContext;
+	InitFunctionCallInfoData(fcinfo, NULL, 2, DEFAULT_COLLATION_OID, NULL, NULL);
+	fcinfo.flinfo = &flinfo;
+	fcinfo.arg[0] = arg1;
+	fcinfo.argnull[0] = false;
+	fcinfo.arg[1] = arg2;
+	fcinfo.argnull[1] = false;
+	result = (*func) (&fcinfo);
+	if (fcinfo.isnull)
+		elog(ERROR, "function %p returned NULL", (void *) func);
 #else
-    LOCAL_FCINFO(fcinfo, 2); /* Could be optimized */
+	LOCAL_FCINFO(fcinfo, 2); /* Could be optimized */
 	InitFunctionCallInfoData(*fcinfo, NULL, 2, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo->args[0].isnull = false;
 	fcinfo->args[0].value = arg1;
@@ -268,31 +268,31 @@ call_function2(PGFunction func, Datum arg1, Datum arg2)
 	if (fcinfo->isnull)
 		elog(ERROR, "function %p returned NULL", (void *) func);
 #endif
-    return result;
+	return result;
 }
 
 Datum
 call_function3(PGFunction func, Datum arg1, Datum arg2, Datum arg3)
 {
-    Datum result;
+	Datum result;
 #if MOBILITYDB_PG_VERSION < 120000
-    FunctionCallInfoData fcinfo;
-    FmgrInfo flinfo;
-    memset(&flinfo, 0, sizeof(flinfo)) ;
-    flinfo.fn_mcxt = CurrentMemoryContext;
-    InitFunctionCallInfoData(fcinfo, NULL, 3, DEFAULT_COLLATION_OID, NULL, NULL);
-    fcinfo.flinfo = &flinfo;
-    fcinfo.arg[0] = arg1;
-    fcinfo.argnull[0] = false;
-    fcinfo.arg[1] = arg2;
-    fcinfo.argnull[1] = false;
-    fcinfo.arg[2] = arg3;
-    fcinfo.argnull[2] = false;
-    result = (*func) (&fcinfo);
-    if (fcinfo.isnull)
-        elog(ERROR, "function %p returned NULL", (void *) func);
+	FunctionCallInfoData fcinfo;
+	FmgrInfo flinfo;
+	memset(&flinfo, 0, sizeof(flinfo)) ;
+	flinfo.fn_mcxt = CurrentMemoryContext;
+	InitFunctionCallInfoData(fcinfo, NULL, 3, DEFAULT_COLLATION_OID, NULL, NULL);
+	fcinfo.flinfo = &flinfo;
+	fcinfo.arg[0] = arg1;
+	fcinfo.argnull[0] = false;
+	fcinfo.arg[1] = arg2;
+	fcinfo.argnull[1] = false;
+	fcinfo.arg[2] = arg3;
+	fcinfo.argnull[2] = false;
+	result = (*func) (&fcinfo);
+	if (fcinfo.isnull)
+		elog(ERROR, "function %p returned NULL", (void *) func);
 #else
-    LOCAL_FCINFO(fcinfo, 3); /* Could be optimized */
+	LOCAL_FCINFO(fcinfo, 3); /* Could be optimized */
 	InitFunctionCallInfoData(*fcinfo, NULL, 3, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo->args[0].isnull = false;
 	fcinfo->args[0].value = arg1;
@@ -304,33 +304,33 @@ call_function3(PGFunction func, Datum arg1, Datum arg2, Datum arg3)
 	if (fcinfo->isnull)
 		elog(ERROR, "function %p returned NULL", (void *) func);
 #endif
-    return result;
+	return result;
 }
 
 Datum
 call_function4(PGFunction func, Datum arg1, Datum arg2, Datum arg3, Datum arg4)
 {
-    Datum result;
+	Datum result;
 #if MOBILITYDB_PG_VERSION < 120000
-    FunctionCallInfoData fcinfo;
-    FmgrInfo flinfo;
-    memset(&flinfo, 0, sizeof(flinfo)) ;
-    flinfo.fn_mcxt = CurrentMemoryContext;
-    InitFunctionCallInfoData(fcinfo, NULL, 4, DEFAULT_COLLATION_OID, NULL, NULL);
-    fcinfo.flinfo = &flinfo;
-    fcinfo.arg[0] = arg1;
-    fcinfo.argnull[0] = false;
-    fcinfo.arg[1] = arg2;
-    fcinfo.argnull[1] = false;
-    fcinfo.arg[2] = arg3;
-    fcinfo.argnull[2] = false;
-    fcinfo.arg[3] = arg4;
-    fcinfo.argnull[3] = false;
-    result = (*func) (&fcinfo);
-    if (fcinfo.isnull)
-        elog(ERROR, "function %p returned NULL", (void *) func);
+	FunctionCallInfoData fcinfo;
+	FmgrInfo flinfo;
+	memset(&flinfo, 0, sizeof(flinfo)) ;
+	flinfo.fn_mcxt = CurrentMemoryContext;
+	InitFunctionCallInfoData(fcinfo, NULL, 4, DEFAULT_COLLATION_OID, NULL, NULL);
+	fcinfo.flinfo = &flinfo;
+	fcinfo.arg[0] = arg1;
+	fcinfo.argnull[0] = false;
+	fcinfo.arg[1] = arg2;
+	fcinfo.argnull[1] = false;
+	fcinfo.arg[2] = arg3;
+	fcinfo.argnull[2] = false;
+	fcinfo.arg[3] = arg4;
+	fcinfo.argnull[3] = false;
+	result = (*func) (&fcinfo);
+	if (fcinfo.isnull)
+		elog(ERROR, "function %p returned NULL", (void *) func);
 #else
-    LOCAL_FCINFO(fcinfo, 4); /* Could be optimized */
+	LOCAL_FCINFO(fcinfo, 4); /* Could be optimized */
 	InitFunctionCallInfoData(*fcinfo, NULL, 4, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo->args[0].isnull = false;
 	fcinfo->args[0].value = arg1;
@@ -344,7 +344,7 @@ call_function4(PGFunction func, Datum arg1, Datum arg2, Datum arg3, Datum arg4)
 	if (fcinfo->isnull)
 		elog(ERROR, "function %p returned NULL", (void *) func);
 #endif
-    return result;
+	return result;
 }
 /*****************************************************************************
  * Array functions
@@ -355,39 +355,39 @@ call_function4(PGFunction func, Datum arg1, Datum arg2, Datum arg3, Datum arg4)
 Datum *
 datumarr_extract(ArrayType *array, int *count)
 {
-    bool byval;
-    int16 typlen;
-    char align;
-    get_typlenbyvalalign(array->elemtype, &typlen, &byval, &align);
-    Datum *result;
-    deconstruct_array(array, array->elemtype, typlen, byval, align, &result, NULL, count);
-    return result;
+	bool byval;
+	int16 typlen;
+	char align;
+	get_typlenbyvalalign(array->elemtype, &typlen, &byval, &align);
+	Datum *result;
+	deconstruct_array(array, array->elemtype, typlen, byval, align, &result, NULL, count);
+	return result;
 }
 
 TimestampTz *
 timestamparr_extract(ArrayType *array, int *count)
 {
-    return (TimestampTz *) datumarr_extract(array, count);
+	return (TimestampTz *) datumarr_extract(array, count);
 }
 
 Period **
 periodarr_extract(ArrayType *array, int *count)
 {
-    return (Period **) datumarr_extract(array, count);
+	return (Period **) datumarr_extract(array, count);
 }
 
 RangeType **
 rangearr_extract(ArrayType *array, int *count)
 {
-    return (RangeType **) datumarr_extract(array, count);
+	return (RangeType **) datumarr_extract(array, count);
 }
 
 Temporal **
 temporalarr_extract(ArrayType *array, int *count)
 {
-    Temporal **result;
-    deconstruct_array(array, array->elemtype, -1, false, 'd', (Datum **) &result, NULL, count);
-    return result;
+	Temporal **result;
+	deconstruct_array(array, array->elemtype, -1, false, 'd', (Datum **) &result, NULL, count);
+	return result;
 }
 
 /*****************************************************************************/
@@ -408,8 +408,8 @@ datumarr_to_array(Datum *values, int count, Oid type)
 ArrayType *
 timestamparr_to_array(TimestampTz *times, int count)
 {
-    ArrayType *result = construct_array((Datum *)times, count, TIMESTAMPTZOID, 8, true, 'd');
-    return result;
+	ArrayType *result = construct_array((Datum *)times, count, TIMESTAMPTZOID, 8, true, 'd');
+	return result;
 }
 
 ArrayType *
@@ -423,24 +423,24 @@ periodarr_to_array(Period **periods, int count)
 ArrayType *
 rangearr_to_array(RangeType **ranges, int count, Oid type)
 {
-    ArrayType *result = construct_array((Datum *)ranges, count, type, -1, false, 'd');
-    return result;
+	ArrayType *result = construct_array((Datum *)ranges, count, type, -1, false, 'd');
+	return result;
 }
 
 ArrayType *
 textarr_to_array(text **textarr, int count)
 {
-    ArrayType *result = construct_array((Datum *)textarr, count, TEXTOID, -1, false, 'i');
-    return result;
+	ArrayType *result = construct_array((Datum *)textarr, count, TEXTOID, -1, false, 'i');
+	return result;
 }
 
 ArrayType *
 temporalarr_to_array(Temporal **temporalarr, int count)
 {
-    assert(count > 0);
-    Oid type = temporal_oid_from_base(temporalarr[0]->valuetypid);
-    ArrayType *result = construct_array((Datum *)temporalarr, count, type, -1, false, 'd');
-    return result;
+	assert(count > 0);
+	Oid type = temporal_oid_from_base(temporalarr[0]->valuetypid);
+	ArrayType *result = construct_array((Datum *)temporalarr, count, type, -1, false, 'd');
+	return result;
 }
 
 /*****************************************************************************
@@ -452,29 +452,29 @@ temporalarr_to_array(Temporal **temporalarr, int count)
 static int
 datum_sort_cmp(Datum *l, Datum *r, Oid *type)
 {
-    Datum x = *l;
-    Datum y = *r;
-    Oid t = *type;
-    if (datum_eq(x, y, t))
-        return 0;
-    else if (datum_lt(x, y, t))
-        return -1;
-    else
-        return 1;
+	Datum x = *l;
+	Datum y = *r;
+	Oid t = *type;
+	if (datum_eq(x, y, t))
+		return 0;
+	else if (datum_lt(x, y, t))
+		return -1;
+	else
+		return 1;
 }
 
 static int
 timestamp_sort_cmp(TimestampTz *l, TimestampTz *r)
 {
-    TimestampTz x = *l;
-    TimestampTz y = *r;
-    return timestamp_cmp_internal(x, y);
+	TimestampTz x = *l;
+	TimestampTz y = *r;
+	return timestamp_cmp_internal(x, y);
 }
 
 static int
 period_sort_cmp(Period **l, Period **r)
 {
-    return period_cmp_internal(*l, *r);
+	return period_cmp_internal(*l, *r);
 }
 
 static int
@@ -487,15 +487,15 @@ range_sort_cmp(RangeType **l, RangeType **r)
 static int
 temporalinstarr_sort_cmp(TemporalInst **l, TemporalInst **r)
 {
-    return timestamp_cmp_internal((*l)->t, (*r)->t);
+	return timestamp_cmp_internal((*l)->t, (*r)->t);
 }
 
 static int
 temporalseqarr_sort_cmp(TemporalSeq **l, TemporalSeq **r)
 {
-    TimestampTz lt = (*l)->period.lower;
-    TimestampTz rt = (*r)->period.lower;
-    return timestamp_cmp_internal(lt, rt);
+	TimestampTz lt = (*l)->period.lower;
+	TimestampTz rt = (*r)->period.lower;
+	return timestamp_cmp_internal(lt, rt);
 }
 
 /*****************************************************************************/
@@ -590,13 +590,13 @@ text_cmp(text *arg1, text *arg2, Oid collid)
 	int			len1,
 			len2;
 
-    a1p = VARDATA_ANY(arg1);
-    a2p = VARDATA_ANY(arg2);
+	a1p = VARDATA_ANY(arg1);
+	a2p = VARDATA_ANY(arg2);
 
-    len1 = VARSIZE_ANY_EXHDR(arg1);
-    len2 = VARSIZE_ANY_EXHDR(arg2);
+	len1 = VARSIZE_ANY_EXHDR(arg1);
+	len2 = VARSIZE_ANY_EXHDR(arg2);
 
-    return varstr_cmp(a1p, len1, a2p, len2, collid);
+	return varstr_cmp(a1p, len1, a2p, len2, collid);
 }
 
 /*****************************************************************************
@@ -630,13 +630,13 @@ datum_eq(Datum l, Datum r, Oid type)
 		//	result = DatumGetBool(call_function2(geography_eq, l, r));
 		result = datum_point_eq(l, r);
 #endif
-    return result;
+	return result;
 }
 
 bool
 datum_ne(Datum l, Datum r, Oid type)
 {
-    return !datum_eq(l, r, type);
+	return !datum_eq(l, r, type);
 }
 
 bool
@@ -653,30 +653,30 @@ datum_lt(Datum l, Datum r, Oid type)
 	else if (type == TEXTOID)
 		result = text_cmp(DatumGetTextP(l), DatumGetTextP(r), DEFAULT_COLLATION_OID) < 0;
 #ifdef WITH_POSTGIS
-    else if (type == type_oid(T_GEOMETRY))
-        result = DatumGetBool(call_function2(lwgeom_lt, l, r));
-    else if (type == type_oid(T_GEOGRAPHY))
-        result = DatumGetBool(call_function2(geography_lt, l, r));
+	else if (type == type_oid(T_GEOMETRY))
+		result = DatumGetBool(call_function2(lwgeom_lt, l, r));
+	else if (type == type_oid(T_GEOGRAPHY))
+		result = DatumGetBool(call_function2(geography_lt, l, r));
 #endif
-    return result;
+	return result;
 }
 
 bool
 datum_le(Datum l, Datum r, Oid type)
 {
-    return datum_eq(l, r, type) || datum_lt(l, r, type);
+	return datum_eq(l, r, type) || datum_lt(l, r, type);
 }
 
 bool
 datum_gt(Datum l, Datum r, Oid type)
 {
-    return datum_lt(r, l, type);
+	return datum_lt(r, l, type);
 }
 
 bool
 datum_ge(Datum l, Datum r, Oid type)
 {
-    return datum_eq(l, r, type) || datum_lt(r, l, type);
+	return datum_eq(l, r, type) || datum_lt(r, l, type);
 }
 
 /*****************************************************************************/
@@ -711,13 +711,13 @@ datum_eq2(Datum l, Datum r, Oid typel, Oid typer)
 		//	result = DatumGetBool(call_function2(geography_eq, l, r));
 		result = datum_point_eq(l, r);
 #endif
-    return result;
+	return result;
 }
 
 bool
 datum_ne2(Datum l, Datum r, Oid typel, Oid typer)
 {
-    return !datum_eq2(l, r, typel, typer);
+	return !datum_eq2(l, r, typel, typer);
 }
 
 bool
@@ -748,13 +748,13 @@ datum_le2(Datum l, Datum r, Oid typel, Oid typer)
 bool
 datum_gt2(Datum l, Datum r, Oid typel, Oid typer)
 {
-    return datum_lt2(r, l, typer, typel);
+	return datum_lt2(r, l, typer, typel);
 }
 
 bool
 datum_ge2(Datum l, Datum r, Oid typel, Oid typer)
 {
-    return datum_eq2(l, r, typel, typer) || datum_gt2(l, r, typel, typer);
+	return datum_eq2(l, r, typel, typer) || datum_gt2(l, r, typel, typer);
 }
 
 /*****************************************************************************/
@@ -762,37 +762,37 @@ datum_ge2(Datum l, Datum r, Oid typel, Oid typer)
 Datum
 datum2_eq2(Datum l, Datum r, Oid typel, Oid typer)
 {
-    return BoolGetDatum(datum_eq2(l, r, typel, typer));
+	return BoolGetDatum(datum_eq2(l, r, typel, typer));
 }
 
 Datum
 datum2_ne2(Datum l, Datum r, Oid typel, Oid typer)
 {
-    return BoolGetDatum(datum_ne2(l, r, typel, typer));
+	return BoolGetDatum(datum_ne2(l, r, typel, typer));
 }
 
 Datum
 datum2_lt2(Datum l, Datum r, Oid typel, Oid typer)
 {
-    return BoolGetDatum(datum_lt2(l, r, typel, typer));
+	return BoolGetDatum(datum_lt2(l, r, typel, typer));
 }
 
 Datum
 datum2_le2(Datum l, Datum r, Oid typel, Oid typer)
 {
-    return BoolGetDatum(datum_le2(l, r, typel, typer));
+	return BoolGetDatum(datum_le2(l, r, typel, typer));
 }
 
 Datum
 datum2_gt2(Datum l, Datum r, Oid typel, Oid typer)
 {
-    return BoolGetDatum(datum_gt2(l, r, typel, typer));
+	return BoolGetDatum(datum_gt2(l, r, typel, typer));
 }
 
 Datum
 datum2_ge2(Datum l, Datum r, Oid typel, Oid typer)
 {
-    return BoolGetDatum(datum_ge2(l, r, typel, typer));
+	return BoolGetDatum(datum_ge2(l, r, typel, typer));
 }
 
 /*****************************************************************************/
