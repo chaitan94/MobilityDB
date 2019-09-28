@@ -2,11 +2,29 @@
 
 MobilityDB
 =======
-MobilityDB is an extension for PostgreSQL to support temporal data types.
+
+<img src="doc/images/mobilitydb-logo.svg" width="200" alt="MobilityDB Logo" />
+
+MobilityDB is an open source software program that adds support for temporal and spatio-temporal objects to the [PostgreSQL](https://www.postgresql.org/) object-relational database and its spatial extension [PostGIS](http://postgis.net/). MobilityDB follows the [Moving Features](https://www.opengeospatial.org/standards/movingfeatures) specification from the [Open Geospatial Consortium](https://www.opengeospatial.org/) (OGC).
+
+Technically, MobilityDB is implemented as a PostgreSQL [external extension](https://www.postgresql.org/docs/current/static/external-extensions.html).
+
+MobilityDB is developed by the Computer & Decision Engineering Department of the [Université Libre de Bruxelles](https://www.ulb.be/) (ULB) under the direction of [Prof. Esteban Zimányi](http://cs.ulb.ac.be/members/esteban/).
+
+
+Features
+--------
+
+* Time types `Period`, `PeriodSet`, and `TimestampSet` which, in addition of the the `TimestampTz` type provided by PostgreSQL,  are used to represent time spans.
+* Temporal types `tbool`, `tint`, `tfloat`, and `ttext` which are based on the `bool`, `int`, `float`, and `text` types provided by PostgreSQL and are used to represent basic types that evolve on time.
+* Spatio-temporal types `tgeompoint` and `tgeogpoint` which are based on the `geometry` and `geography` types provided by PostGIS (restricted to 2D or 3D points) and are used to represent points that evolve on time.
+* Range types `intrange` and `floatrange` which are used to represent ranges of `int` and `float` values.
+
+All these types have associated an extensive set of functions and operators. GiST and SP-GIST index support for these types are also provided.
 
 Status
 ------
-The extension is under heavy development; many things work, some things are not yet fully tested, and some things are broken.
+The extension is under development. We are planning to release the first version in late 2019.
 
 Requirements
 ------------
@@ -14,6 +32,14 @@ Requirements
  - PostgreSQL == 11
  - CMake >= 3.1
  - PostGIS == 2.5
+ - JSON-C
+ - Development files for PostgreSQL, PostGIS/liblwgeom, PROJ & JSON-C
+
+Example for Debian-based systems:
+```
+# install all MobilityDB build dependencies
+apt install build-essential cmake postgresql-server-dev-11 liblwgeom-dev libproj-dev libjson-c-dev
+```
 
 Building & installation
 -----------------------
@@ -34,13 +60,46 @@ shared_preload_libraries = 'postgis-2.5'
 max_locks_per_transaction = 128
 ```
 
-Usage
------
+Docker container
+-----------------
 
-https://docs.mobilitydb.com/nightly/
+A docker container with MobilityDB and all its dependencies is available. If you have docker installed in your system you can run:
+```
+docker run -p 5432 codewit/mobilitydb
+```
+
+This command downloads and executes a binary image of PostgreSQL, PostGIS, and MobilityDB with postgres on port 5432 (user = pw = docker, db = gis). This image is based on [this docker container](https://github.com/kartoza/docker-postgis/), please refer to it for more information.
+
+Issues
+------
+
+Please report any issues at the address 
+
+https://github.com/ULB-CoDE-WIT/MobilityDB/issues
+
+Manuals
+-------
+
+HTML: https://docs.mobilitydb.com/nightly/
+
+PDF: https://docs.mobilitydb.com/nightly/mobilitydb.pdf
+
+EPUB: https://docs.mobilitydb.com/nightly/mobilitydb.epub
+
+
+Publications
+------------
+* Esteban Zimányi, Mahmoud Sakr, Arthur Lesuisse, Mohamed Bakli, [MobilityDB: A Mainstream Moving Object Database System](https://dl.acm.org/citation.cfm?id=3340991). In Proc. of the 16th International Symposium on Spatial and Temporal Databases, SSTD 2019, p. 206-209. ACM. [Best Demo Paper Award](https://docs.mobilitydb.com/pub/MobilityDB_SSTD_Poster_BDPA.pdf). [Poster](https://docs.mobilitydb.com/pub/MobilityDB_SSTD_Poster.pdf)
+
+* Alejandro A. Vaisman, Esteban Zimányi:
+[Mobility Data Warehouses](https://www.mdpi.com/2220-9964/8/4/170). ISPRS International Journal of Geo-Information, 8(4): 170, 2019.
+
+Presentations
+------------
+* [MobilityDB: A PostgreSQL extension for mobility data management](https://pgconf.ru/en/2019/242944), PGConf.Russia, 2019.
 
 
 License
 -------
-MobilityDB is provided under the PostgreSQL license.
+MobilityDB is provided under the [PostgreSQL license](https://www.postgresql.org/about/licence/).
 
