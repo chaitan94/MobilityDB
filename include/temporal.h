@@ -29,6 +29,12 @@
 
 #define EPSILON					1.0E-06
 
+#define MOBDB_LIB_VERSION_STR "MobilityDB 1.0alpha1"
+#define MOBDB_PGSQL_VERSION 115
+#define MOBDB_PGSQL_VERSION_STR "PostgreSQL 11.5"
+#define MOBDB_POSTGIS_VERSION 25
+#define MOBDB_POSTGIS_VERSION_STR "PostGIS 2.5"
+
 /*****************************************************************************
  * Duration of temporal types
  *****************************************************************************/
@@ -155,7 +161,7 @@ typedef struct
 	int16		flags;			/* flags */
 	Oid 		valuetypid;		/* base type's OID (4 bytes) */
 	int32 		count;			/* number of TemporalInst elements */
-	size_t		offsets[1];		/* begining of variable-length data */
+	size_t		offsets[1];		/* beginning of variable-length data */
 } TemporalI;
 
 /* Temporal Sequence */
@@ -168,7 +174,7 @@ typedef struct
 	Oid 		valuetypid;		/* base type's OID (4 bytes) */
 	int32 		count;			/* number of TemporalInst elements */
 	Period 		period;			/* time span (24 bytes) */
-	size_t		offsets[1];		/* begining of variable-length data */
+	size_t		offsets[1];		/* beginning of variable-length data */
 } TemporalSeq;
 
 /* Temporal Sequence Set */
@@ -181,7 +187,7 @@ typedef struct
 	Oid 		valuetypid;		/* base type's OID (4 bytes) */
 	int32 		count;			/* number of TemporalSeq elements */
 	int32 		totalcount;		/* total number of TemporalInst elements in all TemporalSeq elements */
-	size_t		offsets[1];		/* begining of variable-length data */
+	size_t		offsets[1];		/* beginning of variable-length data */
 } TemporalS;
 
 /* bboxunion - Union type for all types of bounding boxes */

@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <access/heapam.h>
 #include <access/htup_details.h>
+#include <access/tuptoaster.h>
 #include <catalog/namespace.h>
 #include <libpq/pqformat.h>
 #include <utils/builtins.h>
@@ -569,6 +570,36 @@ point_base_type_oid(Oid valuetypid)
 #endif
 
 /*****************************************************************************
+ * Utility functions
+ *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(mobdb_lib_version);
+
+PGDLLEXPORT Datum
+mobdb_lib_version(PG_FUNCTION_ARGS)
+{
+	char *ver = MOBDB_LIB_VERSION_STR;
+	text *result = cstring_to_text(ver);
+	PG_RETURN_TEXT_P(result);
+}
+
+PG_FUNCTION_INFO_V1(mobdb_full_version);
+
+PGDLLEXPORT Datum
+mobdb_full_version(PG_FUNCTION_ARGS)
+{
+	char ver[64];
+	text *result;
+
+	snprintf(ver, 64, "%s, %s, %s", MOBDB_LIB_VERSION_STR, 
+		MOBDB_PGSQL_VERSION_STR, MOBDB_POSTGIS_VERSION_STR);
+	ver[63] = '\0';
+
+	result = cstring_to_text(ver);
+	PG_RETURN_TEXT_P(result);
+}
+
+/*****************************************************************************
  * Input/output functions
  *****************************************************************************/
 
@@ -1068,6 +1099,7 @@ Datum temporal_type(PG_FUNCTION_ARGS)
 
 PG_FUNCTION_INFO_V1(temporal_mem_size);
 
+/*
 PGDLLEXPORT Datum
 temporal_mem_size(PG_FUNCTION_ARGS)
 {
@@ -1075,6 +1107,14 @@ temporal_mem_size(PG_FUNCTION_ARGS)
 	size_t result = VARSIZE(temp);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_INT32(result);
+}
+*/
+
+PGDLLEXPORT Datum
+temporal_mem_size(PG_FUNCTION_ARGS)
+{
+	Datum result = toast_datum_size(PG_GETARG_DATUM(0));
+	PG_RETURN_DATUM(result);
 }
 
 /* Values of a discrete temporal */ 
