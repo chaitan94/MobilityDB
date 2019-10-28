@@ -84,9 +84,11 @@ stbox_in(PG_FUNCTION_ARGS)
 static char *
 stbox_to_string(const STBOX *box)
 {
-	static int sz = MAXSTBOXLEN + 1;
+	static int size = MAXSTBOXLEN + 1;
 	char *str = NULL, *strtmin = NULL, *strtmax = NULL;
-	str = (char *)palloc(sz);
+	str = (char *)palloc(size);
+	char *boxtype = MOBDB_FLAGS_GET_GEODETIC(box->flags) ? "GEODSTBOX" : "STBOX";
+
 	assert(MOBDB_FLAGS_GET_X(box->flags) || MOBDB_FLAGS_GET_T(box->flags));
 	if (MOBDB_FLAGS_GET_T(box->flags))
 	{
@@ -95,35 +97,41 @@ stbox_to_string(const STBOX *box)
 	}
 	if (MOBDB_FLAGS_GET_X(box->flags))
 	{
-		if (MOBDB_FLAGS_GET_GEODETIC(box->flags))
-		{
-			if (MOBDB_FLAGS_GET_T(box->flags))
-				snprintf(str, sz, "GEODSTBOX T((%.8g,%.8g,%.8g,%s),(%.8g,%.8g,%.8g,%s))",
-					box->xmin, box->ymin, box->zmin, strtmin, 
-					box->xmax, box->ymax, box->zmax, strtmax);
-			else
-				snprintf(str, sz, "GEODSTBOX((%.8g,%.8g,%.8g),(%.8g,%.8g,%.8g))", 
-					box->xmin, box->ymin, box->zmin, 
-					box->xmax, box->ymax, box->zmax);
-		}
+		if (MOBDB_FLAGS_GET_Z(box->flags) && MOBDB_FLAGS_GET_M(box->flags) && 
+			MOBDB_FLAGS_GET_T(box->flags))
+			snprintf(str, size, "%s ZMT((%.8g,%.8g,%.8g,%.8g,%s),(%.8g,%.8g,%.8g,%.8g,%s))",
+				boxtype, box->xmin, box->ymin, box->zmin, box->mmin, strtmin, 
+				box->xmax, box->ymax, box->zmax, box->mmax, strtmax);
 		else if (MOBDB_FLAGS_GET_Z(box->flags) && MOBDB_FLAGS_GET_T(box->flags))
-			snprintf(str, sz, "STBOX ZT((%.8g,%.8g,%.8g,%s),(%.8g,%.8g,%.8g,%s))",
-				box->xmin, box->ymin, box->zmin, strtmin, 
+			snprintf(str, size, "%s ZT((%.8g,%.8g,%.8g,%s),(%.8g,%.8g,%.8g,%s))",
+				boxtype, box->xmin, box->ymin, box->zmin, strtmin, 
 				box->xmax, box->ymax, box->zmax, strtmax);
+		else if (MOBDB_FLAGS_GET_M(box->flags) && MOBDB_FLAGS_GET_T(box->flags))
+			snprintf(str, size, "%s MT((%.8g,%.8g,%.8g,%s),(%.8g,%.8g,%.8g,%s))",
+				boxtype, box->xmin, box->ymin, box->mmin, strtmin, 
+				box->xmax, box->ymax, box->mmax, strtmax);
+		else if (MOBDB_FLAGS_GET_Z(box->flags) && MOBDB_FLAGS_GET_M(box->flags))
+			snprintf(str, size, "%s ZM((%.8g,%.8g,%.8g,%.8g),(%.8g,%.8g,%.8g,%.8g))",
+				boxtype, box->xmin, box->ymin, box->zmin, box->mmin,
+				box->xmax, box->ymax, box->zmax, box->mmax);
 		else if (MOBDB_FLAGS_GET_Z(box->flags))
-			snprintf(str, sz, "STBOX Z((%.8g,%.8g,%.8g),(%.8g,%.8g,%.8g))", 
-				box->xmin, box->ymin, box->zmin, 
+			snprintf(str, size, "%s Z((%.8g,%.8g,%.8g),(%.8g,%.8g,%.8g))", 
+				boxtype, box->xmin, box->ymin, box->zmin, 
 				box->xmax, box->ymax, box->zmax);
+		else if (MOBDB_FLAGS_GET_M(box->flags))
+			snprintf(str, size, "%s M((%.8g,%.8g,%.8g),(%.8g,%.8g,%.8g))", 
+				boxtype, box->xmin, box->ymin, box->mmin, 
+				box->xmax, box->ymax, box->mmax);
 		else if (MOBDB_FLAGS_GET_T(box->flags))
-			snprintf(str, sz, "STBOX T((%.8g,%.8g,%s),(%.8g,%.8g,%s))", 
-				box->xmin, box->ymin, strtmin, box->xmax, box->ymax, strtmax);
+			snprintf(str, size, "%s T((%.8g,%.8g,%s),(%.8g,%.8g,%s))", 
+				boxtype, box->xmin, box->ymin, strtmin, box->xmax, box->ymax, strtmax);
 		else 
-			snprintf(str, sz, "STBOX((%.8g,%.8g),(%.8g,%.8g))", 
-				box->xmin, box->ymin, box->xmax, box->ymax);
+			snprintf(str, size, "%s((%.8g,%.8g),(%.8g,%.8g))", 
+				boxtype, box->xmin, box->ymin, box->xmax, box->ymax);
 	}
 	else
 		/* Missing spatial dimension */
-		snprintf(str, sz, "STBOX T((,,%s),(,,%s))", 
+		snprintf(str, size, "STBOX T((,,%s),(,,%s))", 
 			strtmin, strtmax);
 	if (MOBDB_FLAGS_GET_T(box->flags))
 	{
@@ -156,7 +164,7 @@ PGDLLEXPORT Datum
 stbox_constructor(PG_FUNCTION_ARGS)
 {
 	assert(PG_NARGS() == 2 || PG_NARGS() == 4 || 
-		PG_NARGS() == 6 || PG_NARGS() == 8);
+		PG_NARGS() == 6 || PG_NARGS() == 8 || PG_NARGS() == 10);
 	double xmin = 0, xmax = 0, ymin = 0, ymax = 0, /* keep compiler quiet */
 		zmin, zmax, mmin, mmax, tmp;
 	TimestampTz tmin, tmax, ttmp;
@@ -317,7 +325,7 @@ stboxt_constructor(PG_FUNCTION_ARGS)
 	result->ymin = ymin;
 	result->ymax = ymax;
 
-	/* Process M min/max */
+	/* Process T min/max */
 	if (tmin > tmax)
 	{
 		ttmp = tmin;
@@ -326,60 +334,29 @@ stboxt_constructor(PG_FUNCTION_ARGS)
 	}
 	result->tmin = tmin;
 	result->tmax = tmax;
-	MOBDB_FLAGS_SET_T(result->flags, true);
 
 	PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(geodstbox_constructor);
+PG_FUNCTION_INFO_V1(stboxzt_constructor);
 
 PGDLLEXPORT Datum
-geodstbox_constructor(PG_FUNCTION_ARGS)
+stboxzt_constructor(PG_FUNCTION_ARGS)
 {
-	double xmin = 0, xmax = 0, ymin = 0, ymax = 0, 
-		zmin = 0, zmax = 0, mmin = 0, mmax = 0, tmp; /* keep compiler quiet */
+	double xmin, xmax, ymin, ymax, zmin, zmax, tmp;
 	TimestampTz tmin, tmax, ttmp;
-	bool hasm = false, hast = false;
 
-	assert(PG_NARGS() == 6 || PG_NARGS() == 8);
-	if (PG_NARGS() == 6)
-	{
-		xmin = PG_GETARG_FLOAT8(0);
-		ymin = PG_GETARG_FLOAT8(1);
-		zmin = PG_GETARG_FLOAT8(2);
-		xmax = PG_GETARG_FLOAT8(3);
-		ymax = PG_GETARG_FLOAT8(4);
-		zmax = PG_GETARG_FLOAT8(5);
-	}
-	else if (PG_NARGS() == 8)
-	{
-		xmin = PG_GETARG_FLOAT8(0);
-		ymin = PG_GETARG_FLOAT8(1);
-		zmin = PG_GETARG_FLOAT8(2);
-		tmin = PG_GETARG_TIMESTAMPTZ(3);
-		xmax = PG_GETARG_FLOAT8(4);
-		ymax = PG_GETARG_FLOAT8(5);
-		zmax = PG_GETARG_FLOAT8(6);
-		tmax = PG_GETARG_TIMESTAMPTZ(7);
-		hast = true;
-	}
-	else if (PG_NARGS() == 10)
-	{
-		xmin = PG_GETARG_FLOAT8(0);
-		ymin = PG_GETARG_FLOAT8(1);
-		zmin = PG_GETARG_FLOAT8(2);
-		mmin = PG_GETARG_FLOAT8(3);
-		tmin = PG_GETARG_TIMESTAMPTZ(4);
-		xmax = PG_GETARG_FLOAT8(5);
-		ymax = PG_GETARG_FLOAT8(6);
-		zmax = PG_GETARG_FLOAT8(7);
-		mmax = PG_GETARG_FLOAT8(8);
-		tmax = PG_GETARG_TIMESTAMPTZ(9);
-		hasm = hast = true;
-	}
+	xmin = PG_GETARG_FLOAT8(0);
+	ymin = PG_GETARG_FLOAT8(1);
+	zmin = PG_GETARG_FLOAT8(2);
+	tmin = PG_GETARG_TIMESTAMPTZ(3);
+	xmax = PG_GETARG_FLOAT8(4);
+	ymax = PG_GETARG_FLOAT8(5);
+	zmax = PG_GETARG_FLOAT8(6);
+	tmax = PG_GETARG_TIMESTAMPTZ(7);
 
-	STBOX *result = stbox_new(true, true, hasm, hast, true);
-
+	STBOX *result = stbox_new(true, true, false, true, false);
+	
 	/* Process X min/max */
 	if (xmin > xmax)
 	{
@@ -409,25 +386,290 @@ geodstbox_constructor(PG_FUNCTION_ARGS)
 	}
 	result->zmin = zmin;
 	result->zmax = zmax;
-	MOBDB_FLAGS_SET_Z(result->flags, true);
 
-	if (hast)
+	/* Process T min/max */
+	if (tmin > tmax)
 	{
-		/* Process M min/max */
-		if ( tmin > tmax )
-		{
-			ttmp = tmin;
-			tmin = tmax;
-			tmax = ttmp;
-		}
-		result->tmin = tmin;
-		result->tmax = tmax;
-		MOBDB_FLAGS_SET_T(result->flags, true);
+		ttmp = tmin;
+		tmin = tmax;
+		tmax = ttmp;
 	}
-
+	result->tmin = tmin;
+	result->tmax = tmax;
 
 	PG_RETURN_POINTER(result);
 }
+
+PG_FUNCTION_INFO_V1(stboxmt_constructor);
+
+PGDLLEXPORT Datum
+stboxmt_constructor(PG_FUNCTION_ARGS)
+{
+	double xmin, xmax, ymin, ymax, mmin, mmax, tmp;
+	TimestampTz tmin, tmax, ttmp;
+
+	xmin = PG_GETARG_FLOAT8(0);
+	ymin = PG_GETARG_FLOAT8(1);
+	mmin = PG_GETARG_FLOAT8(2);
+	tmin = PG_GETARG_TIMESTAMPTZ(3);
+	xmax = PG_GETARG_FLOAT8(4);
+	ymax = PG_GETARG_FLOAT8(5);
+	mmax = PG_GETARG_FLOAT8(6);
+	tmax = PG_GETARG_TIMESTAMPTZ(7);
+
+	STBOX *result = stbox_new(true, false, true, true, false);
+	
+	/* Process X min/max */
+	if (xmin > xmax)
+	{
+		tmp = xmin;
+		xmin = xmax;
+		xmax = tmp;
+	}
+	result->xmin = xmin;
+	result->xmax = xmax;
+
+	/* Process Y min/max */
+	if (ymin > ymax)
+	{
+		tmp = ymin;
+		ymin = ymax;
+		ymax = tmp;
+	}
+	result->ymin = ymin;
+	result->ymax = ymax;
+
+	/* Process M min/max */
+	if (mmin > mmax)
+	{
+		tmp = mmin;
+		mmin = mmax;
+		mmax = tmp;
+	}
+	result->mmin = mmin;
+	result->mmax = mmax;
+
+	/* Process M min/max */
+	if (tmin > tmax)
+	{
+		ttmp = tmin;
+		tmin = tmax;
+		tmax = ttmp;
+	}
+	result->tmin = tmin;
+	result->tmax = tmax;
+
+	PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(geodstbox_constructor);
+
+PGDLLEXPORT Datum
+geodstbox_constructor(PG_FUNCTION_ARGS)
+{
+	double xmin, xmax, ymin, ymax, zmin, zmax, mmin, mmax, tmp;
+	TimestampTz tmin, tmax, ttmp;
+	bool hasx = false, hasz = false, hasm = false, hast = false;
+
+	assert(PG_NARGS() == 2 || PG_NARGS() == 6 || 
+		PG_NARGS() == 8 || PG_NARGS() == 10);
+	if (PG_NARGS() == 2)
+	{
+		tmin = PG_GETARG_TIMESTAMPTZ(0);
+		tmax = PG_GETARG_TIMESTAMPTZ(1);
+		hast = true;
+	}
+	else if (PG_NARGS() == 6)
+	{
+		xmin = PG_GETARG_FLOAT8(0);
+		ymin = PG_GETARG_FLOAT8(1);
+		zmin = PG_GETARG_FLOAT8(2);
+		xmax = PG_GETARG_FLOAT8(3);
+		ymax = PG_GETARG_FLOAT8(4);
+		zmax = PG_GETARG_FLOAT8(5);
+		hasx = hasz = true;
+	}
+	else if (PG_NARGS() == 8)
+	{
+		xmin = PG_GETARG_FLOAT8(0);
+		ymin = PG_GETARG_FLOAT8(1);
+		zmin = PG_GETARG_FLOAT8(2);
+		tmin = PG_GETARG_TIMESTAMPTZ(3);
+		xmax = PG_GETARG_FLOAT8(4);
+		ymax = PG_GETARG_FLOAT8(5);
+		zmax = PG_GETARG_FLOAT8(6);
+		tmax = PG_GETARG_TIMESTAMPTZ(7);
+		hasx = hasz = hast = true;
+	}
+	else if (PG_NARGS() == 10)
+	{
+		xmin = PG_GETARG_FLOAT8(0);
+		ymin = PG_GETARG_FLOAT8(1);
+		zmin = PG_GETARG_FLOAT8(2);
+		mmin = PG_GETARG_FLOAT8(3);
+		tmin = PG_GETARG_TIMESTAMPTZ(4);
+		xmax = PG_GETARG_FLOAT8(5);
+		ymax = PG_GETARG_FLOAT8(6);
+		zmax = PG_GETARG_FLOAT8(7);
+		mmax = PG_GETARG_FLOAT8(8);
+		tmax = PG_GETARG_TIMESTAMPTZ(9);
+		hasx = hasz = hasm = hast = true;
+	}
+
+	STBOX *result = stbox_new(hasx, hasz, hasm, hast, true);
+
+	/* Process X min/max */
+	if (hasx)
+	{
+		if (xmin > xmax)
+		{
+			tmp = xmin;
+			xmin = xmax;
+			xmax = tmp;
+		}
+		result->xmin = xmin;
+		result->xmax = xmax;
+
+		/* Process Y min/max */
+		if (ymin > ymax)
+		{
+			tmp = ymin;
+			ymin = ymax;
+			ymax = tmp;
+		}
+		result->ymin = ymin;
+		result->ymax = ymax;
+
+		/* Process Z min/max */
+		if (zmin > zmax)
+		{
+			tmp = zmin;
+			zmin = zmax;
+			zmax = tmp;
+		}
+		result->zmin = zmin;
+		result->zmax = zmax;
+
+		if (hasm)
+		{
+			/* Process M min/max */
+			if ( mmin > mmax )
+			{
+				tmp = mmin;
+				mmin = mmax;
+				mmax = tmp;
+			}
+			result->mmin = mmin;
+			result->mmax = mmax;
+		}
+
+		if (hast)
+		{
+			/* Process T min/max */
+			if ( tmin > tmax )
+			{
+				ttmp = tmin;
+				tmin = tmax;
+				tmax = ttmp;
+			}
+			result->tmin = tmin;
+			result->tmax = tmax;
+		}
+	}
+
+	PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(geodstboxzt_constructor);
+
+PGDLLEXPORT Datum
+geodstboxzt_constructor(PG_FUNCTION_ARGS)
+{
+	double xmin, xmax, ymin, ymax, zmin, zmax, tmp;
+	TimestampTz tmin, tmax, ttmp;
+
+	xmin = PG_GETARG_FLOAT8(0);
+	ymin = PG_GETARG_FLOAT8(1);
+	zmin = PG_GETARG_FLOAT8(2);
+	tmin = PG_GETARG_TIMESTAMPTZ(3);
+	xmax = PG_GETARG_FLOAT8(4);
+	ymax = PG_GETARG_FLOAT8(5);
+	zmax = PG_GETARG_FLOAT8(6);
+	tmax = PG_GETARG_TIMESTAMPTZ(7);
+
+	STBOX *result = stbox_new(true, true, false, true, true);
+	
+	/* Process X min/max */
+	if (xmin > xmax)
+	{
+		tmp = xmin;
+		xmin = xmax;
+		xmax = tmp;
+	}
+	result->xmin = xmin;
+	result->xmax = xmax;
+
+	/* Process Y min/max */
+	if (ymin > ymax)
+	{
+		tmp = ymin;
+		ymin = ymax;
+		ymax = tmp;
+	}
+	result->ymin = ymin;
+	result->ymax = ymax;
+
+	/* Process Z min/max */
+	if (zmin > zmax)
+	{
+		tmp = zmin;
+		zmin = zmax;
+		zmax = tmp;
+	}
+	result->zmin = zmin;
+	result->zmax = zmax;
+
+	/* Process T min/max */
+	if (tmin > tmax)
+	{
+		ttmp = tmin;
+		tmin = tmax;
+		tmax = ttmp;
+	}
+	result->tmin = tmin;
+	result->tmax = tmax;
+
+	PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(geodstboxt_constructor);
+
+PGDLLEXPORT Datum
+geodstboxt_constructor(PG_FUNCTION_ARGS)
+{
+	TimestampTz tmin, tmax, ttmp;
+
+	tmin = PG_GETARG_TIMESTAMPTZ(0);
+	tmax = PG_GETARG_TIMESTAMPTZ(1);
+
+	STBOX *result = stbox_new(false, false, false, true, true);
+	
+	/* Process T min/max */
+	if (tmin > tmax)
+	{
+		ttmp = tmin;
+		tmin = tmax;
+		tmax = ttmp;
+	}
+	result->tmin = tmin;
+	result->tmax = tmax;
+
+	PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************
+ * Comparison functions
+ *****************************************************************************/
 
 /*
  * Compare two boxes
@@ -452,6 +694,13 @@ stbox_cmp_internal(const STBOX *box1, const STBOX *box2)
 		if (box1->zmin < box2->zmin)
 			return -1;
 		if (box1->zmin > box2->zmin)
+			return 1;
+	}
+	if (MOBDB_FLAGS_GET_M(box1->flags) && MOBDB_FLAGS_GET_M(box2->flags))
+	{
+		if (box1->mmin < box2->mmin)
+			return -1;
+		if (box1->mmin > box2->mmin)
 			return 1;
 	}
 	if (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags))
@@ -480,6 +729,13 @@ stbox_cmp_internal(const STBOX *box1, const STBOX *box2)
 		if (box1->zmax > box2->zmax)
 			return 1;
 	}
+	if (MOBDB_FLAGS_GET_M(box1->flags) && MOBDB_FLAGS_GET_M(box2->flags))
+	{
+		if (box1->mmax < box2->mmax)
+			return -1;
+		if (box1->mmax > box2->mmax)
+			return 1;
+	}
 	if (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags))
 	{
 		if (box1->tmax < box2->tmax)
@@ -487,6 +743,10 @@ stbox_cmp_internal(const STBOX *box1, const STBOX *box2)
 		if (box1->tmax > box2->tmax)
 			return 1;
 	}
+	if ( ! MOBDB_FLAGS_GET_GEODETIC(box1->flags) && MOBDB_FLAGS_GET_GEODETIC(box2->flags))
+		return -1;
+	if ( MOBDB_FLAGS_GET_GEODETIC(box1->flags) && ! MOBDB_FLAGS_GET_GEODETIC(box2->flags))
+		return 1;
 	/* The two boxes are equal */
 	return 0;
 }

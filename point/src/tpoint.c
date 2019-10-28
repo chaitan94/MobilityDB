@@ -97,13 +97,21 @@ tpoint_valid_typmod(Temporal *temp, int32_t typmod)
 				errmsg("Temporal type (%s) does not match column type (%s)",
 					temporal_type_name(tpoint_type), temporal_type_name(duration_type)) ));
 	/* Mismatched Z dimensionality.  */
-	if (typmod > 0 && ((typmod_z && !tpoint_z) || (!typmod_z && tpoint_z)))
+	if (typmod > 0 && typmod_z && !tpoint_z)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				errmsg("Column has Z dimension but temporal point does not" )));
+	/* Mismatched Z dimensionality (other way).  */
+	if (typmod > 0 && tpoint_z && !typmod_z)
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				errmsg("Temporal point has Z dimension but column does not" )));
 	/* Mismatched M dimensionality.  */
-	if (typmod > 0 && ((typmod_m && !tpoint_m) || (!typmod_m && tpoint_m)))
+	if (typmod > 0 && typmod_m && !tpoint_m)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				errmsg("Column has M dimension but temporal point does not" )));
+	/* Mismatched Z dimensionality (other way).  */
+	if (typmod > 0 && tpoint_m && !typmod_m)
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				errmsg("Temporal point has M dimension but column does not" )));
 
 	return temp;
 }

@@ -49,6 +49,7 @@ geo_to_stbox_internal(STBOX *box, GSERIALIZED *gs)
 		/* Spatial dimensions are set as missing for the SP-GiST index */
 		MOBDB_FLAGS_SET_X(box->flags, false);
 		MOBDB_FLAGS_SET_Z(box->flags, false);
+		MOBDB_FLAGS_SET_M(box->flags, false);
 		MOBDB_FLAGS_SET_T(box->flags, false);
 		return false;
 	}
@@ -56,15 +57,26 @@ geo_to_stbox_internal(STBOX *box, GSERIALIZED *gs)
 	box->xmax = gbox.xmax;
 	box->ymin = gbox.ymin;
 	box->ymax = gbox.ymax;
-	if (FLAGS_GET_Z(gs->flags) || FLAGS_GET_GEODETIC(gs->flags))
+	MOBDB_FLAGS_SET_X(box->flags, true);
+	if (FLAGS_GET_Z(gs->flags))
 	{
 		box->zmin = gbox.zmin;
 		box->zmax = gbox.zmax;
+		MOBDB_FLAGS_SET_Z(box->flags, true);
 	}
-	MOBDB_FLAGS_SET_X(box->flags, true);
-	MOBDB_FLAGS_SET_Z(box->flags, FLAGS_GET_Z(gs->flags));
-	MOBDB_FLAGS_SET_T(box->flags, false);
-	MOBDB_FLAGS_SET_GEODETIC(box->flags, FLAGS_GET_GEODETIC(gs->flags));
+	if (FLAGS_GET_GEODETIC(gs->flags))
+	{
+		box->zmin = gbox.zmin;
+		box->zmax = gbox.zmax;
+		MOBDB_FLAGS_SET_Z(box->flags, true);
+		MOBDB_FLAGS_SET_GEODETIC(box->flags, true);
+	}
+	if (FLAGS_GET_M(gs->flags))
+	{
+		box->mmin = gbox.mmin;
+		box->mmax = gbox.mmax;
+		MOBDB_FLAGS_SET_M(box->flags, true);
+	}
 	return true;
 }
 

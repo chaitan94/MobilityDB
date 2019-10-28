@@ -77,9 +77,8 @@ struct temporaltype_struct
  *****************************************************************************/
 
 #define MOBDB_FLAGS_GET_CONTINUOUS(flags) 		((flags) & 0x01)
-/* Only for TemporalInst */
+/* The following flag is only used for TemporalInst */
 #define MOBDB_FLAGS_GET_BYVAL(flags) 			(((flags) & 0x02)>>1)
-/* Only for TemporalS */
 #define MOBDB_FLAGS_GET_X(flags)			 	(((flags) & 0x04)>>2)
 #define MOBDB_FLAGS_GET_Z(flags) 				(((flags) & 0x08)>>3)
 #define MOBDB_FLAGS_GET_M(flags) 				(((flags) & 0x10)>>4)
@@ -88,7 +87,7 @@ struct temporaltype_struct
 
 #define MOBDB_FLAGS_SET_CONTINUOUS(flags, value) \
 	((flags) = (value) ? ((flags) | 0x01) : ((flags) & 0xFE))
-/* Only for TemporalInst */
+/* The following flag is only used for TemporalInst */
 #define MOBDB_FLAGS_SET_BYVAL(flags, value) \
 	((flags) = (value) ? ((flags) | 0x02) : ((flags) & 0xFD))
 #define MOBDB_FLAGS_SET_X(flags, value) \
@@ -110,17 +109,19 @@ struct temporaltype_struct
 
 typedef struct 
 {
+	int16		flags;			/* flags */
 	double		xmin;			/* minimum numeric value */
 	double		xmax;			/* maximum numeric value */
 	TimestampTz	tmin;			/* minimum timestamp */
 	TimestampTz	tmax;			/* maximum timestamp */
-	int16		flags;			/* flags */
 } TBOX;
 
 /* STBOX */
 
 typedef struct 
 {
+	int16		flags;			/* flags */
+	int32		srid;			/* SRID */
 	double		xmin;			/* minimum x value */
 	double		xmax;			/* maximum x value */
 	double		ymin;			/* minimum y value */
@@ -131,7 +132,6 @@ typedef struct
 	double		mmax;			/* maximum m value */
 	TimestampTz	tmin;			/* minimum timestamp */
 	TimestampTz	tmax;			/* maximum timestamp */
-	int16		flags;			/* flags */
 } STBOX;
 
 /* Temporal */

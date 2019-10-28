@@ -24,7 +24,7 @@ STBOX *
 stbox_parse(char **str) 
 {
 	double xmin, xmax, ymin, ymax, zmin, zmax, mmin, mmax, tmp;
-	TimestampTz tmin = 0, tmax = 0, ttmp; /* make compiler quiet */
+	TimestampTz tmin, tmax, ttmp;
 	bool hasx = false, hasz = false, hasm = false, hast = false, geodetic = false;
 	char *nextstr;
 
@@ -41,6 +41,11 @@ stbox_parse(char **str)
 		if (strncasecmp(*str, "ZT", 2) == 0)
 		{
 			hasz = hast = true;
+			*str += 2;
+		}
+		else if (strncasecmp(*str, "MT", 2) == 0)
+		{
+			hasm = hast = true;
 			*str += 2;
 		}
 		else if (strncasecmp(*str, "ZM", 2) == 0)
@@ -68,22 +73,32 @@ stbox_parse(char **str)
 	else if (strncasecmp(*str, "GEODSTBOX", 9) == 0) 
 	{
 		*str += 9;
-		hasz = geodetic = 1;
+		geodetic = 1;
 		p_whitespace(str);
-		if (strncasecmp(*str, "MT", 2) == 0)
+		if (strncasecmp(*str, "ZMT", 3) == 0)
+		{
+			*str += 3;
+			hasz = hasm = hast = true;
+		}
+		else if (strncasecmp(*str, "ZM", 2) == 0)
 		{
 			*str += 2;
-			hasm = hast = true;
+			hasz = hasm = true;
 		}
-		if (strncasecmp(*str, "M", 1) == 0)
+		else if (strncasecmp(*str, "ZT", 2) == 0)
 		{
-			*str += 1;
-			hasm = true;
+			*str += 2;
+			hasz = hast = true;
 		}
-		if (strncasecmp(*str, "T", 1) == 0)
+		else if (strncasecmp(*str, "T", 1) == 0)
 		{
 			*str += 1;
 			hast = true;
+		}
+		else if (strncasecmp(*str, "Z", 1) == 0)
+		{
+			*str += 1;
+			hasz = true;
 		}
 		p_whitespace(str);
 	}
@@ -101,7 +116,7 @@ stbox_parse(char **str)
 	if (((*str)[0]) != ',')
 		hasx = true;
 
-	if (! hasx && ! hast)
+	if (!hasx && !hast)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
 			errmsg("Could not parse TBOX")));
 
