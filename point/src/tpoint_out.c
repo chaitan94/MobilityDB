@@ -392,11 +392,11 @@ bbox_mfjson_buf(char *output, STBOX *bbox, int hasz, int hasm, int precision)
 		ptr += sprintf(ptr, "\"bbox\":[%.*f,%.*f,%.*f,%.*f,%.*f,%.*f,%.*f,%.*f],",
 					precision, bbox->xmin, precision, bbox->ymin, precision, bbox->zmin, precision, bbox->mmin,
 					precision, bbox->xmax, precision, bbox->ymax, precision, bbox->zmax, precision, bbox->mmax);
-	else if (!hasm && hasz)
+	else if (hasm && !hasz)
 		ptr += sprintf(ptr, "\"bbox\":[%.*f,%.*f,%.*f,%.*f,%.*f,%.*f],",
 					precision, bbox->xmin, precision, bbox->ymin, precision, bbox->mmin,
 					precision, bbox->xmax, precision, bbox->ymax, precision, bbox->mmax);
-	else if (hasz && !hasm)
+	else if (!hasm && hasz)
 		ptr += sprintf(ptr, "\"bbox\":[%.*f,%.*f,%.*f,%.*f,%.*f,%.*f],",
 					precision, bbox->xmin, precision, bbox->ymin, precision, bbox->zmin,
 					precision, bbox->xmax, precision, bbox->ymax, precision, bbox->zmax);

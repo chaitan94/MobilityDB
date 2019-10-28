@@ -211,12 +211,12 @@ stbox_constructor(PG_FUNCTION_ARGS)
 		xmin = PG_GETARG_FLOAT8(0);
 		ymin = PG_GETARG_FLOAT8(1);
 		zmin = PG_GETARG_FLOAT8(2);
-		zmin = PG_GETARG_FLOAT8(3);
+		mmin = PG_GETARG_FLOAT8(3);
 		tmin = PG_GETARG_TIMESTAMPTZ(4);
 		xmax = PG_GETARG_FLOAT8(5);
 		ymax = PG_GETARG_FLOAT8(6);
 		zmax = PG_GETARG_FLOAT8(7);
-		zmax = PG_GETARG_FLOAT8(8);
+		mmax = PG_GETARG_FLOAT8(8);
 		tmax = PG_GETARG_TIMESTAMPTZ(9);
 		hasx = hasz = hasm = hast = true;
 	}
