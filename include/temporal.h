@@ -121,6 +121,7 @@ typedef struct
 typedef struct 
 {
 	int16		flags;			/* flags */
+	int16		__padding;		/* padding */
 	int32		srid;			/* SRID */
 	double		xmin;			/* minimum x value */
 	double		xmax;			/* maximum x value */
@@ -153,7 +154,8 @@ typedef struct
 	int16		duration;		/* duration */
 	int16		flags;			/* flags */
 	Oid 		valuetypid;		/* base type's OID  (4 bytes) */
-	TimestampTz t;				/* time span */
+	int32		__padding;		/* padding */
+	TimestampTz t;				/* time instant (8 bytes) */
 	/* variable-length data follows */
 } TemporalInst;
 
@@ -192,6 +194,7 @@ typedef struct
 	Oid 		valuetypid;		/* base type's OID (4 bytes) */
 	int32 		count;			/* number of TemporalSeq elements */
 	int32 		totalcount;		/* total number of TemporalInst elements in all TemporalSeq elements */
+	int32		__padding;		/* padding */
 	size_t		offsets[1];		/* beginning of variable-length data */
 } TemporalS;
 
