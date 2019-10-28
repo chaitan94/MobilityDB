@@ -28,11 +28,12 @@
  *****************************************************************************/
 
 STBOX *
-stbox_new(bool hasx, bool hasz, bool hast, bool geodetic)
+stbox_new(bool hasx, bool hasz, bool hasm, bool hast, bool geodetic)
 {
 	STBOX *result = palloc0(sizeof(STBOX));
 	MOBDB_FLAGS_SET_X(result->flags, hasx);
 	MOBDB_FLAGS_SET_Z(result->flags, hasz);
+	MOBDB_FLAGS_SET_M(result->flags, hasm);
 	MOBDB_FLAGS_SET_T(result->flags, hast);
 	MOBDB_FLAGS_SET_GEODETIC(result->flags, geodetic);
 	return result;
@@ -157,9 +158,9 @@ stbox_constructor(PG_FUNCTION_ARGS)
 	assert(PG_NARGS() == 2 || PG_NARGS() == 4 || 
 		PG_NARGS() == 6 || PG_NARGS() == 8);
 	double xmin = 0, xmax = 0, ymin = 0, ymax = 0, /* keep compiler quiet */
-		zmin, zmax, tmp;
+		zmin, zmax, mmin, mmax, tmp;
 	TimestampTz tmin, tmax, ttmp;
-	bool hasx = false, hasz = false, hast = false;
+	bool hasx = false, hasz = false, hasm = false, hast = false;
 
 	if (PG_NARGS() == 2)
 	{
@@ -190,15 +191,29 @@ stbox_constructor(PG_FUNCTION_ARGS)
 		xmin = PG_GETARG_FLOAT8(0);
 		ymin = PG_GETARG_FLOAT8(1);
 		zmin = PG_GETARG_FLOAT8(2);
-		tmin = PG_GETARG_TIMESTAMPTZ(3);
+		mmin = PG_GETARG_FLOAT8(3);
 		xmax = PG_GETARG_FLOAT8(4);
 		ymax = PG_GETARG_FLOAT8(5);
 		zmax = PG_GETARG_FLOAT8(6);
-		tmax = PG_GETARG_TIMESTAMPTZ(7);
-		hasx = hasz = hast = true;
+		mmax = PG_GETARG_FLOAT8(7);
+		hasx = hasz = hasm = true;
+	}
+	else if (PG_NARGS() == 10)
+	{
+		xmin = PG_GETARG_FLOAT8(0);
+		ymin = PG_GETARG_FLOAT8(1);
+		zmin = PG_GETARG_FLOAT8(2);
+		zmin = PG_GETARG_FLOAT8(3);
+		tmin = PG_GETARG_TIMESTAMPTZ(4);
+		xmax = PG_GETARG_FLOAT8(5);
+		ymax = PG_GETARG_FLOAT8(6);
+		zmax = PG_GETARG_FLOAT8(7);
+		zmax = PG_GETARG_FLOAT8(8);
+		tmax = PG_GETARG_TIMESTAMPTZ(9);
+		hasx = hasz = hasm = hast = true;
 	}
 
-	STBOX *result = stbox_new(hasx, hasz, hast, false);
+	STBOX *result = stbox_new(hasx, hasz, hasm, hast, false);
 	
 	/* Process X min/max */
 	if (hasx)
@@ -234,6 +249,19 @@ stbox_constructor(PG_FUNCTION_ARGS)
 			result->zmin = zmin;
 			result->zmax = zmax;
 		}
+
+		/* Process M min/max */
+		if (hasm)
+		{
+			if (mmin > mmax)
+			{
+				tmp = mmin;
+				mmin = mmax;
+				mmax = tmp;
+			}
+			result->mmin = mmin;
+			result->mmax = mmax;
+		}
 	}
 
 	/* Process T min/max */
@@ -267,7 +295,7 @@ stboxt_constructor(PG_FUNCTION_ARGS)
 	ymax = PG_GETARG_FLOAT8(4);
 	tmax = PG_GETARG_TIMESTAMPTZ(5);
 
-	STBOX *result = stbox_new(true, false, true, false);
+	STBOX *result = stbox_new(true, false, false, true, false);
 	
 	/* Process X min/max */
 	if (xmin > xmax)
@@ -309,9 +337,9 @@ PGDLLEXPORT Datum
 geodstbox_constructor(PG_FUNCTION_ARGS)
 {
 	double xmin = 0, xmax = 0, ymin = 0, ymax = 0, 
-		zmin = 0, zmax = 0, tmp; /* keep compiler quiet */
+		zmin = 0, zmax = 0, mmin = 0, mmax = 0, tmp; /* keep compiler quiet */
 	TimestampTz tmin, tmax, ttmp;
-	bool hast = false;
+	bool hasm = false, hast = false;
 
 	assert(PG_NARGS() == 6 || PG_NARGS() == 8);
 	if (PG_NARGS() == 6)
@@ -335,8 +363,22 @@ geodstbox_constructor(PG_FUNCTION_ARGS)
 		tmax = PG_GETARG_TIMESTAMPTZ(7);
 		hast = true;
 	}
+	else if (PG_NARGS() == 10)
+	{
+		xmin = PG_GETARG_FLOAT8(0);
+		ymin = PG_GETARG_FLOAT8(1);
+		zmin = PG_GETARG_FLOAT8(2);
+		mmin = PG_GETARG_FLOAT8(3);
+		tmin = PG_GETARG_TIMESTAMPTZ(4);
+		xmax = PG_GETARG_FLOAT8(5);
+		ymax = PG_GETARG_FLOAT8(6);
+		zmax = PG_GETARG_FLOAT8(7);
+		mmax = PG_GETARG_FLOAT8(8);
+		tmax = PG_GETARG_TIMESTAMPTZ(9);
+		hasm = hast = true;
+	}
 
-	STBOX *result = stbox_new(true, true, hast, true);
+	STBOX *result = stbox_new(true, true, hasm, hast, true);
 
 	/* Process X min/max */
 	if (xmin > xmax)

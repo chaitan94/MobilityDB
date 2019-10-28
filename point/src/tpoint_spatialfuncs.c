@@ -83,7 +83,38 @@ datum_get_point3dz(Datum geom)
 	lwgeom_free(lwgeom);
 	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	return point;
+}
 
+/* Get 3DM point from a datum */
+
+POINT3DM
+datum_get_point3dm(Datum geom)
+{
+	GSERIALIZED *gs = (GSERIALIZED *)PointerGetDatum(geom);
+	// POINT3DZ *point = (POINT3DZ *)((uint8_t*)gs->data + 8);
+	// return *point;
+	LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
+	LWPOINT* lwpoint = lwgeom_as_lwpoint(lwgeom);
+	POINT3DM point = getPoint3dm(lwpoint->point, 0);
+	lwgeom_free(lwgeom);
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	return point;
+}
+
+/* Get 4D point from a datum */
+
+POINT4D
+datum_get_point4d(Datum geom)
+{
+	GSERIALIZED *gs = (GSERIALIZED *)PointerGetDatum(geom);
+	// POINT3DZ *point = (POINT3DZ *)((uint8_t*)gs->data + 8);
+	// return *point;
+	LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
+	LWPOINT* lwpoint = lwgeom_as_lwpoint(lwgeom);
+	POINT4D point = getPoint4d(lwpoint->point, 0);
+	lwgeom_free(lwgeom);
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	return point;
 }
 
 /* Compare two points from serialized geometries */

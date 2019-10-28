@@ -155,7 +155,7 @@ double2_collinear(double2 *x1, double2 *x2, double2 *x3,
 #ifdef WITH_POSTGIS
 static bool
 point_collinear(Datum value1, Datum value2, Datum value3,
-	TimestampTz t1, TimestampTz t2, TimestampTz t3, bool hasz)
+	TimestampTz t1, TimestampTz t2, TimestampTz t3, bool hasz, bool hasm)
 {
 	double duration1 = (double) (t2 - t1);
 	double duration2 = (double) (t3 - t2);
@@ -181,7 +181,23 @@ point_collinear(Datum value1, Datum value2, Datum value3,
 		tofree = DatumGetPointer(value1);
 	}
 	bool result;
-	if (hasz)
+	if (hasz & hasm)
+	{
+		POINT4D point1 = datum_get_point4d(value1);
+		POINT4D point2 = datum_get_point4d(value2);
+		POINT4D point3 = datum_get_point4d(value3);
+		double dx1 = point2.x - point1.x;
+		double dy1 = point2.y - point1.y;
+		double dz1 = point2.z - point1.z;
+		double dm1 = point2.m - point1.m;
+		double dx2 = point3.x - point2.x;
+		double dy2 = point3.y - point2.y;
+		double dz2 = point3.z - point2.z;
+		double dm2 = point3.m - point2.m;
+		result = fabs(dx1-dx2) <= EPSILON && fabs(dy1-dy2) <= EPSILON && 
+			fabs(dz1-dz2) <= EPSILON && fabs(dm1-dm2) <= EPSILON;
+	}
+	else if (hasz & !hasm)
 	{
 		POINT3DZ point1 = datum_get_point3dz(value1);
 		POINT3DZ point2 = datum_get_point3dz(value2);
@@ -194,6 +210,20 @@ point_collinear(Datum value1, Datum value2, Datum value3,
 		double dz2 = point3.z - point2.z;
 		result = fabs(dx1-dx2) <= EPSILON && fabs(dy1-dy2) <= EPSILON && 
 			fabs(dz1-dz2) <= EPSILON;
+	}
+	else if (!hasz & hasm)
+	{
+		POINT3DM point1 = datum_get_point3dm(value1);
+		POINT3DM point2 = datum_get_point3dm(value2);
+		POINT3DM point3 = datum_get_point3dm(value3);
+		double dx1 = point2.x - point1.x;
+		double dy1 = point2.y - point1.y;
+		double dm1 = point2.m - point1.m;
+		double dx2 = point3.x - point2.x;
+		double dy2 = point3.y - point2.y;
+		double dm2 = point3.m - point2.m;
+		result = fabs(dx1-dx2) <= EPSILON && fabs(dy1-dy2) <= EPSILON && 
+			fabs(dm1-dm2) <= EPSILON;
 	}
 	else
 	{
@@ -317,7 +347,8 @@ datum_collinear(Oid valuetypid, Datum value1, Datum value2, Datum value3,
 	{
 		GSERIALIZED *gs = (GSERIALIZED *)DatumGetPointer(value1);
 		bool hasz = FLAGS_GET_Z(gs->flags);
-		return point_collinear(value1, value2, value3, t1, t2, t3, hasz);
+		bool hasm = FLAGS_GET_M(gs->flags);
+		return point_collinear(value1, value2, value3, t1, t2, t3, hasz, hasm);
 	}
 	if (valuetypid == type_oid(T_DOUBLE3))
 		return double3_collinear(DatumGetDouble3P(value1), DatumGetDouble3P(value2), 
@@ -354,8 +385,9 @@ temporalinst_collinear(TemporalInst *inst1, TemporalInst *inst2,
 		Datum value1 = temporalinst_value(inst1);
 		Datum value2 = temporalinst_value(inst2);
 		Datum value3 = temporalinst_value(inst3);
-		return point_collinear(value1, value2, value3, 
-				inst1->t, inst2->t, inst3->t, MOBDB_FLAGS_GET_Z(inst1->flags));
+		return point_collinear(value1, value2, value3, inst1->t, inst2->t,
+				inst3->t, MOBDB_FLAGS_GET_Z(inst1->flags), 
+				MOBDB_FLAGS_GET_M(inst1->flags));
 	}
 	if (valuetypid == type_oid(T_DOUBLE3))
 	{
@@ -577,11 +609,12 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 #ifdef WITH_POSTGIS
 	bool isgeo = (valuetypid == type_oid(T_GEOMETRY) ||
 		valuetypid == type_oid(T_GEOGRAPHY));
-	bool hasz = false, isgeodetic = false;
+	bool hasz = false, hasm = false, isgeodetic = false;
 	int srid;
 	if (isgeo)
 	{
 		hasz = MOBDB_FLAGS_GET_Z(instants[0]->flags);
+		hasm = MOBDB_FLAGS_GET_M(instants[0]->flags);
 		isgeodetic = MOBDB_FLAGS_GET_GEODETIC(instants[0]->flags);
 		srid = tpoint_srid_internal((Temporal *) instants[0]);
 	}
@@ -601,7 +634,8 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 			if (tpoint_srid_internal((Temporal *)instants[i]) != srid)
 				ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
 					errmsg("All geometries composing a temporal point must be of the same SRID")));
-			if (MOBDB_FLAGS_GET_Z(instants[i]->flags) != hasz)
+			if (MOBDB_FLAGS_GET_Z(instants[i]->flags) != hasz ||
+				MOBDB_FLAGS_GET_M(instants[i]->flags) != hasm)
 				ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
 					errmsg("All geometries composing a temporal point must be of the same dimensionality")));
 		}
@@ -657,6 +691,7 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 	if (isgeo)
 	{
 		MOBDB_FLAGS_SET_Z(result->flags, hasz);
+		MOBDB_FLAGS_SET_M(result->flags, hasm);
 		MOBDB_FLAGS_SET_GEODETIC(result->flags, isgeodetic);
 	}
 #endif

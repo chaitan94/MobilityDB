@@ -736,7 +736,8 @@ gist_tpoint_picksplit(PG_FUNCTION_ARGS)
 	int			dim,
 				nentries,
 				commonEntriesCount;
-	bool 		hasz;
+	bool 		hasz,
+				hasm;
 	SplitInterval *intervalsLower,
 				*intervalsUpper;
 	CommonEntry *commonEntries;
@@ -762,15 +763,16 @@ gist_tpoint_picksplit(PG_FUNCTION_ARGS)
 			adjust_stbox(&context.boundingBox, box);
 	}
 
-	/* Determine whether there is a Z dimension */
+	/* Determine whether there is a Z and/or M dimension */
 	box = (STBOX *)DatumGetPointer(entryvec->vector[FirstOffsetNumber].key);
 	hasz = MOBDB_FLAGS_GET_Z(box->flags);
+	hasm = MOBDB_FLAGS_GET_M(box->flags);
 	
 	/*
 	 * Iterate over axes for optimal split searching.
 	 */
 	context.first = true;		/* nothing selected yet */
-	for (dim = 0; dim < 4; dim++)
+	for (dim = 0; dim < 5; dim++)
 	{
 		double		leftUpper,
 					rightLower;
@@ -779,6 +781,10 @@ gist_tpoint_picksplit(PG_FUNCTION_ARGS)
 		
 		/* Skip the process for Z dimension if it is missing */
 		if (dim == 2 && !hasz)
+			continue;
+		
+		/* Skip the process for M dimension if it is missing */
+		if (dim == 3 && !hasm)
 			continue;
 		
 		/* Project each entry as an interval on the selected axis. */
@@ -799,6 +805,11 @@ gist_tpoint_picksplit(PG_FUNCTION_ARGS)
 			{
 				intervalsLower[i - FirstOffsetNumber].lower = box->zmin;
 				intervalsLower[i - FirstOffsetNumber].upper = box->zmax;
+			}
+			else if (dim == 3 && hasm)
+			{
+				intervalsLower[i - FirstOffsetNumber].lower = box->mmin;
+				intervalsLower[i - FirstOffsetNumber].upper = box->mmax;
 			}
 			else
 			{
@@ -1004,6 +1015,11 @@ gist_tpoint_picksplit(PG_FUNCTION_ARGS)
 		{
 			lower = box->zmin;
 			upper = box->zmax;
+		}
+		else if (context.dim == 3 && hasm)
+		{
+			lower = box->mmin;
+			upper = box->mmax;
 		}
 		else
 		{

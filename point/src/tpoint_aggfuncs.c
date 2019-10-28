@@ -32,10 +32,11 @@ struct GeoAggregateState
 {
 	int32_t srid;
 	bool hasz;
+	bool hasm;
 };
 
 static void
-geoaggstate_check(SkipList *state, int32_t srid, bool hasz)
+geoaggstate_check(SkipList *state, int32_t srid, bool hasz, bool hasm)
 {
 	if(! state)
 		return;
@@ -43,7 +44,7 @@ geoaggstate_check(SkipList *state, int32_t srid, bool hasz)
 	if (extra && extra->srid != srid)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
 			errmsg("Geometries must have the same SRID for temporal aggregation")));
-	if (extra && extra->hasz != hasz)
+	if (extra && extra->hasz != hasz && extra->hasm != hasm)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
 			errmsg("Geometries must have the same dimensionality for temporal aggregation")));
 }
@@ -53,13 +54,14 @@ geoaggstate_check_as(SkipList *state1, SkipList *state2)
 {
 	struct GeoAggregateState *extra2 = state2->extra;
 	if (extra2)
-		geoaggstate_check(state1, extra2->srid, extra2->hasz);
+		geoaggstate_check(state1, extra2->srid, extra2->hasz, extra2->hasm);
 }
 
 static void
 geoaggstate_check_t(SkipList *state, Temporal *t)
 {
-	geoaggstate_check(state, tpoint_srid_internal(t), MOBDB_FLAGS_GET_Z(t->flags) != 0);
+	geoaggstate_check(state, tpoint_srid_internal(t), 
+		MOBDB_FLAGS_GET_Z(t->flags) != 0, MOBDB_FLAGS_GET_M(t->flags) != 0);
 }
 
 /*****************************************************************************/
@@ -315,7 +317,8 @@ tpoint_tcentroid_transfn(PG_FUNCTION_ARGS)
 		struct GeoAggregateState extra =
 		{
 			.srid = tpoint_srid_internal(temp),
-			.hasz = MOBDB_FLAGS_GET_Z(temp->flags) != 0
+			.hasz = MOBDB_FLAGS_GET_Z(temp->flags) != 0,
+			.hasm = MOBDB_FLAGS_GET_M(temp->flags) != 0
 		};
 		aggstate_set_extra(fcinfo, state, &extra, sizeof(struct GeoAggregateState));
 	}
@@ -347,6 +350,7 @@ tpoint_tcentroid_combinefn(PG_FUNCTION_ARGS)
 	if (state2 && state2->extra) 
 		extra = state2->extra;
 	assert(extra != NULL);
+	/* N.B. For the moment the centroid does not average the M dimension */
 	Datum (*func)(Datum, Datum) = extra->hasz ?
 		&datum_sum_double4 : &datum_sum_double3;
 	SkipList *result = temporal_tagg_combinefn(fcinfo, state1, state2, 

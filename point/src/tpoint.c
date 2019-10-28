@@ -77,9 +77,11 @@ tpoint_valid_typmod(Temporal *temp, int32_t typmod)
 	if (typmod == 0)
 		typmod = -1;
 	int32 tpoint_z = MOBDB_FLAGS_GET_Z(temp->flags);
+	int32 tpoint_m = MOBDB_FLAGS_GET_M(temp->flags);
 	int32 typmod_srid = TYPMOD_GET_SRID(typmod);
 	int32 typmod_type = TYPMOD_GET_TYPE(typmod);
 	int32 typmod_z = TYPMOD_GET_Z(typmod);
+	int32 typmod_m = TYPMOD_GET_M(typmod);
 
 	/* No typmod (-1) */
 	if (typmod < 0 && duration_type == 0)
@@ -95,13 +97,13 @@ tpoint_valid_typmod(Temporal *temp, int32_t typmod)
 				errmsg("Temporal type (%s) does not match column type (%s)",
 					temporal_type_name(tpoint_type), temporal_type_name(duration_type)) ));
 	/* Mismatched Z dimensionality.  */
-	if (typmod > 0 && typmod_z && ! tpoint_z)
+	if (typmod > 0 && ((typmod_z && !tpoint_z) || (!typmod_z && tpoint_z)))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				errmsg("Column has Z dimension but temporal point does not" )));
-	/* Mismatched Z dimensionality (other way).  */
-	if (typmod > 0 && tpoint_z && ! typmod_z)
+	/* Mismatched M dimensionality.  */
+	if (typmod > 0 && ((typmod_m && !tpoint_m) || (!typmod_m && tpoint_m)))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				errmsg("Temporal type has Z dimension but column does not" )));
+				errmsg("Column has M dimension but temporal point does not" )));
 
 	return temp;
 }
@@ -356,6 +358,7 @@ tpoint_typmod_out(PG_FUNCTION_ARGS)
 	int32 srid = TYPMOD_GET_SRID(typmod);
 	int32 geometry_type = TYPMOD_GET_TYPE(typmod);
 	int32 hasz = TYPMOD_GET_Z(typmod);
+	int32 hasm = TYPMOD_GET_M(typmod);
 
 	/* No duration type or geometry type? Then no typmod at all. 
 	  Return empty string. */
@@ -375,6 +378,8 @@ tpoint_typmod_out(PG_FUNCTION_ARGS)
 		str += sprintf(str, "%s", lwtype_name(geometry_type));
 		/* Has Z?  */
 		if (hasz) str += sprintf(str, "Z");
+		/* Has M?  */
+		if (hasm) str += sprintf(str, "M");
 		/* Has SRID?  */
 		if (srid) str += sprintf(str, ",%d", srid);
 	}

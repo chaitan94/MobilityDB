@@ -523,6 +523,7 @@ typedef struct
 	uint8_t duration; /* Current duration we are handling */
 	int32_t srid;    /* Current SRID we are handling */
 	bool has_z; /* Z? */
+	bool has_m; /* M? */
 	bool has_srid; /* SRID? */
 	const uint8_t *pos; /* Current parse position */
 } wkb_parse_state;
@@ -638,11 +639,13 @@ static void
 tpoint_type_from_wkb_state(wkb_parse_state *s, uint8_t wkb_type)
 {
 	s->has_z = false;
+	s->has_m = false;
 	s->has_srid = false;
 	/* If any of the higher bits are set, this is probably an extended type. */
 	if (wkb_type & 0xF0)
 	{
 		if (wkb_type & WKB_ZFLAG) s->has_z = true;
+		if (wkb_type & WKB_MFLAG) s->has_m = true;
 		if (wkb_type & WKB_SRIDFLAG) s->has_srid = true;
 	}
 	/* Mask off the flags */

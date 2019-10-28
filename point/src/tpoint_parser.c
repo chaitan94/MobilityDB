@@ -23,9 +23,9 @@
 STBOX *
 stbox_parse(char **str) 
 {
-	double xmin, xmax, ymin, ymax, zmin, zmax, tmp;
+	double xmin, xmax, ymin, ymax, zmin, zmax, mmin, mmax, tmp;
 	TimestampTz tmin = 0, tmax = 0, ttmp; /* make compiler quiet */
-	bool hasx = false, hasz = false, hast = false, geodetic = false;
+	bool hasx = false, hasz = false, hasm = false, hast = false, geodetic = false;
 	char *nextstr;
 
 	p_whitespace(str);
@@ -33,15 +33,30 @@ stbox_parse(char **str)
 	{
 		*str += 5;
 		p_whitespace(str);
+		if (strncasecmp(*str, "ZMT", 3) == 0)
+		{
+			hasz = hasm = hast = true;
+			*str += 3;
+		}
 		if (strncasecmp(*str, "ZT", 2) == 0)
 		{
 			hasz = hast = true;
+			*str += 2;
+		}
+		else if (strncasecmp(*str, "ZM", 2) == 0)
+		{
+			hasz = hasm = true;
 			*str += 2;
 		}
 		else if (strncasecmp(*str, "Z", 1) == 0)
 		{
 			*str += 1;
 			hasz = true;
+		}
+		else if (strncasecmp(*str, "M", 1) == 0)
+		{
+			*str += 1;
+			hasm = true;
 		}
 		else if (strncasecmp(*str, "T", 1) == 0)
 		{
@@ -55,6 +70,16 @@ stbox_parse(char **str)
 		*str += 9;
 		hasz = geodetic = 1;
 		p_whitespace(str);
+		if (strncasecmp(*str, "MT", 2) == 0)
+		{
+			*str += 2;
+			hasm = hast = true;
+		}
+		if (strncasecmp(*str, "M", 1) == 0)
+		{
+			*str += 1;
+			hasm = true;
+		}
 		if (strncasecmp(*str, "T", 1) == 0)
 		{
 			*str += 1;
@@ -109,10 +134,21 @@ stbox_parse(char **str)
 					errmsg("Could not parse TBOX: Invalid input syntax for type double")));
 			*str = nextstr; 
 		}
+		if (hasm)
+		{	
+			p_whitespace(str);
+			p_comma(str);
+			p_whitespace(str);
+			mmin = strtod(*str, &nextstr);
+			if (*str == nextstr)
+				ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
+					errmsg("Could not parse TBOX: Invalid input syntax for type double")));
+			*str = nextstr; 
+		}
 	}
 	else
 	{
-		/* Empty XY(Z) dimension */
+		/* Empty XY(ZM) dimension */
 		p_whitespace(str);
 		p_comma(str);
 		p_whitespace(str);
@@ -158,7 +194,7 @@ stbox_parse(char **str)
 			ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
 				errmsg("Could not parse TBOX: Invalid input syntax for type double")));
 		*str = nextstr; 
-		if (hasz != 0)
+		if (hasz)
 		{	
 			p_whitespace(str);
 			p_comma(str);
@@ -167,12 +203,23 @@ stbox_parse(char **str)
 			if (*str == nextstr)
 				ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
 					errmsg("Could not parse TBOX: Invalid input syntax for type double")));
-		*str = nextstr; 
+			*str = nextstr; 
+		}
+		if (hasm)
+		{	
+			p_whitespace(str);
+			p_comma(str);
+			p_whitespace(str);
+			mmax = strtod(*str, &nextstr);
+			if (*str == nextstr)
+				ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
+					errmsg("Could not parse TBOX: Invalid input syntax for type double")));
+			*str = nextstr; 
 		}
 	}
 	else
 	{
-		/* Empty XY dimensions */
+		/* Empty XY(ZM) dimensions */
 		p_whitespace(str);
 		p_comma(str);
 		p_whitespace(str);
@@ -194,7 +241,7 @@ stbox_parse(char **str)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
 			errmsg("Could not parse STBOX: Missing closing parenthesis")));
 	
-	STBOX *result = stbox_new(hasx, hasz, hast, geodetic);
+	STBOX *result = stbox_new(hasx, hasz, hasm, hast, geodetic);
 	if (hasx)
 	{
 		if (xmin > xmax)
@@ -213,17 +260,28 @@ stbox_parse(char **str)
 		result->xmax = xmax;
 		result->ymin = ymin;
 		result->ymax = ymax;
-	}
-	if (hasz)
-	{
-		if (zmin > zmax)
+		if (hasz)
 		{
-			tmp = zmin;
-			zmin = zmax;
-			zmax = tmp;
+			if (zmin > zmax)
+			{
+				tmp = zmin;
+				zmin = zmax;
+				zmax = tmp;
+			}
+			result->zmin = zmin;
+			result->zmax = zmax;
 		}
-		result->zmin = zmin;
-		result->zmax = zmax;
+		if (hasm)
+		{
+			if (mmin > mmax)
+			{
+				tmp = mmin;
+				mmin = mmax;
+				mmax = tmp;
+			}
+			result->mmin = mmin;
+			result->mmax = mmax;
+		}
 	}
 	if (hast)
 	{

@@ -26,6 +26,8 @@ extern POINT3DM gs_get_point3dm(GSERIALIZED *gs);
 extern POINT4D gs_get_point4d(GSERIALIZED *gs);
 extern POINT2D datum_get_point2d(Datum value);
 extern POINT3DZ datum_get_point3dz(Datum value);
+extern POINT3DM datum_get_point3dm(Datum value);
+extern POINT4D datum_get_point4d(Datum value);
 extern bool datum_point_eq(Datum geopoint1, Datum geopoint2);
 extern void tpoint_same_srid(Temporal *temp1, Temporal *temp2);
 extern void tpoint_gs_same_srid(Temporal *temp, GSERIALIZED *gs);

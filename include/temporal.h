@@ -127,6 +127,8 @@ typedef struct
 	double		ymax;			/* maximum y value */
 	double		zmin;			/* minimum z value */
 	double		zmax;			/* maximum z value */
+	double		mmin;			/* minimum m value */
+	double		mmax;			/* maximum m value */
 	TimestampTz	tmin;			/* minimum timestamp */
 	TimestampTz	tmax;			/* maximum timestamp */
 	int16		flags;			/* flags */
