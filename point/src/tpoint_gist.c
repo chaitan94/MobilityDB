@@ -399,8 +399,8 @@ size_stbox(const STBOX *box)
 	 */
 	if (isnan(box->xmax) || isnan(box->ymax) || isnan(box->zmax) || isnan(box->mmax))
 		return get_float8_infinity();
-	return (box->xmax - box->xmin) * (box->ymax - box->ymin) * (box->zmax - box->zmin) * 
-		(box->mmax - box->mmin) * (box->tmax - box->tmin);
+	return (box->xmax - box->xmin) * (box->ymax - box->ymin) * 
+		(box->zmax - box->zmin) * (box->mmax - box->mmin) * (box->tmax - box->tmin);
 }
 
 /*
