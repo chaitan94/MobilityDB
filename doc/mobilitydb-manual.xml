@@ -47,7 +47,7 @@
 
 		<para>MobilityDB is an extension of <ulink url="http://postgresql.org">PostgreSQL</ulink> and <ulink url="http://postgis.net">PostGIS</ulink> that provides temporal types. Such types are data types that represent the evolution on time of values of some element type, called the base type of the temporal type. For instance, temporal integers may be used to represent the evolution on time of the number of employees of a department. In this case, the data type is &ldquo;temporal integer&rdquo; and &ldquo;integer&rdquo; is the base type. Similarly, a temporal float may be used to represent the evolution on time of the temperature of a room. As another example, a temporal point may be used to represent the evolution on time of the location of a car, as reported by GPS devices. Temporal types are useful because representing values that evolve in time is essential in many applications, for example in mobility applications. Furthermore, the operators on the base types (such as arithmetic operators and aggregation for integers and floats, spatial relationships and distance for geometries) can be intuitively generalized when the values evolve in time.</para>
 
-		<para>MobilityDB provides the following temporal types: <varname>tbool</varname>, <varname>tint</varname>, <varname>tfloat</varname>, <varname>ttext</varname>, <varname>tgeompoint</varname> and <varname>tgeogpoint</varname>. These temporal types are based, respectively, on the <varname>bool</varname>, <varname>int</varname>, <varname>float</varname>, and <varname>text</varname> base types provided by PostgreSQL, and on the <varname>geometry</varname> and <varname>geography</varname> base types provided by PostGIS (restricted to 2D or 3D points).<footnote><para>Although 4D temporal points can be represented, the M dimension is currently not taken into account.</para></footnote> Furthermore, MobilityDB uses four time types to represent extents of time: the <varname>timestamptz</varname> type provided by PostgreSQL and three new types which are <varname>period</varname>, <varname>timestampset</varname>, and <varname>periodset</varname>. In addition, two range types are defined in MobilityDB: <varname>intrange</varname> and <varname>floatrange</varname>.</para>
+		<para>MobilityDB provides the following temporal types: <varname>tbool</varname>, <varname>tint</varname>, <varname>tfloat</varname>, <varname>ttext</varname>, <varname>tgeompoint</varname> and <varname>tgeogpoint</varname>. These temporal types are based, respectively, on the <varname>bool</varname>, <varname>int</varname>, <varname>float</varname>, and <varname>text</varname> base types provided by PostgreSQL, and on the <varname>geometry</varname> and <varname>geography</varname> base types provided by PostGIS (restricted to 2D, 3D, or 4D points). Furthermore, MobilityDB uses four time types to represent extents of time: the <varname>timestamptz</varname> type provided by PostgreSQL and three new types which are <varname>period</varname>, <varname>timestampset</varname>, and <varname>periodset</varname>. In addition, two range types are defined in MobilityDB: <varname>intrange</varname> and <varname>floatrange</varname>.</para>
 		
 	</chapter>
 	
@@ -591,7 +591,7 @@ CREATE INDEX reservation_during_idx ON reservation USING GIST(during);
 
 	<chapter id="temporal_types">
 		<title>Temporal Types</title>
-		<para>There are six built-in temporal types, <varname>tbool</varname>, <varname>tint</varname>, <varname>tfloat</varname>, <varname>ttext</varname>, <varname>tgeompoint</varname>, and <varname>tgeogpoint</varname>, which are, respectively, based on the base types <varname>bool</varname>, <varname>int</varname>, <varname>float</varname>, <varname>text</varname>, <varname>geometry</varname>, and <varname>geography</varname> (the last two types restricted to 2D or 3D points). Depending on their base type, temporal types may be discrete or continuous. Discrete temporal types (which are based on the <varname>boolean</varname>, <varname>int</varname>, or <varname>text</varname> base types) evolve in a stepwise manner, while continuous temporal types (which are based on the <varname>float</varname>, <varname>geometry</varname>, or <varname>geography</varname> base types) evolve in a continuous manner. For example, the number of employees of a department may be represented with a temporal integer, which indicates that its value is constant between two time instants. On the other hand, the temperature of a room may be represented with a temporal float, which indicates that the values are known at the two time instants but continuously evolve between them. Similarly, the location of a car may be represented by a temporal point, since it is typically assumed the location between two consecutive GPS readings can be obtained by (linear) interpolation.</para>
+		<para>There are six built-in temporal types, <varname>tbool</varname>, <varname>tint</varname>, <varname>tfloat</varname>, <varname>ttext</varname>, <varname>tgeompoint</varname>, and <varname>tgeogpoint</varname>, which are, respectively, based on the base types <varname>bool</varname>, <varname>int</varname>, <varname>float</varname>, <varname>text</varname>, <varname>geometry</varname>, and <varname>geography</varname> (the last two types restricted to 2D, 3D, or 4D points). Depending on their base type, temporal types may be discrete or continuous. Discrete temporal types (which are based on the <varname>boolean</varname>, <varname>int</varname>, or <varname>text</varname> base types) evolve in a stepwise manner, while continuous temporal types (which are based on the <varname>float</varname>, <varname>geometry</varname>, or <varname>geography</varname> base types) evolve in a continuous manner. For example, the number of employees of a department may be represented with a temporal integer, which indicates that its value is constant between two time instants. On the other hand, the temperature of a room may be represented with a temporal float, which indicates that the values are known at the two time instants but continuously evolve between them. Similarly, the location of a car may be represented by a temporal point, since it is typically assumed the location between two consecutive GPS readings can be obtained by (linear) interpolation.</para>
 
 		<para>The duration of a temporal value states the temporal extent at which the evolution of values is recorded. Temporal values come in four durations, namely, instant, instant set, sequence, and sequence set.</para>
 
@@ -651,7 +651,7 @@ CREATE TABLE Fligth(FlightNo integer, Route tgeogpoint(Sequence, PointZ, 4326));
 				</listitem>
 
 				<listitem>
-					<para>A <varname>stbox</varname> (spatiotemporal box) type for the <varname>tgeompoint</varname> and <varname>tgeogpoint</varname> types, where the spatial extent is defined in the X, Y, and Z dimensions, and the temporal extent in the T dimension.</para>
+					<para>A <varname>stbox</varname> (spatiotemporal box) type for the <varname>tgeompoint</varname> and <varname>tgeogpoint</varname> types, where the spatial extent is defined in the X, Y, Z, and M dimensions, and the temporal extent in the T dimension.</para>
 				</listitem>
 			</itemizedlist>
 		</para>
@@ -907,7 +907,7 @@ SELECT tbox(1.0, '2001-01-01 08:00:00', 2.0, '2001-01-01 08:10:00')
 				</programlisting>
 			</para>
 
-			<para>An <varname>stbox</varname> is composed of coordinate and/or time dimensions, where the coordinates may be 2D or 3D. For each dimension, minimum and maximum values are given. The coordinates may be Cartesian (planar) or geodetic (spherical). Examples of input of <varname>stbox</varname> values are as follows:
+			<para>An <varname>stbox</varname> is composed of coordinate and/or time dimensions, where the coordinates may be 2D, 3D, or 4D. For each dimension, minimum and maximum values are given. The coordinates may be Cartesian (planar) or geodetic (spherical). Examples of input of <varname>stbox</varname> values are as follows:
 				<programlisting>
 -- Only coordinate (X and Y) dimension
 SELECT stbox 'STBOX((1.0, 2.0), (1.0, 2.0))';
@@ -918,15 +918,15 @@ SELECT stbox 'STBOX T((1.0, 2.0, 2001-01-03), (1.0, 2.0, 2001-01-03))';
 -- Both coordinate (X, Y, and Z) and time dimensions
 SELECT stbox 'STBOX ZT((1.0, 2.0, 3.0, 2001-01-04), (1.0, 2.0, 3.0, 2001-01-04))';
 -- Only geodetic coordinate (X, Y and Z) dimension
-SELECT stbox 'GEODSTBOX((1.0, 2.0, 3.0), (1.0, 2.0, 3.0))';
+SELECT stbox 'GEODSTBOX Z((1.0, 2.0, 3.0), (1.0, 2.0, 3.0))';
 --  Both geodetic coordinate (X, Y, and Z) and time dimensions
-SELECT stbox 'GEODSTBOX T((1.0, 2.0, 3.0, 2001-01-04), (1.0, 2.0, 3.0, 2001-01-03))';
+SELECT stbox 'GEODSTBOX ZT((1.0, 2.0, 3.0, 2001-01-04), (1.0, 2.0, 3.0, 2001-01-03))';
 -- Only time dimension
 SELECT stbox 'STBOX T(( , , 2001-01-03), ( , , 2001-01-03))';
 				</programlisting>
 			</para>
 
-			<para>Type <varname>stbox</varname> has several constructor functions depending on whether the coordinates and/or the time dimensions are given. Furthermore, the coordinates can be 2D or 3D and can be either Cartesian or geodetic. These functions have several arguments for the minimum and maximum coordinate values and/or two arguments for the minimum and maximum <varname>timestamptz</varname> values. Examples of <varname>stbox</varname> values defined with the constructor functions are as follows:
+			<para>Type <varname>stbox</varname> has several constructor functions depending on whether the coordinates and/or the time dimensions are given. Furthermore, the coordinates can be 2D, 3D, or 4D and can be either Cartesian or geodetic. These functions have several arguments for the minimum and maximum coordinate values and/or two arguments for the minimum and maximum <varname>timestamptz</varname> values. Examples of <varname>stbox</varname> values defined with the constructor functions are as follows:
 				<programlisting>
 -- Only coordinate (X and Y) dimension
 SELECT stbox(1.0, 2.0, 1.0, 2.0);
@@ -1643,7 +1643,7 @@ SELECT twAvg(tfloat '{[1@2012-01-01, 2@2012-01-03), [2@2012-01-04, 2@2012-01-06)
 
 		<sect1>
 			<title>Spatial Functions</title>
-			<para>In the following functions we specify with the symbol &Z_support; that the function supports 3D points, with the symbol &geography_support; that the function is available for geographies, and with the symbol &M_support; that the function supports M coordinates.</para>
+			<para>In the following functions we specify with the symbol &Z_support; that the function supports supports Z coordinates, with the symbol &M_support; that the function supports M coordinates, and with the symbol &geography_support; that the function is available for geographies.</para>
 
 			<itemizedlist>
 				<listitem>
