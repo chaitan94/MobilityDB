@@ -143,7 +143,10 @@ temporalinst_make(Datum value, TimestampTz t, Oid valuetypid)
 		valuetypid == type_oid(T_GEOGRAPHY))
 	{
 		GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(value);
+		MOBDB_FLAGS_SET_X(result->flags,true);
 		MOBDB_FLAGS_SET_Z(result->flags, FLAGS_GET_Z(gs->flags));
+		MOBDB_FLAGS_SET_M(result->flags, FLAGS_GET_M(gs->flags));
+		MOBDB_FLAGS_SET_T(result->flags,true);
 		MOBDB_FLAGS_SET_GEODETIC(result->flags, FLAGS_GET_GEODETIC(gs->flags));
 		POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(value));
 	}

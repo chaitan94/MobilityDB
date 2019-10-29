@@ -303,14 +303,22 @@ adjust_stbox(STBOX *b, const STBOX *addon)
 		b->xmax = addon->xmax;
 	if (FLOAT8_GT(b->xmin, addon->xmin))
 		b->xmin = addon->xmin;
+
 	if (FLOAT8_LT(b->ymax, addon->ymax))
 		b->ymax = addon->ymax;
 	if (FLOAT8_GT(b->ymin, addon->ymin))
 		b->ymin = addon->ymin;
+
 	if (FLOAT8_LT(b->zmax, addon->zmax))
 		b->zmax = addon->zmax;
 	if (FLOAT8_GT(b->zmin, addon->zmin))
 		b->zmin = addon->zmin;
+
+	if (FLOAT8_LT(b->mmax, addon->mmax))
+		b->mmax = addon->mmax;
+	if (FLOAT8_GT(b->mmin, addon->mmin))
+		b->mmin = addon->mmin;
+
 	if (timestamp_cmp_internal(b->tmax, addon->tmax) < 0)
 		b->tmax = addon->tmax;
 	if (timestamp_cmp_internal(b->tmin, addon->tmin) > 0)
@@ -356,10 +364,12 @@ rt_stbox_union(STBOX *n, const STBOX *a, const STBOX *b)
 	n->xmax = FLOAT8_MAX(a->xmax, b->xmax);
 	n->ymax = FLOAT8_MAX(a->ymax, b->ymax);
 	n->zmax = FLOAT8_MAX(a->zmax, b->zmax);
+	n->mmax = FLOAT8_MAX(a->mmax, b->mmax);
 	n->tmax = timestamp_cmp_internal(a->tmax, b->tmax) > 0 ? a->tmax : b->tmax;
 	n->xmin = FLOAT8_MIN(a->xmin, b->xmin);
 	n->ymin = FLOAT8_MIN(a->ymin, b->ymin);
 	n->zmin = FLOAT8_MIN(a->zmin, b->zmin);
+	n->mmin = FLOAT8_MIN(a->mmin, b->mmin);
 	n->tmin = timestamp_cmp_internal(a->tmin, b->tmin) < 0 ? a->tmin : b->tmin;
 }
 
@@ -377,9 +387,8 @@ size_stbox(const STBOX *box)
 	 *
 	 * The less-than cases should not happen, but if they do, say "zero".
 	 */
-	if (FLOAT8_LE(box->xmax, box->xmin) ||
-		FLOAT8_LE(box->ymax, box->ymin) ||
-		FLOAT8_LE(box->zmax, box->zmin) ||
+	if (FLOAT8_LE(box->xmax, box->xmin) || FLOAT8_LE(box->ymax, box->ymin) ||
+		FLOAT8_LE(box->zmax, box->zmin) || FLOAT8_LE(box->mmax, box->mmin) ||
 		timestamp_cmp_internal(box->tmax, box->tmin) <= 0)
 		return 0.0;
 	
@@ -388,10 +397,10 @@ size_stbox(const STBOX *box)
 	 * and a non-NaN is infinite.  Note the previous check eliminated the
 	 * possibility that the low fields are NaNs.
 	 */
-	if (isnan(box->xmax) || isnan(box->ymax) || isnan(box->zmax))
+	if (isnan(box->xmax) || isnan(box->ymax) || isnan(box->zmax) || isnan(box->mmax))
 		return get_float8_infinity();
-	return (box->xmax - box->xmin) * (box->ymax - box->ymin) * 
-		(box->tmax - box->tmin) * (box->tmax - box->tmin);
+	return (box->xmax - box->xmin) * (box->ymax - box->ymin) * (box->zmax - box->zmin) * 
+		(box->mmax - box->mmin) * (box->tmax - box->tmin);
 }
 
 /*
@@ -420,10 +429,10 @@ gist_tpoint_penalty(PG_FUNCTION_ARGS)
 	GISTENTRY *origentry = (GISTENTRY *) PG_GETARG_POINTER(0);
 	GISTENTRY *newentry = (GISTENTRY *) PG_GETARG_POINTER(1);
 	float *result = (float *) PG_GETARG_POINTER(2);
-	STBOX *oristbox = (STBOX *) DatumGetPointer(origentry->key);
+	STBOX *origstbox = (STBOX *) DatumGetPointer(origentry->key);
 	STBOX *newbox = (STBOX *) DatumGetPointer(newentry->key);
 	
-	*result = (float) stbox_penalty(oristbox, newbox);
+	*result = (float) stbox_penalty(origstbox, newbox);
 	PG_RETURN_POINTER(result);
 }
 
@@ -620,8 +629,12 @@ g_stbox_consider_split(ConsiderSplitContext *context, int dimNum,
 			range = context->boundingBox.xmax - context->boundingBox.xmin;
 		else if (dimNum == 1)
 			range = context->boundingBox.ymax - context->boundingBox.ymin;
-		else
+		else if (dimNum == 2)
 			range = context->boundingBox.zmax - context->boundingBox.zmin;
+		else if (dimNum == 3)
+			range = context->boundingBox.mmax - context->boundingBox.mmin;
+		else
+			range = context->boundingBox.tmax - context->boundingBox.tmin;
 		
 		overlap = (leftUpper - rightLower) / range;
 		
@@ -801,12 +814,12 @@ gist_tpoint_picksplit(PG_FUNCTION_ARGS)
 				intervalsLower[i - FirstOffsetNumber].lower = box->ymin;
 				intervalsLower[i - FirstOffsetNumber].upper = box->ymax;
 			}
-			else if (dim == 2 && hasz)
+			else if (dim == 2)
 			{
 				intervalsLower[i - FirstOffsetNumber].lower = box->zmin;
 				intervalsLower[i - FirstOffsetNumber].upper = box->zmax;
 			}
-			else if (dim == 3 && hasm)
+			else if (dim == 3)
 			{
 				intervalsLower[i - FirstOffsetNumber].lower = box->mmin;
 				intervalsLower[i - FirstOffsetNumber].upper = box->mmax;
@@ -1137,10 +1150,12 @@ gist_tpoint_same(PG_FUNCTION_ARGS)
 		*result = (FLOAT8_EQ(b1->xmin, b2->xmin) &&
 				   FLOAT8_EQ(b1->ymin, b2->ymin) &&
 				   FLOAT8_EQ(b1->zmin, b2->zmin) &&
+				   FLOAT8_EQ(b1->mmin, b2->mmin) &&
 				   float8_cmp_internal(b1->tmin, b2->tmin) == 0 &&
 				   FLOAT8_EQ(b1->xmax, b2->xmax) &&
 				   FLOAT8_EQ(b1->ymax, b2->ymax) &&
 				   FLOAT8_EQ(b1->zmax, b2->zmax) &&
+				   FLOAT8_EQ(b1->mmax, b2->mmax) &&
 				   timestamp_cmp_internal(b1->tmax, b2->tmax) == 0);
 	else
 		*result = (b1 == NULL && b2 == NULL);

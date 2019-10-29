@@ -44,7 +44,7 @@ geoaggstate_check(SkipList *state, int32_t srid, bool hasz, bool hasm)
 	if (extra && extra->srid != srid)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
 			errmsg("Geometries must have the same SRID for temporal aggregation")));
-	if (extra && extra->hasz != hasz && extra->hasm != hasm)
+	if (extra && (extra->hasz != hasz || extra->hasm != hasm))
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
 			errmsg("Geometries must have the same dimensionality for temporal aggregation")));
 }
@@ -180,6 +180,7 @@ tpoint_extent_transfn(PG_FUNCTION_ARGS)
 	STBOX *box = PG_ARGISNULL(0) ? NULL : PG_GETARG_STBOX_P(0);
 	Temporal *temp = PG_ARGISNULL(1) ? NULL : PG_GETARG_TEMPORAL(1);
 	STBOX box1, *result = NULL;
+	memset(&box1, 0, sizeof(STBOX));
 
 	/* Can't do anything with null inputs */
 	if (!box && !temp)
@@ -187,45 +188,60 @@ tpoint_extent_transfn(PG_FUNCTION_ARGS)
 	/* Null box and non-null temporal, return the bbox of the temporal */
 	if (!box)
 	{
-		result = palloc(sizeof(STBOX));
+		result = palloc0(sizeof(STBOX));
 		temporal_bbox(result, temp);
 		PG_RETURN_POINTER(result);
 	}
 	/* Non-null box and null temporal, return the box */
 	if (!temp)
 	{
-		result = palloc(sizeof(STBOX));
+		result = palloc0(sizeof(STBOX));
 		memcpy(result, box, sizeof(STBOX));
 		PG_RETURN_POINTER(result);
 	}
 
+	temporal_bbox(&box1, temp);
 	if (!MOBDB_FLAGS_GET_X(box->flags) || !MOBDB_FLAGS_GET_T(box->flags))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				errmsg("Argument STBOX must have both X and T dimensions")));
-	if (MOBDB_FLAGS_GET_Z(box->flags) != MOBDB_FLAGS_GET_Z(temp->flags))
+	if (MOBDB_FLAGS_GET_Z(box->flags) != MOBDB_FLAGS_GET_Z(box1.flags))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				errmsg("One argument has Z dimension but the other does not")));
-	if (MOBDB_FLAGS_GET_GEODETIC(box->flags) != MOBDB_FLAGS_GET_GEODETIC(temp->flags))
+	if (MOBDB_FLAGS_GET_M(box->flags) != MOBDB_FLAGS_GET_M(box1.flags))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				errmsg("One argument has M dimension but the other does not")));
+	if (MOBDB_FLAGS_GET_GEODETIC(box->flags) != MOBDB_FLAGS_GET_GEODETIC(box1.flags))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				errmsg("One argument has geodetic coordinates but the other does not")));
 
-	temporal_bbox(&box1, temp);
-	result = palloc(sizeof(STBOX));
+	result = palloc0(sizeof(STBOX));
 	result->xmax = Max(box->xmax, box1.xmax);
 	result->ymax = Max(box->ymax, box1.ymax);
 	result->tmax = Max(box->tmax, box1.tmax);
 	result->xmin = Min(box->xmin, box1.xmin);
 	result->ymin = Min(box->ymin, box1.ymin);
 	result->tmin = Min(box->tmin, box1.tmin);
-	if (MOBDB_FLAGS_GET_Z(box->flags) || MOBDB_FLAGS_GET_GEODETIC(box->flags))
+	MOBDB_FLAGS_SET_X(result->flags, true);
+	MOBDB_FLAGS_SET_T(result->flags, true);
+	if (MOBDB_FLAGS_GET_Z(box->flags))
 	{
 		result->zmax = Max(box->zmax, box1.zmax);
 		result->zmin = Min(box->zmin, box1.zmin);
+		MOBDB_FLAGS_SET_Z(result->flags, true);
 	}
-	MOBDB_FLAGS_SET_X(result->flags, true);
-	MOBDB_FLAGS_SET_Z(result->flags, MOBDB_FLAGS_GET_Z(box->flags));
-	MOBDB_FLAGS_SET_T(result->flags, true);
-	MOBDB_FLAGS_SET_GEODETIC(result->flags, MOBDB_FLAGS_GET_GEODETIC(box->flags));
+	if (MOBDB_FLAGS_GET_GEODETIC(box->flags))
+	{
+		result->zmax = Max(box->zmax, box1.zmax);
+		result->zmin = Min(box->zmin, box1.zmin);
+		MOBDB_FLAGS_SET_Z(result->flags, true);
+		MOBDB_FLAGS_SET_GEODETIC(result->flags, true);
+	}
+	if (MOBDB_FLAGS_GET_M(box->flags))
+	{
+		result->mmax = Max(box->mmax, box1.mmax);
+		result->mmin = Min(box->mmin, box1.mmin);
+		MOBDB_FLAGS_SET_M(result->flags, true);
+	}
 
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
@@ -254,26 +270,41 @@ tpoint_extent_combinefn(PG_FUNCTION_ARGS)
 	if (MOBDB_FLAGS_GET_Z(box1->flags) != MOBDB_FLAGS_GET_Z(box2->flags))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				errmsg("One argument has Z dimension but the other does not")));
+	if (MOBDB_FLAGS_GET_M(box1->flags) != MOBDB_FLAGS_GET_M(box2->flags))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				errmsg("One argument has M dimension but the other does not")));
 	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				errmsg("One argument has geodetic coordinates but the other does not")));
 
-	result = palloc(sizeof(STBOX));
+	result = palloc0(sizeof(STBOX));
 	result->xmax = Max(box1->xmax, box2->xmax);
 	result->ymax = Max(box1->ymax, box2->ymax);
 	result->tmax = Max(box1->tmax, box2->tmax);
 	result->xmin = Min(box1->xmin, box2->xmin);
 	result->ymin = Min(box1->ymin, box2->ymin);
 	result->tmin = Min(box1->tmin, box2->tmin);
-	if (MOBDB_FLAGS_GET_Z(box1->flags) || MOBDB_FLAGS_GET_GEODETIC(box1->flags))
+	MOBDB_FLAGS_SET_X(result->flags, true);
+	MOBDB_FLAGS_SET_T(result->flags, true);
+	if (MOBDB_FLAGS_GET_Z(box1->flags))
 	{
 		result->zmax = Max(box1->zmax, box2->zmax);
 		result->zmin = Min(box1->zmin, box2->zmin);
+		MOBDB_FLAGS_SET_Z(result->flags, true);
 	}
-	MOBDB_FLAGS_SET_X(result->flags, true);
-	MOBDB_FLAGS_SET_Z(result->flags, MOBDB_FLAGS_GET_Z(box1->flags));
-	MOBDB_FLAGS_SET_T(result->flags, true);
-	MOBDB_FLAGS_SET_GEODETIC(result->flags, MOBDB_FLAGS_GET_GEODETIC(box1->flags));
+	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags))
+	{
+		result->zmax = Max(box1->zmax, box2->zmax);
+		result->zmin = Min(box1->zmin, box2->zmin);
+		MOBDB_FLAGS_SET_Z(result->flags, true);
+		MOBDB_FLAGS_SET_GEODETIC(result->flags, true);
+	}
+	if (MOBDB_FLAGS_GET_M(box1->flags))
+	{
+		result->mmax = Max(box1->mmax, box2->mmax);
+		result->mmin = Min(box1->mmin, box2->mmin);
+		MOBDB_FLAGS_SET_M(result->flags, true);
+	}
 
 	PG_RETURN_POINTER(result);
 }

@@ -1643,27 +1643,28 @@ SELECT twAvg(tfloat '{[1@2012-01-01, 2@2012-01-03), [2@2012-01-04, 2@2012-01-06)
 
 		<sect1>
 			<title>Spatial Functions</title>
-			<para>In the following functions we specify with the symbol &Z_support; that the function supports 3D points and with the symbol &geography_support; that the function is available for geographies.</para>
+			<para>In the following functions we specify with the symbol &Z_support; that the function supports 3D points, with the symbol &geography_support; that the function is available for geographies, and with the symbol &M_support; that the function supports M coordinates.</para>
 
 			<itemizedlist>
 				<listitem>
-					<para><varname>asText</varname>: Well-Known Text (WKT) representation &Z_support; &geography_support;</para>
+					<para><varname>asText</varname>: Well-Known Text (WKT) representation &Z_support; &M_support; &geography_support;</para>
 					<para>Signature: <varname>asText({tpoint, tpoint[], geo[]}): {text, text[]}</varname></para>
 					<programlisting>
-SELECT asText(tgeompoint 'SRID=4326;[Point(0 0 0)@2012-01-01, Point(1 1 1)@2012-01-02)');
--- "[POINT Z (0 0 0)@2012-01-01 00:00:00+00, POINT Z (1 1 1)@2012-01-02 00:00:00+00)"
+SELECT asText(tgeompoint 'SRID=4326;[Point(0 0 0 25)@2012-01-01, 
+	Point(1 1 1 30)@2012-01-02)');
+-- "[POINT ZM (0 0 0 25)@2012-01-01, POINT ZM (1 1 1 30)@2012-01-02)"
 SELECT asText(ARRAY[geometry 'Point(0 0)', 'Point(1 1)']);
 -- "{"POINT(0 0)","POINT(1 1)"}"
 					</programlisting>
 				</listitem>
 
 				<listitem>
-					<para><varname>asEWKT</varname>: Extended Well-Known Text (WKT) representation &Z_support; &geography_support;</para>
+					<para><varname>asEWKT</varname>: Extended Well-Known Text (WKT) representation &Z_support; &M_support; &geography_support;</para>
 					<para>Signature: <varname>asEWKT({tpoint, tpoint[], geo[]}): {text, text[]}</varname></para>
 					<programlisting>
-SELECT asEWKT(tgeompoint 'SRID=4326;[Point(0 0 0)@2012-01-01, Point(1 1 1)@2012-01-02)');
--- "SRID=4326;[POINT Z (0 0 0)@2012-01-01 00:00:00+00, 
-	POINT Z (1 1 1)@2012-01-02 00:00:00+00)"
+SELECT asEWKT(tgeompoint 'SRID=4326;[Point(0 0 0 25)@2012-01-01, 
+	Point(1 1 1 30)@2012-01-02)');
+-- "SRID=4326;[POINT ZM (0 0 0 25)@2012-01-01, POINT ZM (1 1 1 30)@2012-01-02)"
 SELECT asEWKT(ARRAY[geometry 'SRID=5676;Point(0 0)', 'SRID=5676;Point(1 1)']);
 -- "{"SRID=5676;POINT(0 0)","SRID=5676;POINT(1 1)"}"
 					</programlisting>
