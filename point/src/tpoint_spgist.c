@@ -11,7 +11,7 @@
  * that this technique especially beneficial with too much overlapping
  * objects, so called "spaghetti data".
  *
- * Unlike the original oct-tree, we are splitting the tree into 256
+ * Unlike the original oct-tree, we are splitting the tree into 1024
  * octants in 10D space.  It is easier to imagine it as splitting space
  * four times into four:
  *
@@ -29,7 +29,7 @@
  *			  FRONT							  BACK
  *
  * We are using STBOX data type as the prefix, but we are treating them
- * as points in 8-dimensional space, because 5D boxes are not enough
+ * as points in 5-dimensional space, because 5D boxes are not enough
  * to represent the octant boundaries in 10D space.  They however are
  * sufficient to point out the additional boundaries of the next
  * octant.
@@ -527,7 +527,7 @@ spgist_tpoint_picksplit(PG_FUNCTION_ARGS)
 	out->hasPrefix = true;
 	out->prefixDatum = STboxPGetDatum(centroid);
 
-	out->nNodes = 256;
+	out->nNodes = 1024;
 	out->nodeLabels = NULL;		/* We don't need node labels. */
 
 	out->mapTuplesToNodes = palloc(sizeof(int) * in->nTuples);
@@ -755,6 +755,7 @@ spgist_tpoint_leaf_consistent(PG_FUNCTION_ARGS)
 		StrategyNumber strategy = in->scankeys[i].sk_strategy;
 		Oid subtype = in->scankeys[i].sk_subtype;
 		STBOX query;
+		memset(&query, 0, sizeof(STBOX));
 
 		/* Update the recheck flag according to the strategy */
 		out->recheck |= index_tpoint_recheck(strategy);	

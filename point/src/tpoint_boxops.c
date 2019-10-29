@@ -271,6 +271,9 @@ contains_stbox_stbox_internal(const STBOX *box1, const STBOX *box2)
 	if (MOBDB_FLAGS_GET_Z(box1->flags) && MOBDB_FLAGS_GET_Z(box2->flags)) 
 		if (box2->zmin < box1->zmin || box2->zmax > box1->zmax)
 			return false;
+	if (MOBDB_FLAGS_GET_M(box1->flags) && MOBDB_FLAGS_GET_M(box2->flags)) 
+		if (box2->mmin < box1->mmin || box2->mmax > box1->mmax)
+			return false;
 	if (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags)) 
 		if (box2->tmin < box1->tmin || box2->tmax > box1->tmax)
 			return false;
@@ -324,6 +327,9 @@ overlaps_stbox_stbox_internal(const STBOX *box1, const STBOX *box2)
 	if (MOBDB_FLAGS_GET_Z(box1->flags) && MOBDB_FLAGS_GET_Z(box2->flags)) 
 		if ( box1->zmax < box2->zmin || box1->zmin > box2->zmax )
 			return false;
+	if (MOBDB_FLAGS_GET_M(box1->flags) && MOBDB_FLAGS_GET_M(box2->flags)) 
+		if ( box1->mmax < box2->mmin || box1->mmin > box2->mmax )
+			return false;
 	if (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags)) 
 		if ( box1->tmax < box2->tmin || box1->tmin > box2->tmax )
 			return false;
@@ -356,6 +362,9 @@ same_stbox_stbox_internal(const STBOX *box1, const STBOX *box2)
 			return false;
 	if (MOBDB_FLAGS_GET_Z(box1->flags) && MOBDB_FLAGS_GET_Z(box2->flags)) 
 		if (box1->zmin != box2->zmin || box1->zmax != box2->zmax)
+			return false;
+	if (MOBDB_FLAGS_GET_M(box1->flags) && MOBDB_FLAGS_GET_M(box2->flags)) 
+		if (box1->mmin != box2->mmin || box1->zmax != box2->mmax)
 			return false;
 	if (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags)) 
 		if (box1->tmin != box2->tmin || box1->tmax != box2->tmax)
