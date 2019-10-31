@@ -361,7 +361,7 @@ SELECT periods(periodset '{[2012-01-01, 2012-01-03), [2012-01-04, 2012-01-04],
 						<para><varname>=</varname>: Equal</para>
 						<para>Signature: <varname>time = time</varname></para>
 						<programlisting>
-SELECT npoint 'Npoint(3, 0.5)' = npoint 'Npoint(3, 0.5)';
+SELECT period '[2012-01-01, 2012-01-04)' = period '[2012-01-01, 2012-01-04)';
 -- true
 						</programlisting>
 					</listitem>
@@ -370,7 +370,7 @@ SELECT npoint 'Npoint(3, 0.5)' = npoint 'Npoint(3, 0.5)';
 						<para><varname>&lt;&gt;</varname>: Not equal</para>
 						<para>Signature: <varname>time &lt;&gt; time</varname></para>
 						<programlisting>
-SELECT npoint 'Npoint(3, 0.5)' &lt;&gt; period '[2012-01-03, 2012-01-05)';
+SELECT period '[2012-01-01, 2012-01-04)' &lt;&gt; period '[2012-01-03, 2012-01-05)';
 -- true
 						</programlisting>
 					</listitem>
@@ -5201,12 +5201,8 @@ CREATE INDEX Trips_Trip_SPGist_Idx ON Trips USING SPGist(Trip);
 			<para>In addition, a GiST index can accelerate nearest neighbor queries involving the <varname>|=|</varname> operator.</para>
 			
 		</sect1>
-
-
 	</chapter>
-	<chapter id ="gtfs">
-		<title>Loading GTFS Data in MobilityDB</title>
-			<para>The General Transit Feed Specification (GTFS) defines a common format for public transportation schedules and associated geographic information. GTFS-realtime is used to specify real-time transit data. Many transportation agencies around the world publish their data in GTFS and GTFS-realtime format and make them publicly available. A well-known repository containing such data is  <ulink url="https://transitfeeds.com">OpenMobilityData</ulink>.</para>
+
 	<chapter id ="importing">
 		<title>Importing Data in MobilityDB</title>
 		<para>In this chapter, we show how to import mobility data of various format into MobilityDB. In particular, we describe how to import General Transit Feed Specification (GTFS), Google Location History, and GPX data.</para>
