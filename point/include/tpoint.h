@@ -81,10 +81,10 @@
 #define NDR 1 /* little endian */
 
 /* Variation flags */
-#define WKB_ZFLAG  		0x10
-#define WKB_MFLAG  		0x20
-#define WKB_SRIDFLAG 	0x40
-#define WKB_BBOXFLAG 	0x80
+#define WKB_ZFLAG       0x10
+#define WKB_MFLAG       0x20
+#define WKB_SRIDFLAG    0x40
+#define WKB_BBOXFLAG    0x80
 
 /*****************************************************************************
  * Miscellaneous functions defined in TemporalPoint.c
