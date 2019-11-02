@@ -50,7 +50,7 @@ CREATE TYPE stbox (
  ******************************************************************************/
 
 /* The names of the SQL and C functions are different, otherwise there is
- * ambiguity and explicit casting of the arguments to ::timestamptz is needed */
+ * ambiguity and explicit casting of the arguments to timestamptz is needed */
 CREATE FUNCTION stboxt(timestamptz, timestamptz)
 	RETURNS stbox
 	AS 'MODULE_PATHNAME', 'stbox_constructor'

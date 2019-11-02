@@ -240,7 +240,7 @@ stbox_parse(char **str)
 		p_whitespace(str);
 		p_comma(str);
 	}
-	if (hast != 0)
+	if (hast)
 	{	
 		p_whitespace(str);
 		p_comma(str);

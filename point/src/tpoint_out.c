@@ -559,19 +559,17 @@ tpointseq_as_mfjson(TemporalSeq *seq, int precision, STBOX *bbox, char *srs)
 static size_t
 tpoints_as_mfjson_size(TemporalS *ts, int precision, STBOX *bbox, char *srs)
 {
-	bool hasz = MOBDB_FLAGS_GET_Z(ts->flags);
-	bool hasm = MOBDB_FLAGS_GET_M(ts->flags);
 	int size = sizeof("{'type':'MovingPoint','sequences':[],");
 	size += sizeof("{'coordinates':[],'datetimes':[],'lower_inc':false,'upper_inc':false},") * ts->count;
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
-		coordinates_mfjson_size(seq->count, hasz, hasm, precision);
+		coordinates_mfjson_size(seq->count, MOBDB_FLAGS_GET_Z(ts->flags), MOBDB_FLAGS_GET_M(ts->flags), precision);
 		size += datetimes_mfjson_size(seq->count);
 	}
 	size += sizeof(",interpolations':['Linear']}");
 	if (srs) size += srs_mfjson_size(srs);
-	if (bbox) size += bbox_mfjson_size(hasz, hasm, precision);
+	if (bbox) size += bbox_mfjson_size(MOBDB_FLAGS_GET_Z(ts->flags), MOBDB_FLAGS_GET_M(ts->flags), precision);
 	return size;
 }
 
