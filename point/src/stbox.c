@@ -449,7 +449,7 @@ stboxmt_constructor(PG_FUNCTION_ARGS)
 	result->mmin = mmin;
 	result->mmax = mmax;
 
-	/* Process M min/max */
+	/* Process T min/max */
 	if (tmin > tmax)
 	{
 		ttmp = tmin;
@@ -602,34 +602,29 @@ geodstboxzt_constructor(PG_FUNCTION_ARGS)
 	/* Process X min/max */
 	if (xmin > xmax)
 	{
-		if (xmin > xmax)
-		{
-			tmp = xmin;
-			xmin = xmax;
-			xmax = tmp;
-		}
-		result->xmin = xmin;
-		result->xmax = xmax;
+		tmp = xmin;
+		xmin = xmax;
+		xmax = tmp;
+	}
+	result->xmin = xmin;
+	result->xmax = xmax;
 
-		/* Process Y min/max */
-		if (ymin > ymax)
-		{
-			tmp = ymin;
-			ymin = ymax;
-			ymax = tmp;
-		}
-		result->ymin = ymin;
-		result->ymax = ymax;
+	/* Process Y min/max */
+	if (ymin > ymax)
+	{
+		tmp = ymin;
+		ymin = ymax;
+		ymax = tmp;
+	}
+	result->ymin = ymin;
+	result->ymax = ymax;
 
-		/* Process Z min/max */
-		if (zmin > zmax)
-		{
-			tmp = zmin;
-			zmin = zmax;
-			zmax = tmp;
-		}
-		result->zmin = zmin;
-		result->zmax = zmax;
+	/* Process Z min/max */
+	if (zmin > zmax)
+	{
+		tmp = zmin;
+		zmin = zmax;
+		zmax = tmp;
 	}
 	result->zmin = zmin;
 	result->zmax = zmax;
