@@ -63,6 +63,27 @@ CREATE TYPE tbox (
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
+ * Accessor functions
+ *****************************************************************************/
+
+CREATE FUNCTION Xmin(tbox)
+	RETURNS float
+	AS 'MODULE_PATHNAME', 'tbox_xmin'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION Xmax(tbox)
+	RETURNS float
+	AS 'MODULE_PATHNAME', 'tbox_xmax'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION Tmin(tbox)
+	RETURNS timestamptz
+	AS 'MODULE_PATHNAME', 'tbox_tmin'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION Tmax(tbox)
+	RETURNS timestamptz
+	AS 'MODULE_PATHNAME', 'tbox_tmax'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+
+/*****************************************************************************
  * Comparison
  *****************************************************************************/
 
