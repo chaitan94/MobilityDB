@@ -47,27 +47,28 @@ stbox_copy(const STBOX *box)
 }
 
 void
-stbox_to_period(Period *period, const STBOX *box)
+stbox_to_period_internal(Period *period, const STBOX *box)
 {
 	assert(MOBDB_FLAGS_GET_T(box->flags));
 	period_set(period, (TimestampTz) box->tmin, (TimestampTz) box->tmin, true, true);
 	return;
 }
 
-
 /*****************************************************************************
- * Input/ functions
+ * Input/Ouput functions
  *****************************************************************************/
 
 /* 
  * Input function. 
  * Examples of input:
- * 		STBOX((1.0, 2.0), (1.0, 2.0)) -> only spatial
- * 		STBOX Z((1.0, 2.0, 3.0), (1.0, 2.0, 3.0)) -> only spatial
- * 		STBOX T((1.0, 2.0, 3.0), (1.0, 2.0, 3.0)) -> spatiotemporal
- * 		STBOX ZT((1.0, 2.0, 3.0, 4.0), (1.0, 2.0, 3.0, 4.0)) -> spatiotemporal
- * 		GEODSTBOX((1.0, 2.0, 3.0), (1.0, 2.0, 3.0)) -> only spatial
- * 		GEODSTBOX T((1.0, 2.0, 3.0, 4.0), (1.0, 2.0, 3.0, 4.0)) -> spatiotemporal
+ * 		STBOX((1.0, 2.0), (3.0, 4.0)) -> only spatial
+ * 		STBOX Z((1.0, 2.0, 3.0), (4.0, 5.0, 6.0)) -> only spatial
+ * 		STBOX T((1.0, 2.0, 2001-01-01), (3.0, 4.0, 2001-01-02)) -> spatiotemporal
+ * 		STBOX ZT((1.0, 2.0, 3.0, 2001-01-01), (4.0, 5.0, 6.0, 2001-01-02)) -> spatiotemporal
+ * 		STBOX T(( , , 2001-01-01), ( , , 2001-01-02)) -> only temporal
+ * 		GEODSTBOX((1.0, 2.0, 3.0), (4.0, 5.0, 6.0)) -> only spatial
+ * 		GEODSTBOX T((1.0, 2.0, 3.0, 2001-01-01), (4.0, 5.0, 6.0, 2001-01-02)) -> spatiotemporal
+ * 		GEODSTBOX T(( , , 2001-01-01), ( , , 2001-01-02)) -> only temporal
  * where the commas are optional
  */
 PG_FUNCTION_INFO_V1(stbox_in);
@@ -85,7 +86,7 @@ stbox_to_string(const STBOX *box)
 {
 	static int size = MAXSTBOXLEN + 1;
 	char *str = NULL, *strtmin = NULL, *strtmax = NULL;
-	str = (char *)palloc(size);
+	str = (char *) palloc(size);
 	char *boxtype = MOBDB_FLAGS_GET_GEODETIC(box->flags) ? "GEODSTBOX" : "STBOX";
 
 	assert(MOBDB_FLAGS_GET_X(box->flags) || MOBDB_FLAGS_GET_T(box->flags));
@@ -390,6 +391,132 @@ geodstbox_constructor(PG_FUNCTION_ARGS)
 		result->tmax = tmax;
 	}
 
+	PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************
+ * Accessor functions
+ *****************************************************************************/
+
+/* Get the minimum X of an STBOX value */
+
+PG_FUNCTION_INFO_V1(stbox_xmin);
+
+PGDLLEXPORT Datum
+stbox_xmin(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	if (!MOBDB_FLAGS_GET_X(box->flags))
+		PG_RETURN_NULL();
+	PG_RETURN_FLOAT8(box->xmin);
+}
+
+/* Get the maximum X of an STBOX value */
+
+PG_FUNCTION_INFO_V1(stbox_xmax);
+
+PGDLLEXPORT Datum
+stbox_xmax(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	if (!MOBDB_FLAGS_GET_X(box->flags))
+		PG_RETURN_NULL();
+	PG_RETURN_FLOAT8(box->xmax);
+}
+
+/* Get the minimum Y of an STBOX value */
+
+PG_FUNCTION_INFO_V1(stbox_ymin);
+
+PGDLLEXPORT Datum
+stbox_ymin(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	if (!MOBDB_FLAGS_GET_X(box->flags))
+		PG_RETURN_NULL();
+	PG_RETURN_FLOAT8(box->ymin);
+}
+
+/* Get the maximum Y of an STBOX value */
+
+PG_FUNCTION_INFO_V1(stbox_ymax);
+
+PGDLLEXPORT Datum
+stbox_ymax(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	if (!MOBDB_FLAGS_GET_X(box->flags))
+		PG_RETURN_NULL();
+	PG_RETURN_FLOAT8(box->ymax);
+}
+
+/* Get the minimum Z of an STBOX value */
+
+PG_FUNCTION_INFO_V1(stbox_zmin);
+
+PGDLLEXPORT Datum
+stbox_zmin(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	if (!MOBDB_FLAGS_GET_Z(box->flags))
+		PG_RETURN_NULL();
+	PG_RETURN_FLOAT8(box->zmin);
+}
+
+/* Get the maximum Z of an STBOX value */
+
+PG_FUNCTION_INFO_V1(stbox_zmax);
+
+PGDLLEXPORT Datum
+stbox_zmax(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	if (!MOBDB_FLAGS_GET_Z(box->flags))
+		PG_RETURN_NULL();
+	PG_RETURN_FLOAT8(box->zmax);
+}
+
+/* Get the minimum timestamp of an STBOX value */
+
+PG_FUNCTION_INFO_V1(stbox_tmin);
+
+PGDLLEXPORT Datum
+stbox_tmin(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	if (!MOBDB_FLAGS_GET_T(box->flags))
+		PG_RETURN_NULL();
+	PG_RETURN_TIMESTAMPTZ(box->tmin);
+}
+
+/* Get the maximum timestamp of an STBOX value */
+
+PG_FUNCTION_INFO_V1(stbox_tmax);
+
+PGDLLEXPORT Datum
+stbox_tmax(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	if (!MOBDB_FLAGS_GET_T(box->flags))
+		PG_RETURN_NULL();
+	PG_RETURN_TIMESTAMPTZ(box->tmax);
+}
+
+/*****************************************************************************
+ * Casting
+ *****************************************************************************/
+
+/* Cast an STBOX value as a Period value */
+
+PG_FUNCTION_INFO_V1(stbox_to_period);
+
+PGDLLEXPORT Datum
+stbox_to_period(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	if (!MOBDB_FLAGS_GET_T(box->flags))
+		PG_RETURN_NULL();
+	Period *result = period_make(box->tmin, box->tmax, true, true);
 	PG_RETURN_POINTER(result);
 }
 
