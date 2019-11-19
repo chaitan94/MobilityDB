@@ -20,6 +20,30 @@
 #include "temporal.h"
 
 /*****************************************************************************
+ * Struct definitions
+ *****************************************************************************/
+
+/* Affine transformation (only rotation and translation) */
+/* Should I use (double, double, double), (double, double2) or double3 ? */
+
+typedef struct
+{
+    double      theta;         /* rotation in radians (limit to -pi,pi ?) */
+    double      tx;            /* translation in x */
+    double      ty;            /* translation in y */
+/*  int         srid;             srid (is this needed ? ) */
+} rtransform;
+
+/*****************************************************************************
+ * fmgr macros
+ *****************************************************************************/
+
+/* npoint */
+#define DatumGetRtransform(X)       ((rtransform *) DatumGetPointer(X))
+#define RtransformGetDatum(X)       PointerGetDatum(X)
+#define PG_GETARG_RTRANSFORM(i)     ((rtransform *) PG_GETARG_POINTER(i))
+
+/*****************************************************************************
  * tgeo.c
  *****************************************************************************/
 

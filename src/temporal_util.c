@@ -86,7 +86,8 @@ get_typbyval_fast(Oid type)
 		result = false;
 #ifdef WITH_POSTGIS
 	else if (type == type_oid(T_GEOMETRY) || type == type_oid(T_GEOGRAPHY) ||
-			 type == type_oid(T_DOUBLE3) || type == type_oid(T_DOUBLE4))
+			 type == type_oid(T_DOUBLE3) || type == type_oid(T_DOUBLE4) ||
+			 type == type_oid(T_RTRANSFORM))
 		result = false;
 #endif
 	return result;
@@ -121,6 +122,8 @@ get_typlen_fast(Oid type)
 		result = 24;
 	else if (type == type_oid(T_DOUBLE4))
 		result = 32;
+	else if (type == type_oid(T_RTRANSFORM))
+		result = 24;
 #endif
 	return result;
 }

@@ -365,9 +365,9 @@ tgeo_make_temporalinst(PG_FUNCTION_ARGS)
     GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
     int geo_type = gserialized_get_type(gs);
     if (((geo_type != LINETYPE) && (geo_type != POLYGONTYPE)) || gserialized_is_empty(gs) ||
-        FLAGS_GET_M(gs->flags))
+        FLAGS_GET_M(gs->flags) || FLAGS_GET_Z(gs->flags))
         ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), 
-            errmsg("Only non-empty linestring or polygon geometries without M dimension accepted")));
+            errmsg("Only non-empty linestring or polygon geometries without Z or M dimension accepted")));
 
     TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
     Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);

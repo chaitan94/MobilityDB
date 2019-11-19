@@ -130,6 +130,7 @@ include("test/scripts/test.cmake")
 
 if (WITH_POSTGIS)
 		include("point/point.cmake")
+		include("geo/geo.cmake")
 endif ()
 
 add_custom_command(

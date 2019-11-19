@@ -427,6 +427,10 @@ base_oid_from_temporal(Oid temptypid)
 		result = type_oid(T_GEOMETRY);
 	else if (temptypid == type_oid(T_TGEOGPOINT)) 
 		result = type_oid(T_GEOGRAPHY);
+	else if (temptypid == type_oid(T_TGEOMETRY))
+		result = type_oid(T_GEOMETRY);
+	else if (temptypid == type_oid(T_TGEOGRAPHY))
+		result = type_oid(T_GEOGRAPHY);
 #endif
 	return result;
 }
@@ -504,6 +508,7 @@ base_type_all_oid(Oid valuetypid)
 		&& valuetypid != type_oid(T_GEOGRAPHY)
 		&& valuetypid != type_oid(T_DOUBLE3)
 		&& valuetypid != type_oid(T_DOUBLE4)
+		&& valuetypid != type_oid(T_RTRANSFORM)
 #endif
 		)
 		elog(ERROR, "unknown base type: %d", valuetypid);

@@ -54,6 +54,9 @@ const char *_type_names[] =
 	"geography",
 	"tgeompoint",
 	"tgeogpoint",
+	"tgeometry",
+	"tgeography",
+	"rtransform",
 #endif
 };
 

@@ -16,8 +16,43 @@
 #include "oidcache.h"
 #include "temporal_parser.h"
 #include "tgeo.h"
+#include "tgeo_transform.h"
 
 /*****************************************************************************/
+
+rtransform *
+rtransform_parse(char **str)
+{
+    p_whitespace(str);
+
+    if (strncasecmp(*str,"RTRANSFORM",10) != 0)
+        ereport(ERROR,
+            (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+            errmsg("Could not parse region transform")));
+
+    *str += 10;
+    p_whitespace(str);
+
+    int delim = 0;
+    while ((*str)[delim] != ')' && (*str)[delim] != '\0')
+        delim++;
+    if ((*str)[delim] == '\0')
+        ereport(ERROR,
+            (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+            errmsg("Could not parse region transform")));
+
+    double theta;
+    double tx;
+    double ty;
+    if (sscanf(*str, "( %lf , %lf , %lf )", &theta, &tx, &ty) != 3)
+        ereport(ERROR,
+                (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+                        errmsg("Could not parse region transform")));
+
+    *str += delim + 1;
+
+    return rtransform_make(theta, tx, ty);
+}
 
 static TemporalInst *
 tgeoinst_parse(char **str, Oid basetype, bool end, int *tgeo_srid) 
@@ -29,9 +64,9 @@ tgeoinst_parse(char **str, Oid basetype, bool end, int *tgeo_srid)
     int geo_srid = gserialized_get_srid(gs);
     int geo_type = gserialized_get_type(gs);
     if (((geo_type != LINETYPE) && (geo_type != POLYGONTYPE)) || gserialized_is_empty(gs) ||
-        FLAGS_GET_M(gs->flags))
+        FLAGS_GET_M(gs->flags) || FLAGS_GET_Z(gs->flags))
         ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
-            errmsg("Only non-empty linestring or polygon geometries without M dimension accepted")));
+            errmsg("Only non-empty linestring or polygon geometries without Z or M dimension accepted")));
     if (*tgeo_srid != SRID_UNKNOWN && geo_srid != SRID_UNKNOWN && *tgeo_srid != geo_srid)
         ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
             errmsg("Geometry SRID (%d) does not match temporal type SRID (%d)", 

@@ -83,6 +83,7 @@ struct temporaltype_struct
 #define MOBDB_FLAGS_GET_Z(flags) 				(((flags) & 0x08)>>3)
 #define MOBDB_FLAGS_GET_T(flags) 				(((flags) & 0x10)>>4)
 #define MOBDB_FLAGS_GET_GEODETIC(flags) 		(((flags) & 0x20)>>5)
+#define MOBDB_FLAGS_GET_REGION(flags) 			(((flags) & 0x40)>>6)
 
 #define MOBDB_FLAGS_SET_CONTINUOUS(flags, value) \
 	((flags) = (value) ? ((flags) | 0x01) : ((flags) & 0xFE))
@@ -97,6 +98,8 @@ struct temporaltype_struct
 	((flags) = (value) ? ((flags) | 0x10) : ((flags) & 0xEF))
 #define MOBDB_FLAGS_SET_GEODETIC(flags, value) \
 	((flags) = (value) ? ((flags) | 0x20) : ((flags) & 0xDF))
+#define MOBDB_FLAGS_SET_REGION(flags, value) \
+	((flags) = (value) ? ((flags) | 0x40) : ((flags) & 0xBF))
 
 /*****************************************************************************
  * Struct definitions

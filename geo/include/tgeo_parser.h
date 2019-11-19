@@ -13,13 +13,12 @@
 #ifndef __TGEO_PARSER_H__
 #define __TGEO_PARSER_H__
 
-#include <postgres.h>
-#include <catalog/pg_type.h>
 #include "temporal.h"
 #include "tgeo.h"
 
 /*****************************************************************************/
 
+extern rtransform *rtransform_parse(char **str);
 extern Temporal *tgeo_parse(char **str, Oid basetype);
 
 /*****************************************************************************/
