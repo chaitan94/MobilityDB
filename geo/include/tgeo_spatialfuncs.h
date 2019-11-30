@@ -21,6 +21,7 @@
 /*****************************************************************************/
 
 extern bool datum_geometry_eq(Datum geometry1, Datum geometry2);
+extern bool lwgeom_similar(const LWGEOM *geometry1, const LWGEOM *geometry2);
 
 /*****************************************************************************/
 

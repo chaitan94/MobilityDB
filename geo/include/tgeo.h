@@ -48,6 +48,7 @@ typedef struct
  *****************************************************************************/
 
 extern Datum tgeo_in(PG_FUNCTION_ARGS);
+extern Datum tgeo_stbox(PG_FUNCTION_ARGS);
 
 extern Datum tgeo_make_temporalinst(PG_FUNCTION_ARGS);
 

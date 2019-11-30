@@ -109,8 +109,9 @@ CREATE OR REPLACE FUNCTION tgeography(tgeography, integer)
     AS 'MODULE_PATHNAME','tgeo_enforce_typmod'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE CAST (tgeometry AS tgeometry) WITH FUNCTION tgeometry(tgeometry, integer) AS IMPLICIT;
-CREATE CAST (tgeography AS tgeography) WITH FUNCTION tgeography(tgeography, integer) AS IMPLICIT;
+-- Casting CANNOT be implicit to avoid ambiguity
+CREATE CAST (tgeometry AS tgeometry) WITH FUNCTION tgeometry(tgeometry, integer);
+CREATE CAST (tgeography AS tgeography) WITH FUNCTION tgeography(tgeography, integer);
 
 
 /******************************************************************************
@@ -166,29 +167,29 @@ CREATE FUNCTION tgeographys(tgeography[])
  ******************************************************************************/
 
 CREATE FUNCTION tgeometryinst(tgeometry)
-    RETURNS tgeometry AS 'MODULE_PATHNAME', 'temporal_as_temporalinst'
+    RETURNS tgeometry AS 'MODULE_PATHNAME', 'temporal_to_temporalinst'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeometryi(tgeometry)
-    RETURNS tgeometry AS 'MODULE_PATHNAME', 'temporal_as_temporali'
+    RETURNS tgeometry AS 'MODULE_PATHNAME', 'temporal_to_temporali'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeometryseq(tgeometry)
-    RETURNS tgeometry AS 'MODULE_PATHNAME', 'temporal_as_temporalseq'
+    RETURNS tgeometry AS 'MODULE_PATHNAME', 'temporal_to_temporalseq'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeometrys(tgeometry)
-    RETURNS tgeometry AS 'MODULE_PATHNAME', 'temporal_as_temporals'
+    RETURNS tgeometry AS 'MODULE_PATHNAME', 'temporal_to_temporals'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tgeographyinst(tgeography)
-    RETURNS tgeography AS 'MODULE_PATHNAME', 'temporal_as_temporalinst'
+    RETURNS tgeography AS 'MODULE_PATHNAME', 'temporal_to_temporalinst'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeographyi(tgeography)
-    RETURNS tgeography AS 'MODULE_PATHNAME', 'temporal_as_temporali'
+    RETURNS tgeography AS 'MODULE_PATHNAME', 'temporal_to_temporali'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeographyseq(tgeography)
-    RETURNS tgeography AS 'MODULE_PATHNAME', 'temporal_as_temporalseq'
+    RETURNS tgeography AS 'MODULE_PATHNAME', 'temporal_to_temporalseq'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeographys(tgeography)
-    RETURNS tgeography AS 'MODULE_PATHNAME', 'temporal_as_temporals'
+    RETURNS tgeography AS 'MODULE_PATHNAME', 'temporal_to_temporals'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
@@ -205,16 +206,34 @@ CREATE FUNCTION appendInstant(tgeography, tgeography)
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
+ * Casting
+ ******************************************************************************/
+
+CREATE FUNCTION period(tgeometry)
+    RETURNS period
+    AS 'MODULE_PATHNAME', 'temporal_to_period'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION period(tgeography)
+    RETURNS period
+    AS 'MODULE_PATHNAME', 'temporal_to_period'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+-- Casting CANNOT be implicit to avoid ambiguity
+CREATE CAST (tgeometry AS period) WITH FUNCTION period(tgeometry);
+CREATE CAST (tgeography AS period) WITH FUNCTION period(tgeography);
+
+/******************************************************************************
  * Functions
  ******************************************************************************/
 
-CREATE FUNCTION temporalType(tgeometry)
+CREATE FUNCTION duration(tgeometry)
     RETURNS text
-    AS 'MODULE_PATHNAME', 'temporal_type'
+    AS 'MODULE_PATHNAME', 'temporal_duration'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporalType(tgeography)
+CREATE FUNCTION duration(tgeography)
     RETURNS text
-    AS 'MODULE_PATHNAME', 'temporal_type'
+    AS 'MODULE_PATHNAME', 'temporal_duration'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION memSize(tgeometry)
@@ -338,21 +357,12 @@ CREATE FUNCTION endValue(tgeography)
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION timespan(tgeometry)
-    RETURNS period
+    RETURNS interval
     AS 'MODULE_PATHNAME', 'temporal_timespan'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION timespan(tgeography)
-    RETURNS period
+    RETURNS interval
     AS 'MODULE_PATHNAME', 'temporal_timespan'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION duration(tgeometry)
-    RETURNS interval
-    AS 'MODULE_PATHNAME', 'temporal_duration'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION duration(tgeography)
-    RETURNS interval
-    AS 'MODULE_PATHNAME', 'temporal_duration'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION numInstants(tgeometry)

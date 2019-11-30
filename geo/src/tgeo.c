@@ -35,7 +35,7 @@ tgeo_valid_typmod(Temporal *temp, int32_t typmod)
 {
     int32 tgeo_srid = tpoint_srid_internal(temp);
     int32 tgeo_type = temp->duration;
-    int32 duration_type = TYPMOD_GET_DURATION(typmod);
+    int32 duration = TYPMOD_GET_DURATION(typmod);
     TYPMOD_DEL_DURATION(typmod);
     /* If there is no geometry type */
     if (typmod == 0)
@@ -46,7 +46,7 @@ tgeo_valid_typmod(Temporal *temp, int32_t typmod)
     int32 typmod_z = TYPMOD_GET_Z(typmod);
 
     /* No typmod (-1) */
-    if (typmod < 0 && duration_type == 0)
+    if (typmod < 0 && duration == 0)
         return temp;
     /* Typmod has a preference for SRID? Geometry SRID had better match.  */
     if ( typmod_srid > 0 && typmod_srid != tgeo_srid )
@@ -54,10 +54,10 @@ tgeo_valid_typmod(Temporal *temp, int32_t typmod)
                 errmsg("Temporal geo SRID (%d) does not match column SRID (%d)",
                     tgeo_srid, typmod_srid) ));
     /* Typmod has a preference for temporal type.  */
-    if (typmod_type > 0 && duration_type != 0 && duration_type != tgeo_type)
+    if (typmod_type > 0 && duration != 0 && duration != tgeo_type)
         ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
                 errmsg("Temporal type (%s) does not match column type (%s)",
-                    temporal_type_name(tgeo_type), temporal_type_name(duration_type)) ));
+                    temporal_duration_name(tgeo_type), temporal_duration_name(duration)) ));
     /* Mismatched Z dimensionality.  */
     if (typmod > 0 && typmod_z && ! tgeo_z)
         ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -115,7 +115,7 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
      * duration types in the same column. Similarly for all generic modifiers.
      */
     deconstruct_array(arr, CSTRINGOID, -2, false, 'c', &elem_values, NULL, &n);
-    uint8_t duration_type = 0, geometry_type = 0;
+    uint8_t duration = 0, geometry_type = 0;
     int z = 0, m = 0;
     char *s;
     
@@ -126,7 +126,7 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
             /* Type_modifier is (Duration, Geometry, SRID) */
             /* Duration type */
             s = DatumGetCString(elem_values[0]);
-            if (temporal_type_from_string(s, &duration_type) == false) 
+            if (temporal_duration_from_string(s, &duration) == false) 
                 ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
                         errmsg("Invalid duration type modifier: %s", s)));
 
@@ -158,14 +158,14 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
             if (srid != SRID_UNKNOWN)
                 TYPMOD_SET_SRID(typmod, srid);
             /* Shift to restore the 4 bits of the duration */
-            TYPMOD_SET_DURATION(typmod, duration_type);
+            TYPMOD_SET_DURATION(typmod, duration);
             break;
         }
         case 2:
         {
             /* Type modifier is either (Duration, Geometry) or (Geometry, SRID) */
             s = DatumGetCString(elem_values[0]);
-            if (temporal_type_from_string(s, &duration_type)) 
+            if (temporal_duration_from_string(s, &duration)) 
             {
                 /* Type modifier is (Duration, Geometry) */
                 /* Shift to remove the 4 bits of the duration */
@@ -188,7 +188,7 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
                 if (z)
                     TYPMOD_SET_Z(typmod);
                 /* Shift to restore the 4 bits of the duration */
-                TYPMOD_SET_DURATION(typmod, duration_type);
+                TYPMOD_SET_DURATION(typmod, duration);
             }
             else if (geometry_type_from_string(s, &geometry_type, &z, &m))
             {
@@ -215,7 +215,7 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
                 if (srid != SRID_UNKNOWN)
                     TYPMOD_SET_SRID(typmod, srid);
                 /* Shift to restore the 4 bits of the duration */
-                TYPMOD_SET_DURATION(typmod, duration_type);
+                TYPMOD_SET_DURATION(typmod, duration);
             }
             else
                 ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -226,9 +226,9 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
         {
             /* Type modifier: either (Duration) or (Geometry) */
             s = DatumGetCString(elem_values[0]);
-            if (temporal_type_from_string(s, &duration_type))
+            if (temporal_duration_from_string(s, &duration))
             {
-                TYPMOD_SET_DURATION(typmod, duration_type);
+                TYPMOD_SET_DURATION(typmod, duration);
             }
             else if (geometry_type_from_string(s, &geometry_type, &z, &m)) 
             {
@@ -249,7 +249,7 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
                     TYPMOD_SET_Z(typmod);
 
                 /* Shift to restore the 4 bits of the duration */
-                TYPMOD_SET_DURATION(typmod, duration_type);
+                TYPMOD_SET_DURATION(typmod, duration);
             }
             else
                 ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -304,7 +304,7 @@ tgeo_typmod_out(PG_FUNCTION_ARGS)
     char *s = (char *)palloc(64);
     char *str = s;
     int32 typmod = PG_GETARG_INT32(0);
-    int32 duration_type = TYPMOD_GET_DURATION(typmod);
+    int32 duration = TYPMOD_GET_DURATION(typmod);
     TYPMOD_DEL_DURATION(typmod);
     int32 srid = TYPMOD_GET_SRID(typmod);
     int32 geometry_type = TYPMOD_GET_TYPE(typmod);
@@ -312,7 +312,7 @@ tgeo_typmod_out(PG_FUNCTION_ARGS)
 
     /* No duration type or geometry type? Then no typmod at all. 
       Return empty string. */
-    if (typmod < 0 || (!duration_type && !geometry_type))
+    if (typmod < 0 || (!duration && !geometry_type))
     {
         *str = '\0';
         PG_RETURN_CSTRING(str);
@@ -320,11 +320,11 @@ tgeo_typmod_out(PG_FUNCTION_ARGS)
     /* Opening bracket.  */
     str += sprintf(str, "(");
     /* Has duration type?  */
-    if (duration_type)
-        str += sprintf(str, "%s", temporal_type_name(duration_type));
+    if (duration)
+        str += sprintf(str, "%s", temporal_duration_name(duration));
     if (geometry_type)
     {
-        if (duration_type) str += sprintf(str, ",");
+        if (duration) str += sprintf(str, ",");
         str += sprintf(str, "%s", lwtype_name(geometry_type));
         /* Has Z?  */
         if (hasz) str += sprintf(str, "Z");
@@ -377,6 +377,24 @@ tgeo_make_temporalinst(PG_FUNCTION_ARGS)
     PG_RETURN_POINTER(result);
 }
 
+/*****************************************************************************
+ * Accessor functions
+ *****************************************************************************/
+
+/* Get the precomputed bounding box of a Temporal (if any) 
+   Notice that TemporalInst do not have a precomputed bounding box */
+
+PG_FUNCTION_INFO_V1(tgeo_stbox);
+
+PGDLLEXPORT Datum
+tgeo_stbox(PG_FUNCTION_ARGS)
+{
+    Temporal *temp = PG_GETARG_TEMPORAL(0);
+    STBOX *result = palloc0(sizeof(STBOX));
+    temporal_bbox(result, temp);
+    PG_FREE_IF_COPY(temp, 0);
+    PG_RETURN_POINTER(result);
+}
 
 Datum
 tgeo_values_internal(Temporal *temp)

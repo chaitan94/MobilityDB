@@ -17,6 +17,7 @@
 #include <libpq/pqformat.h>
 #include <utils/builtins.h>
 #include <utils/timestamp.h>
+#include <math.h>
 
 #include "timestampset.h"
 #include "period.h"
@@ -33,6 +34,8 @@
 #include "tpoint.h"
 #include "tpoint_spatialfuncs.h"
 #include "tpoint_boxops.h"
+#include "tgeo.h"
+#include "tgeo_transform.h"
 #endif
 
 /*****************************************************************************
@@ -300,6 +303,47 @@ double4_collinear(double4 *x1, double4 *x2, double4 *x3,
 		pfree(x1new);
 	return result;
 }
+
+static bool
+rtransform_collinear(rtransform *rt1, rtransform *rt2, rtransform *rt3, 
+	TimestampTz t1, TimestampTz t2, TimestampTz t3)
+{
+	double duration1 = (double) (t2 - t1);
+	double duration2 = (double) (t3 - t2);
+	rtransform *rt1new, *rt3new;
+	double ratio;
+	if (duration1 < duration2)
+	{
+		ratio = duration1 / duration2;
+		rt3new = rtransform_interpolate(rt2, rt3, ratio);
+	}
+	else
+		rt3new = rt3;
+	if (duration1 > duration2)
+	{
+		ratio = duration2 / duration1;
+		rt1new = rtransform_interpolate(rt1, rt2, ratio);
+	}
+	else
+		rt1new = rt1;
+	double d1theta = rt2->theta - rt1new->theta;
+	double d1tx = rt2->tx - rt1new->tx;
+	double d1ty = rt2->ty - rt1new->ty;
+	double d2theta = rt3new->theta - rt2->theta;
+	double d2tx = rt3new->tx - rt2->tx;
+	double d2ty = rt3new->ty - rt2->ty;
+	bool result = (fabs(d1tx-d2tx) <= EPSILON 
+				&& fabs(d1ty-d2ty) <= EPSILON 
+				&& (fabs(d1theta-d2theta) <= EPSILON 
+				 || fabs(d1theta-d2theta+2*M_PI) <= EPSILON 
+				 || fabs(d1theta-d2theta-2*M_PI) <= EPSILON));
+	if (duration1 < duration2)
+		pfree(rt3new);
+	if (duration1 > duration2)
+		pfree(rt1new);
+	return result;
+}
+
 #endif
 
 static bool
@@ -325,6 +369,9 @@ datum_collinear(Oid valuetypid, Datum value1, Datum value2, Datum value3,
 	if (valuetypid == type_oid(T_DOUBLE4))
 		return double4_collinear(DatumGetDouble4P(value1), DatumGetDouble4P(value2), 
 			DatumGetDouble4P(value3), t1, t2, t3);
+	if (valuetypid == type_oid(T_RTRANSFORM))
+		return rtransform_collinear(DatumGetRtransform(value1), DatumGetRtransform(value2), 
+			DatumGetRtransform(value3), t1, t2, t3);
 #endif
 	return false;
 }
@@ -371,6 +418,13 @@ temporalinst_collinear(TemporalInst *inst1, TemporalInst *inst2,
 		double4 *x3 = DatumGetDouble4P(temporalinst_value(inst3));
 		return double4_collinear(x1, x2, x3, inst1->t, inst2->t, inst3->t);
 	}
+	if (valuetypid == type_oid(T_RTRANSFORM))
+	{
+		rtransform *rt1 = DatumGetRtransform(temporalinst_value(inst1));
+		rtransform *rt2 = DatumGetRtransform(temporalinst_value(inst2));
+		rtransform *rt3 = DatumGetRtransform(temporalinst_value(inst3));
+		return rtransform_collinear(rt1, rt2, rt3, inst1->t, inst2->t, inst3->t);
+	}
 #endif
 	return false;
 }
@@ -384,7 +438,7 @@ temporalinst_collinear(TemporalInst *inst1, TemporalInst *inst2,
 static TemporalInst **
 temporalinstarr_normalize(TemporalInst **instants, int count, int *newcount)
 {
-	Oid valuetypid = instants[0]->valuetypid;
+	Oid valuetypid;
 	TemporalInst **result = palloc(sizeof(TemporalInst *) * count);
 	/* Remove redundant instants */ 
 	TemporalInst *inst1 = instants[0];
@@ -394,8 +448,21 @@ temporalinstarr_normalize(TemporalInst **instants, int count, int *newcount)
 	bool continuous = MOBDB_FLAGS_GET_CONTINUOUS(instants[0]->flags);
 	result[0] = inst1;
 	int k = 1;
+#ifdef WITH_POSTGIS
+	bool regions = false;
+	TemporalInst *tofree;
+	if (inst2->valuetypid == type_oid(T_RTRANSFORM))
+	{
+		regions = true;
+		rtransform *rt = rtransform_make(0, 0, 0);
+		inst1 = temporalinst_make(RtransformGetDatum(rt), instants[0]->t, type_oid(T_RTRANSFORM));
+		value1 = temporalinst_value(inst1);
+		tofree = inst1;
+	}
+#endif
 	for (int i = 2; i < count; i++)
 	{
+		valuetypid = inst1->valuetypid;
 		TemporalInst *inst3 = instants[i];
 		Datum value3 = temporalinst_value(inst3);
 		if (
@@ -424,6 +491,10 @@ temporalinstarr_normalize(TemporalInst **instants, int count, int *newcount)
 			inst2 = inst3; value2 = value3;
 		}
 	}
+#ifdef WITH_POSTGIS
+	if (regions)
+		pfree(tofree);
+#endif
 	result[k++] = inst2;
 	*newcount = k;
 	return result;
@@ -440,6 +511,19 @@ temporalinstarr_normalize(TemporalInst **instants, int count, int *newcount)
 static TemporalSeq *
 temporalseq_join(TemporalSeq *seq1, TemporalSeq *seq2, bool last, bool first)
 {
+	// TODO: Make it handle joining of rtransform sequences.
+	// Can't use the standard temporalseq_from_temporalinstarr because of bounding box issues.
+	// Also have to handle the trajectory if pointtype
+	// Maybe enought to look at type of seq2 to differentiate
+
+	// ex: 
+	/*if (seq2->valuetypid == type_oid(T_RTRANSFORM))
+		return tgeoseq_join(TemporalSeq *seq1, TemporalSeq *seq2, bool last, bool first);*/
+
+	// Can also be done more efficiently for the other cases I think
+	// Maybe a general case with just copying instants, copying flags and joining bboxes.
+	// Can we join trajectories?
+
 	int count1 = last ? seq1->count - 1 : seq1->count;
 	int start2 = first ? 1 : 0;
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * 
@@ -473,6 +557,22 @@ temporalseqarr_normalize(TemporalSeq **sequences, int count, int *newcount)
 	bool continuous = MOBDB_FLAGS_GET_CONTINUOUS(seq1->flags);
 	bool isnew = false;
 	int k = 0;
+#ifdef WITH_POSTGIS
+	bool regions = false;
+	rtransform *rt = NULL;
+	TemporalInst *inst = NULL;
+	uint geo_type;
+	if (seq1->valuetypid == type_oid(T_GEOMETRY) || seq1->valuetypid == type_oid(T_GEOGRAPHY))
+	{
+		TemporalInst *instant = temporalseq_inst_n(seq1, 0);
+		Datum value = temporalinst_value(instant);
+		GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+		geo_type = gserialized_get_type(gs);
+		if (geo_type == POLYGONTYPE || geo_type == LINETYPE)
+			regions = true;
+			valuetypid = type_oid(T_RTRANSFORM);
+	}
+#endif
 	for (int i = 1; i < count; i++)
 	{
 		TemporalSeq *seq2 = sequences[i];
@@ -488,6 +588,22 @@ temporalseqarr_normalize(TemporalSeq **sequences, int count, int *newcount)
 			temporalseq_inst_n(seq2, 1); 
 		Datum first2value = (seq2->count == 1) ? 0 : 
 			temporalinst_value(first2);
+#ifdef WITH_POSTGIS
+		if (regions && k == 0 && (seq1->count == 1 || seq1->count == 2)) 
+		{
+			if (rt == NULL)
+				rt = rtransform_make(0, 0, 0);
+			if (seq1->count == 1)
+				last1value = RtransformGetDatum(rt);
+			else if (seq1->count == 2)
+			{
+				if (inst == NULL)
+					inst = temporalinst_make(last2value, last2->t, type_oid(T_RTRANSFORM));
+				last2value = RtransformGetDatum(rt);
+				last2 = inst;
+			}
+		}
+#endif
 		bool adjacent = 
 			timestamp_cmp_internal(seq1->period.upper, seq2->period.lower) == 0 && 
 			(seq1->period.upper_inc || seq2->period.lower_inc);
@@ -554,6 +670,12 @@ temporalseqarr_normalize(TemporalSeq **sequences, int count, int *newcount)
 			isnew = false;
 		}
 	}
+#ifdef WITH_POSTGIS
+	if (rt != NULL)
+		pfree(rt);
+	if (inst != NULL)
+		pfree(inst);
+#endif
 	result[k++] = isnew ? seq1 : temporalseq_copy(seq1);
 	*newcount = k;
 	return result;
@@ -579,11 +701,35 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 		valuetypid == type_oid(T_GEOGRAPHY));
 	bool hasz = false, isgeodetic = false;
 	int srid;
+	uint geo_type;
+	uint line_npoints;
+	uint poly_nrings;
+	uint* poly_npoints;
 	if (isgeo)
 	{
 		hasz = MOBDB_FLAGS_GET_Z(instants[0]->flags);
 		isgeodetic = MOBDB_FLAGS_GET_GEODETIC(instants[0]->flags);
 		srid = tpoint_srid_internal((Temporal *) instants[0]);
+		Datum value = temporalinst_value((TemporalInst *) instants[0]);
+		GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+		geo_type = gserialized_get_type(gs);
+		if (geo_type == LINETYPE)
+		{
+			LWLINE *line = (LWLINE *) lwgeom_from_gserialized(gs);
+			line_npoints = line->points->npoints;
+			lwline_free(line);
+		}
+		else if (geo_type == POLYGONTYPE)
+		{
+			LWPOLY *poly = (LWPOLY *) lwgeom_from_gserialized(gs);
+			poly_nrings = poly->nrings;
+			poly_npoints = malloc(sizeof(uint)*poly_nrings);
+			for (int i = 0; i < (int) poly_nrings; ++i)
+			{
+				poly_npoints[i] = poly->rings[i]->npoints;
+			}
+			lwpoly_free(poly);
+		}
 	}
 #endif
 	for (int i = 1; i < count; i++)
@@ -604,9 +750,48 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 			if (MOBDB_FLAGS_GET_Z(instants[i]->flags) != hasz)
 				ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
 					errmsg("All geometries composing a temporal point must be of the same dimensionality")));
+			if (geo_type == LINETYPE)
+			{
+				Datum value = temporalinst_value((TemporalInst *) instants[i]);
+				GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+				if (geo_type != gserialized_get_type(gs))
+					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+						errmsg("All geometries must be of the same type")));
+				LWLINE *line = (LWLINE *) lwgeom_from_gserialized(gs);
+				/* Maybe test better using number of inner rings and number of ponts of each ring */
+				if (line_npoints != line->points->npoints)
+					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+						errmsg("All regions must contain the same number of points")));
+				lwline_free(line);
+			}
+			else if (geo_type == POLYGONTYPE)
+			{
+				Datum value = temporalinst_value((TemporalInst *) instants[i]);
+				GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+				if (geo_type != gserialized_get_type(gs))
+					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+						errmsg("All geometries must be of the same type")));
+				LWPOLY *poly = (LWPOLY *) lwgeom_from_gserialized(gs);
+				/* Maybe test better using number of inner rings and number of ponts of each ring */
+				if (poly_nrings != poly->nrings)
+					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+						errmsg("All regions must contain the same number of rings")));
+				for (int j = 0; j < (int) poly_nrings; ++j)
+				{
+					if (poly_npoints[j] != poly->rings[j]->npoints)
+						ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+							errmsg("Corresponding rings in each region must contain the same number of points")));
+				}
+				lwpoly_free(poly);
+			}
 		}
 #endif
 	}
+#ifdef WITH_POSTGIS
+	if (isgeo && geo_type == POLYGONTYPE)
+		free(poly_npoints);
+#endif
+
 	bool continuous = MOBDB_FLAGS_GET_CONTINUOUS(instants[0]->flags);
 	if (!continuous && count > 1 && !upper_inc &&
 		datum_ne(temporalinst_value(instants[count - 1]), 
@@ -614,14 +799,35 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 		ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
 			errmsg("Invalid end value for temporal sequence")));
 
+	/* Get the bounding box size */
+	size_t bboxsize = temporal_bbox_size(valuetypid);
+	size_t memsize = double_pad(bboxsize);
+	void *bbox;
+	bool bbox_precomputed = false;
+	/*
+	 * Precompute the bounding box 
+	 * Compute before transforming the instants if we handle regions
+	 */
+#ifdef WITH_POSTGIS
+	if (bboxsize != 0 && isgeo && (geo_type == LINETYPE || geo_type == POLYGONTYPE))
+	{
+		bbox_precomputed = true;
+		bbox = palloc0(bboxsize);
+		temporalseq_make_bbox(bbox, instants, count, lower_inc, upper_inc);
+	}
+
+	/*
+	 * Transform the instants into rtransforms (keep the first instant as a region)
+	 */
+	if (count > 1 && isgeo && (geo_type == LINETYPE || geo_type == POLYGONTYPE))
+		instants = geo_instarr_to_rtransform(instants, count);
+#endif
+
 	/* Normalize the array of instants */
 	TemporalInst **newinstants = instants;
 	int newcount = count;
 	if (normalize && count > 2)
 		newinstants = temporalinstarr_normalize(instants, count, &newcount);
-	/* Get the bounding box size */
-	size_t bboxsize = temporal_bbox_size(valuetypid);
-	size_t memsize = double_pad(bboxsize);
 	/* Add the size of composing instants */
 	for (int i = 0; i < newcount; i++)
 		memsize += double_pad(VARSIZE(newinstants[i]));
@@ -629,9 +835,9 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 #ifdef WITH_POSTGIS
 	bool trajectory = false; /* keep compiler quiet */
 	Datum traj = 0; /* keep compiler quiet */
-	if (isgeo)
+	if (isgeo && !(geo_type == LINETYPE || geo_type == POLYGONTYPE)) // maybe change 'type_has_precomputed_trajectory'
 	{
-		trajectory = type_has_precomputed_trajectory(valuetypid);  
+		trajectory = type_has_precomputed_trajectory(valuetypid);
 		if (trajectory)
 		{
 			/* A trajectory is a geometry/geography, either a point or a 
@@ -676,9 +882,9 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 	 * For temporal points the bounding box is computed from the trajectory 
 	 * for efficiency reasons.
 	 */
-	if (bboxsize != 0)
+	if (bboxsize != 0 && !bbox_precomputed)
 	{
-		void *bbox = ((char *) result) + pdata + pos;
+		bbox = ((char *) result) + pdata + pos;
 #ifdef WITH_POSTGIS
 		if (trajectory)
 		{
@@ -695,12 +901,25 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 		pos += double_pad(bboxsize);
 	}
 #ifdef WITH_POSTGIS
+	else if (bboxsize != 0 && bbox_precomputed)
+	{
+		memcpy(((char *)result) + pdata + pos, bbox, bboxsize);
+		result->offsets[newcount] = pos;
+		pos += double_pad(bboxsize);
+		pfree(bbox);
+	}
 	if (isgeo && trajectory)
 	{
 		result->offsets[newcount + 1] = pos;
 		memcpy(((char *) result) + pdata + pos, DatumGetPointer(traj),
 			VARSIZE(DatumGetPointer(traj)));
 		pfree(DatumGetPointer(traj));
+	}
+	if (count > 1 && isgeo && (geo_type == LINETYPE || geo_type == POLYGONTYPE))
+	{
+		for (int i = 0; i < count; ++i)
+			pfree(instants[i]);
+		pfree(instants);
 	}
 #endif
 

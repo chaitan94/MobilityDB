@@ -8,7 +8,9 @@
 #include "oidcache.h"
 #include "tgeo.h"
 #include "temporalinst.h"
+#include "temporalseq.h"
 #include "tgeo_parser.h"
+#include "tgeo_spatialfuncs.h"
 
 /*****************************************************************************
  * Input/Output functions for rtransform
@@ -85,7 +87,6 @@ rtransform_send(PG_FUNCTION_ARGS)
 rtransform *
 rtransform_make(double theta, double tx, double ty)
 {
-    /* Check this or not ? */
     if (theta < -M_PI || theta > M_PI)
         ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
             errmsg("Rotation theta must be between -pi and pi (got: %f)", theta)));
@@ -100,8 +101,19 @@ rtransform_make(double theta, double tx, double ty)
     return result;
 }
 
+rtransform *
+rtransform_combine(rtransform *rt1, rtransform *rt2)
+{
+    double new_theta = rt1->theta + rt2->theta;
+    if (new_theta > M_PI)
+        new_theta = new_theta - 2*M_PI;
+    else if (new_theta <= -M_PI)
+        new_theta = new_theta + 2*M_PI;
+    return rtransform_make(new_theta, rt1->tx + rt2->tx, rt1->ty + rt2->ty);
+}
+
 /*****************************************************************************
- * Usage functions
+ * Utility functions
  *****************************************************************************/
 
 void
@@ -128,7 +140,7 @@ apply_affine_transform(LWGEOM *geom,
 }
 
 void
-apply_rtransform(LWGEOM *region, rtransform *rt)
+apply_rtransform(LWGEOM *region, const rtransform *rt)
 {
     double a = cos(rt->theta);
     double b = sin(rt->theta);
@@ -147,6 +159,34 @@ apply_rtransform(LWGEOM *region, rtransform *rt)
     {
         lwgeom_refresh_bbox(region);
     }
+}
+
+rtransform *
+rtransform_interpolate(const rtransform *rt1, const rtransform *rt2, double ratio)
+{
+    if (ratio < 0 || ratio > 1)
+        ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+            errmsg("Interpolation ratio must be between 0 and 1 (got: %f)", ratio)));
+
+    if (rt2->theta < rt1->theta)
+        return rtransform_interpolate(rt2, rt1, 1-ratio);
+
+    double new_theta;
+    if (fabs(rt2->theta - rt1->theta) <= M_PI)
+    {
+        new_theta = rt1->theta + (rt2->theta - rt1->theta)*ratio;
+    }
+    else 
+    {
+        new_theta = rt2->theta + (rt1->theta - rt2->theta + 2*M_PI)*ratio;
+        if (new_theta > M_PI)
+        {
+            new_theta = new_theta - 2*M_PI;
+        }
+    }
+    double new_tx = rt1->tx + (rt2->tx - rt1->tx)*ratio;
+    double new_ty = rt1->ty + (rt2->ty - rt1->ty)*ratio;
+    return rtransform_make(new_theta, new_tx, new_ty);
 }
 
 /*****************************************************************************
@@ -195,6 +235,8 @@ rtransform_compute(LWGEOM *region_1, LWGEOM *region_2)
     double x2_ = p22.x, y2_ = p22.y;
     double a, b, c, d;
 
+    // TODO division by 0
+
     /* Compute affine tranformation from region_1 to region_2 */
     a = ((x1_ - x2_)*(x1 - x2) + (y1_ - y2_)*(y1 - y2))/((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2));
     b = ((y1_ - y2_)*(x1 - x2) - (x1_ - x2_)*(y1 - y2))/((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2));
@@ -223,13 +265,11 @@ Creates a new array of instants, does not free old array
 TemporalInst **
 geo_instarr_to_rtransform(TemporalInst **instants, int count)
 {
-    if (count < 2)
-        return instants;
     TemporalInst *firstInst = instants[0];
     Datum firstValue = temporalinst_value(firstInst);
     GSERIALIZED *firstGs = (GSERIALIZED *) DatumGetPointer(firstValue);
     LWGEOM *firstLwgeom = lwgeom_from_gserialized(firstGs);
-    TemporalInst **newInstants = instants;
+    TemporalInst **newInstants = palloc(sizeof(TemporalInst *) * count);;
     newInstants[0] = (TemporalInst *) temporal_copy((Temporal *) firstInst);
     for (int i = 1; i < count; ++i)
     {
@@ -245,17 +285,85 @@ geo_instarr_to_rtransform(TemporalInst **instants, int count)
         LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
         rtransform *rt = rtransform_compute(firstLwgeomCopy, lwgeom);
         apply_rtransform(firstLwgeomCopy, rt);
-        /* TODO: tgeo_similar, test if the difference between the coordinates of each corresponding point is less then epsilon */
-        /*if (!tgeo_similar(firstLwgeomCopy, lwgeom))
+        /* TODO: tgeo_similar, test if the difference between the coordinates of each corresponding point is less then epsilon? */
+        if (!lwgeom_similar(firstLwgeomCopy, lwgeom))
             ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
-                        errmsg("All regions must be congruent")));*/
+                        errmsg("All regions must be congruent")));
         /* What should be copied and what not? */
         /* Should i create a new valuetypid or keep T_GEOMETRY (/ T_GEOGRAPHY) ? */
         /* Maybe issues with varsize if we keep T_GEOMETRY */
         newInstants[i] = temporalinst_make(RtransformGetDatum(rt), instants[i]->t, type_oid(T_RTRANSFORM));
+        pfree(rt);
         lwgeom_free(firstLwgeomCopy);
         lwgeom_free(lwgeom);
     }
     lwgeom_free(firstLwgeom);
     return newInstants;
+}
+
+/* 
+Computes the transformations for all first instants of each sequence 
+with respect to the first instant of the first sequence
+Raises an error if the regions are not colinear enough
+Creates a new array of sequences, does not free old array
+ */
+
+TemporalSeq **
+geo_seqarr_to_rtransform(TemporalSeq **sequences, int count)
+{
+    TemporalSeq *firstSeq = sequences[0];
+    TemporalInst *firstInst = temporalseq_inst_n(firstSeq, 0);
+    Datum firstValue = temporalinst_value(firstInst);
+    GSERIALIZED *firstGs = (GSERIALIZED *) DatumGetPointer(firstValue);
+    LWGEOM *firstLwgeom = lwgeom_from_gserialized(firstGs);
+    TemporalSeq **newSequences = palloc(sizeof(TemporalSeq *) * count);;
+    newSequences[0] = temporalseq_copy(firstSeq);
+    for (int i = 1; i < count; ++i)
+    {
+        /* 
+        Compute transformation
+        Compute tranformed region
+        Compare regions
+        Create new instant if ok, else throw error
+         */
+        LWGEOM *firstLwgeomCopy = lwgeom_clone_deep(firstLwgeom);
+        TemporalInst *instant = temporalseq_inst_n(sequences[i], 0);
+        Datum value = temporalinst_value(instant);
+        GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+        LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
+        rtransform *rt = rtransform_compute(firstLwgeomCopy, lwgeom);
+        apply_rtransform(firstLwgeomCopy, rt);
+        /* TODO: tgeo_similar, test if the difference between the coordinates of each corresponding point is less then epsilon? */
+        if (!lwgeom_similar(firstLwgeomCopy, lwgeom))
+            ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+                        errmsg("All regions must be congruent")));
+        /* What should be copied and what not? */
+        /* Should i create a new valuetypid or keep T_GEOMETRY (/ T_GEOGRAPHY) ? */
+        /* Maybe issues with varsize if we keep T_GEOMETRY */
+        rtransform **newRts = palloc(sizeof(rtransform *) * sequences[i]->count);
+        TemporalInst **newInstants = palloc(sizeof(TemporalInst *) * sequences[i]->count);
+        newRts[0] = rt;
+        TemporalInst *newInstant = temporalinst_make(RtransformGetDatum(rt), instant->t, type_oid(T_RTRANSFORM));
+        newInstants[0] = newInstant;
+        for (int j = 1; j < sequences[i]->count; j++)
+        {
+            instant = temporalseq_inst_n(sequences[i], j);
+            rtransform *old_rt = DatumGetRtransform(temporalinst_value(instant));
+            newRts[j] = rtransform_combine(old_rt, rt);
+            newInstants[j] = temporalinst_make(RtransformGetDatum(newRts[j]), instant->t, instant->valuetypid);
+        }
+        newSequences[i] = temporalseq_from_temporalinstarr(newInstants, sequences[i]->count, 
+            sequences[i]->period.lower_inc, sequences[i]->period.upper_inc, false);
+        for (int j = 0; j < sequences[i]->count; ++j)
+        {
+            pfree(newRts[j]);
+            pfree(newInstants[j]);
+        }
+        pfree(newRts);
+        pfree(newInstants);
+        lwgeom_free(firstLwgeomCopy);
+        lwgeom_free(lwgeom);
+    }
+    lwgeom_free(firstLwgeom);
+    return newSequences;
 }

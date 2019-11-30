@@ -30,6 +30,7 @@
 #ifdef WITH_POSTGIS
 #include "tpoint.h"
 #include "tpoint_spatialfuncs.h"
+#include "tgeo_transform.h"
 #endif
 
 /*****************************************************************************
@@ -98,11 +99,36 @@ temporals_from_temporalseqarr(TemporalSeq **sequences, int count,
 		valuetypid == type_oid(T_GEOGRAPHY));
 	bool hasz = false, isgeodetic = false;
 	int srid;
+	uint geo_type;
+	uint line_npoints;
+	uint poly_nrings;
+	uint* poly_npoints;
 	if (isgeo)
 	{
 		hasz = MOBDB_FLAGS_GET_Z(sequences[0]->flags);
 		isgeodetic = MOBDB_FLAGS_GET_GEODETIC(sequences[0]->flags);
 		srid = tpoint_srid_internal((Temporal *) sequences[0]);
+		TemporalInst *instant = temporalseq_inst_n(sequences[0], 0);
+		Datum value = temporalinst_value(instant);
+		GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+		geo_type = gserialized_get_type(gs);
+		if (geo_type == LINETYPE)
+		{
+			LWLINE *line = (LWLINE *) lwgeom_from_gserialized(gs);
+			line_npoints = line->points->npoints;
+			lwline_free(line);
+		}
+		else if (geo_type == POLYGONTYPE)
+		{
+			LWPOLY *poly = (LWPOLY *) lwgeom_from_gserialized(gs);
+			poly_nrings = poly->nrings;
+			poly_npoints = malloc(sizeof(uint)*poly_nrings);
+			for (int i = 0; i < (int) poly_nrings; ++i)
+			{
+				poly_npoints[i] = poly->rings[i]->npoints;
+			}
+			lwpoly_free(poly);
+		}
 	}
 #endif
 	for (int i = 1; i < count; i++)
@@ -125,9 +151,52 @@ temporals_from_temporalseqarr(TemporalSeq **sequences, int count,
 			if (MOBDB_FLAGS_GET_Z(sequences[i]->flags) != hasz)
 				ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
 					errmsg("All geometries composing a temporal point must be of the same dimensionality")));
+			if (geo_type == LINETYPE)
+			{
+				Datum value = temporalinst_value(temporalseq_inst_n(sequences[i], 0));
+				GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+				if (geo_type != gserialized_get_type(gs))
+					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+						errmsg("All geometries must be of the same type")));
+				LWLINE *line = (LWLINE *) lwgeom_from_gserialized(gs);
+				/* Maybe test better using number of inner rings and number of ponts of each ring */
+				if (line_npoints != line->points->npoints)
+					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+						errmsg("All regions must contain the same number of points")));
+				lwline_free(line);
+			}
+			else if (geo_type == POLYGONTYPE)
+			{
+				Datum value = temporalinst_value(temporalseq_inst_n(sequences[i], 0));
+				GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+				if (geo_type != gserialized_get_type(gs))
+					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+						errmsg("All geometries must be of the same type")));
+				LWPOLY *poly = (LWPOLY *) lwgeom_from_gserialized(gs);
+				/* Maybe test better using number of inner rings and number of ponts of each ring */
+				if (poly_nrings != poly->nrings)
+					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+						errmsg("All regions must contain the same number of rings")));
+				for (int j = 0; j < (int) poly_nrings; ++j)
+				{
+					if (poly_npoints[j] != poly->rings[j]->npoints)
+						ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+							errmsg("Corresponding rings in each region must contain the same number of points")));
+				}
+				lwpoly_free(poly);
+			}
 		}
 #endif
 	}
+#ifdef WITH_POSTGIS
+	if (isgeo && geo_type == POLYGONTYPE)
+		free(poly_npoints);
+	/*
+	 * Transform the first regions of the sequences into rtransforms (keep the first instant of the first sequence as a region)
+	 */
+	if (count > 1 && isgeo && (geo_type == LINETYPE || geo_type == POLYGONTYPE))
+		sequences = geo_seqarr_to_rtransform(sequences, count);
+#endif
 
 	TemporalSeq **newsequences = sequences;
 	int newcount = count;
@@ -180,6 +249,14 @@ temporals_from_temporalseqarr(TemporalSeq **sequences, int count,
 		temporals_make_bbox(bbox, newsequences, newcount);
 		result->offsets[newcount] = pos;
 	}
+#ifdef WITH_POSTGIS
+	if (count > 1 && isgeo && (geo_type == LINETYPE || geo_type == POLYGONTYPE))
+	{
+		for (int i = 0; i < count; ++i)
+			pfree(sequences[i]);
+		pfree(sequences);
+	}
+#endif
 	if (normalize && count > 1)
 	{
 		for (int i = 0; i < newcount; i++)

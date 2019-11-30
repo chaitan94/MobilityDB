@@ -39,6 +39,7 @@
 #include "tpoint.h"
 #include "stbox.h"
 #include "tpoint_boxops.h"
+#include "tgeo_boxops.h"
 #endif
 
 /*****************************************************************************
@@ -313,10 +314,20 @@ temporalseq_make_bbox(void *box, TemporalInst **instants, int count,
 #ifdef WITH_POSTGIS
 	/* This code is currently not used since for temporal points the bounding
 	 * box is computed from the trajectory for efficiency reasons. It is left
-	 * here in case this is no longer the case */
+	 * here in case this is no longer the case 
+	 * Now it's only used in the case of regions (LINETYPE || POLYGONTYPE)
+	 */
 	else if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
-		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
-		tpointinstarr_to_stbox((STBOX *)box, instants, count);
+		instants[0]->valuetypid == type_oid(T_GEOMETRY))
+	{
+		Datum value = temporalinst_value((TemporalInst *) instants[0]);
+		GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+		int geo_type = gserialized_get_type(gs);
+		if (geo_type == POINTTYPE)
+			tpointinstarr_to_stbox((STBOX *)box, instants, count);
+		else if (geo_type == LINETYPE || geo_type == POLYGONTYPE)
+			tregioninstarr_to_stbox((STBOX *)box, instants, count);
+	}
 #endif
 	return;
 }

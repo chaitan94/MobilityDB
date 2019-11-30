@@ -556,7 +556,7 @@ text_cmp(text *arg1, text *arg2, Oid collid)
 */
 
 bool
-datum_eq(Datum l, Datum r, Oid type)
+datum_eq(Datum l, Datum r, Oid type) // change to type_l and type_r? Only usefull when comparing region with rtransform
 {
 	base_type_all_oid(type);
 	bool result = false;
@@ -577,6 +577,8 @@ datum_eq(Datum l, Datum r, Oid type)
 	else if (type == type_oid(T_GEOGRAPHY))
 		//	result = DatumGetBool(call_function2(geography_eq, l, r));
 		result = datum_point_eq(l, r);
+	else if (type == type_oid(T_RTRANSFORM))
+		result = double3_eq((double3 *)DatumGetPointer(l), (double3 *)DatumGetPointer(r));
 #endif
 	return result;
 }

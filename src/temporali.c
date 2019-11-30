@@ -97,7 +97,9 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 	bool hasz = false, isgeodetic = false;
 	int srid;
 	uint geo_type;
-	uint npoints = 0;
+	uint line_npoints;
+	uint poly_nrings;
+	uint* poly_npoints;
 	if (isgeo)
 	{
 		hasz = MOBDB_FLAGS_GET_Z(instants[0]->flags);
@@ -106,11 +108,22 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 		Datum value = temporalinst_value((TemporalInst *) instants[0]);
 		GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
 		geo_type = gserialized_get_type(gs);
-		if (geo_type == LINETYPE || geo_type == POLYGONTYPE)
+		if (geo_type == LINETYPE)
 		{
-			LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
-			npoints = lwgeom_count_vertices(lwgeom);
-			lwgeom_free(lwgeom);
+			LWLINE *line = (LWLINE *) lwgeom_from_gserialized(gs);
+			line_npoints = line->points->npoints;
+			lwline_free(line);
+		}
+		else if (geo_type == POLYGONTYPE)
+		{
+			LWPOLY *poly = (LWPOLY *) lwgeom_from_gserialized(gs);
+			poly_nrings = poly->nrings;
+			poly_npoints = malloc(sizeof(uint)*poly_nrings);
+			for (int i = 0; i < (int) poly_nrings; ++i)
+			{
+				poly_npoints[i] = poly->rings[i]->npoints;
+			}
+			lwpoly_free(poly);
 		}
 	}
 #endif
@@ -132,23 +145,47 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 			if (MOBDB_FLAGS_GET_Z(instants[i]->flags) != hasz)
 				ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
 					errmsg("All geometries composing a temporal point must be of the same dimensionality")));
-			if (geo_type == LINETYPE || geo_type == POLYGONTYPE)
+			if (geo_type == LINETYPE)
 			{
 				Datum value = temporalinst_value((TemporalInst *) instants[i]);
 				GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
 				if (geo_type != gserialized_get_type(gs))
 					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
 						errmsg("All geometries must be of the same type")));
-				LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
+				LWLINE *line = (LWLINE *) lwgeom_from_gserialized(gs);
 				/* Maybe test better using number of inner rings and number of ponts of each ring */
-				if (npoints != lwgeom_count_vertices(lwgeom))
+				if (line_npoints != line->points->npoints)
 					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
-						errmsg("All geometries must contain the same number of points")));
-				lwgeom_free(lwgeom);
+						errmsg("All regions must contain the same number of points")));
+				lwline_free(line);
+			}
+			else if (geo_type == POLYGONTYPE)
+			{
+				Datum value = temporalinst_value((TemporalInst *) instants[i]);
+				GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+				if (geo_type != gserialized_get_type(gs))
+					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+						errmsg("All geometries must be of the same type")));
+				LWPOLY *poly = (LWPOLY *) lwgeom_from_gserialized(gs);
+				/* Maybe test better using number of inner rings and number of ponts of each ring */
+				if (poly_nrings != poly->nrings)
+					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+						errmsg("All regions must contain the same number of rings")));
+				for (int j = 0; j < (int) poly_nrings; ++j)
+				{
+					if (poly_npoints[j] != poly->rings[j]->npoints)
+						ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+							errmsg("Corresponding rings in each region must contain the same number of points")));
+				}
+				lwpoly_free(poly);
 			}
 		}
 #endif
 	}
+#ifdef WITH_POSTGIS
+	if (isgeo && geo_type == POLYGONTYPE)
+		free(poly_npoints);
+#endif
 
 	/* Get the bounding box size */
 	size_t bboxsize = temporal_bbox_size(valuetypid);
@@ -170,9 +207,8 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 	/*
 	 * Transform the instants into rtransforms (keep the first instant as a region)
 	 */
-	if (count > 1 && isgeo && (geo_type == LINETYPE || geo_type == POLYGONTYPE)) {
+	if (count > 1 && isgeo && (geo_type == LINETYPE || geo_type == POLYGONTYPE))
 		instants = geo_instarr_to_rtransform(instants, count);
-	}
 #endif
 
 	/* Add the size of composing instants */
@@ -213,6 +249,14 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 		result->offsets[count] = pos;
 		pfree(bbox);
 	}
+#ifdef WITH_POSTGIS
+	if (count > 1 && isgeo && (geo_type == LINETYPE || geo_type == POLYGONTYPE))
+	{
+		for (int i = 0; i < count; ++i)
+			pfree(instants[i]);
+		pfree(instants);
+	}
+#endif
 	return result;
 }
 

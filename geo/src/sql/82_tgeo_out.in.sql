@@ -12,38 +12,38 @@
 
 CREATE FUNCTION asText(tgeometry)
     RETURNS text
-    AS 'MODULE_PATHNAME', 'tpoint_as_text'
+    AS 'MODULE_PATHNAME', 'tgeo_as_text'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION asText(tgeometry[])
     RETURNS text[]
-    AS 'MODULE_PATHNAME', 'tpointarr_as_text'
+    AS 'MODULE_PATHNAME', 'tgeoarr_as_text'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION asText(tgeography)
     RETURNS text
-    AS 'MODULE_PATHNAME', 'tpoint_as_text'
+    AS 'MODULE_PATHNAME', 'tgeo_as_text'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION asText(tgeography[])
     RETURNS text[]
-    AS 'MODULE_PATHNAME', 'tpointarr_as_text'
+    AS 'MODULE_PATHNAME', 'tgeoarr_as_text'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION asEWKT(tgeometry)
     RETURNS text
-    AS 'MODULE_PATHNAME', 'tpoint_as_ewkt'
+    AS 'MODULE_PATHNAME', 'tgeo_as_ewkt'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION asEWKT(tgeometry[])
     RETURNS text[]
-    AS 'MODULE_PATHNAME', 'tpointarr_as_ewkt'
+    AS 'MODULE_PATHNAME', 'tgeoarr_as_ewkt'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION asEWKT(tgeography)
     RETURNS text
-    AS 'MODULE_PATHNAME', 'tpoint_as_ewkt'
+    AS 'MODULE_PATHNAME', 'tgeo_as_ewkt'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION asEWKT(tgeography[])
     RETURNS text[]
-    AS 'MODULE_PATHNAME', 'tpointarr_as_ewkt'
+    AS 'MODULE_PATHNAME', 'tgeoarr_as_ewkt'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
