@@ -143,10 +143,10 @@ double2_collinear(double2 *x1, double2 *x2, double2 *x3,
 	}
 	else
 		x1new = x1;
-	double d1a = x2->a - x1->a;
-	double d1b = x2->b - x1->b;
-	double d2a = x3->a - x2->a;
-	double d2b = x3->b - x2->b;
+	double d1a = x2->a - x1new->a;
+	double d1b = x2->b - x1new->b;
+	double d2a = x3new->a - x2->a;
+	double d2b = x3new->b - x2->b;
 	bool result = (fabs(d1a-d2a) <= EPSILON && fabs(d1b-d2b) <= EPSILON);
 	if (duration1 < duration2)
 		pfree(x3new);
@@ -242,12 +242,12 @@ double3_collinear(double3 *x1, double3 *x2, double3 *x3,
 	}
 	else
 		x1new = x1;
-	double d1a = x2->a - x1->a;
-	double d1b = x2->b - x1->b;
-	double d1c = x2->c - x1->c;
-	double d2a = x3->a - x2->a;
-	double d2b = x3->b - x2->b;
-	double d2c = x3->c - x2->c;
+	double d1a = x2->a - x1new->a;
+	double d1b = x2->b - x1new->b;
+	double d1c = x2->c - x1new->c;
+	double d2a = x3new->a - x2->a;
+	double d2b = x3new->b - x2->b;
+	double d2c = x3new->c - x2->c;
 	bool result = (fabs(d1a-d2a) <= EPSILON && fabs(d1b-d2b) <= EPSILON && 
 		fabs(d1c-d2c) <= EPSILON);
 	if (duration1 < duration2)
@@ -287,14 +287,14 @@ double4_collinear(double4 *x1, double4 *x2, double4 *x3,
 	}
 	else
 		x1new = x1;
-	double d1a = x2->a - x1->a;
-	double d1b = x2->b - x1->b;
-	double d1c = x2->c - x1->c;
-	double d1d = x2->d - x1->d;
-	double d2a = x3->a - x2->a;
-	double d2b = x3->b - x2->b;
-	double d2c = x3->c - x2->c;
-	double d2d = x3->d - x2->d;
+	double d1a = x2->a - x1new->a;
+	double d1b = x2->b - x1new->b;
+	double d1c = x2->c - x1new->c;
+	double d1d = x2->d - x1new->d;
+	double d2a = x3new->a - x2->a;
+	double d2b = x3new->b - x2->b;
+	double d2c = x3new->c - x2->c;
+	double d2d = x3new->d - x2->d;
 	bool result = (fabs(d1a-d2a) <= EPSILON && fabs(d1b-d2b) <= EPSILON && 
 		fabs(d1c-d2c) <= EPSILON && fabs(d1d-d2d) <= EPSILON);
 	if (duration1 < duration2)
@@ -1824,27 +1824,6 @@ temporalseq_get_time(TemporalSeq *seq)
 	Period *p = &seq->period;
 	PeriodSet *result = periodset_from_periodarr_internal(&p, 1, false);
 	return result;
-}
-
-/* Bounding box range of a temporal number */
-
-RangeType *
-tnumberseq_value_range(TemporalSeq *seq)
-{
-	TBOX *box = temporalseq_bbox_ptr(seq);
-	Datum min = 0, max = 0;
-	numeric_base_type_oid(seq->valuetypid);
-	if (seq->valuetypid == INT4OID)
-	{
-		min = Int32GetDatum(box->xmin);
-		max = Int32GetDatum(box->xmax);
-	}
-	else if (seq->valuetypid == FLOAT8OID)
-	{
-		min = Float8GetDatum(box->xmin);
-		max = Float8GetDatum(box->xmax);
-	}
-	return range_make(min, max, true, true, seq->valuetypid);
 }
 
 /* Minimum value */

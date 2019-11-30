@@ -907,27 +907,6 @@ tfloats_ranges(TemporalS *ts)
 	return result;
 }
 
-/* Bounding box range of a temporal number */
-
-RangeType *
-tnumbers_value_range(TemporalS *ts)
-{
-	TBOX *box = temporals_bbox_ptr(ts);
-	Datum min = 0, max = 0;
-	numeric_base_type_oid(ts->valuetypid);
-	if (ts->valuetypid == INT4OID)
-	{
-		min = Int32GetDatum(box->xmin);
-		max = Int32GetDatum(box->xmax);
-	}
-	else if (ts->valuetypid == FLOAT8OID)
-	{
-		min = Float8GetDatum(box->xmin);
-		max = Float8GetDatum(box->xmax);
-	}
-	return range_make(min, max, true, true, ts->valuetypid);
-}
-
 /* Minimum value */
 
 Datum
