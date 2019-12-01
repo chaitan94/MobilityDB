@@ -139,8 +139,8 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 	result->count = count;
 	result->valuetypid = valuetypid;
 	result->duration = TEMPORALI;
-	MOBDB_FLAGS_SET_CONTINUOUS(result->flags, 
-		MOBDB_FLAGS_GET_CONTINUOUS(instants[0]->flags));
+	MOBDB_FLAGS_SET_LINEAR(result->flags, 
+		MOBDB_FLAGS_GET_LINEAR(instants[0]->flags));
 #ifdef WITH_POSTGIS
 	if (isgeo)
 	{
@@ -218,8 +218,8 @@ temporali_append_instant(TemporalI *ti, TemporalInst *inst)
 	result->count = ti->count + 1;
 	result->valuetypid = valuetypid;
 	result->duration = TEMPORALI;
-	MOBDB_FLAGS_SET_CONTINUOUS(result->flags, 
-		MOBDB_FLAGS_GET_CONTINUOUS(inst->flags));
+	MOBDB_FLAGS_SET_LINEAR(result->flags, 
+		MOBDB_FLAGS_GET_LINEAR(inst->flags));
 #ifdef WITH_POSTGIS
 	if (isgeo)
 		MOBDB_FLAGS_SET_Z(result->flags, hasz);
@@ -361,10 +361,10 @@ bool
 intersection_temporali_temporali(TemporalI *ti1, TemporalI *ti2, 
 	TemporalI **inter1, TemporalI **inter2)
 {
-	/* Test whether the bounding timespan of the two temporal values overlap */
+	/* Test whether the bounding period of the two temporal values overlap */
 	Period p1, p2;
-	temporali_timespan(&p1, ti1);
-	temporali_timespan(&p2, ti2);
+	temporali_period(&p1, ti1);
+	temporali_period(&p2, ti2);
 	if (!overlaps_period_period_internal(&p1, &p2))
 		return false;
 	
@@ -491,7 +491,7 @@ temporali_append_instant(TemporalI *ti, TemporalInst *inst)
 /* Cast a temporal integer as a temporal float */
 
 TemporalI *
-tinti_as_tfloati(TemporalI *ti)
+tinti_to_tfloati(TemporalI *ti)
 {
 	TemporalI *result = temporali_copy(ti);
 	result->valuetypid = FLOAT8OID;
@@ -510,13 +510,13 @@ tinti_as_tfloati(TemporalI *ti)
  *****************************************************************************/
 
 TemporalI *
-temporalinst_as_temporali(TemporalInst *inst)
+temporalinst_to_temporali(TemporalInst *inst)
 {
 	return temporali_from_temporalinstarr(&inst, 1);
 }
 
 TemporalI *
-temporalseq_as_temporali(TemporalSeq *seq)
+temporalseq_to_temporali(TemporalSeq *seq)
 {
 	if (seq->count != 1)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -527,7 +527,7 @@ temporalseq_as_temporali(TemporalSeq *seq)
 }
 
 TemporalI *
-temporals_as_temporali(TemporalS *ts)
+temporals_to_temporali(TemporalS *ts)
 {
 	for (int i = 0; i < ts->count; i++)
 	{
@@ -610,27 +610,6 @@ temporali_get_time(TemporalI *ti)
 	return result;
 }
 
-/* Bounding box range of a temporal integer */
-
-RangeType *
-tnumberi_value_range(TemporalI *ti)
-{
-	TBOX *box = temporali_bbox_ptr(ti);
-	Datum min = 0, max = 0;
-	numeric_base_type_oid(ti->valuetypid);
-	if (ti->valuetypid == INT4OID)
-	{
-		min = Int32GetDatum((int)(box->xmin));
-		max = Int32GetDatum((int)(box->xmax));
-	}
-	else if (ti->valuetypid == FLOAT8OID)
-	{
-		min = Float8GetDatum(box->xmin);
-		max = Float8GetDatum(box->xmax);
-	}
-	return range_make(min, max, true, true, ti->valuetypid);
-}
-
 /* Minimum value */
 
 Datum
@@ -700,7 +679,7 @@ temporali_max_value(TemporalI *ti)
 /* Bounding period on which the temporal value is defined */
 
 void
-temporali_timespan(Period *p, TemporalI *ti)
+temporali_period(Period *p, TemporalI *ti)
 {
 	TimestampTz lower = temporali_start_timestamp(ti);
 	TimestampTz upper = temporali_end_timestamp(ti);
@@ -1223,7 +1202,7 @@ temporali_at_timestamp(TemporalI *ti, TimestampTz t)
 {
 	/* Bounding box test */
 	Period p;
-	temporali_timespan(&p, ti);
+	temporali_period(&p, ti);
 	if (!contains_period_timestamp_internal(&p, t))
 		return NULL;
 
@@ -1265,7 +1244,7 @@ temporali_minus_timestamp(TemporalI *ti, TimestampTz t)
 {
 	/* Bounding box test */
 	Period p;
-	temporali_timespan(&p, ti);
+	temporali_period(&p, ti);
 	if (!contains_period_timestamp_internal(&p, t))
 		return temporali_copy(ti);
 
@@ -1297,7 +1276,7 @@ temporali_at_timestampset(TemporalI *ti, TimestampSet *ts)
 {
 	/* Bounding box test */
 	Period p1;
-	temporali_timespan(&p1, ti);
+	temporali_period(&p1, ti);
 	Period *p2 = timestampset_bbox(ts);
 	if (!overlaps_period_period_internal(&p1, p2))
 		return NULL;
@@ -1347,7 +1326,7 @@ temporali_minus_timestampset(TemporalI *ti, TimestampSet *ts)
 {
 	/* Bounding box test */
 	Period p1;
-	temporali_timespan(&p1, ti);
+	temporali_period(&p1, ti);
 	Period *p2 = timestampset_bbox(ts);
 	if (!overlaps_period_period_internal(&p1, p2))
 		return temporali_copy(ti);
@@ -1393,7 +1372,7 @@ temporali_at_period(TemporalI *ti, Period *period)
 {
 	/* Bounding box test */
 	Period p;
-	temporali_timespan(&p, ti);
+	temporali_period(&p, ti);
 	if (!overlaps_period_period_internal(&p, period))
 		return NULL;
 
@@ -1423,7 +1402,7 @@ temporali_minus_period(TemporalI *ti, Period *period)
 {
 	/* Bounding box test */
 	Period p;
-	temporali_timespan(&p, ti);
+	temporali_period(&p, ti);
 	if (!overlaps_period_period_internal(&p, period))
 		return temporali_copy(ti);
 
@@ -1453,7 +1432,7 @@ temporali_at_periodset(TemporalI *ti, PeriodSet *ps)
 {
 	/* Bounding box test */
 	Period p1;
-	temporali_timespan(&p1, ti);
+	temporali_period(&p1, ti);
 	Period *p2 = periodset_bbox(ps);
 	if (!overlaps_period_period_internal(&p1, p2))
 		return NULL;
@@ -1496,7 +1475,7 @@ temporali_minus_periodset(TemporalI *ti, PeriodSet *ps)
 {
 	/* Bounding box test */
 	Period p1;
-	temporali_timespan(&p1, ti);
+	temporali_period(&p1, ti);
 	Period *p2 = periodset_bbox(ps);
 	if (!overlaps_period_period_internal(&p1, p2))
 		return temporali_copy(ti);

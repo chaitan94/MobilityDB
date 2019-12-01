@@ -137,7 +137,7 @@ temporalinst_make(Datum value, TimestampTz t, Oid valuetypid)
 	result->t = t;
 	SET_VARSIZE(result, size);
 	MOBDB_FLAGS_SET_BYVAL(result->flags, byval);
-	MOBDB_FLAGS_SET_CONTINUOUS(result->flags, type_is_continuous(valuetypid));
+	MOBDB_FLAGS_SET_LINEAR(result->flags, linear_interpolation(valuetypid));
 #ifdef WITH_POSTGIS
 	if (valuetypid == type_oid(T_GEOMETRY) || 
 		valuetypid == type_oid(T_GEOGRAPHY))
@@ -255,11 +255,11 @@ intersection_temporalinst_temporalinst(TemporalInst *inst1, TemporalInst *inst2,
 /* Cast temporal integer as temporal float */
 
 TemporalInst *
-tintinst_as_tfloatinst(TemporalInst *inst)
+tintinst_to_tfloatinst(TemporalInst *inst)
 {
 	TemporalInst *result = temporalinst_copy(inst);
 	result->valuetypid = FLOAT8OID;
-	MOBDB_FLAGS_SET_CONTINUOUS(result->flags, true);
+	MOBDB_FLAGS_SET_LINEAR(result->flags, true);
 	Datum *value_ptr = temporalinst_value_ptr(result);
 	*value_ptr = Float8GetDatum((double)DatumGetInt32(temporalinst_value(inst)));
 	return result;
@@ -270,7 +270,7 @@ tintinst_as_tfloatinst(TemporalInst *inst)
  *****************************************************************************/
 
 TemporalInst *
-temporali_as_temporalinst(TemporalI *ti)
+temporali_to_temporalinst(TemporalI *ti)
 {
 	if (ti->count != 1)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -280,7 +280,7 @@ temporali_as_temporalinst(TemporalI *ti)
 }
 
 TemporalInst *
-temporalseq_as_temporalinst(TemporalSeq *seq)
+temporalseq_to_temporalinst(TemporalSeq *seq)
 {
 	if (seq->count != 1)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -290,7 +290,7 @@ temporalseq_as_temporalinst(TemporalSeq *seq)
 }
 
 TemporalInst *
-temporals_as_temporalinst(TemporalS *ts)
+temporals_to_temporalinst(TemporalS *ts)
 {
 	TemporalSeq *seq = temporals_seq_n(ts, 0);
 	if (ts->count != 1 || seq->count != 1)
@@ -336,19 +336,10 @@ temporalinst_get_time(TemporalInst *inst)
 	return result;
 }
 
-/* Value range of a temporal integer */
-
-RangeType *
-tnumberinst_value_range(TemporalInst *inst)
-{
-	Datum value = temporalinst_value(inst);
-	return range_make(value, value,	true, true, inst->valuetypid);
-}
-
 /* Bounding period on which the temporal value is defined */
 
 void
-temporalinst_timespan(Period *p, TemporalInst *inst)
+temporalinst_period(Period *p, TemporalInst *inst)
 {
 	return period_set(p, inst->t, inst->t, true, true);
 }

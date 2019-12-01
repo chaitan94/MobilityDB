@@ -73,20 +73,20 @@ extern TemporalSeq *temporalseq_append_instant(TemporalSeq *seq, TemporalInst *i
 
 /* Cast functions */
 
-extern int tintseq_as_tfloatseq1(TemporalSeq **result, TemporalSeq *seq);
-extern TemporalS *tintseq_as_tfloatseq(TemporalSeq *seq);
-extern TemporalSeq *tfloatseq_as_tintseq(TemporalSeq *seq);
+extern int tintseq_to_tfloatseq1(TemporalSeq **result, TemporalSeq *seq);
+extern TemporalS *tintseq_to_tfloatseq(TemporalSeq *seq);
+extern TemporalSeq *tfloatseq_to_tintseq(TemporalSeq *seq);
 
 /* Transformation functions */
 
-extern TemporalSeq *temporalinst_as_temporalseq(TemporalInst *inst);
-extern TemporalSeq *temporali_as_temporalseq(TemporalI *ti);
-extern TemporalSeq *temporals_as_temporalseq(TemporalS *ts);
+extern TemporalSeq *temporalinst_to_temporalseq(TemporalInst *inst);
+extern TemporalSeq *temporali_to_temporalseq(TemporalI *ti);
+extern TemporalSeq *temporals_to_temporalseq(TemporalS *ts);
 
 /* Accessor functions */
 
-extern Datum *tempdiscseq_values1(TemporalSeq *seq);
-extern ArrayType *tempdiscseq_values(TemporalSeq *seq);
+extern Datum *tstepwiseseq_values1(TemporalSeq *seq);
+extern ArrayType *tstepwiseseq_values(TemporalSeq *seq);
 extern PeriodSet *temporalseq_get_time(TemporalSeq *seq);
 extern void *temporalseq_bbox_ptr(TemporalSeq *seq);
 extern void temporalseq_bbox(void *box, TemporalSeq *seq);
@@ -95,8 +95,8 @@ extern RangeType *tfloatseq_range(TemporalSeq *seq);
 extern ArrayType *tfloatseq_ranges(TemporalSeq *seq);
 extern Datum temporalseq_min_value(TemporalSeq *seq);
 extern Datum temporalseq_max_value(TemporalSeq *seq);
-extern void temporalseq_timespan(Period *p, TemporalSeq *seq);
-extern Datum temporalseq_duration(TemporalSeq *seq);
+extern void temporalseq_period(Period *p, TemporalSeq *seq);
+extern Datum temporalseq_timespan(TemporalSeq *seq);
 extern TemporalInst **temporalseq_instants(TemporalSeq *seq);
 extern ArrayType *temporalseq_instants_array(TemporalSeq *seq);
 extern TimestampTz temporalseq_start_timestamp(TemporalSeq *seq);
@@ -110,7 +110,7 @@ extern TemporalSeq *temporalseq_shift(TemporalSeq *seq,
 
 /* Restriction Functions */
 
-extern bool tempcontseq_timestamp_at_value(TemporalInst *inst1, TemporalInst *inst2, 
+extern bool tlinearseq_timestamp_at_value(TemporalInst *inst1, TemporalInst *inst2, 
 	Datum value, Oid valuetypid, TimestampTz *t);
 extern int temporalseq_at_value2(TemporalSeq **result, TemporalSeq *seq, Datum value);
 extern TemporalS *temporalseq_at_value(TemporalSeq *seq, Datum value);

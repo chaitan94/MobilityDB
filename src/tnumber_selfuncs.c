@@ -13,6 +13,7 @@
 #include "tnumber_selfuncs.h"
 
 #include <assert.h>
+#include <math.h>
 #include <access/htup_details.h>
 #include <utils/builtins.h>
 #include <utils/selfuncs.h>
@@ -812,7 +813,7 @@ tnumberinst_sel(PlannerInfo *root, VariableStatData *vardata, TBOX *box,
 			operator = oper_oid(GT_OP, valuetypid, valuetypid);
 			selec_value += scalarineqsel(root, operator, true, false, vardata, 
 				Float8GetDatum(box->xmax), valuetypid);
-			selec_value = fabs(1 - selec_value);
+			selec_value = fabs(1.0 - selec_value);
 		}
 		/* Selectivity for the time dimension */
 		if (MOBDB_FLAGS_GET_T(box->flags))
@@ -823,7 +824,7 @@ tnumberinst_sel(PlannerInfo *root, VariableStatData *vardata, TBOX *box,
 			operator = oper_oid(GT_OP, T_TIMESTAMPTZ, T_TIMESTAMPTZ);
 			selec_time += scalarineqsel(root, operator, true, false, vardata, 
 				TimestampTzGetDatum(box->tmax), TIMESTAMPTZOID);
-			selec_time = fabs(1 - selec_time);
+			selec_time = fabs(1.0 - selec_time);
 		}
 		selec = selec_value * selec_time;
 	}

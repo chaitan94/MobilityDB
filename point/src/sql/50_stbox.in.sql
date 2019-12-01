@@ -94,6 +94,55 @@ CREATE FUNCTION geodstbox(float8, float8, float8, timestamptz, float8, float8, f
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
+ * Accessor functions
+ *****************************************************************************/
+
+CREATE FUNCTION Xmin(stbox)
+	RETURNS float
+	AS 'MODULE_PATHNAME', 'stbox_xmin'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION Ymin(stbox)
+	RETURNS float
+	AS 'MODULE_PATHNAME', 'stbox_ymin'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION Zmin(stbox)
+	RETURNS float
+	AS 'MODULE_PATHNAME', 'stbox_zmin'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION Tmin(stbox)
+	RETURNS timestamptz
+	AS 'MODULE_PATHNAME', 'stbox_tmin'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+
+CREATE FUNCTION Xmax(stbox)
+	RETURNS float
+	AS 'MODULE_PATHNAME', 'stbox_xmax'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION Ymax(stbox)
+	RETURNS float
+	AS 'MODULE_PATHNAME', 'stbox_ymax'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION Zmax(stbox)
+	RETURNS float
+	AS 'MODULE_PATHNAME', 'stbox_zmax'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+CREATE FUNCTION Tmax(stbox)
+	RETURNS timestamptz
+	AS 'MODULE_PATHNAME', 'stbox_tmax'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+
+/*****************************************************************************
+ * Casting
+ *****************************************************************************/
+
+CREATE FUNCTION period(stbox)
+	RETURNS period
+	AS 'MODULE_PATHNAME', 'stbox_to_period'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+
+CREATE CAST (stbox AS period) WITH FUNCTION period(stbox);
+
+/*****************************************************************************
  * Comparison
  *****************************************************************************/
 
