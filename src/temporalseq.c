@@ -588,7 +588,7 @@ temporalseq_join(TemporalSeq *seq1, TemporalSeq *seq2, bool last, bool first)
 	result->duration = TEMPORALSEQ;
 	period_set(&result->period, temporalseq_inst_n(seq1, 0)->t, temporalseq_inst_n(seq2, seq2->count)->t,
 		seq1->period.lower_inc, seq2->period.upper_inc);
-	MOBDB_FLAGS_SET_CONTINUOUS(result->flags, MOBDB_FLAGS_GET_CONTINUOUS(seq1->flags));
+	MOBDB_FLAGS_SET_LINEAR(result->flags, MOBDB_FLAGS_GET_LINEAR(seq1->flags));
 #ifdef WITH_POSTGIS
 	if (valuetypid == type_oid(T_GEOMETRY) ||
 		valuetypid == type_oid(T_GEOGRAPHY))

@@ -9,6 +9,7 @@
 #include "tgeo.h"
 #include "temporalinst.h"
 #include "temporalseq.h"
+#include "temporal_util.h"
 #include "tgeo_parser.h"
 #include "tgeo_spatialfuncs.h"
 
@@ -285,13 +286,9 @@ geo_instarr_to_rtransform(TemporalInst **instants, int count)
         LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
         rtransform *rt = rtransform_compute(firstLwgeomCopy, lwgeom);
         apply_rtransform(firstLwgeomCopy, rt);
-        /* TODO: tgeo_similar, test if the difference between the coordinates of each corresponding point is less then epsilon? */
         if (!lwgeom_similar(firstLwgeomCopy, lwgeom))
             ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
                         errmsg("All regions must be congruent")));
-        /* What should be copied and what not? */
-        /* Should i create a new valuetypid or keep T_GEOMETRY (/ T_GEOGRAPHY) ? */
-        /* Maybe issues with varsize if we keep T_GEOMETRY */
         newInstants[i] = temporalinst_make(RtransformGetDatum(rt), instants[i]->t, type_oid(T_RTRANSFORM));
         pfree(rt);
         lwgeom_free(firstLwgeomCopy);
@@ -333,13 +330,9 @@ geo_seqarr_to_rtransform(TemporalSeq **sequences, int count)
         LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
         rtransform *rt = rtransform_compute(firstLwgeomCopy, lwgeom);
         apply_rtransform(firstLwgeomCopy, rt);
-        /* TODO: tgeo_similar, test if the difference between the coordinates of each corresponding point is less then epsilon? */
         if (!lwgeom_similar(firstLwgeomCopy, lwgeom))
             ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
                         errmsg("All regions must be congruent")));
-        /* What should be copied and what not? */
-        /* Should i create a new valuetypid or keep T_GEOMETRY (/ T_GEOGRAPHY) ? */
-        /* Maybe issues with varsize if we keep T_GEOMETRY */
         rtransform **newRts = palloc(sizeof(rtransform *) * sequences[i]->count);
         TemporalInst **newInstants = palloc(sizeof(TemporalInst *) * sequences[i]->count);
         newRts[0] = rt;
@@ -352,10 +345,31 @@ geo_seqarr_to_rtransform(TemporalSeq **sequences, int count)
             newRts[j] = rtransform_combine(old_rt, rt);
             newInstants[j] = temporalinst_make(RtransformGetDatum(newRts[j]), instant->t, instant->valuetypid);
         }
-        // TODO: solve bbox issue? (can't recreate bbox from only rtransforms)
-        // maybe do same as in tempseq_join
-        newSequences[i] = temporalseq_from_temporalinstarr(newInstants, sequences[i]->count, 
-            sequences[i]->period.lower_inc, sequences[i]->period.upper_inc, false);
+
+        // Create new sequence, copy flags, instants, period and bbox.
+        size_t bboxsize = sizeof(STBOX);
+        size_t memsize = double_pad(bboxsize);
+        for (int j = 0; j < sequences[i]->count; j++)
+            memsize += double_pad(VARSIZE(newInstants[j]));
+        size_t pdata = double_pad(sizeof(TemporalSeq)) + (sequences[i]->count + 1) * sizeof(size_t);
+        newSequences[i] = palloc0(pdata + memsize);
+        SET_VARSIZE(newSequences[i], pdata + memsize);
+        newSequences[i]->count = sequences[i]->count;
+        newSequences[i]->valuetypid = type_oid(T_RTRANSFORM);
+        newSequences[i]->duration = TEMPORALSEQ;
+        memcpy((char *) &newSequences[i]->period, (char *) &sequences[i]->period, sizeof(Period));
+        MOBDB_FLAGS_SET_LINEAR(newSequences[i]->flags, MOBDB_FLAGS_GET_LINEAR(sequences[i]->flags));
+        // Set Z or Geodetic?
+        size_t pos = 0;
+        for (int j = 0; j < sequences[i]->count; j++)
+        {
+            memcpy(((char *)newSequences[i]) + pdata + pos, newInstants[j], 
+                VARSIZE(newInstants[j]));
+            newSequences[i]->offsets[j] = pos;
+            pos += double_pad(VARSIZE(newInstants[j]));
+        }
+        memcpy(((char *) newSequences[i]) + pdata + pos, temporalseq_bbox_ptr(sequences[i]), bboxsize);
+
         for (int j = 0; j < sequences[i]->count; ++j)
         {
             pfree(newRts[j]);
