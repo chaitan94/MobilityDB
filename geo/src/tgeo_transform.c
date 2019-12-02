@@ -346,7 +346,7 @@ geo_seqarr_to_rtransform(TemporalSeq **sequences, int count)
             newInstants[j] = temporalinst_make(RtransformGetDatum(newRts[j]), instant->t, instant->valuetypid);
         }
 
-        // Create new sequence, copy flags, instants, period and bbox.
+        // Create new sequence, copy flags, instants, period and bbox
         size_t bboxsize = sizeof(STBOX);
         size_t memsize = double_pad(bboxsize);
         for (int j = 0; j < sequences[i]->count; j++)
@@ -368,7 +368,9 @@ geo_seqarr_to_rtransform(TemporalSeq **sequences, int count)
             newSequences[i]->offsets[j] = pos;
             pos += double_pad(VARSIZE(newInstants[j]));
         }
-        memcpy(((char *) newSequences[i]) + pdata + pos, temporalseq_bbox_ptr(sequences[i]), bboxsize);
+        void *bbox = ((char *) newSequences[i]) + pdata + pos;
+        temporalseq_bbox(bbox, sequences[i]);
+        newSequences[i]->offsets[sequences[i]->count] = pos;
 
         for (int j = 0; j < sequences[i]->count; ++j)
         {
