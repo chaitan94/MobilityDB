@@ -352,6 +352,8 @@ geo_seqarr_to_rtransform(TemporalSeq **sequences, int count)
             newRts[j] = rtransform_combine(old_rt, rt);
             newInstants[j] = temporalinst_make(RtransformGetDatum(newRts[j]), instant->t, instant->valuetypid);
         }
+        // TODO: solve bbox issue? (can't recreate bbox from only rtransforms)
+        // maybe do same as in tempseq_join
         newSequences[i] = temporalseq_from_temporalinstarr(newInstants, sequences[i]->count, 
             sequences[i]->period.lower_inc, sequences[i]->period.upper_inc, false);
         for (int j = 0; j < sequences[i]->count; ++j)
