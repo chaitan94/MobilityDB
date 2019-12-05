@@ -104,7 +104,7 @@ SELECT count(*) FROM tbl_tgeogpoint,
 ( SELECT * FROM tbl_geography LIMIT 10 ) t
 WHERE NearestApproachInstant(temp, g) IS NOT NULL;
 SELECT count(*) FROM tbl_tgeogpoint t1, 
-( SELECT * FROM tbl_tgeogpoint t2  LIMIT 10 ) t
+( SELECT * FROM tbl_tgeogpoint t2  LIMIT 10 ) t2
 WHERE NearestApproachInstant(t1.temp, t2.temp) IS NOT NULL;
 /* Errors */ 
 SELECT count(*) FROM tbl_tgeogpoint3D, tbl_geography3D 
