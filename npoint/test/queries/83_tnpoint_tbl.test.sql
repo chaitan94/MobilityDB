@@ -20,31 +20,31 @@ SELECT MAX(getPosition(startValue(temp))) FROM test;
  * Transformation functions
  ******************************************************************************/
 
-SELECT DISTINCT temporalType(tnpointinst(inst)) FROM tbl_tnpointinst;
-SELECT DISTINCT temporalType(tnpointi(inst)) FROM tbl_tnpointinst;
-SELECT DISTINCT temporalType(tnpointseq(inst)) FROM tbl_tnpointinst;
-SELECT DISTINCT temporalType(tnpoints(inst)) FROM tbl_tnpointinst;
+SELECT DISTINCT duration(tnpointinst(inst)) FROM tbl_tnpointinst;
+SELECT DISTINCT duration(tnpointi(inst)) FROM tbl_tnpointinst;
+SELECT DISTINCT duration(tnpointseq(inst)) FROM tbl_tnpointinst;
+SELECT DISTINCT duration(tnpoints(inst)) FROM tbl_tnpointinst;
 
 /******************************************************************************/
 
-SELECT DISTINCT temporalType(tnpointinst(ti)) FROM tbl_tnpointi WHERE numInstants(ti) = 1;
-SELECT DISTINCT temporalType(tnpointi(ti)) FROM tbl_tnpointi;
-SELECT DISTINCT temporalType(tnpointseq(ti)) FROM tbl_tnpointi WHERE numInstants(ti) = 1;
-SELECT DISTINCT temporalType(tnpoints(ti)) FROM tbl_tnpointi;
+SELECT DISTINCT duration(tnpointinst(ti)) FROM tbl_tnpointi WHERE numInstants(ti) = 1;
+SELECT DISTINCT duration(tnpointi(ti)) FROM tbl_tnpointi;
+SELECT DISTINCT duration(tnpointseq(ti)) FROM tbl_tnpointi WHERE numInstants(ti) = 1;
+SELECT DISTINCT duration(tnpoints(ti)) FROM tbl_tnpointi;
 
 /******************************************************************************/
 
-SELECT DISTINCT temporalType(tnpointinst(seq)) FROM tbl_tnpointseq WHERE numInstants(seq) = 1;
-SELECT DISTINCT temporalType(tnpointi(seq)) FROM tbl_tnpointseq WHERE numInstants(seq) = 1;
-SELECT DISTINCT temporalType(tnpointseq(seq)) FROM tbl_tnpointseq;
-SELECT DISTINCT temporalType(tnpoints(seq)) FROM tbl_tnpointseq;
+SELECT DISTINCT duration(tnpointinst(seq)) FROM tbl_tnpointseq WHERE numInstants(seq) = 1;
+SELECT DISTINCT duration(tnpointi(seq)) FROM tbl_tnpointseq WHERE numInstants(seq) = 1;
+SELECT DISTINCT duration(tnpointseq(seq)) FROM tbl_tnpointseq;
+SELECT DISTINCT duration(tnpoints(seq)) FROM tbl_tnpointseq;
 
 /******************************************************************************/
 
-SELECT DISTINCT temporalType(tnpointinst(ts)) FROM tbl_tnpoints WHERE numInstants(ts) = 1;
-SELECT DISTINCT temporalType(tnpointi(ts)) FROM tbl_tnpoints WHERE duration(ts) = '00:00:00';
-SELECT DISTINCT temporalType(tnpointseq(ts)) FROM tbl_tnpoints WHERE numSequences(ts) = 1;
-SELECT DISTINCT temporalType(tnpoints(ts)) FROM tbl_tnpoints;
+SELECT DISTINCT duration(tnpointinst(ts)) FROM tbl_tnpoints WHERE numInstants(ts) = 1;
+SELECT DISTINCT duration(tnpointi(ts)) FROM tbl_tnpoints WHERE duration(ts) = '00:00:00';
+SELECT DISTINCT duration(tnpointseq(ts)) FROM tbl_tnpoints WHERE numSequences(ts) = 1;
+SELECT DISTINCT duration(tnpoints(ts)) FROM tbl_tnpoints;
 
 /******************************************************************************
  * Append functions
@@ -64,7 +64,7 @@ SELECT count(*) FROM tbl_tnpoint WHERE temp = (temp::tgeompoint)::tnpoint;
  * Accessor functions
  ******************************************************************************/
 
-SELECT DISTINCT temporalType(temp) FROM tbl_tnpoint ORDER BY 1;
+SELECT DISTINCT duration(temp) FROM tbl_tnpoint ORDER BY 1;
 
 SELECT MAX(memSize(temp)) FROM tbl_tnpoint;
 
@@ -86,13 +86,13 @@ SELECT MAX(duration(getTime(temp))) FROM tbl_tnpoint;
 
 SELECT MAX(getTimestamp(inst)) FROM tbl_tnpointinst;
 
-SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp &= t2.np;
+SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp ?= t2.np;
 
-SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp @= t2.np;
+SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp %= t2.np;
 
 SELECT count(*) FROM tbl_tnpointinst t1, tbl_npoint t2 WHERE everEquals(t1.inst, t2.np);
 
-SELECT count(*) FROM tbl_tnpointinst t1, tbl_npoint t2 WHERE alwaysEquals(t1.inst, t2.np);
+SELECT count(*) FROM tbl_tnpointinst t1, tbl_npoint t2 WHERE always_eq(t1.inst, t2.np);
 
 SELECT MAX(startTimestamp(shift(t1.temp, t2.i))) FROM tbl_tnpoint t1, tbl_interval t2;
 

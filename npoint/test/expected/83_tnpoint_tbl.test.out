@@ -34,100 +34,100 @@ SELECT MAX(getPosition(startValue(temp))) FROM test;
 /******************************************************************************
  * Transformation functions
  ******************************************************************************/
-SELECT DISTINCT temporalType(tnpointinst(inst)) FROM tbl_tnpointinst;
+SELECT DISTINCT duration(tnpointinst(inst)) FROM tbl_tnpointinst;
  temporaltype 
 --------------
  Instant
 (1 row)
 
-SELECT DISTINCT temporalType(tnpointi(inst)) FROM tbl_tnpointinst;
+SELECT DISTINCT duration(tnpointi(inst)) FROM tbl_tnpointinst;
  temporaltype 
 --------------
  InstantSet
 (1 row)
 
-SELECT DISTINCT temporalType(tnpointseq(inst)) FROM tbl_tnpointinst;
+SELECT DISTINCT duration(tnpointseq(inst)) FROM tbl_tnpointinst;
  temporaltype 
 --------------
  Sequence
 (1 row)
 
-SELECT DISTINCT temporalType(tnpoints(inst)) FROM tbl_tnpointinst;
+SELECT DISTINCT duration(tnpoints(inst)) FROM tbl_tnpointinst;
  temporaltype 
 --------------
  SequenceSet
 (1 row)
 
 /******************************************************************************/
-SELECT DISTINCT temporalType(tnpointinst(ti)) FROM tbl_tnpointi WHERE numInstants(ti) = 1;
+SELECT DISTINCT duration(tnpointinst(ti)) FROM tbl_tnpointi WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
  Instant
 (1 row)
 
-SELECT DISTINCT temporalType(tnpointi(ti)) FROM tbl_tnpointi;
+SELECT DISTINCT duration(tnpointi(ti)) FROM tbl_tnpointi;
  temporaltype 
 --------------
  InstantSet
 (1 row)
 
-SELECT DISTINCT temporalType(tnpointseq(ti)) FROM tbl_tnpointi WHERE numInstants(ti) = 1;
+SELECT DISTINCT duration(tnpointseq(ti)) FROM tbl_tnpointi WHERE numInstants(ti) = 1;
  temporaltype 
 --------------
  Sequence
 (1 row)
 
-SELECT DISTINCT temporalType(tnpoints(ti)) FROM tbl_tnpointi;
+SELECT DISTINCT duration(tnpoints(ti)) FROM tbl_tnpointi;
  temporaltype 
 --------------
  SequenceSet
 (1 row)
 
 /******************************************************************************/
-SELECT DISTINCT temporalType(tnpointinst(seq)) FROM tbl_tnpointseq WHERE numInstants(seq) = 1;
+SELECT DISTINCT duration(tnpointinst(seq)) FROM tbl_tnpointseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
  Instant
 (1 row)
 
-SELECT DISTINCT temporalType(tnpointi(seq)) FROM tbl_tnpointseq WHERE numInstants(seq) = 1;
+SELECT DISTINCT duration(tnpointi(seq)) FROM tbl_tnpointseq WHERE numInstants(seq) = 1;
  temporaltype 
 --------------
  InstantSet
 (1 row)
 
-SELECT DISTINCT temporalType(tnpointseq(seq)) FROM tbl_tnpointseq;
+SELECT DISTINCT duration(tnpointseq(seq)) FROM tbl_tnpointseq;
  temporaltype 
 --------------
  Sequence
 (1 row)
 
-SELECT DISTINCT temporalType(tnpoints(seq)) FROM tbl_tnpointseq;
+SELECT DISTINCT duration(tnpoints(seq)) FROM tbl_tnpointseq;
  temporaltype 
 --------------
  SequenceSet
 (1 row)
 
 /******************************************************************************/
-SELECT DISTINCT temporalType(tnpointinst(ts)) FROM tbl_tnpoints WHERE numInstants(ts) = 1;
+SELECT DISTINCT duration(tnpointinst(ts)) FROM tbl_tnpoints WHERE numInstants(ts) = 1;
  temporaltype 
 --------------
  Instant
 (1 row)
 
-SELECT DISTINCT temporalType(tnpointi(ts)) FROM tbl_tnpoints WHERE duration(ts) = '00:00:00';
+SELECT DISTINCT duration(tnpointi(ts)) FROM tbl_tnpoints WHERE duration(ts) = '00:00:00';
  temporaltype 
 --------------
  InstantSet
 (1 row)
 
-SELECT DISTINCT temporalType(tnpointseq(ts)) FROM tbl_tnpoints WHERE numSequences(ts) = 1;
+SELECT DISTINCT duration(tnpointseq(ts)) FROM tbl_tnpoints WHERE numSequences(ts) = 1;
  temporaltype 
 --------------
  Sequence
 (1 row)
 
-SELECT DISTINCT temporalType(tnpoints(ts)) FROM tbl_tnpoints;
+SELECT DISTINCT duration(tnpoints(ts)) FROM tbl_tnpoints;
  temporaltype 
 --------------
  SequenceSet
@@ -160,7 +160,7 @@ SELECT count(*) FROM tbl_tnpoint WHERE temp = (temp::tgeompoint)::tnpoint;
 /******************************************************************************
  * Accessor functions
  ******************************************************************************/
-SELECT DISTINCT temporalType(temp) FROM tbl_tnpoint ORDER BY 1;
+SELECT DISTINCT duration(temp) FROM tbl_tnpoint ORDER BY 1;
  temporaltype 
 --------------
  Instant
@@ -220,13 +220,13 @@ SELECT MAX(getTimestamp(inst)) FROM tbl_tnpointinst;
  2001-12-30 18:06:00+00
 (1 row)
 
-SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp &= t2.np;
+SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp ?= t2.np;
  count 
 -------
    101
 (1 row)
 
-SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp @= t2.np;
+SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp %= t2.np;
  count 
 -------
    101
@@ -238,7 +238,7 @@ SELECT count(*) FROM tbl_tnpointinst t1, tbl_npoint t2 WHERE everEquals(t1.inst,
      0
 (1 row)
 
-SELECT count(*) FROM tbl_tnpointinst t1, tbl_npoint t2 WHERE alwaysEquals(t1.inst, t2.np);
+SELECT count(*) FROM tbl_tnpointinst t1, tbl_npoint t2 WHERE always_eq(t1.inst, t2.np);
  count 
 -------
      0

@@ -80,10 +80,10 @@ SELECT (tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(
  * Accessor Functions
  *****************************************************************************/
 
-SELECT temporalType(tnpoint 'Npoint(1, 0.5)@2000-01-01');
-SELECT temporalType(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
-SELECT temporalType(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
-SELECT temporalType(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
+SELECT duration(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT duration(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+SELECT duration(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+SELECT duration(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
 
 SELECT memSize(tnpoint 'Npoint(1, 0.5)@2000-01-01');
 SELECT memSize(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
@@ -116,15 +116,15 @@ SELECT getTime(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, 
 
 SELECT getTimestamp(tnpoint 'Npoint(1, 0.5)@2000-01-01');
 
-SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' &= 'Npoint(1, 0.5)@2000-01-01';
-SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' &= 'Npoint(1, 0.5)@2000-01-01';
-SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' &= 'Npoint(1, 0.5)@2000-01-01';
-SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}' &= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' ?= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' ?= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' ?= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}' ?= 'Npoint(1, 0.5)@2000-01-01';
 
-SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' @= 'Npoint(1, 0.5)@2000-01-01';
-SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' @= 'Npoint(1, 0.5)@2000-01-01';
-SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' @= 'Npoint(1, 0.5)@2000-01-01';
-SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}' @= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint 'Npoint(1, 0.5)@2000-01-01' %= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}' %= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]' %= 'Npoint(1, 0.5)@2000-01-01';
+SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}' %= 'Npoint(1, 0.5)@2000-01-01';
 
 SELECT shift(tnpoint 'Npoint(1, 0.5)@2000-01-01', '1 year'::interval);
 SELECT shift(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', '1 year'::interval);
