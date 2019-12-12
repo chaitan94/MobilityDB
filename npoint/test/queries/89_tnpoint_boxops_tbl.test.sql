@@ -18,13 +18,13 @@ CREATE TABLE test_tnpointboundboxops(
 -- <type> op tnpoint
 
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'geomcollection', 'tnpoint', count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g && temp;
+SELECT '&&', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g && temp;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'geomcollection', 'tnpoint', count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g @> temp;
+SELECT '@>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g @> temp;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'geomcollection', 'tnpoint', count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g <@ temp;
+SELECT '<@', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g <@ temp;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'geomcollection', 'tnpoint', count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g ~= temp;
+SELECT '~=', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g ~= temp;
 
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
 SELECT '&&', 'timestamptz', 'tnpoint', count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t && temp;
@@ -75,13 +75,13 @@ SELECT '~=', 'stbox', 'tnpoint', count(*) FROM tbl_stbox, tbl_tnpoint WHERE b ~=
 --  tnpoint op <type>
 
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '&&', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp && g;
+SELECT '&&', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp && g;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '@>', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp @> g;
+SELECT '@>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp @> g;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '<@', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp <@ g;
+SELECT '<@', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <@ g;
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
-SELECT '~=', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp ~= g;
+SELECT '~=', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp ~= g;
 
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
 SELECT '&&', 'tnpoint', 'timestamptz', count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp && t;
@@ -145,17 +145,17 @@ CREATE INDEX tbl_tnpoint_gist_idx ON tbl_tnpoint USING GIST(temp);
 -- <type> op tnpoint
 
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g && temp )
-WHERE op = '&&' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g && temp )
+WHERE op = '&&' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g @> temp )
-WHERE op = '@>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g @> temp )
+WHERE op = '@>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g <@ temp )
-WHERE op = '<@' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g <@ temp )
+WHERE op = '<@' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g ~= temp )
-WHERE op = '~=' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g ~= temp )
+WHERE op = '~=' and leftarg = 'geometry' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointboundboxops
 SET gistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t && temp )
@@ -226,17 +226,17 @@ WHERE op = '~=' and leftarg = 'stbox' and rightarg = 'tnpoint';
 -- tnpoint op <type>
 
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp && g )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp && g )
+WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp @> g )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp @> g )
+WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp <@ g )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <@ g )
+WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointboundboxops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp ~= g )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp ~= g )
+WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'geometry';
 
 UPDATE test_tnpointboundboxops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp && t )
@@ -326,17 +326,17 @@ CREATE INDEX tbl_tnpoint_spgist_idx ON tbl_tnpoint USING SPGIST(temp);
 -- <type> op tnpoint
 
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g && temp )
-WHERE op = '&&' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g && temp )
+WHERE op = '&&' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g @> temp )
-WHERE op = '@>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g @> temp )
+WHERE op = '@>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g <@ temp )
-WHERE op = '<@' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g <@ temp )
+WHERE op = '<@' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_geomcollection, tbl_tnpoint WHERE g ~= temp )
-WHERE op = '~=' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g ~= temp )
+WHERE op = '~=' and leftarg = 'geometry' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointboundboxops
 SET spgistidx = ( SELECT count(*) FROM tbl_timestamptz, tbl_tnpoint WHERE t && temp )
@@ -407,17 +407,17 @@ WHERE op = '~=' and leftarg = 'stbox' and rightarg = 'tnpoint';
 -- tnpoint op <type>
 
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp && g )
-WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp && g )
+WHERE op = '&&' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp @> g )
-WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp @> g )
+WHERE op = '@>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp <@ g )
-WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <@ g )
+WHERE op = '<@' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointboundboxops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geomcollection WHERE temp ~= g )
-WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp ~= g )
+WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'geometry';
 
 UPDATE test_tnpointboundboxops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_timestamptz WHERE temp && t )

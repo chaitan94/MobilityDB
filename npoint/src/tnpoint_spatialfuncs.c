@@ -622,9 +622,8 @@ tnpoint_twcentroid(PG_FUNCTION_ARGS)
  * Temporal azimuth
  *****************************************************************************/
 
-static TemporalSeq **
-tnpointseq_azimuth1(TemporalInst *inst1, TemporalInst *inst2, bool lower_inc,
-	int *count)
+static TemporalInst **
+tnpointseq_azimuth1(TemporalInst *inst1, TemporalInst *inst2, int *count)
 {
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
 	npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
@@ -640,90 +639,128 @@ tnpointseq_azimuth1(TemporalInst *inst1, TemporalInst *inst2, bool lower_inc,
 	Datum traj = tnpointseq_trajectory1(inst1, inst2);
 	int countVertices = DatumGetInt32(call_function1(
 		LWGEOM_numpoints_linestring, traj));
-	TemporalSeq **result = palloc(sizeof(TemporalSeq *) * (countVertices - 1));
-	TemporalInst *instants[2];
-
-	Datum vertex1 = call_function2(LWGEOM_pointn_linestring, traj, Int32GetDatum(1));
-	TimestampTz time1 = inst1->t;
+	TemporalInst **result = palloc(sizeof(TemporalInst *) * countVertices);
+	Datum vertex1 = call_function2(LWGEOM_pointn_linestring, traj, 
+		Int32GetDatum(1)); /* 1-based */
+	Datum azimuth;
+	TimestampTz time = inst1->t;
 	for (int i = 0; i < countVertices - 1; i++)
 	{
 		Datum vertex2 = call_function2(LWGEOM_pointn_linestring, traj, 
-			Int32GetDatum(i + 2));
+			Int32GetDatum(i + 2)); /* 1-based */
 		double fraction = DatumGetFloat8(call_function2(
 			LWGEOM_line_locate_point, traj, vertex2));
-		TimestampTz time2 = (TimestampTz)(inst1->t + (inst2->t - inst1->t) * fraction);
-
-		Datum azimuth = call_function2(LWGEOM_azimuth, vertex1, vertex2);
-		bool lower_inc1 = (i == 0)? lower_inc: true;
-		instants[0] = temporalinst_make(azimuth, time1, FLOAT8OID);
-		instants[1] = temporalinst_make(azimuth, time2, FLOAT8OID);
-		result[i] = temporalseq_from_temporalinstarr(instants, 2, 
-			lower_inc1, false, true, false);
-
-		pfree(instants[0]); pfree(instants[1]);
+		azimuth = call_function2(LWGEOM_azimuth, vertex1, vertex2);
+		result[i] = temporalinst_make(azimuth, time, FLOAT8OID);
 		pfree(DatumGetPointer(vertex1));
 		vertex1 = vertex2;
-		time1 = time2;
+		time = 	inst1->t + (inst2->t - inst1->t) * fraction;
 	}
-
 	pfree(DatumGetPointer(traj));
 	pfree(DatumGetPointer(vertex1));
 	*count = countVertices - 1;
 	return result;
 }
 
-static TemporalSeq **
-tnpointseq_azimuth2(TemporalSeq *seq, int *count)
+static int
+tnpointseq_azimuth2(TemporalSeq **result, TemporalSeq *seq)
 {
+	/* Instantaneous sequence */
 	if (seq->count == 1)
-	{
-		*count = 0;
-		return NULL;
-	}
+		return 0;
 
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * (seq->count - 1));
-	int *countseqs = palloc0(sizeof(int) * (seq->count - 1));
-	int totalseqs = 0;
+	TemporalInst ***instants = palloc(sizeof(TemporalInst *) * (seq->count - 1));
+	int *countinsts = palloc0(sizeof(int) * (seq->count - 1));
+	int totalinsts = 0; /* number of created instants so far */
+	int l = 0; /* number of created sequences */
+	int m = 0; /* index of the segment from which to assemble instants */
+	Datum last_value;
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
 	bool lower_inc = seq->period.lower_inc;
 	for (int i = 0; i < seq->count - 1; i++)
 	{
 		TemporalInst *inst2 = temporalseq_inst_n(seq, i + 1);
-		sequences[i] = tnpointseq_azimuth1(inst1, inst2, lower_inc, &countseqs[i]);
-		totalseqs += countseqs[i];
+		instants[i] = tnpointseq_azimuth1(inst1, inst2, &countinsts[i]);
+		/* If constant segment */
+		if (countinsts[i] == 0)
+		{
+			/* Assemble all instants created so far */
+			if (totalinsts != 0)
+			{
+				TemporalInst **allinstants = palloc(sizeof(TemporalInst *) * (totalinsts + 1));
+				int n = 0;
+				for (int j = m; j < i; j++)
+				{
+					for (int k = 0; k < countinsts[j]; k++)
+						allinstants[n++] = instants[j][k];
+					if (instants[j] != NULL)
+						pfree(instants[j]);
+				}
+				/* Add closing instant */
+				last_value = temporalinst_value(allinstants[n - 1]);
+				allinstants[n++] = temporalinst_make(last_value, inst1->t, FLOAT8OID);
+				/* Resulting sequence has stepwise interpolation */
+				result[l++] = temporalseq_from_temporalinstarr(allinstants, 
+					n, lower_inc, true, false, true);
+				for (int j = 0; j < n; j++)
+					pfree(allinstants[j]);
+				pfree(allinstants);
+				/* Indicate that we have consommed all instants created so far */
+				m = i;
+				totalinsts = 0;
+			}
+		}
+		else
+		{
+			totalinsts += countinsts[i];
+		}
 		inst1 = inst2;
 		lower_inc = true;
 	}
-
-	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
-	int k = 0;
-	for (int i = 0; i < seq->count - 1; i++)
+	if (totalinsts != 0)
 	{
-		for (int j = 0; j < countseqs[i]; j++)
-			allsequences[k++] = sequences[i][j];
-		if (sequences[i] != NULL)
-			pfree(sequences[i]);
+		/* Assemble all instants created so far */
+		TemporalInst **allinstants = palloc(sizeof(TemporalInst *) * (totalinsts + 1));
+		int n = 0;
+		for (int j = m; j < seq->count - 1; j++)
+		{
+			for (int k = 0; k < countinsts[j]; k++)
+				allinstants[n++] = instants[j][k];
+			if (instants[j] != NULL)
+				pfree(instants[j]);
+		}
+		/* Add closing instant */
+		last_value = temporalinst_value(allinstants[n - 1]);
+		allinstants[n++] = temporalinst_make(last_value, inst1->t, FLOAT8OID);
+		/* Resulting sequence has stepwise interpolation */
+		result[l++] = temporalseq_from_temporalinstarr(allinstants, 
+			n, lower_inc, true, false, true);
+		for (int j = 0; j < n; j++)
+			pfree(allinstants[j]);
+		pfree(allinstants);
 	}
-
-	pfree(sequences);
-	pfree(countseqs);
-	*count = totalseqs;
-	return allsequences;
+	pfree(instants);
+	pfree(countinsts);
+	return l;
 }
 
 static TemporalS *
 tnpointseq_azimuth(TemporalSeq *seq)
 {
-	int countseqs;
-	TemporalSeq **allsequences = tnpointseq_azimuth2(seq, &countseqs);
-	if (countseqs == 0)
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * (seq->count - 1));
+	int count = tnpointseq_azimuth2(sequences, seq);
+	if (count == 0)
+	{
+		pfree(sequences);
 		return NULL;
+	}
 
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, countseqs, 
-		true, true);
-	for (int i = 0; i < countseqs; i++)
-		pfree(allsequences[i]);
-	pfree(allsequences);
+	/* Resulting sequence set has stepwise interpolation */
+	TemporalS *result = temporals_from_temporalseqarr(sequences, count, 
+		false, true);
+	for (int i = 0; i < count; i++)
+		pfree(sequences[i]);
+	pfree(sequences);
 	return result;
 }
 
@@ -733,39 +770,25 @@ tnpoints_azimuth(TemporalS *ts)
 	if (ts->count == 1)
 		return tnpointseq_azimuth(temporals_seq_n(ts, 0));
 		
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
-	int *countseqs = palloc0(sizeof(int) * ts->count);
-	int totalseqs = 0;
-	for (int i = 0; i < ts->count; i++)
-	{
-		TemporalSeq *seq = temporals_seq_n(ts, i);
-		sequences[i] = tnpointseq_azimuth2(seq, &countseqs[i]);
-		totalseqs += countseqs[i];
-	}
-	if (totalseqs == 0)
-	{
-		pfree(sequences);
-		pfree(countseqs);
-		return NULL;
-	}
-
-	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
+	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * ts->totalcount);
 	int k = 0;
 	for (int i = 0; i < ts->count; i++)
 	{
-		for (int j = 0; j < countseqs[i]; j++)
-			allsequences[k++] = sequences[i][j];
-		if (sequences[i] != NULL)
-			pfree(sequences[i]);
+		TemporalSeq *seq = temporals_seq_n(ts, i);
+		int countstep = tnpointseq_azimuth2(&sequences[k], seq);
+		k += countstep;
 	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, totalseqs, 
-		true, true);
+	if (k == 0)
+		return NULL;
 
-	for (int i = 0; i < totalseqs; i++)
-		pfree(allsequences[i]);
-	pfree(allsequences);
+	/* Resulting sequence set has stepwise interpolation */
+	TemporalS *result = temporals_from_temporalseqarr(sequences, k, 
+		false, true);
+
+	for (int i = 0; i < k; i++)
+		pfree(sequences[i]);
 	pfree(sequences);
-	pfree(countseqs);
+	
 	return result;
 }
 

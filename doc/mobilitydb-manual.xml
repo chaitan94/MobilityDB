@@ -4952,7 +4952,7 @@ WHERE S1.SumDist &lt;= ALL (
 		<sect1>
 			<title>Static Network Types</title>
 			<para>
-				An <varname>npoint</varname> value is a couple of the form <varname>(rid, position)</varname> where <varname>rid</varname> is a <varname>bigint</varname> value representing a route identifier and <varname>position</varname> is a <varname>float</varname> value in the range [0,1] indicating its relative position. <varname>position = 0</varname> denotes the starting position of route and <varname>position = 1</varname> denotes the ending position of route. The road distance between an <varname>npoint</varname> value and the starting position of route with identifier <varname>rid</varname> is computed by <varname>position x length</varname>, where <varname>length</varname> is the route length. Examples of input of network point values are as follows:
+				An <varname>npoint</varname> value is a couple of the form <varname>(rid, position)</varname> where <varname>rid</varname> is a <varname>bigint</varname> value representing a route identifier and <varname>position</varname> is a <varname>float</varname> value in the range [0,1] indicating its relative position. The value <varname>position = 0</varname> denotes the starting position of route and the value <varname>position = 1</varname> denotes the ending position of route. The road distance between an <varname>npoint</varname> value and the starting position of route with identifier <varname>rid</varname> is computed by <varname>position x length</varname>, where <varname>length</varname> is the route length. Examples of input of network point values are as follows:
 				<programlisting>
 SELECT npoint 'Npoint(76, 0.3)';
 SELECT npoint 'Npoint(64, 1.0)';
@@ -5080,26 +5080,6 @@ SELECT geometry 'LINESTRING(406.7 702.6,383.6 845.1)'::nsegment;
 -- NULL
 					</programlisting>
 				</para>
-
-				<itemizedlist>
-					<listitem>
-						<para><varname>route</varname>: Route</para>
-						<para>Signature: <varname>route({npoint, nsegment}): bigint</varname></para>
-						<programlisting>
-SELECT getType(tint '[1@2012-01-01, 2@2012-01-02, 3@2012-01-03]');
--- "Sequence"
-						</programlisting>
-					</listitem>
-
-					<listitem>
-					<para><varname>memSize</varname>: Memory size in bytes</para>
-						<para>Signature: <varname>memSize(ttype): integer</varname></para>
-						<programlisting>
-SELECT memSize(tint '{1@2012-01-01, 2@2012-01-02, 3@2012-01-03}');
--- 280
-						</programlisting>
-					</listitem>
-				</itemizedlist>
 			</sect2>
 
 			<sect2>
@@ -5185,7 +5165,7 @@ SELECT tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02,
 			</para>
 
 			<para>
-				The temporal network point type support type modifiers (or typmod in PostgreSQL terminology). The possible values for the type modifier are Instant, InstantSet, Sequence, and SequenceSet. If no type modifier is specified for a column, values of any duration are allowed.
+				The temporal network point type support type modifiers (or typmod in PostgreSQL terminology). The possible values for the type modifier are <varname>Instant</varname>, <varname>InstantSet</varname>, <varname>Sequence</varname>, and <varname>SequenceSet</varname>. If no type modifier is specified for a column, values of any duration are allowed.
 					<programlisting>
 SELECT tnpoint(Sequence) '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, 
 	Npoint(1, 0.5)@2000-01-03]';
@@ -5318,8 +5298,8 @@ SELECT cumulativeLength(tnpoint '{[NPoint(1, 0.3)@2000-01-01, NPoint(1, 0.5)@200
 					<programlisting>
 SELECT speed(tnpoint '[NPoint(1, 0.1)@2000-01-01, NPoint(1, 0.4)@2000-01-02, 
 	NPoint(1, 0.6)@2000-01-03]') * 3600 * 24;
--- "[81.5636112703177@2000-01-01, 54.3757408468784@2000-01-02, 
-	54.3757408468784@2000-01-03]"
+-- "Interp=Stepwise;[21.4016800272077@2000-01-01, 14.2677866848051@2000-01-02, 
+	14.2677866848051@2000-01-03]"
 					</programlisting>
 				</listitem>
 
@@ -5335,9 +5315,9 @@ SELECT stbox(npoint 'NPoint(1,0.3)');
 					<para><varname>stbox</varname>: Construct the bounding box from a npoint and a timestamp or period</para>
 					<programlisting>
 SELECT stbox(npoint 'NPoint(1,0.3)', timestamptz '2000-01-01');
--- "STBOX M((48.711754,20.92568,-3.6e+09),(48.711758,20.925682,-3.6e+09))"
+-- "STBOX T((62.786633,80.143555,2000-01-01),(62.786636,80.143562,2000-01-01))"
 SELECT stbox(npoint 'NPoint(1,0.3)', period '[2000-01-01,2000-01-02]');
--- "STBOX M((48.711754,20.92568,-3.6e+09),(48.711758,20.925682,8.28e+10))"
+-- "STBOX T((62.786633,80.143555,2000-01-01),(62.786636,80.143562,2000-01-02))"
 					</programlisting>
 				</listitem>
 
