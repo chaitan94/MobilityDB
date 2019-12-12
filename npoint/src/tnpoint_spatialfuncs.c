@@ -543,8 +543,9 @@ tnpoints_speed(TemporalS *ts)
 		pfree(sequences);
 		return NULL;
 	}
+	/* The resulting sequence set has stepwise interpolation */
 	TemporalS *result = temporals_from_temporalseqarr(sequences, k, 
-		true, true);
+		false, true);
 	for (int i = 0; i < k; i++)
 		pfree(sequences[i]);
 	pfree(sequences);

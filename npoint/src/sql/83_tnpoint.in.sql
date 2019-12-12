@@ -136,6 +136,11 @@ CREATE FUNCTION tnpoints(tnpoint)
 	AS 'MODULE_PATHNAME', 'temporal_to_temporals'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION toLinear(tnpoint)
+	RETURNS tnpoint
+	AS 'MODULE_PATHNAME', 'tstepw_to_linear'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /******************************************************************************
  * Append function
  ******************************************************************************/

@@ -95,7 +95,7 @@ nsegment_parse(char **str)
 }
 
 static TemporalSeq *
-tnpointseq_parse(char **str, Oid basetype, bool end)
+tnpointseq_parse(char **str, Oid basetype, bool linear, bool end)
 {
 	p_whitespace(str);
 	bool lower_inc = false, upper_inc = false;
@@ -152,7 +152,7 @@ tnpointseq_parse(char **str, Oid basetype, bool end)
 	p_cbracket(str);
 	p_cparen(str);
 	TemporalSeq *result = temporalseq_from_temporalinstarr(insts,
-		count, lower_inc, upper_inc, true, true);
+		count, lower_inc, upper_inc, linear, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(insts[i]);
@@ -162,7 +162,7 @@ tnpointseq_parse(char **str, Oid basetype, bool end)
 }
 
 static TemporalS *
-tnpoints_parse(char **str, Oid basetype)
+tnpoints_parse(char **str, Oid basetype, bool linear)
 {
 	p_whitespace(str);
 	if (!p_obrace(str))
@@ -171,13 +171,13 @@ tnpoints_parse(char **str, Oid basetype)
 
 	//FIXME: parsing twice
 	char *bak = *str;
-	TemporalSeq *seq = tnpointseq_parse(str, basetype, false);
+	TemporalSeq *seq = tnpointseq_parse(str, basetype, linear, false);
 	int count = 1;
 	while (p_comma(str))
 	{
 		count++;
 		pfree(seq);
-		seq = tnpointseq_parse(str, basetype, false);
+		seq = tnpointseq_parse(str, basetype, linear, false);
 	}
 	pfree(seq);
 	if (!p_cbrace(str))
@@ -194,11 +194,11 @@ tnpoints_parse(char **str, Oid basetype)
 	for (int i = 0; i < count; i++)
 	{
 		p_comma(str);
-		seqs[i] = tnpointseq_parse(str, basetype, false);
+		seqs[i] = tnpointseq_parse(str, basetype, linear, false);
 	}
 	p_cbrace(str);
 	TemporalS *result = temporals_from_temporalseqarr(seqs, count, 
-		true, true);
+		linear, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(seqs[i]);
@@ -212,11 +212,19 @@ tnpoint_parse(char **str, Oid basetype)
 {
 	p_whitespace(str);
 	
+	bool linear = linear_interpolation(basetype);
+	/* Starts with "Interp=Stepwise" */
+	if (strncasecmp(*str,"Interp=Stepwise;",16) == 0)
+	{
+		/* Move str after the semicolon */
+		*str += 16;
+		linear = false;
+	}
 	/* Determine the type of the temporal point */
 	if (**str != '{' && **str != '[' && **str != '(')
 		return (Temporal *)temporalinst_parse(str, basetype, true);
 	else if (**str == '[' || **str == '(')
-		return (Temporal *)tnpointseq_parse(str, basetype, true);		
+		return (Temporal *)tnpointseq_parse(str, basetype, linear, true);		
 	else if (**str == '{')
 	{
 		char *bak = *str;
@@ -225,7 +233,7 @@ tnpoint_parse(char **str, Oid basetype)
 		if (**str == '[' || **str == '(')
 		{
 			*str = bak;
-			return (Temporal *)tnpoints_parse(str, basetype);
+			return (Temporal *)tnpoints_parse(str, basetype, linear);
 		}
 		else
 		{
