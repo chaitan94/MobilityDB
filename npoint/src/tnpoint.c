@@ -69,7 +69,7 @@ tnpoint_make_tnpointseq(PG_FUNCTION_ARGS)
 	}
 
 	TemporalSeq *result = temporalseq_from_temporalinstarr(instants,
-		count, lower_inc, upper_inc, true);
+		count, lower_inc, upper_inc, true, true);
 
 	pfree(instants);
 	PG_FREE_IF_COPY(array, 0);
@@ -118,7 +118,7 @@ tnpointseq_as_tgeompointseq(TemporalSeq *seq)
 		instants[i] = tnpointinst_as_tgeompointinst(inst);
 	}
 	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, seq->count,
-		seq->period.lower_inc, seq->period.upper_inc, false);
+		seq->period.lower_inc, seq->period.upper_inc, true, false);
 	for (int i = 0; i < seq->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -135,7 +135,7 @@ tnpoints_as_tgeompoints(TemporalS *ts)
 		sequences[i] = tnpointseq_as_tgeompointseq(seq);
 	}
 	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, 
-		false);
+		true, false);
 	for (int i = 0; i < ts->count; i++)
 		pfree(sequences[i]);
 	pfree(sequences);
@@ -146,7 +146,7 @@ Temporal *
 tnpoint_as_tgeompoint_internal(Temporal *temp)
 {
 	Temporal *result = NULL;
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tnpointinst_as_tgeompointinst((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -226,7 +226,7 @@ tgeompointseq_as_tnpointseq(TemporalSeq *seq)
 		instants[i] = inst1;
 	}
 	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, seq->count,
-		seq->period.lower_inc, seq->period.upper_inc, false);
+		seq->period.lower_inc, seq->period.upper_inc, true, false);
 	for (int i = 0; i < seq->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -251,7 +251,7 @@ tgeompoints_as_tnpoints(TemporalS *ts)
 		sequences[i] = seq1;
 	}
 	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, 
-		false);
+		true, false);
 	for (int i = 0; i < ts->count; i++)
 		pfree(sequences[i]);
 	pfree(sequences);
@@ -265,7 +265,7 @@ tgeompoint_as_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result = NULL;
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tgeompointinst_as_tnpointinst((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -376,7 +376,7 @@ tnpoint_positions(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	ArrayType *result = NULL; /* make the compiler quiet */
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = tnpointinst_positions((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -469,7 +469,7 @@ tnpoint_routes(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	ArrayType *result = NULL; /* make the compiler quiet */
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = tnpointinst_routes((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 

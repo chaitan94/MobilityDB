@@ -571,7 +571,7 @@ temporals_to_temporali(TemporalS *ts)
 
 /* Set of values taken by the temporal value */
 
-static Datum *
+Datum *
 temporali_values1(TemporalI *ti, int *count)
 {
 	Datum *result = palloc(sizeof(Datum *) * ti->count);

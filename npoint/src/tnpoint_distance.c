@@ -66,7 +66,7 @@ distance_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2,
 		if (fraction > 0 && fraction < 1)
 		{
 			TimestampTz inttime = (TimestampTz)(time1 + (time2 - time1) * fraction);
-			Datum intnp = temporalseq_value_at_timestamp1(inst1, inst2, inttime);
+			Datum intnp = temporalseq_value_at_timestamp1(inst1, inst2, true, inttime);
 			Datum intgeom = npoint_as_geom_internal(DatumGetNpoint(intnp));
 			result[k++] = temporalinst_make(geom_distance2d(geo, intgeom), inttime, FLOAT8OID);
 
@@ -118,7 +118,7 @@ distance_tnpointseq_geo(TemporalSeq *seq, Datum geo)
 		inst1->t, FLOAT8OID);
 
 	TemporalSeq *result = temporalseq_from_temporalinstarr(allinstants, k,
-		seq->period.lower_inc, seq->period.upper_inc, true);
+		seq->period.lower_inc, seq->period.upper_inc, true, true);
 
 	for (int i = 0; i < k; i++)
 		pfree(allinstants[i]);
@@ -138,7 +138,8 @@ distance_tnpoints_geo(TemporalS *ts, Datum geo)
 		TemporalSeq *seq = temporals_seq_n(ts, i);
 		sequences[i] = distance_tnpointseq_geo(seq, geo);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, true);
+	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, 
+		true, true);
 
 	for (int i = 0; i < ts->count; i++)
 		pfree(sequences[i]);
@@ -252,7 +253,7 @@ distance_tnpointseq_tnpointseq1(TemporalInst *start1, TemporalInst *start2,
 		else if (fraction1 < fraction2)
 		{
 			TimestampTz inttime = (TimestampTz)(start1->t + (end1->t - start1->t) * fraction1);
-			Datum intnp = temporalseq_value_at_timestamp1(start2, end2, inttime);
+			Datum intnp = temporalseq_value_at_timestamp1(start2, end2, true, inttime);
 			Datum intgeom = npoint_as_geom_internal(DatumGetNpoint(intnp));
 			result[k++] = temporalinst_make(geom_distance2d(vertex1, intgeom), inttime, FLOAT8OID);
 
@@ -265,7 +266,7 @@ distance_tnpointseq_tnpointseq1(TemporalInst *start1, TemporalInst *start2,
 		else
 		{
 			TimestampTz inttime = (TimestampTz)(start1->t + (end1->t - start1->t) * fraction2);
-			Datum intnp = temporalseq_value_at_timestamp1(start1, end1, inttime);
+			Datum intnp = temporalseq_value_at_timestamp1(start1, end1, true, inttime);
 			Datum intgeom = npoint_as_geom_internal(DatumGetNpoint(intnp));
 			result[k++] = temporalinst_make(geom_distance2d(intgeom, vertex2), inttime, FLOAT8OID);
 
@@ -320,7 +321,7 @@ distance_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
 	pfree(DatumGetPointer(endGeom1)); pfree(DatumGetPointer(endGeom2));
 
 	TemporalSeq *result = temporalseq_from_temporalinstarr(allinstants, k, 
-		seq1->period.lower_inc, seq1->period.upper_inc, true);
+		seq1->period.lower_inc, seq1->period.upper_inc, true, true);
 
 	for (int i = 0; i < k; i++)
 		pfree(allinstants[i]);
@@ -340,7 +341,8 @@ distance_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
 		TemporalSeq *seq2 = temporals_seq_n(ts2, i);
 		sequences[i] = distance_tnpointseq_tnpointseq(seq1, seq2);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(sequences, ts1->count, true);
+	TemporalS *result = temporals_from_temporalseqarr(sequences, ts1->count, 
+		true, true);
 
 	for (int i = 0; i < ts1->count; i++)
 		pfree(sequences[i]);
@@ -372,7 +374,7 @@ distance_geo_tnpoint(PG_FUNCTION_ARGS)
 
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Temporal *result = NULL; 
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
@@ -402,7 +404,7 @@ distance_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Datum geom = npoint_as_geom_internal(np);
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 	Temporal *result = NULL; 
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
@@ -442,7 +444,7 @@ distance_tnpoint_geo(PG_FUNCTION_ARGS)
 
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result = NULL; 
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp, 
 			PointerGetDatum(gs), &geom_distance2d, 
@@ -473,7 +475,7 @@ distance_tnpoint_npoint(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 
 	Temporal *result = NULL; 
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_geo((TemporalInst *)temp,
 			PointerGetDatum(gs), &geom_distance2d, 
@@ -504,7 +506,7 @@ distance_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2)
 		return NULL;
 	
 	Temporal *result = NULL;
-	temporal_duration_is_valid(sync1->duration);
+	ensure_valid_duration(sync1->duration);
 	if (sync1->duration == TEMPORALINST)
 		result = (Temporal *)tspatialrel_tnpointinst_tnpointinst(
 			(TemporalInst *)sync1, (TemporalInst *)sync2, 

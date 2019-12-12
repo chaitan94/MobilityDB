@@ -314,7 +314,7 @@ spatialrel_tnpoint_geo(Temporal *temp, Datum geom,
 	Datum (*operator)(Datum, Datum), bool invert)
 {
 	bool result = false;
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = spatialrel_tnpointinst_geo((TemporalInst *)temp, geom,
 			operator, invert);
@@ -335,7 +335,7 @@ spatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
 	Datum (*operator)(Datum, Datum))
 {
 	bool result = false;
-	temporal_duration_is_valid(temp1->duration);
+	ensure_valid_duration(temp1->duration);
 	if (temp1->duration == TEMPORALINST) 
 		result = spatialrel_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, operator);
@@ -357,7 +357,7 @@ static text *
 relate_tnpoint_geo_internal(Temporal *temp, Datum geo, bool invert)
 {
 	text *result = NULL;
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = relate_tnpointinst_geo((TemporalInst *)temp, geo, invert);
 	else if (temp->duration == TEMPORALI)
@@ -376,7 +376,7 @@ spatialrel3_tnpoint_geo(Temporal *temp, Datum geom, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
 	bool result = false;
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = spatialrel3_tnpointinst_geo((TemporalInst *)temp, geom, param,
 			operator, invert);
@@ -397,7 +397,7 @@ spatialrel3_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2, Datum param,
 	Datum (*operator)(Datum, Datum, Datum))
 {
 	bool result = false;
-	temporal_duration_is_valid(temp1->duration);
+	ensure_valid_duration(temp1->duration);
 	if (temp1->duration == TEMPORALINST) 
 		result = spatialrel3_tnpointinst_tnpointinst(
 			(TemporalInst *)temp1, (TemporalInst *)temp2, param, operator);
@@ -1427,7 +1427,7 @@ relate_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	}
 	
 	text *result = NULL;
-	temporal_duration_is_valid(inter1->duration);
+	ensure_valid_duration(inter1->duration);
 	if (inter1->duration == TEMPORALINST)
 		result = relate_tnpointinst_tnpointinst(
 			(TemporalInst *)inter1, (TemporalInst *)inter2);

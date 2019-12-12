@@ -202,7 +202,7 @@ tnpoint_trajectory(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum result = 0; 
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = tnpointinst_geom((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI)
@@ -280,7 +280,7 @@ Datum
 tnpoint_geom(Temporal *temp)
 {
 	Datum result = 0;
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = tnpointinst_geom((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -338,7 +338,7 @@ tnpoint_length(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	double result = 0.0; 
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST || temp->duration == TEMPORALI)
 		;
 	else if (temp->duration == TEMPORALSEQ)
@@ -383,7 +383,7 @@ tnpointseq_cumulative_length(TemporalSeq *seq, double prevlength)
 		TemporalInst *inst1 = temporalinst_make(Float8GetDatum(prevlength), 
 			inst->t, FLOAT8OID);
 		TemporalSeq *result = temporalseq_from_temporalinstarr(&inst1, 1,
-			true, true, false);
+			true, true, true, false);
 		pfree(inst1);
 		return result;
 	}
@@ -405,7 +405,7 @@ tnpointseq_cumulative_length(TemporalSeq *seq, double prevlength)
 		np1 = np2;
 	}
 	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, seq->count,
-		seq->period.lower_inc, seq->period.upper_inc, false);
+		seq->period.lower_inc, seq->period.upper_inc, true, false);
 
 	for (int i = 1; i < seq->count; i++)
 		pfree(instants[i]);
@@ -426,7 +426,7 @@ tnpoints_cumulative_length(TemporalS *ts)
 		length += DatumGetFloat8(temporalinst_value(end));
 	}
 	TemporalS *result = temporals_from_temporalseqarr(sequences,
-		ts->count, false);
+		ts->count, true, false);
 
 	for (int i = 1; i < ts->count; i++)
 		pfree(sequences[i]);
@@ -441,7 +441,7 @@ tnpoint_cumulative_length(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result = NULL; 
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tnpointinst_set_zero((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI)
@@ -482,7 +482,7 @@ tnpointseq_speed(TemporalSeq *seq)
 	instants[seq->count-1] = temporalinst_make(Float8GetDatum(speed),
 	   inst2->t, FLOAT8OID);
 	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, seq->count, 
-		seq->period.lower_inc, seq->period.upper_inc, true);
+		seq->period.lower_inc, seq->period.upper_inc, true, true);
 
 	for (int i = 0; i < seq->count; i++)
 		pfree(instants[i]);
@@ -508,7 +508,8 @@ tnpoints_speed(TemporalS *ts)
 		pfree(sequences);
 		return NULL;
 	}
-	TemporalS *result = temporals_from_temporalseqarr(sequences, k, true);
+	TemporalS *result = temporals_from_temporalseqarr(sequences, k, 
+		true, true);
 	for (int i = 0; i < k; i++)
 		pfree(sequences[i]);
 	pfree(sequences);
@@ -522,7 +523,7 @@ tnpoint_speed(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result = NULL; 
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tnpointinst_set_zero((TemporalInst *)temp);	
 	else if (temp->duration == TEMPORALI)
@@ -568,7 +569,7 @@ tnpoint_twcentroid(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum result = 0; 
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = temporalinst_value_copy((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -621,7 +622,7 @@ tnpointseq_azimuth1(TemporalInst *inst1, TemporalInst *inst2, bool lower_inc,
 		instants[0] = temporalinst_make(azimuth, time1, FLOAT8OID);
 		instants[1] = temporalinst_make(azimuth, time2, FLOAT8OID);
 		result[i] = temporalseq_from_temporalinstarr(instants, 2, 
-			lower_inc1, false, false);
+			lower_inc1, false, true, false);
 
 		pfree(instants[0]); pfree(instants[1]);
 		pfree(DatumGetPointer(vertex1));
@@ -682,7 +683,8 @@ tnpointseq_azimuth(TemporalSeq *seq)
 	if (countseqs == 0)
 		return NULL;
 
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, countseqs, true);
+	TemporalS *result = temporals_from_temporalseqarr(allsequences, countseqs, 
+		true, true);
 	for (int i = 0; i < countseqs; i++)
 		pfree(allsequences[i]);
 	pfree(allsequences);
@@ -720,7 +722,8 @@ tnpoints_azimuth(TemporalS *ts)
 		if (sequences[i] != NULL)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, totalseqs, true);
+	TemporalS *result = temporals_from_temporalseqarr(allsequences, totalseqs, 
+		true, true);
 
 	for (int i = 0; i < totalseqs; i++)
 		pfree(allsequences[i]);
@@ -737,7 +740,7 @@ tnpoint_azimuth(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result = NULL; 
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST || temp->duration == TEMPORALI)
 		;
 	else if (temp->duration == TEMPORALSEQ)
@@ -818,7 +821,7 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 		instants[1] = inst2;
 		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
 		result[0] = temporalseq_from_temporalinstarr(instants, 2, 
-			lower_inc, upper_inc, false);
+			lower_inc, upper_inc, true, false);
 		*count = 1;
 		return result;
 	}
@@ -863,8 +866,8 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 				npoint *intnp = npoint_make(np1->rid, pos);
 				instants[0] = temporalinst_make(PointerGetDatum(intnp), time,
 					type_oid(T_NPOINT));
-				result[k++] = temporalseq_from_temporalinstarr(instants,
-					1, true, true, false);
+				result[k++] = temporalseq_from_temporalinstarr(instants, 1, 
+					true, true, true, false);
 				pfree(instants[0]);
 				pfree(intnp);
 			}
@@ -894,7 +897,7 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 			instants[1] = temporalinst_make(PointerGetDatum(intnp2), upper1,
 				type_oid(T_NPOINT));
 			result[k++] = temporalseq_from_temporalinstarr(instants, 2,
-				lower_inc1, upper_inc1, false);
+				lower_inc1, upper_inc1, true, false);
 
 			pfree(instants[0]); pfree(instants[1]);
 			pfree(DatumGetPointer(inter1)); pfree(DatumGetPointer(inter2));
@@ -934,7 +937,7 @@ tnpointseq_at_geometry2(TemporalSeq *seq, Datum geom, int *count)
 		}
 		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
 		result[0] = temporalseq_from_temporalinstarr(&inst, 1, 
-			true, true, false);
+			true, true, true, false);
 		*count = 1;
 		return result;
 	}
@@ -988,7 +991,8 @@ tnpointseq_at_geometry(TemporalSeq *seq, Datum geom)
 	if (sequences == NULL)
 		return NULL;
 
-	TemporalS *result = temporals_from_temporalseqarr(sequences, count, true);
+	TemporalS *result = temporals_from_temporalseqarr(sequences, count, 
+		true, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
@@ -1026,7 +1030,8 @@ tnpoints_at_geometry(TemporalS *ts, Datum geom)
 		if (sequences[i] != NULL)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, totalseqs, true);
+	TemporalS *result = temporals_from_temporalseqarr(allsequences, totalseqs, 
+		true, true);
 
 	for (int i = 0; i < totalseqs; i++)
 		pfree(allsequences[i]);
@@ -1051,7 +1056,7 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 	}
 
 	Temporal *result = NULL; 
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tnpointinst_at_geometry((TemporalInst *)temp,
 			PointerGetDatum(gs));
@@ -1146,7 +1151,8 @@ tnpointseq_minus_geometry(TemporalSeq *seq, Datum geom)
 	if (sequences == NULL)
 		return NULL;
 
-	TemporalS *result = temporals_from_temporalseqarr(sequences, count, true);
+	TemporalS *result = temporals_from_temporalseqarr(sequences, count, 
+		true, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
@@ -1200,7 +1206,8 @@ tnpoints_minus_geometry(TemporalS *ts, GSERIALIZED *gs, STBOX *box2)
 		if (countseqs[i] != 0)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, totalseqs, true);
+	TemporalS *result = temporals_from_temporalseqarr(allsequences, totalseqs, 
+		true, true);
 
 	for (int i = 0; i < totalseqs; i++)
 		pfree(allsequences[i]);
@@ -1236,7 +1243,7 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 	}
 
 	Temporal *result = NULL;
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tnpointinst_minus_geometry((TemporalInst *)temp, 
 			PointerGetDatum(gs));
@@ -1366,7 +1373,7 @@ NAI_geometry_tnpoint(PG_FUNCTION_ARGS)
 	}
 
 	Temporal *result = NULL;
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_copy((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -1394,7 +1401,7 @@ NAI_npoint_tnpoint(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 
 	Temporal *result = NULL;
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_copy((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -1427,7 +1434,7 @@ NAI_tnpoint_geometry(PG_FUNCTION_ARGS)
 	}
 
 	Temporal *result = NULL;
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_copy((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -1455,7 +1462,7 @@ NAI_tnpoint_npoint(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 
 	Temporal *result = NULL;
-	temporal_duration_is_valid(temp->duration);
+	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_copy((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
@@ -1834,7 +1841,7 @@ shortestline_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	}
 	
 	Datum result = 0;
-	temporal_duration_is_valid(sync1->duration);
+	ensure_valid_duration(sync1->duration);
 	if (sync1->duration == TEMPORALINST)
 		result = shortestline_tnpointinst_tnpointinst((TemporalInst *)sync1,
 			(TemporalInst *)sync2);

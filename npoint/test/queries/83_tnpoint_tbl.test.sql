@@ -82,7 +82,7 @@ SELECT MAX(route(inst)) FROM tbl_tnpointinst;
 
 SELECT MAX(array_length(routes(temp), 1)) FROM tbl_tnpoint;
 
-SELECT MAX(duration(getTime(temp))) FROM tbl_tnpoint;
+SELECT MAX(timespan(getTime(temp))) FROM tbl_tnpoint;
 
 SELECT MAX(getTimestamp(inst)) FROM tbl_tnpointinst;
 
@@ -100,9 +100,9 @@ SELECT DISTINCT MAX(getPosition(startValue(temp))) FROM tbl_tnpoint;
 
 SELECT DISTINCT MAX(getPosition(endValue(temp))) FROM tbl_tnpoint;
 
-SELECT MAX(duration(timespan(temp))) FROM tbl_tnpoint;
+SELECT MAX(timespan(period(temp))) FROM tbl_tnpoint;
 
-SELECT MAX(duration(temp)) FROM tbl_tnpoint;
+SELECT MAX(timespan(temp)) FROM tbl_tnpoint;
 
 SELECT MAX(numInstants(temp)) FROM tbl_tnpoint;
 
