@@ -294,7 +294,7 @@ tnpoint_geom(Temporal *temp)
 
 
 /*****************************************************************************
- * Length and speed functions
+ * Length functions
  *****************************************************************************/
 
 /* Length traversed by the temporal npoint */
@@ -302,6 +302,7 @@ tnpoint_geom(Temporal *temp)
 static double
 tnpointseq_length(TemporalSeq *seq)
 {
+	/* Instantaneous sequence */
 	if (seq->count == 1)
 		return 0;
 
@@ -377,6 +378,7 @@ tnpointi_set_zero(TemporalI *ti)
 static TemporalSeq *
 tnpointseq_cumulative_length(TemporalSeq *seq, double prevlength)
 {
+	/* Instantaneous sequence */
 	if (seq->count == 1)
 	{
 		TemporalInst *inst = temporalseq_inst_n(seq, 0);
@@ -389,23 +391,38 @@ tnpointseq_cumulative_length(TemporalSeq *seq, double prevlength)
 	}
 
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * seq->count);
-	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
-	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
-	double rlength = route_length(np1->rid);
-	double length = prevlength;
-	instants[0] = temporalinst_make(Float8GetDatum(length), inst1->t, FLOAT8OID);
-	for (int i = 1; i < seq->count; i++)
+	/* Stepwise interpolation */
+	if (! MOBDB_FLAGS_GET_LINEAR(seq->flags))
 	{
-		TemporalInst *inst2 = temporalseq_inst_n(seq, i);
-		npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
-		length += fabs(np2->pos - np1->pos) * rlength;
-		instants[i] = temporalinst_make(Float8GetDatum(length), inst2->t,
-			FLOAT8OID);
-		inst1 = inst2;
-		np1 = np2;
+		Datum length = Float8GetDatum(0.0);
+		for (int i = 0; i < seq->count; i++)
+		{
+			TemporalInst *inst = temporalseq_inst_n(seq, i);
+			instants[i] = temporalinst_make(length, inst->t, FLOAT8OID);
+		}
 	}
-	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, seq->count,
-		seq->period.lower_inc, seq->period.upper_inc, true, false);
+	else
+	/* Linear interpolation */
+	{
+		TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
+		npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
+		double rlength = route_length(np1->rid);
+		double length = prevlength;
+		instants[0] = temporalinst_make(Float8GetDatum(length), inst1->t, FLOAT8OID);
+		for (int i = 1; i < seq->count; i++)
+		{
+			TemporalInst *inst2 = temporalseq_inst_n(seq, i);
+			npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
+			length += fabs(np2->pos - np1->pos) * rlength;
+			instants[i] = temporalinst_make(Float8GetDatum(length), inst2->t,
+				FLOAT8OID);
+			inst1 = inst2;
+			np1 = np2;
+		}
+	}
+	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, 
+		seq->count, seq->period.lower_inc, seq->period.upper_inc,
+		MOBDB_FLAGS_GET_LINEAR(seq->flags), false);
 
 	for (int i = 1; i < seq->count; i++)
 		pfree(instants[i]);
@@ -426,7 +443,7 @@ tnpoints_cumulative_length(TemporalS *ts)
 		length += DatumGetFloat8(temporalinst_value(end));
 	}
 	TemporalS *result = temporals_from_temporalseqarr(sequences,
-		ts->count, true, false);
+		ts->count, MOBDB_FLAGS_GET_LINEAR(ts->flags), false);
 
 	for (int i = 1; i < ts->count; i++)
 		pfree(sequences[i]);
@@ -454,35 +471,53 @@ tnpoint_cumulative_length(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
-/* Speed of the temporal npoint */
+/*****************************************************************************
+ * Speed functions
+ *****************************************************************************/
 
 static TemporalSeq *
 tnpointseq_speed(TemporalSeq *seq)
 {
+	/* Instantaneous sequence */
 	if (seq->count == 1)
 		return NULL;
 
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * seq->count);
-	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
-	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
-	double rlength = route_length(np1->rid);
-	TemporalInst *inst2 = NULL; /* make the compiler quiet */
-	double speed = 0; /* make the compiler quiet */
-	for (int i = 0; i < seq->count - 1; i++)
+	/* Stepwise interpolation */
+	if (! MOBDB_FLAGS_GET_LINEAR(seq->flags))
 	{
-		inst2 = temporalseq_inst_n(seq, i + 1);
-		npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
-		double length = fabs(np2->pos - np1->pos) * rlength;
-		speed = length / (((double)(inst2->t) - (double)(inst1->t)) / 1000000);
-		instants[i] = temporalinst_make(Float8GetDatum(speed),
-			inst1->t, FLOAT8OID);
-		inst1 = inst2;
-		np1 = np2;
+		Datum length = Float8GetDatum(0.0);
+		for (int i = 0; i < seq->count; i++)
+		{
+			TemporalInst *inst = temporalseq_inst_n(seq, i);
+			instants[i] = temporalinst_make(length, inst->t, FLOAT8OID);
+		}
 	}
-	instants[seq->count-1] = temporalinst_make(Float8GetDatum(speed),
-	   inst2->t, FLOAT8OID);
+	else
+	/* Linear interpolation */
+	{
+		TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
+		npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
+		double rlength = route_length(np1->rid);
+		TemporalInst *inst2 = NULL; /* make the compiler quiet */
+		double speed = 0; /* make the compiler quiet */
+		for (int i = 0; i < seq->count - 1; i++)
+		{
+			inst2 = temporalseq_inst_n(seq, i + 1);
+			npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
+			double length = fabs(np2->pos - np1->pos) * rlength;
+			speed = length / (((double)(inst2->t) - (double)(inst1->t)) / 1000000);
+			instants[i] = temporalinst_make(Float8GetDatum(speed),
+				inst1->t, FLOAT8OID);
+			inst1 = inst2;
+			np1 = np2;
+		}
+		instants[seq->count-1] = temporalinst_make(Float8GetDatum(speed),
+		inst2->t, FLOAT8OID);
+	}
+	/* The resulting sequence has stepwise interpolation */
 	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, seq->count, 
-		seq->period.lower_inc, seq->period.upper_inc, true, true);
+		seq->period.lower_inc, seq->period.upper_inc, false, true);
 
 	for (int i = 0; i < seq->count; i++)
 		pfree(instants[i]);
