@@ -126,11 +126,11 @@ SELECT MAX(array_length(timestamps(temp),1)) FROM tbl_tnpoint;
 
 SELECT MAX(numSequences(ts)) FROM tbl_tnpoints;
 
-SELECT MAX(duration(startSequence(ts))) FROM tbl_tnpoints;
+SELECT MAX(timespan(startSequence(ts))) FROM tbl_tnpoints;
 
-SELECT MAX(duration(endSequence(ts))) FROM tbl_tnpoints;
+SELECT MAX(timespan(endSequence(ts))) FROM tbl_tnpoints;
 
-SELECT MAX(duration(sequenceN(ts, numSequences(ts)))) FROM tbl_tnpoints;
+SELECT MAX(timespan(sequenceN(ts, numSequences(ts)))) FROM tbl_tnpoints;
 
 SELECT MAX(array_length(sequences(ts),1)) FROM tbl_tnpoints;
 
