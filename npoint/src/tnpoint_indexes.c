@@ -25,10 +25,10 @@ PG_FUNCTION_INFO_V1(gist_tnpoint_compress);
 PGDLLEXPORT Datum
 gist_tnpoint_compress(PG_FUNCTION_ARGS)
 {
-    GISTENTRY* entry = (GISTENTRY *) PG_GETARG_POINTER(0);
-    if (entry->leafkey)
-    {
-        GISTENTRY *retval = palloc(sizeof(GISTENTRY));
+	GISTENTRY* entry = (GISTENTRY *) PG_GETARG_POINTER(0);
+	if (entry->leafkey)
+	{
+		GISTENTRY *retval = palloc(sizeof(GISTENTRY));
    		Temporal *temp = DatumGetTemporal(entry->key);
 		STBOX *box = palloc0(sizeof(STBOX));
 		temporal_bbox(box, temp);

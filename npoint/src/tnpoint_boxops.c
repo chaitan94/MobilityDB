@@ -4,9 +4,7 @@
  *	  Bounding box operators for temporal network points.
  *
  * These operators test the bounding boxes of temporal npoints, which are
- * 3D boxes, where the x and y coordinates are for the space (value)
- * dimension and the z coordinate is for the time dimension.
- * The following operators are defined:
+ * STBOX boxes. The following operators are defined:
  *	  overlaps, contains, contained, same
  * The operators consider as many dimensions as they are shared in both
  * arguments: only the space dimension, only the time dimension, or both
@@ -20,6 +18,8 @@
  *****************************************************************************/
 
 #include "tnpoint_boxops.h"
+
+#include <utils/timestamp.h>
 
 #include "temporaltypes.h"
 #include "temporal_util.h"
@@ -73,7 +73,8 @@ tnpointinstarr_cont_to_stbox(STBOX *box, TemporalInst **instants, int count)
 {
 	npoint *np = DatumGetNpoint(temporalinst_value(instants[0]));
 	int64 rid = np->rid;
-	double posmin = np->pos, posmax = np->pos, tmin = instants[0]->t, tmax = instants[0]->t;
+	double posmin = np->pos, posmax = np->pos;
+	TimestampTz tmin = instants[0]->t, tmax = instants[0]->t;
 	for (int i = 1; i < count; i++)
 	{
 		np = DatumGetNpoint(temporalinst_value(instants[i]));
@@ -84,20 +85,17 @@ tnpointinstarr_cont_to_stbox(STBOX *box, TemporalInst **instants, int count)
 	}
 
 	Datum line = route_geom(rid);
-	Datum geom;
-	if (posmin == 0 && posmax == 1)
-		geom = PointerGetDatum(gserialized_copy((GSERIALIZED *)PG_DETOAST_DATUM(line)));
-	else
-		geom = call_function3(LWGEOM_line_substring, line,
-			Float8GetDatum(posmin), Float8GetDatum(posmax));
-								 
+	Datum geom = (posmin == 0 && posmax == 1) ? line :
+		call_function3(LWGEOM_line_substring, line, Float8GetDatum(posmin),
+			Float8GetDatum(posmax));
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 	geo_to_stbox_internal(box, gs);
 	box->tmin = tmin;
 	box->tmax = tmax;
 	MOBDB_FLAGS_SET_T(box->flags, true);
 	pfree(DatumGetPointer(line));
-	pfree(DatumGetPointer(geom));
+	if (posmin != 0 || posmax != 1)
+		pfree(DatumGetPointer(geom));
 	return;
 }
 
@@ -107,10 +105,8 @@ tnpointseqarr_to_stbox(STBOX *box, TemporalSeq **sequences, int count)
 	temporalseq_bbox(box, sequences[0]);
 	for (int i = 1; i < count; i++)
 	{
-		STBOX box1;
-		memset(&box1, 0, sizeof(STBOX));
-		temporalseq_bbox(&box1, sequences[i]);
-		stbox_expand(box, &box1);
+		STBOX *box1 = temporalseq_bbox_ptr(sequences[i]);
+		stbox_expand(box, box1);
 	}
 	return;
 }

@@ -610,6 +610,9 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 		isgeodetic = MOBDB_FLAGS_GET_GEODETIC(instants[0]->flags);
 		srid = tpoint_srid_internal((Temporal *) instants[0]);
 	}
+	int64 rid;
+	if (valuetypid == type_oid(T_NPOINT))
+		rid = DatumGetNpoint(temporalinst_value(instants[0]))->rid;
 #endif
 	for (int i = 1; i < count; i++)
 	{
@@ -629,6 +632,12 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 			if (MOBDB_FLAGS_GET_Z(instants[i]->flags) != hasz)
 				ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
 					errmsg("All geometries composing a temporal point must be of the same dimensionality")));
+		}
+		if (valuetypid == type_oid(T_NPOINT))
+		{
+			if (rid != DatumGetNpoint(temporalinst_value(instants[i]))->rid)
+				ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION),
+					errmsg("All network points composing a temporal sequence must have same rid")));
 		}
 #endif
 	}
@@ -658,8 +667,8 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 		trajectory = type_has_precomputed_trajectory(valuetypid);  
 		if (trajectory)
 		{
-			/* A trajectory is a geometry/geography, either a point or a 
-			 * linestring, which may be self-intersecting */
+			/* A trajectory is a geometry/geography, a point, a multipoint, 
+			 * or a linestring, which may be self-intersecting */
 			traj = tpointseq_make_trajectory(newinstants, newcount, linear);
 			memsize += double_pad(VARSIZE(DatumGetPointer(traj)));
 		}
@@ -763,6 +772,13 @@ temporalseq_append_instant(TemporalSeq *seq, TemporalInst *inst)
 		if (MOBDB_FLAGS_GET_Z(inst->flags) != MOBDB_FLAGS_GET_Z(seq->flags))
 			ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
 				errmsg("All geometries composing a temporal point must be of the same dimensionality")));
+	}
+	if (valuetypid == type_oid(T_NPOINT))
+	{
+		if (DatumGetNpoint(temporalinst_value(inst))->rid !=
+			DatumGetNpoint(temporalinst_value(inst1))->rid)
+			ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION),
+				errmsg("All network points composing a temporal sequence must have same rid")));
 	}
 #endif
 

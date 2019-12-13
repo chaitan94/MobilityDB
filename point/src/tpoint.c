@@ -38,7 +38,7 @@ pg_error(const char *fmt, va_list ap)
 
     vsnprintf (errmsg, PGC_ERRMSG_MAXLEN, fmt, ap);
 
-    errmsg[PGC_ERRMSG_MAXLEN]='\0';
+    errmsg[PGC_ERRMSG_MAXLEN] = '\0';
     ereport(ERROR, (errmsg_internal("%s", errmsg)));
 }
 
@@ -49,7 +49,7 @@ pg_notice(const char *fmt, va_list ap)
 
     vsnprintf (errmsg, PGC_ERRMSG_MAXLEN, fmt, ap);
 
-    errmsg[PGC_ERRMSG_MAXLEN]='\0';
+    errmsg[PGC_ERRMSG_MAXLEN] = '\0';
     ereport(NOTICE, (errmsg_internal("%s", errmsg)));
 }
 
@@ -66,7 +66,7 @@ void temporalgeom_init()
  * Check the consistency of the metadata we want to enforce in the typmod:
  * srid, type and dimensionality. If things are inconsistent, shut down the query.
  */
-Temporal*
+Temporal *
 tpoint_valid_typmod(Temporal *temp, int32_t typmod)
 {
 	int32 tpoint_srid = tpoint_srid_internal(temp);

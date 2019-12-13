@@ -466,7 +466,7 @@ temporali_parse(char **str, Oid basetype)
 }
 
 static TemporalSeq *
-temporalseq_parse(char **str, Oid basetype, bool linear, bool end) 
+temporalseq_parse(char **str, Oid basetype, bool linear, bool end)
 {
 	p_whitespace(str);
 	bool lower_inc = false, upper_inc = false;

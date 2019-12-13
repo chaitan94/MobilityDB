@@ -24,14 +24,14 @@
  *****************************************************************************/
 
 static TemporalInst **
-distance_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2,
+distance_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, bool linear,
 	Datum geo, int *count)
 {
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
 	npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
 
-	/* Constant segment */
-	if (np1->pos == np2->pos)
+	/* Constant segment or stepwise interpolation */
+	if (np1->pos == np2->pos || ! linear)
 	{
 		Datum geom1 = npoint_as_geom_internal(np1);
 		TemporalInst **result = palloc(sizeof(TemporalInst *));
@@ -97,7 +97,8 @@ distance_tnpointseq_geo(TemporalSeq *seq, Datum geo)
 	for (int i = 0; i < seq->count - 1; i++)
 	{
 		TemporalInst *inst2 = temporalseq_inst_n(seq, i + 1);
-		instants[i] = distance_tnpointseq_geo1(inst1, inst2, geo, &countinst);
+		instants[i] = distance_tnpointseq_geo1(inst1, inst2, geo, 
+			MOBDB_FLAGS_GET_LINEAR(seq->flags), &countinst);
 
 		countinsts[i] = countinst;
 		totalinsts += countinst;

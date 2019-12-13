@@ -13,6 +13,7 @@
 #include "tnpoint.h"
 
 #include "temporaltypes.h"
+#include "temporal_parser.h"
 #include "oidcache.h"
 #include "temporal_util.h"
 #include "tnpoint_static.h"
@@ -31,48 +32,9 @@ tnpoint_in(PG_FUNCTION_ARGS)
 	Oid temptypid = PG_GETARG_OID(1);
 	Oid valuetypid;
 	temporal_typinfo(temptypid, &valuetypid);
-	Temporal *result = tnpoint_parse(&input, valuetypid);
+	Temporal *result = temporal_parse(&input, valuetypid);
 	if (result == 0)
 		PG_RETURN_NULL();
-	PG_RETURN_POINTER(result);
-}
-
-/*****************************************************************************
- * Constructor functions
- *****************************************************************************/
-
-PG_FUNCTION_INFO_V1(tnpoint_make_tnpointseq);
-
-PGDLLEXPORT Datum
-tnpoint_make_tnpointseq(PG_FUNCTION_ARGS)
-{
-	ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
-	bool lower_inc = PG_GETARG_BOOL(1);
-	bool upper_inc = PG_GETARG_BOOL(2);
-	int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
-	if (count < 1)
-	{
-		PG_FREE_IF_COPY(array, 0);
-		ereport(ERROR, (errcode(ERRCODE_ARRAY_ELEMENT_ERROR),
-			errmsg("A temporal value must have at least one instant")));
-	}
-
-	TemporalInst **instants = (TemporalInst **)temporalarr_extract(array, &count);
-	npoint *np = DatumGetNpoint(temporalinst_value(instants[0]));
-	int64 rid = np->rid;
-	for (int i = 1; i < count; i++)
-	{
-		np = DatumGetNpoint(temporalinst_value(instants[i]));
-		if (np->rid != rid)
-			ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION),
-				errmsg("Temporal sequence must have same rid")));
-	}
-
-	TemporalSeq *result = temporalseq_from_temporalinstarr(instants,
-		count, lower_inc, upper_inc, true, true);
-
-	pfree(instants);
-	PG_FREE_IF_COPY(array, 0);
 	PG_RETURN_POINTER(result);
 }
 
@@ -117,8 +79,9 @@ tnpointseq_as_tgeompointseq(TemporalSeq *seq)
 		TemporalInst *inst = temporalseq_inst_n(seq, i);
 		instants[i] = tnpointinst_as_tgeompointinst(inst);
 	}
-	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, seq->count,
-		seq->period.lower_inc, seq->period.upper_inc, true, false);
+	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, 
+		seq->count, seq->period.lower_inc, seq->period.upper_inc, 
+		MOBDB_FLAGS_GET_LINEAR(seq->flags), false);
 	for (int i = 0; i < seq->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -135,7 +98,7 @@ tnpoints_as_tgeompoints(TemporalS *ts)
 		sequences[i] = tnpointseq_as_tgeompointseq(seq);
 	}
 	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, 
-		true, false);
+		MOBDB_FLAGS_GET_LINEAR(ts->flags), false);
 	for (int i = 0; i < ts->count; i++)
 		pfree(sequences[i]);
 	pfree(sequences);
@@ -180,7 +143,8 @@ tgeompointinst_as_tnpointinst(TemporalInst *inst)
 	npoint *np = geom_as_npoint_internal(geom);
 	if (np == NULL)
 		return NULL;
-	TemporalInst *result = temporalinst_make(PointerGetDatum(np), inst->t, type_oid(T_NPOINT));
+	TemporalInst *result = temporalinst_make(PointerGetDatum(np), inst->t,
+		type_oid(T_NPOINT));
 	return result;
 }
 
@@ -225,8 +189,9 @@ tgeompointseq_as_tnpointseq(TemporalSeq *seq)
 		}
 		instants[i] = inst1;
 	}
-	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, seq->count,
-		seq->period.lower_inc, seq->period.upper_inc, true, false);
+	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, 
+		seq->count, seq->period.lower_inc, seq->period.upper_inc, 
+		MOBDB_FLAGS_GET_LINEAR(seq->flags), false);
 	for (int i = 0; i < seq->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -251,7 +216,7 @@ tgeompoints_as_tnpoints(TemporalS *ts)
 		sequences[i] = seq1;
 	}
 	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, 
-		true, false);
+		MOBDB_FLAGS_GET_LINEAR(ts->flags), false);
 	for (int i = 0; i < ts->count; i++)
 		pfree(sequences[i]);
 	pfree(sequences);
