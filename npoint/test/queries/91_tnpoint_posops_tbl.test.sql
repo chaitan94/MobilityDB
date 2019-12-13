@@ -17,21 +17,22 @@ CREATE TABLE test_tnpointrelativeposops(
 /*****************************************************************************/
 
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '<<', 'geomcollection', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g << temp;
+SELECT '<<', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g << temp;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '>>', 'geomcollection', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g >> temp;
+SELECT '>>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g >> temp;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&<', 'geomcollection', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &< temp;
+SELECT '&<', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &< temp;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&>', 'geomcollection', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &> temp;
+SELECT '&>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &> temp;
 
-SELECT '<<|', 'geomcollection', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g <<| temp;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '|>>', 'geomcollection', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |>> temp;
+SELECT '<<|', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g <<| temp;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&<|', 'geomcollection', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &<| temp;
+SELECT '|>>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |>> temp;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '|&>', 'geomcollection', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |&> temp;
+SELECT '&<|', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &<| temp;
+INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
+SELECT '|&>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |&> temp;
 
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
 SELECT '<<', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np << temp;
@@ -89,21 +90,21 @@ SELECT '#&>', 'periodset', 'tnpoint', count(*) FROM tbl_periodset, tbl_tnpoint W
 /*****************************************************************************/
 
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '<<', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << g;
+SELECT '<<', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << g;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '>>', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp >> g;
+SELECT '>>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp >> g;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&<', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &< g;
+SELECT '&<', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &< g;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&>', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &> g;
+SELECT '&>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &> g;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '<<|', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <<| g;
+SELECT '<<|', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <<| g;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '|>>', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |>> g;
+SELECT '|>>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |>> g;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&<|', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &<| g;
+SELECT '&<|', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &<| g;
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '|&>', 'tnpoint', 'geomcollection', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |&> g;
+SELECT '|&>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |&> g;
 
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
 SELECT '<<', 'tnpoint', 'npoint', count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp << np;
@@ -193,16 +194,16 @@ CREATE INDEX tbl_tnpoint_gist_idx ON tbl_tnpoint USING GIST(temp);
 
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g << temp )
-WHERE op = '<<' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '<<' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g >> temp )
-WHERE op = '>>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '>>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &< temp )
-WHERE op = '&<' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '&<' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &> temp )
-WHERE op = '&>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '&>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np << temp )
@@ -219,16 +220,16 @@ WHERE op = '&>' and leftarg = 'npoint' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g <<| temp )
-WHERE op = '<<|' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '<<|' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |>> temp )
-WHERE op = '|>>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '|>>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &<| temp )
-WHERE op = '&<|' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '&<|' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |&> temp )
-WHERE op = '|&>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '|&>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np <<| temp )
@@ -299,29 +300,29 @@ WHERE op = '#&>' and leftarg = 'periodset' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << g )
-WHERE op = '<<' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '<<' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp >> g )
-WHERE op = '>>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '>>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &< g )
-WHERE op = '&<' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '&<' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &> g )
-WHERE op = '&>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '&>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <<| g )
-WHERE op = '<<|' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '<<|' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |>> g )
-WHERE op = '|>>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '|>>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &<| g )
-WHERE op = '&<|' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '&<|' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |&> g )
-WHERE op = '|&>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '|&>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp << np )
@@ -449,16 +450,16 @@ CREATE INDEX tbl_tnpoint_spgist_idx ON tbl_tnpoint USING SPGIST(temp);
 
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g << temp )
-WHERE op = '<<' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '<<' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g >> temp )
-WHERE op = '>>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '>>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &< temp )
-WHERE op = '&<' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '&<' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &> temp )
-WHERE op = '&>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '&>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np << temp )
@@ -475,16 +476,16 @@ WHERE op = '&>' and leftarg = 'npoint' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g <<| temp )
-WHERE op = '<<|' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '<<|' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |>> temp )
-WHERE op = '|>>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '|>>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &<| temp )
-WHERE op = '&<|' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '&<|' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |&> temp )
-WHERE op = '|&>' and leftarg = 'geomcollection' and rightarg = 'tnpoint';
+WHERE op = '|&>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np <<| temp )
@@ -555,29 +556,29 @@ WHERE op = '#&>' and leftarg = 'periodset' and rightarg = 'tnpoint';
 
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << g )
-WHERE op = '<<' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '<<' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp >> g )
-WHERE op = '>>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '>>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &< g )
-WHERE op = '&<' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '&<' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &> g )
-WHERE op = '&>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '&>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <<| g )
-WHERE op = '<<|' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '<<|' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |>> g )
-WHERE op = '|>>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '|>>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &<| g )
-WHERE op = '&<|' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '&<|' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |&> g )
-WHERE op = '|&>' and leftarg = 'tnpoint' and rightarg = 'geomcollection';
+WHERE op = '|&>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp << np )
