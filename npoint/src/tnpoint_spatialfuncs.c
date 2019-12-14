@@ -261,9 +261,10 @@ tnpointseq_geom(TemporalSeq *seq)
 	if (seq->count == 1)
 		return tnpointinst_geom(temporalseq_inst_n(seq, 0));
 
-	nsegment **segments = tnpointseq_positions1(ts);
-	Datum result = nsegmentarr_to_geom_internal(segments, seq->count);
-	for (int i = 0; i < seq->count; i++)
+	int count;
+	nsegment **segments = tnpointseq_positions1(seq, &count);
+	Datum result = nsegmentarr_to_geom_internal(segments, count);
+	for (int i = 0; i < count; i++)
 		pfree(segments[i]);
 	pfree(segments);
 	return result;

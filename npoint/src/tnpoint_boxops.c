@@ -53,7 +53,7 @@ tnpointinst_make_stbox(STBOX *box, Datum value, TimestampTz t)
 }
 
 void
-tnpointinstarr_disc_to_stbox(STBOX *box, TemporalInst **instants, int count)
+tnpointinstarr_stepw_to_stbox(STBOX *box, TemporalInst **instants, int count)
 {
 	Datum value = temporalinst_value(instants[0]);
 	tnpointinst_make_stbox(box, value, instants[0]->t);
@@ -69,7 +69,7 @@ tnpointinstarr_disc_to_stbox(STBOX *box, TemporalInst **instants, int count)
 }
 
 void
-tnpointinstarr_cont_to_stbox(STBOX *box, TemporalInst **instants, int count)
+tnpointinstarr_linear_to_stbox(STBOX *box, TemporalInst **instants, int count)
 {
 	npoint *np = DatumGetNpoint(temporalinst_value(instants[0]));
 	int64 rid = np->rid;

@@ -80,7 +80,7 @@ extern Datum tnpoint_routes(PG_FUNCTION_ARGS);
 
 extern ArrayType *tnpointinst_positions(TemporalInst *inst);
 extern ArrayType *tnpointi_positions(TemporalI *ti);
-extern nsegment *tnpointseq_positions1(TemporalSeq *seq);
+extern nsegment **tnpointseq_positions1(TemporalSeq *seq);
 extern ArrayType *tnpointseq_positions(TemporalSeq *seq);
 extern nsegment **tnpoints_positions1(TemporalS *ts);
 extern ArrayType *tnpoints_positions(TemporalS *ts);
