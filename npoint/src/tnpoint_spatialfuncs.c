@@ -203,16 +203,7 @@ PGDLLEXPORT Datum
 tnpoint_trajectory(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum result = 0; 
-	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST)
-		result = tnpointinst_geom((TemporalInst *)temp);
-	else if (temp->duration == TEMPORALI)
-		result = tnpointi_geom((TemporalI *)temp);
-	else if (temp->duration == TEMPORALSEQ)
-		result = tnpointseq_trajectory((TemporalSeq *)temp);
-	else if (temp->duration == TEMPORALS)
-		result = tnpoints_trajectory((TemporalS *)temp);
+	Datum result = tnpoint_geom(temp);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
