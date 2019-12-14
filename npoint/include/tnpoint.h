@@ -92,4 +92,4 @@ extern ArrayType *tnpoints_routes(TemporalS *ts);
 
 /*****************************************************************************/
 
-#endif 
+#endif /* __TNPOINT_H__ */

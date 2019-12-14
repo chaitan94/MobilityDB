@@ -97,8 +97,8 @@ distance_tnpointseq_geo(TemporalSeq *seq, Datum geo)
 	for (int i = 0; i < seq->count - 1; i++)
 	{
 		TemporalInst *inst2 = temporalseq_inst_n(seq, i + 1);
-		instants[i] = distance_tnpointseq_geo1(inst1, inst2, geo, 
-			MOBDB_FLAGS_GET_LINEAR(seq->flags), &countinst);
+		instants[i] = distance_tnpointseq_geo1(inst1, inst2, 
+			MOBDB_FLAGS_GET_LINEAR(seq->flags), geo, &countinst);
 
 		countinsts[i] = countinst;
 		totalinsts += countinst;
@@ -361,12 +361,7 @@ PGDLLEXPORT Datum
 distance_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-	if (gserialized_get_type(gs) != POINTTYPE)
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("Input must be a point")));
-	}
+	ensure_point_type(gs);
 	if (gserialized_is_empty(gs))
 	{
 		PG_FREE_IF_COPY(gs, 0);
@@ -431,12 +426,7 @@ PGDLLEXPORT Datum
 distance_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-	if (gserialized_get_type(gs) != POINTTYPE)
-	{
-		PG_FREE_IF_COPY(gs, 1);
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("Input must be a point")));
-	}
+	ensure_point_type(gs);
 	if (gserialized_is_empty(gs))
 	{
 		PG_FREE_IF_COPY(gs, 1);

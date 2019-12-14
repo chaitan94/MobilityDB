@@ -22,4 +22,4 @@ extern Datum tnpoint_analyze(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 
-#endif 
+#endif /* __TNPOINT_ANALYZE_H__ */

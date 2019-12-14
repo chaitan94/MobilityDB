@@ -255,11 +255,14 @@ tnpointi_geom(TemporalI *ti)
 Datum
 tnpointseq_geom(TemporalSeq *seq)
 {
+	/* Instantaneous sequence */
 	if (seq->count == 1)
 		return tnpointinst_geom(temporalseq_inst_n(seq, 0));
 
 	nsegment *ns = tnpointseq_positions1(seq);
-	return nsegment_as_geom_internal(ns);
+	Datum result = nsegment_as_geom_internal(ns);
+	pfree(ns);
+	return result;
 }
 
 Datum
@@ -983,6 +986,7 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 static TemporalSeq **
 tnpointseq_at_geometry2(TemporalSeq *seq, Datum geom, int *count)
 {
+	/* Instantaneous sequence */
 	if (seq->count == 1)
 	{
 		TemporalInst *inst = temporalseq_inst_n(seq, 0);

@@ -22,4 +22,4 @@ extern Datum tnpoint_tcentroid_transfn(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 
-#endif 
+#endif /* __TNPOINT_AGGFUNCS_H__ */

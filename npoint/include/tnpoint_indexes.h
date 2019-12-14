@@ -23,4 +23,4 @@ extern Datum spgist_tnpoint_compress(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 
-#endif 
+#endif /* __TNPOINT_INDEXES_H__ */

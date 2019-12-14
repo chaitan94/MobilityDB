@@ -30,26 +30,21 @@
 ArrayType *
 int64arr_to_array(int64 *int64arr, int count)
 {
-	ArrayType *result = construct_array((Datum *)int64arr, count, INT8OID, 8, true, 'd');
-	return result;
+	return construct_array((Datum *)int64arr, count, INT8OID, 8, true, 'd');
 }
 
 ArrayType *
 npointarr_to_array(npoint **npointarr, int count)
 {
-	Oid type = type_oid(T_NPOINT);
-	ArrayType *result = construct_array((Datum *)npointarr, count, type, 
+	return construct_array((Datum *)npointarr, count, type_oid(T_NPOINT), 
 		sizeof(npoint), false, 'd');
-	return result;
 }
 
 ArrayType *
 nsegmentarr_to_array(nsegment **nsegmentarr, int count)
 {
-	Oid type = type_oid(T_NSEGMENT);
-	ArrayType *result = construct_array((Datum *)nsegmentarr, count, type, 
+	return construct_array((Datum *)nsegmentarr, count, type_oid(T_NSEGMENT), 
 		sizeof(nsegment), false, 'd');
-	return result;
 }
 
 /*****************************************************************************
@@ -188,6 +183,27 @@ nsegment_send(PG_FUNCTION_ARGS)
  * Constructors
  *****************************************************************************/
 
+/*
+ * Set an npoint value from arguments
+ */
+void
+npoint_set(npoint *np, int64 rid, double pos)
+{
+	if (!route_exists(rid))
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("there is no route with gid value %lu in table ways", rid)));
+	if (pos < 0 || pos > 1)
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("the relative position must be a real number between 0 and 1")));
+
+	np->rid = rid;
+	np->pos = pos;
+	return;
+}
+
+/*
+ * Construct an npoint value from arguments
+ */
 npoint *
 npoint_make(int64 rid, double pos)
 {
@@ -215,6 +231,29 @@ npoint_constructor(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
+
+/*
+ * Set an nsegment value from arguments
+ */
+void
+nsegment_set(nsegment *ns, int64 rid, double pos1, double pos2)
+{
+	if (!route_exists(rid))
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("there is no route with gid value %lu in table ways", rid)));
+	if (pos1 < 0 || pos1 > 1 || pos2 < 0 || pos2 > 1)
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("The relative position of a network segment must be a real number between 0 and 1")));
+
+	ns->rid = rid;
+	ns->pos1 = Min(pos1, pos2);
+	ns->pos2 = Max(pos1, pos2);
+	return;
+}
+
+/*
+ * Construct an nsegment value from arguments
+ */
 nsegment *
 nsegment_make(int64 rid, double pos1, double pos2)
 {
@@ -223,7 +262,7 @@ nsegment_make(int64 rid, double pos1, double pos2)
 			errmsg("there is no route with gid value %lu in table ways", rid)));
 	if (pos1 < 0 || pos1 > 1 || pos2 < 0 || pos2 > 1)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("the relative position must be a real number between 0 and 1")));
+			errmsg("The relative position of a network segment must be a real number between 0 and 1")));
 
 	nsegment *result = (nsegment *)palloc(sizeof(nsegment));
 	result->rid = rid;
@@ -251,7 +290,6 @@ nsegment_from_npoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	nsegment *result = nsegment_make(np->rid, np->pos, np->pos);
-	PG_FREE_IF_COPY(np, 0);
 	PG_RETURN_POINTER(result);
 }
 
@@ -266,7 +304,6 @@ npoint_route(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	int64 result = np->rid;
-	PG_FREE_IF_COPY(np, 0);
 	PG_RETURN_INT64(result);
 }
 
@@ -276,9 +313,7 @@ PGDLLEXPORT Datum
 npoint_position(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
-	double result = np->pos;
-	PG_FREE_IF_COPY(np, 0);
-	PG_RETURN_FLOAT8(result);
+	PG_RETURN_FLOAT8(np->pos);
 }
 
 PG_FUNCTION_INFO_V1(nsegment_route);
@@ -287,9 +322,7 @@ PGDLLEXPORT Datum
 nsegment_route(PG_FUNCTION_ARGS)
 {
 	nsegment *ns = PG_GETARG_NSEGMENT(0);
-	int64 result = ns->rid;
-	PG_FREE_IF_COPY(ns, 0);
-	PG_RETURN_INT64(result);
+	PG_RETURN_INT64(ns->rid);
 }
 
 PG_FUNCTION_INFO_V1(nsegment_start_position);
@@ -298,9 +331,7 @@ PGDLLEXPORT Datum
 nsegment_start_position(PG_FUNCTION_ARGS)
 {
 	nsegment *ns = PG_GETARG_NSEGMENT(0);
-	double result = ns->pos1;
-	PG_FREE_IF_COPY(ns, 0);
-	PG_RETURN_FLOAT8(result);
+	PG_RETURN_FLOAT8(ns->pos1);
 }
 
 PG_FUNCTION_INFO_V1(nsegment_end_position);
@@ -309,9 +340,7 @@ PGDLLEXPORT Datum
 nsegment_end_position(PG_FUNCTION_ARGS)
 {
 	nsegment *ns = PG_GETARG_NSEGMENT(0);
-	double result = ns->pos2;
-	PG_FREE_IF_COPY(ns, 0);
-	PG_RETURN_FLOAT8(result);
+	PG_RETURN_FLOAT8(ns->pos2);
 }
 
 /*****************************************************************************

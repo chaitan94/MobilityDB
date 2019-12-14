@@ -145,6 +145,7 @@ tgeompointinst_as_tnpointinst(TemporalInst *inst)
 		return NULL;
 	TemporalInst *result = temporalinst_make(PointerGetDatum(np), inst->t,
 		type_oid(T_NPOINT));
+	pfree(np);
 	return result;
 }
 

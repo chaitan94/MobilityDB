@@ -37,4 +37,4 @@ extern Datum overabove_tnpoint_npoint(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 
-#endif 
+#endif /* __TNPOINT_POSOPS_H__ */

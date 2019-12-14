@@ -31,4 +31,4 @@ extern Temporal *distance_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *te
 
 /*****************************************************************************/
 
-#endif
+#endif /* __TNPOINT_DISTANCE_H__ */

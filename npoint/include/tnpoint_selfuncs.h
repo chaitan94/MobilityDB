@@ -30,4 +30,4 @@ extern Datum tnpoint_position_joinsel(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 
-#endif 
+#endif /* __TNPOINT_SELFUNCS_H__ */

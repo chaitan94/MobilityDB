@@ -45,4 +45,4 @@ extern Datum same_bbox_tnpoint_npoint(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 
-#endif 
+#endif /* __TNPOINT_BOXOPS_H__ */

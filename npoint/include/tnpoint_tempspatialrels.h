@@ -90,4 +90,4 @@ extern Datum trelate_pattern_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 
-#endif 
+#endif /* __TNPOINT_TEMPSPATIALRELS_H__ */

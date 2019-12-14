@@ -58,4 +58,4 @@ extern Datum shortestline_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 
-#endif 
+#endif /* __TNPOINT_SPATIALFUNCS_H__ */

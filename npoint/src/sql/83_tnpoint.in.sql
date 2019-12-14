@@ -69,14 +69,14 @@ CREATE CAST (tnpoint AS tnpoint) WITH FUNCTION tnpoint(tnpoint, integer) AS IMPL
 
 CREATE FUNCTION tnpointinst(val npoint, t timestamptz)
 	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'temporal_make_temporalinst'
+	AS 'MODULE_PATHNAME', 'temporalinst_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /* Temporal instant set */
 
 CREATE FUNCTION tnpointi(tnpoint[])
 	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'temporal_make_temporali'
+	AS 'MODULE_PATHNAME', 'temporali_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /* Temporal sequence */
@@ -84,14 +84,14 @@ CREATE FUNCTION tnpointi(tnpoint[])
 CREATE FUNCTION tnpointseq(tnpoint[], lower_inc boolean DEFAULT true, 
 		upper_inc boolean DEFAULT true, linear boolean DEFAULT true)
 	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'temporal_make_temporalseq'
+	AS 'MODULE_PATHNAME', 'temporalseq_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /* Temporal sequence set */
 
 CREATE FUNCTION tnpoints(tnpoint[])
 	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'temporal_make_temporals'
+	AS 'MODULE_PATHNAME', 'temporals_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 	
 /******************************************************************************

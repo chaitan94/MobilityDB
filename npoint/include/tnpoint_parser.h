@@ -24,4 +24,4 @@ extern Temporal *tnpoint_parse(char **str, Oid basetype);
 
 /*****************************************************************************/
 
-#endif
+#endif /* __TNPOINT_PARSER_H__ */

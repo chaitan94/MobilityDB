@@ -91,4 +91,4 @@ extern Datum relate_pattern_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 
-#endif 
+#endif /* __TNPOINT_SPATIALRELS_H__ */
