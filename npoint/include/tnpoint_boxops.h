@@ -29,7 +29,8 @@ extern Datum tnpoint_to_stbox(PG_FUNCTION_ARGS);
 extern bool npoint_to_stbox_internal(STBOX *box, npoint *np);
 extern void tnpointinst_make_stbox(STBOX *box, Datum value, TimestampTz t);
 extern void tnpointinstarr_disc_to_stbox(STBOX *box, TemporalInst **inst, int count);
-extern void tnpointinstarr_cont_to_stbox(STBOX *box, TemporalInst **inst, int count);
+extern void tnpointinstarr_stepw_to_stbox(STBOX *box, TemporalInst **inst, int count);
+extern void tnpointinstarr_linear_to_stbox(STBOX *box, TemporalInst **inst, int count);
 extern void tnpointseqarr_to_stbox(STBOX *box, TemporalSeq **seq, int count);
 
 extern Datum npoint_expand_spatial(PG_FUNCTION_ARGS);

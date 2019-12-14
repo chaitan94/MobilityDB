@@ -322,7 +322,7 @@ tnpointseq_linear_positions1(TemporalSeq *seq)
 nsegment **
 tnpointseq_positions1(TemporalSeq *seq, int *count)
 {
-	if (MOBDB_FLAGS_GET_LINEAR(seq-flags))
+	if (MOBDB_FLAGS_GET_LINEAR(seq->flags))
 	{
 		nsegment **result = palloc(sizeof(nsegment *));
 		result[0] = tnpointseq_linear_positions1(seq);
@@ -336,6 +336,7 @@ tnpointseq_positions1(TemporalSeq *seq, int *count)
 ArrayType *
 tnpointseq_positions(TemporalSeq *seq)
 {
+	int count;
 	nsegment **segments = tnpointseq_positions1(seq, &count);
 	ArrayType *result = nsegmentarr_to_array(segments, count);
 	pfree(segments);
@@ -343,31 +344,31 @@ tnpointseq_positions(TemporalSeq *seq)
 }
 
 nsegment **
-tnpoints_stepw_positions1(TemporalS *ts)
+tnpoints_stepw_positions1(TemporalS *ts, int *count)
 {
-	int count;
+	int count1;
 	/* The following function removes duplicate values */
-	Datum *values = temporals_values1(ts, &count);
-	nsegment **segments = palloc(sizeof(nsegment *) * count);
-	for (int i = 0; i < count; i++)
+	Datum *values = temporals_values1(ts, &count1);
+	nsegment **result = palloc(sizeof(nsegment *) * count1);
+	for (int i = 0; i < count1; i++)
 	{
 		npoint *np = DatumGetNpoint(values[i]);
-		segments[i] = nsegment_make(np->rid, np->pos, np->pos);
+		result[i] = nsegment_make(np->rid, np->pos, np->pos);
 	}
+	*count = count1;
 	return result;
 }
 
 nsegment **
-tnpoints_linear_positions1(TemporalS *ts)
+tnpoints_linear_positions1(TemporalS *ts, int *count)
 {
-	nsegment **segments = palloc(sizeof(nsegment *) * ts->count);
-	int k = 0;
+	nsegment **result = palloc(sizeof(nsegment *) * ts->count);
 	for (int i = 0; i < ts->count; i++) 
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
-		int countstep = tnpointseq_positions1(seq);
-		k += countstep;
+		result[i] = tnpointseq_linear_positions1(seq);
 	}
+	*count = ts->count;
 	return result;
 }
 
@@ -375,7 +376,7 @@ nsegment **
 tnpoints_positions1(TemporalS *ts, int *count)
 {
 	nsegment **result;
-	if (MOBDB_FLAGS_GET_LINEAR(ts-flags))
+	if (MOBDB_FLAGS_GET_LINEAR(ts->flags))
 		result = tnpoints_linear_positions1(ts, count);
 	else
 		result = tnpoints_stepw_positions1(ts, count);
@@ -385,9 +386,10 @@ tnpoints_positions1(TemporalS *ts, int *count)
 ArrayType *
 tnpoints_positions(TemporalS *ts)
 {
-	nsegment **segments = tnpoints_positions1(ts);
-	ArrayType *result = nsegmentarr_to_array(segments, ts->count);
-	for (int i = 0; i < ts->count; i++)
+	int count;
+	nsegment **segments = tnpoints_positions1(ts, &count);
+	ArrayType *result = nsegmentarr_to_array(segments, count);
+	for (int i = 0; i < count; i++)
 		pfree(segments[i]);
 	pfree(segments);
 	return result;
