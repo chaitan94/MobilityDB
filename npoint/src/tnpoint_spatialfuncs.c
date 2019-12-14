@@ -803,7 +803,9 @@ tnpoint_azimuth(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result = NULL; 
 	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST || temp->duration == TEMPORALI)
+	if (temp->duration == TEMPORALINST || temp->duration == TEMPORALI ||
+		(temp->duration == TEMPORALSEQ && ! MOBDB_FLAGS_GET_LINEAR(temp->flags)) ||
+		(temp->duration == TEMPORALS && ! MOBDB_FLAGS_GET_LINEAR(temp->flags)))
 		;
 	else if (temp->duration == TEMPORALSEQ)
 		result = (Temporal *)tnpointseq_azimuth((TemporalSeq *)temp);

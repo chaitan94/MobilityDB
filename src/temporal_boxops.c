@@ -328,7 +328,12 @@ temporalseq_make_bbox(void *box, TemporalInst **instants, int count,
 		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
 		tpointinstarr_to_stbox((STBOX *)box, instants, count);
 	else if (instants[0]->valuetypid == type_oid(T_NPOINT)) 
-		tnpointinstarr_cont_to_stbox((STBOX *)box, instants, count);
+	{	
+		if (linear)
+			tnpointinstarr_cont_to_stbox((STBOX *)box, instants, count);
+		else
+			tnpointinstarr_disc_to_stbox((STBOX *)box, instants, count);
+	}
 #endif
 	return;
 }
