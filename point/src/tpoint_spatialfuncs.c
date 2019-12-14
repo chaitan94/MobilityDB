@@ -29,7 +29,7 @@
 #include "tpoint_distance.h"
 
 /*****************************************************************************
- * Assertion tests
+ * Parameter tests
  *****************************************************************************/
 
 void
@@ -65,19 +65,19 @@ ensure_same_dimensionality_tpoint_gs(Temporal *temp, GSERIALIZED *gs)
 }
 
 void
-ensure_Z_dimension_tpoint(Temporal *temp1, Temporal *temp2)
+ensure_has_Z_tpoint(Temporal *temp)
 {
-	if (! MOBDB_FLAGS_GET_Z(temp1->flags) || ! MOBDB_FLAGS_GET_Z(temp2->flags))
+	if (! MOBDB_FLAGS_GET_Z(temp->flags))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("The temporal points must have Z dimension")));
+			errmsg("The temporal point must have Z dimension")));
 }
 
 void
-ensure_Z_dimension_tpoint_gs(Temporal *temp, GSERIALIZED *gs)
+ensure_has_not_Z_tpoint(Temporal *temp)
 {
-	if (! MOBDB_FLAGS_GET_Z(temp->flags) || ! FLAGS_GET_Z(gs->flags))
+	if (MOBDB_FLAGS_GET_Z(temp->flags))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("The temporal point and the geometry must have Z dimension")));
+			errmsg("The temporal point must not have Z dimension")));
 }
 
 void
@@ -86,6 +86,38 @@ ensure_point_type(GSERIALIZED *gs)
 	if (gserialized_get_type(gs) != POINTTYPE)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 			errmsg("Only point geometries accepted")));
+}
+
+void
+ensure_non_empty(GSERIALIZED *gs)
+{
+	if (gserialized_is_empty(gs))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("Only non-empty geometries accepted")));
+}
+
+void
+ensure_has_Z(GSERIALIZED *gs)
+{
+	if (! FLAGS_GET_Z(gs->flags))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("Only geometries with Z dimension accepted")));
+}
+
+void
+ensure_has_M(GSERIALIZED *gs)
+{
+	if (! FLAGS_GET_M(gs->flags))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("Only geometries with M dimension accepted")));
+}
+
+void
+ensure_has_not_M(GSERIALIZED *gs)
+{
+	if (FLAGS_GET_M(gs->flags))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("Only geometries without M dimension accepted")));
 }
 
 /*****************************************************************************
@@ -3080,18 +3112,8 @@ PGDLLEXPORT Datum
 geo_to_tpoint(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-	if (gserialized_is_empty(gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("Input trajectory cannot be empty")));
-	}
-	if (! FLAGS_GET_M(gs->flags))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("Input trajectory do not have M values")));
-	}
+	ensure_non_empty(gs);
+	ensure_has_M(gs);
 	
 	Temporal *result;
 	if (gserialized_get_type(gs) == POINTTYPE)
