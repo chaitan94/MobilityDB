@@ -24,6 +24,8 @@
 #include "tpoint_distance.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
+#include "tnpoint_distance.h"
+#include "tnpoint_tempspatialrels.h"
 
 /*****************************************************************************
  * Trajectory functions
@@ -259,9 +261,11 @@ tnpointseq_geom(TemporalSeq *seq)
 	if (seq->count == 1)
 		return tnpointinst_geom(temporalseq_inst_n(seq, 0));
 
-	nsegment *ns = tnpointseq_positions1(seq);
-	Datum result = nsegment_as_geom_internal(ns);
-	pfree(ns);
+	nsegment **segments = tnpointseq_positions1(ts);
+	Datum result = nsegmentarr_to_geom_internal(segments, seq->count);
+	for (int i = 0; i < seq->count; i++)
+		pfree(segments[i]);
+	pfree(segments);
 	return result;
 }
 
@@ -343,7 +347,9 @@ tnpoint_length(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	double result = 0.0; 
 	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST || temp->duration == TEMPORALI)
+	if (temp->duration == TEMPORALINST || temp->duration == TEMPORALI ||
+		(temp->duration == TEMPORALSEQ && ! MOBDB_FLAGS_GET_LINEAR(temp->flags)) ||
+		(temp->duration == TEMPORALS && ! MOBDB_FLAGS_GET_LINEAR(temp->flags)))
 		;
 	else if (temp->duration == TEMPORALSEQ)
 		result = tnpointseq_length((TemporalSeq *)temp);	

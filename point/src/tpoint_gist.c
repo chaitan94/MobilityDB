@@ -22,6 +22,7 @@
 #include "tpoint_posops.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
+#include "tnpoint_boxops.h"
 
 /* Minimum accepted ratio of split */
 #define LIMIT_RATIO 0.3

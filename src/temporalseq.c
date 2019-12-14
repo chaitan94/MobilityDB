@@ -35,6 +35,7 @@
 #include "tpoint_boxops.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
+#include "tnpoint_tempspatialrels.h"
 #endif
 
 /*****************************************************************************
@@ -1381,7 +1382,9 @@ temporalseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1, boo
 		pfree(start1geom2); pfree(end1geom2); pfree(start2geom2); pfree(end2geom2);
 	}
 	if (start1->valuetypid == type_oid(T_NPOINT))
-		return tnpointseq_intersect_at_timestamp(start1, end1, start2, end2, false, false, inter);
+		// TODO: Take care of the bounding boxes
+		return tnpointseq_intersect_at_timestamp(start1, end1, linear1, 
+			start2, end2, linear2, false, false, inter);
 #endif
 	return result;
 }

@@ -28,6 +28,8 @@
 #include "tpoint_tempspatialrels.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
+#include "tnpoint_spatialfuncs.h"
+#include "tnpoint_distance.h"
 
 /*****************************************************************************
  * Intersection functions
@@ -39,7 +41,7 @@
  */
 bool
 tnpointseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
-	TemporalInst *start2, TemporalInst *end2,
+	bool linear1, TemporalInst *start2, TemporalInst *end2, bool linear2,
 	bool lower_inc, bool upper_inc, TimestampTz *inter)
 {
 	npoint *startnp1 = DatumGetNpoint(temporalinst_value(start1));
@@ -91,7 +93,7 @@ tnpointseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
  */
 static int
 tnpointseq_geom_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
-	TemporalInst *start2, TemporalInst *end2,
+	bool linear1, TemporalInst *start2, TemporalInst *end2, bool linear2,
 	bool lower_inc, bool upper_inc, TimestampTz *inter)
 {
 	npoint *startnp1 = DatumGetNpoint(temporalinst_value(start1));
@@ -110,8 +112,8 @@ tnpointseq_geom_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 	 * they have 0 or 1 intersection */
 	if (startnp1->rid == startnp2->rid)
 	{
-		if (tnpointseq_intersect_at_timestamp(start1, end1, start2, end2, 
-			lower_inc, upper_inc, inter))
+		if (tnpointseq_intersect_at_timestamp(start1, end1, linear1, start2, 
+			end2, linear2, lower_inc, upper_inc, inter))
 			return 1;
 		else
 			return 0;
@@ -273,8 +275,9 @@ tspatialrel_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2,
 
 static void
 tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
-	TemporalInst *start1, TemporalInst *end1,
-	TemporalInst *start2, TemporalInst *end2, bool lower_inc, bool upper_inc,
+	TemporalInst *start1, TemporalInst *end1, bool linear1,
+	TemporalInst *start2, TemporalInst *end2, bool linear2,
+	bool lower_inc, bool upper_inc,
 	Datum (*operator)(Datum, Datum), Oid valuetypid, int *count)
 {
 	npoint *startnp1 = DatumGetNpoint(temporalinst_value(start1));
@@ -305,8 +308,8 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 
 	/* Determine whether there is a crossing */
 	TimestampTz crosstime;
-	int cross = tnpointseq_geom_intersect_at_timestamp(start1, end1, start2, end2,
-		lower_inc, upper_inc, &crosstime);
+	int cross = tnpointseq_geom_intersect_at_timestamp(start1, end1, linear1,
+		start2, end2, linear2, lower_inc, upper_inc, &crosstime);
 
 	/* If there is no crossing */
 	if (cross == 0)
@@ -473,8 +476,10 @@ tspatialrel_tnpointseq_tnpointseq2(TemporalSeq *seq1, TemporalSeq *seq2,
 		TemporalInst *end1 = temporalseq_inst_n(seq1, i);
 		TemporalInst *end2 = temporalseq_inst_n(seq2, i);
 		bool upper_inc = (i == seq1->count-1) ? seq1->period.upper_inc : false;
-		tspatialrel_tnpointseq_tnpointseq1(&result[k], start1, end1,
-			start2, end2, lower_inc, upper_inc, operator, valuetypid, &countseq);
+		tspatialrel_tnpointseq_tnpointseq1(&result[k], 
+			start1, end1, MOBDB_FLAGS_GET_LINEAR(seq1->flags), 
+			start2, end2, MOBDB_FLAGS_GET_LINEAR(seq2->flags),
+			lower_inc, upper_inc, operator, valuetypid, &countseq);
 		/* The previous step has added between one and three sequences */
 		k += countseq;
 		start1 = end1;
@@ -583,8 +588,8 @@ tspatialrel3_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2, Datum param,
 
 static void
 tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
-	TemporalInst *start1, TemporalInst *end1,
-	TemporalInst *start2, TemporalInst *end2, 
+	TemporalInst *start1, TemporalInst *end1, bool linear1,
+	TemporalInst *start2, TemporalInst *end2, bool linear2,
 	bool lower_inc, bool upper_inc, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), Oid valuetypid, int *count)
 {
@@ -617,8 +622,8 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 
 	/* Determine whether there is a crossing */
 	TimestampTz crosstime;
-	int cross = tnpointseq_geom_intersect_at_timestamp(start1, end1, start2, end2,
-		lower_inc, upper_inc, &crosstime);
+	int cross = tnpointseq_geom_intersect_at_timestamp(start1, end1, linear1,
+		start2, end2, linear2, lower_inc, upper_inc, &crosstime);
 
 	/* If there is no crossing */
 	if (cross == 0)
@@ -785,8 +790,10 @@ tspatialrel3_tnpointseq_tnpointseq2(TemporalSeq *seq1, TemporalSeq *seq2, Datum 
 		TemporalInst *end1 = temporalseq_inst_n(seq1, i);
 		TemporalInst *end2 = temporalseq_inst_n(seq2, i);
 		bool upper_inc = (i == seq1->count-1) ? seq1->period.upper_inc : false;
-		tspatialrel3_tnpointseq_tnpointseq1(&result[k], start1, end1, 
-			start2, end2, lower_inc, upper_inc, param, operator, 
+		tspatialrel3_tnpointseq_tnpointseq1(&result[k], 
+			start1, end1, MOBDB_FLAGS_GET_LINEAR(seq1->flags),
+			start2, end2, MOBDB_FLAGS_GET_LINEAR(seq2->flags),
+			lower_inc, upper_inc, param, operator, 
 			valuetypid, &countseq);
 		/* The previous step has added between one and three sequences */
 		k += countseq;

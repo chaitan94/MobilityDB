@@ -42,6 +42,7 @@
 #include "tpoint_boxops.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
+#include "tnpoint_boxops.h"
 #endif
 
 /*****************************************************************************

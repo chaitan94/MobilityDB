@@ -24,6 +24,7 @@
 #include "tpoint_spatialrels.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
+#include "tnpoint_spatialfuncs.h"
 
 /*****************************************************************************
  * Generic binary functions for tnpoint <rel> geo

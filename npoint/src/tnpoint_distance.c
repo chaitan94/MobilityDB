@@ -18,6 +18,8 @@
 #include "tpoint_distance.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
+#include "tnpoint_spatialfuncs.h"
+#include "tnpoint_tempspatialrels.h"
 
 /*****************************************************************************
  * Generic distance functions when temporal npoints are moving

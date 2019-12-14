@@ -20,8 +20,8 @@
 /*****************************************************************************/
 
 extern bool tnpointseq_intersect_at_timestamp(TemporalInst *start1, 
-	TemporalInst *end1, TemporalInst *start2, TemporalInst *end2, 
-	bool lower_inc, bool upper_inc, TimestampTz *inter);
+	TemporalInst *end1, bool linear1, TemporalInst *start2, TemporalInst *end2, 
+	bool linear2, bool lower_inc, bool upper_inc, TimestampTz *inter);
 extern TemporalInst *tspatialrel_tnpointinst_geo(TemporalInst *inst, Datum geo,
 	Datum (*operator)(Datum, Datum), Oid valuetypid, bool invert);
 extern TemporalI *tspatialrel_tnpointi_geo(TemporalI *ti, Datum geo,
