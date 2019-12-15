@@ -27,296 +27,16 @@
 #include "tnpoint_spatialfuncs.h"
 
 /*****************************************************************************
- * Generic binary functions for tnpoint <rel> geo
- ***************************************************************************** /
+ * Generic binary functions for tnpoint <rel> geo/tnpoint
+ *****************************************************************************/
 
 static bool
-spatialrel_tnpointinst_geo(TemporalInst *inst, Datum geo, 
+spatialrel_tnpoint_geom(Temporal *temp, Datum geom,
 	Datum (*operator)(Datum, Datum), bool invert)
 {
-	Datum geom = tnpointinst_geom(inst);
-	bool result = invert ? DatumGetBool(operator(geo, geom)) :
-		DatumGetBool(operator(geom, geo));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-
-static bool
-spatialrel_tnpointi_geo(TemporalI *ti, Datum geo, 
-	Datum (*operator)(Datum, Datum), bool invert)
-{
-	Datum geom = tnpointi_geom(ti);
-	bool result = invert ? DatumGetBool(operator(geo, geom)) :
-		DatumGetBool(operator(geom, geo));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-
-static bool
-spatialrel_tnpointseq_geo(TemporalSeq *seq, Datum geo, 
-	Datum (*operator)(Datum, Datum), bool invert)
-{
-	Datum geom = tnpointseq_geom(seq);
-	bool result = invert ? DatumGetBool(operator(geo, geom)) :
-		DatumGetBool(operator(geom, geo));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-
-static bool
-spatialrel_tnpoints_geo(TemporalS *ts, Datum geo, 
-	Datum (*operator)(Datum, Datum), bool invert)
-{
-	Datum geom = tnpoints_geom(ts);
-	bool result = invert ? DatumGetBool(operator(geo, geom)) :
-		DatumGetBool(operator(geom, geo));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-*/
-/*****************************************************************************
- * Generic binary functions for tnpoint <rel> tnpoint
- *****************************************************************************/
-
-static bool
-spatialrel_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2, 
-	Datum (*operator)(Datum, Datum))
-{
-	Datum geom1 =  tnpointinst_geom(inst1);
-	Datum geom2 =  tnpointinst_geom(inst2);
-	bool result = DatumGetBool(operator(geom1, geom2));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-static bool
-spatialrel_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2, 
-	Datum (*operator)(Datum, Datum))
-{
-	Datum geom1 = tnpointi_geom(ti1);
-	Datum geom2 = tnpointi_geom(ti2);
-	bool result = DatumGetBool(operator(geom1, geom2));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-static bool
-spatialrel_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2, 
-	Datum (*operator)(Datum, Datum))
-{
-	Datum geom1 = tnpointseq_geom(seq1);
-	Datum geom2 = tnpointseq_geom(seq2);
-	bool result = DatumGetBool(operator(geom1, geom2));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-static bool
-spatialrel_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, 
-	Datum (*operator)(Datum, Datum))
-{
-	Datum geom1 = tnpoints_geom(ts1);
-	Datum geom2 = tnpoints_geom(ts2);
-	bool result = DatumGetBool(operator(geom1, geom2));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-/*****************************************************************************
- * Generic ternary functions for tnpoint <rel> geo
- *****************************************************************************/
-
-static bool
-spatialrel3_tnpointinst_geo(TemporalInst *inst, Datum geo, Datum param, 
-	Datum (*operator)(Datum, Datum, Datum), bool invert)
-{
-	Datum geom = tnpointinst_geom(inst);
-	bool result = invert ? DatumGetBool(operator(geo, geom, param)) :
-		DatumGetBool(operator(geom, geo, param));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-
-static bool
-spatialrel3_tnpointi_geo(TemporalI *ti, Datum geo, Datum param, 
-	Datum (*operator)(Datum, Datum, Datum), bool invert)
-{
-	Datum geom = tnpointi_geom(ti);
-	bool result = invert ? DatumGetBool(operator(geo, geom, param)) :
-		DatumGetBool(operator(geom, geo, param));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-
-static bool
-spatialrel3_tnpointseq_geo(TemporalSeq *seq, Datum geo, Datum param, 
-	Datum (*operator)(Datum, Datum, Datum), bool invert)
-{
-	Datum geom = tnpointseq_geom(seq);
-	bool result = invert ? DatumGetBool(operator(geo, geom, param)) :
-		DatumGetBool(operator(geom, geo, param));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-
-static bool
-spatialrel3_tnpoints_geo(TemporalS *ts, Datum geo, Datum param, 
-	Datum (*operator)(Datum, Datum, Datum), bool invert)
-{
-	Datum geom = tnpoints_geom(ts);
-	bool result = invert ? DatumGetBool(operator(geo, geom, param)) :
-		DatumGetBool(operator(geom, geo, param));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-
-/*****************************************************************************
- * Generic ternary functions for tnpoint <rel> tnpoint
- *****************************************************************************/
-
-static bool
-spatialrel3_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2, Datum param, 
-	Datum (*operator)(Datum, Datum, Datum))
-{
-	Datum geom1 =  tnpointinst_geom(inst1);
-	Datum geom2 =  tnpointinst_geom(inst2);
-	bool result = DatumGetBool(operator(geom1, geom2, param));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-static bool
-spatialrel3_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2, Datum param, 
-	Datum (*operator)(Datum, Datum, Datum))
-{
-	Datum geom1 = tnpointi_geom(ti1);
-	Datum geom2 = tnpointi_geom(ti2);
-	bool result = DatumGetBool(operator(geom1, geom2, param));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-static bool
-spatialrel3_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2, Datum param, 
-	Datum (*operator)(Datum, Datum, Datum))
-{
-	Datum geom1 = tnpointseq_geom(seq1);
-	Datum geom2 = tnpointseq_geom(seq2);
-	bool result = DatumGetBool(operator(geom1, geom2, param));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-static bool
-spatialrel3_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, Datum param, 
-	Datum (*operator)(Datum, Datum, Datum))
-{
-	Datum geom1 = tnpoints_geom(ts1);
-	Datum geom2 = tnpoints_geom(ts2);
-	bool result = DatumGetBool(operator(geom1, geom2, param));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-/*****************************************************************************
- * Generic relate functions for tnpoint relate geo
- *****************************************************************************/
-
-static text *
-relate_tnpointinst_geo(TemporalInst *inst, Datum geo, bool invert)
-{
-	Datum geom = tnpointinst_geom(inst);
-	text *result = invert ? DatumGetTextP(geom_relate(geo, geom)) :
-		DatumGetTextP(geom_relate(geom, geo));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-
-static text *
-relate_tnpointi_geo(TemporalI *ti, Datum geo, bool invert)
-{
-	Datum geom = tnpointi_geom(ti);
-	text *result = invert ? DatumGetTextP(geom_relate(geo, geom)) :
-		DatumGetTextP(geom_relate(geom, geo));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-
-static text *
-relate_tnpointseq_geo(TemporalSeq *seq, Datum geo, bool invert)
-{
-	Datum geom = tnpointseq_geom(seq);
-	text *result = invert ? DatumGetTextP(geom_relate(geo, geom)) :
-		DatumGetTextP(geom_relate(geom, geo));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-
-static text *
-relate_tnpoints_geo(TemporalS *ts, Datum geo, bool invert)
-{
-	Datum geom = tnpoints_geom(ts);
-	text *result = invert ? DatumGetTextP(geom_relate(geo, geom)) :
-		DatumGetTextP(geom_relate(geom, geo));
-	pfree(DatumGetPointer(geom));
-	return result;
-}
-
-/*****************************************************************************
- * Generic relate functions for tnpoint relate tnpoint 
- *****************************************************************************/
-
-static text *
-relate_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2)
-{
-	Datum geom1 =  tnpointinst_geom(inst1);
-	Datum geom2 =  tnpointinst_geom(inst2);
-	text *result = DatumGetTextP(geom_relate(geom1, geom2));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-static text *
-relate_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2)
-{
-	Datum geom1 = tnpointi_geom(ti1);
-	Datum geom2 = tnpointi_geom(ti2);
-	text *result = DatumGetTextP(geom_relate(geom1, geom2));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-static text *
-relate_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
-{
-	Datum geom1 = tnpointseq_geom(seq1);
-	Datum geom2 = tnpointseq_geom(seq2);
-	text *result = DatumGetTextP(geom_relate(geom1, geom2));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-static text *
-relate_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
-{
-	Datum geom1 = tnpoints_geom(ts1);
-	Datum geom2 = tnpoints_geom(ts2);
-	text *result = DatumGetTextP(geom_relate(geom1, geom2));
-	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-	return result;
-}
-
-/*****************************************************************************
- * Dispatch Functions
- *****************************************************************************/
-
-static bool
-spatialrel_tnpoint_geo(Temporal *temp, Datum geo,
-	Datum (*operator)(Datum, Datum), bool invert)
-{
-	Datum geom = tnpoint_geom(temp);
-	bool result = invert ? DatumGetBool(operator(geo, geom)) :
-		DatumGetBool(operator(geom, geo));
+	Datum geom1 = tnpoint_geom(temp);
+	bool result = invert ? DatumGetBool(operator(geom1, geom)) :
+		DatumGetBool(operator(geom, geom1));
 	pfree(DatumGetPointer(geom));
 	return result;
 }
@@ -325,61 +45,49 @@ static bool
 spatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
 	Datum (*operator)(Datum, Datum))
 {
-	bool result = false;
-	ensure_valid_duration(temp1->duration);
-	if (temp1->duration == TEMPORALINST) 
-		result = spatialrel_tnpointinst_tnpointinst(
-			(TemporalInst *)temp1, (TemporalInst *)temp2, operator);
-	else if (temp1->duration == TEMPORALI) 
-		result = spatialrel_tnpointi_tnpointi(
-			(TemporalI *)temp1, (TemporalI *)temp2, operator);
-	else if (temp1->duration == TEMPORALSEQ)
-		result = spatialrel_tnpointseq_tnpointseq(
-			(TemporalSeq *)temp1, (TemporalSeq *)temp2, operator);
-	else if (temp1->duration == TEMPORALS)
-		result = spatialrel_tnpoints_tnpoints(
-			(TemporalS *)temp1, (TemporalS *)temp2, operator);
+	Datum geom1 = tnpoint_geom(temp1);
+	Datum geom2 = tnpoint_geom(temp2);
+	text *result = DatumGetTextP(geom_relate(geom1, geom2));
+	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
 	return result;
 }
 
-/*****************************************************************************/
+/*****************************************************************************
+ * Generic relate functions for tnpoint relate geo/tnpoint 
+ *****************************************************************************/
 
 static text *
-relate_tnpoint_geo_internal(Temporal *temp, Datum geo, bool invert)
+relate_tnpoint_geom_internal(Temporal *temp, Datum geom, bool invert)
 {
-	text *result = NULL;
-	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST)
-		result = relate_tnpointinst_geo((TemporalInst *)temp, geo, invert);
-	else if (temp->duration == TEMPORALI)
-		result = relate_tnpointi_geo((TemporalI *)temp, geo, invert);
-	else if (temp->duration == TEMPORALSEQ)
-		result = relate_tnpointseq_geo((TemporalSeq *)temp, geo, invert);
-	else if (temp->duration == TEMPORALS)
-		result = relate_tnpoints_geo((TemporalS *)temp, geo, invert);
+	Datum geom1 = tnpoint_geom(temp);
+	text *result = invert ? DatumGetTextP(geom_relate(geom1, geom)) :
+		DatumGetTextP(geom_relate(geom, geom1));
+	pfree(DatumGetPointer(geom));
 	return result;
 }
 
-/*****************************************************************************/
+static text *
+relate_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2)
+{
+	Datum geom1 = tnpoint_geom(temp1);
+	Datum geom2 = tnpoint_geom(temp2);
+	text *result = DatumGetTextP(geom_relate(geom1, geom2));
+	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
+	return result;
+}
+
+/*****************************************************************************
+ * Generic ternary functions for tnpoint <rel> geo/tnpoint
+ *****************************************************************************/
 
 static bool
-spatialrel3_tnpoint_geo(Temporal *temp, Datum geom, Datum param,
+spatialrel3_tnpoint_geom(Temporal *temp, Datum geom, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
-	bool result = false;
-	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST)
-		result = spatialrel3_tnpointinst_geo((TemporalInst *)temp, geom, param,
-			operator, invert);
-	else if (temp->duration == TEMPORALI)
-		result = spatialrel3_tnpointi_geo((TemporalI *)temp, geom, param,
-			operator, invert);
-	else if (temp->duration == TEMPORALSEQ)
-		result = spatialrel3_tnpointseq_geo((TemporalSeq *)temp, geom, param,
-			operator, invert);
-	else if (temp->duration == TEMPORALS)
-		result = spatialrel3_tnpoints_geo((TemporalS *)temp, geom, param,
-			operator, invert);
+	Datum geom1 = tnpoint_geom(temp);
+	bool result = invert ? DatumGetBool(operator(geom1, geom, param)) :
+		DatumGetBool(operator(geom1, geom, param));
+	pfree(DatumGetPointer(geom));
 	return result;
 }
 
@@ -387,20 +95,10 @@ static bool
 spatialrel3_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2, Datum param,
 	Datum (*operator)(Datum, Datum, Datum))
 {
-	bool result = false;
-	ensure_valid_duration(temp1->duration);
-	if (temp1->duration == TEMPORALINST) 
-		result = spatialrel3_tnpointinst_tnpointinst(
-			(TemporalInst *)temp1, (TemporalInst *)temp2, param, operator);
-	else if (temp1->duration == TEMPORALI) 
-		result = spatialrel3_tnpointi_tnpointi(
-			(TemporalI *)temp1, (TemporalI *)temp2, param, operator);
-	else if (temp1->duration == TEMPORALSEQ) 
-		result = spatialrel3_tnpointseq_tnpointseq(
-			(TemporalSeq *)temp1, (TemporalSeq *)temp2, param, operator);
-	else if (temp1->duration == TEMPORALS) 
-		result = spatialrel3_tnpoints_tnpoints(
-			(TemporalS *)temp1, (TemporalS *)temp2, param, operator);
+	Datum geom1 = tnpoint_geom(temp1);
+	Datum geom2 = tnpoint_geom(temp2);
+	bool result = DatumGetBool(operator(geom1, geom2, param));
+	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
 	return result;
 }
 
@@ -415,7 +113,7 @@ contains_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_contains, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_contains, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -428,7 +126,7 @@ contains_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_contains, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_contains, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -441,7 +139,7 @@ contains_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_contains, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_contains, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -454,7 +152,7 @@ contains_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_contains, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_contains, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -493,7 +191,7 @@ containsproperly_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_containsproperly, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_containsproperly, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -506,7 +204,7 @@ containsproperly_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_containsproperly, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_containsproperly, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -519,7 +217,7 @@ containsproperly_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_containsproperly, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_containsproperly, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -532,7 +230,7 @@ containsproperly_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_containsproperly, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_containsproperly, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -571,7 +269,7 @@ covers_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_covers, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_covers, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -584,7 +282,7 @@ covers_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_covers, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_covers, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -597,7 +295,7 @@ covers_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_covers, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_covers, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -610,7 +308,7 @@ covers_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_covers, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_covers, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -649,7 +347,7 @@ coveredby_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_coveredby, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_coveredby, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -662,7 +360,7 @@ coveredby_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_coveredby, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_coveredby, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -675,7 +373,7 @@ coveredby_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_coveredby, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_coveredby, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -688,7 +386,7 @@ coveredby_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_coveredby, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_coveredby, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -727,7 +425,7 @@ crosses_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_crosses, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_crosses, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -740,7 +438,7 @@ crosses_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_crosses, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_crosses, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -753,7 +451,7 @@ crosses_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_crosses, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_crosses, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -766,7 +464,7 @@ crosses_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_crosses, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_crosses, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -805,7 +503,7 @@ disjoint_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_disjoint, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_disjoint, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -818,7 +516,7 @@ disjoint_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_disjoint, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_disjoint, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -831,7 +529,7 @@ disjoint_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_disjoint, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_disjoint, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -844,7 +542,7 @@ disjoint_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_disjoint, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_disjoint, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -883,7 +581,7 @@ equals_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_equals, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_equals, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -896,7 +594,7 @@ equals_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_equals, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_equals, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -909,7 +607,7 @@ equals_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_equals, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_equals, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -922,7 +620,7 @@ equals_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_equals, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_equals, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -961,7 +659,7 @@ intersects_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_intersects2d, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_intersects2d, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -974,7 +672,7 @@ intersects_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_intersects2d, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_intersects2d, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -987,7 +685,7 @@ intersects_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_intersects2d, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_intersects2d, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1000,7 +698,7 @@ intersects_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_intersects2d, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_intersects2d, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -1039,7 +737,7 @@ overlaps_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_overlaps, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_overlaps, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -1052,7 +750,7 @@ overlaps_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_overlaps, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_overlaps, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -1065,7 +763,7 @@ overlaps_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_overlaps, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_overlaps, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1078,7 +776,7 @@ overlaps_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_overlaps, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_overlaps, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -1117,7 +815,7 @@ touches_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_touches, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_touches, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -1130,7 +828,7 @@ touches_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_touches, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_touches, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -1143,7 +841,7 @@ touches_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_touches, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_touches, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1156,7 +854,7 @@ touches_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_touches, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_touches, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -1195,7 +893,7 @@ within_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_within, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_within, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -1208,7 +906,7 @@ within_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_within, true);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_within, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -1221,7 +919,7 @@ within_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_within, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_within, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1234,7 +932,7 @@ within_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel_tnpoint_geo(temp, geom, &geom_within, false);
+	bool result = spatialrel_tnpoint_geom(temp, geom, &geom_within, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -1274,7 +972,7 @@ dwithin_geo_tnpoint(PG_FUNCTION_ARGS)
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum dist = PG_GETARG_DATUM(2);
-	bool result = spatialrel3_tnpoint_geo(temp, geom, dist, &geom_dwithin2d, true);
+	bool result = spatialrel3_tnpoint_geom(temp, geom, dist, &geom_dwithin2d, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -1288,7 +986,7 @@ dwithin_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum dist = PG_GETARG_DATUM(2);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel3_tnpoint_geo(temp, geom, dist, &geom_dwithin2d, true);
+	bool result = spatialrel3_tnpoint_geom(temp, geom, dist, &geom_dwithin2d, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -1302,7 +1000,7 @@ dwithin_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
 	Datum dist = PG_GETARG_DATUM(2);
-	bool result = spatialrel3_tnpoint_geo(temp, geom, dist, &geom_dwithin2d, false);
+	bool result = spatialrel3_tnpoint_geom(temp, geom, dist, &geom_dwithin2d, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1316,7 +1014,7 @@ dwithin_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum dist = PG_GETARG_DATUM(2);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel3_tnpoint_geo(temp, geom, dist, &geom_dwithin2d, false);
+	bool result = spatialrel3_tnpoint_geom(temp, geom, dist, &geom_dwithin2d, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -1356,7 +1054,7 @@ relate_geo_tnpoint(PG_FUNCTION_ARGS)
 {
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	text *result = relate_tnpoint_geo_internal(temp, geom, true);
+	text *result = relate_tnpoint_geom_internal(temp, geom, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_TEXT_P(result);
 }
@@ -1369,7 +1067,7 @@ relate_npoint_tnpoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
-	text *result = relate_tnpoint_geo_internal(temp, geom, true);
+	text *result = relate_tnpoint_geom_internal(temp, geom, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_TEXT_P(result);
@@ -1382,7 +1080,7 @@ relate_tnpoint_geo(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
-	text *result = relate_tnpoint_geo_internal(temp, geom, false);
+	text *result = relate_tnpoint_geom_internal(temp, geom, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_TEXT_P(result);
 }
@@ -1395,7 +1093,7 @@ relate_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
-	text *result = relate_tnpoint_geo_internal(temp, geom, false);
+	text *result = relate_tnpoint_geom_internal(temp, geom, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_TEXT_P(result);
@@ -1416,22 +1114,7 @@ relate_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 		PG_FREE_IF_COPY(temp2, 1);
 		PG_RETURN_NULL();
 	}
-	
-	text *result = NULL;
-	ensure_valid_duration(inter1->duration);
-	if (inter1->duration == TEMPORALINST)
-		result = relate_tnpointinst_tnpointinst(
-			(TemporalInst *)inter1, (TemporalInst *)inter2);
-	else if (inter1->duration == TEMPORALI)
-		result = relate_tnpointi_tnpointi(
-			(TemporalI *)inter1, (TemporalI *)inter2);
-	else if (inter1->duration == TEMPORALSEQ)
-		result = relate_tnpointseq_tnpointseq(
-			(TemporalSeq *)inter1, (TemporalSeq *)inter2);
-	else if (inter1->duration == TEMPORALS)
-		result = relate_tnpoints_tnpoints(
-			(TemporalS *)inter1, (TemporalS *)inter2);
-
+	text *result = relate_tnpoint_tnpoint_internal(temp1, temp2);
  	pfree(inter1); pfree(inter2); 
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
@@ -1452,7 +1135,7 @@ relate_pattern_geo_tnpoint(PG_FUNCTION_ARGS)
 	Datum geom = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum pattern = PG_GETARG_DATUM(2);
-	bool result = spatialrel3_tnpoint_geo(temp, geom, pattern,
+	bool result = spatialrel3_tnpoint_geom(temp, geom, pattern,
 		&geom_relate_pattern, true);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
@@ -1467,7 +1150,7 @@ relate_pattern_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum pattern = PG_GETARG_DATUM(2);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel3_tnpoint_geo(temp, geom, pattern,
+	bool result = spatialrel3_tnpoint_geom(temp, geom, pattern,
 		&geom_relate_pattern, true);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
@@ -1482,7 +1165,7 @@ relate_pattern_tnpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum geom = PG_GETARG_DATUM(1);
 	Datum pattern = PG_GETARG_DATUM(2);
-	bool result = spatialrel3_tnpoint_geo(temp, geom, pattern,
+	bool result = spatialrel3_tnpoint_geom(temp, geom, pattern,
 		&geom_relate_pattern, false);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -1497,7 +1180,7 @@ relate_pattern_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum pattern = PG_GETARG_DATUM(2);
 	Datum geom = npoint_as_geom_internal(np);
-	bool result = spatialrel3_tnpoint_geo(temp, geom, pattern,
+	bool result = spatialrel3_tnpoint_geom(temp, geom, pattern,
 		&geom_relate_pattern, false);
     pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
