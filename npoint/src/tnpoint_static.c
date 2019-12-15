@@ -950,27 +950,31 @@ geom_as_nsegment(PG_FUNCTION_ARGS)
 Datum
 nsegmentarr_to_geom_internal(nsegment **segments, int count)
 {
-	Datum *sublines = palloc(sizeof(Datum) * count);
+	Datum *geoms = palloc(sizeof(Datum) * count);
 	for (int i = 0; i < count; i++)
 	{
 		Datum line = route_geom(segments[i]->rid);
 		if (segments[i]->pos1 == 0 && segments[i]->pos2 == 1)
-			sublines[i] = PointerGetDatum(gserialized_copy((GSERIALIZED *)PG_DETOAST_DATUM(line)));
+			geoms[i] = PointerGetDatum(gserialized_copy((GSERIALIZED *)PG_DETOAST_DATUM(line)));
 		else if (segments[i]->pos1 == segments[i]->pos2)
-			sublines[i] = call_function2(LWGEOM_line_interpolate_point, line, Float8GetDatum(segments[i]->pos1));
+			geoms[i] = call_function2(LWGEOM_line_interpolate_point, line, Float8GetDatum(segments[i]->pos1));
 		else
-			sublines[i] = call_function3(LWGEOM_line_substring, line,
+			geoms[i] = call_function3(LWGEOM_line_substring, line,
 				Float8GetDatum(segments[i]->pos1), Float8GetDatum(segments[i]->pos2));
 		pfree(DatumGetPointer(line));
 	}
 	Datum result;
-	ArrayType *array = datumarr_to_array(sublines, count, type_oid(T_GEOMETRY));
-	result = call_function1(pgis_union_geometry_array, PointerGetDatum(array));
-	// cannot pfree because an element of the array is returned by PostGIS in one particular case
-	// pfree(array);
-	for (int i = 0; i < count; i++)
-		pfree(DatumGetPointer(sublines[i])); 
-	pfree(sublines); 
+	if (count == 1)
+		result = geoms[0];
+	else
+	{
+		ArrayType *array = datumarr_to_array(geoms, count, type_oid(T_GEOMETRY));
+		result = call_function1(pgis_union_geometry_array, PointerGetDatum(array));
+		pfree(array);
+		for (int i = 0; i < count; i++)
+			pfree(DatumGetPointer(geoms[i])); 
+		pfree(geoms); 
+	}
 	PG_RETURN_DATUM(result);
 }
 

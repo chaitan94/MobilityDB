@@ -50,7 +50,7 @@ CREATE TYPE tnpoint (
 	typmod_out = temporal_typmod_out,
 	storage = extended,
 	alignment = double,
-	analyze = temporal_analyze
+	analyze = tnpoint_analyze
 );
 
 -- Special cast for enforcing the typmod restrictions
