@@ -255,39 +255,33 @@ tgeompoint_as_tnpoint(PG_FUNCTION_ARGS)
  * Return the network segments covered by the moving object
  */
 
-ArrayType *
+nsegment **
 tnpointinst_positions(TemporalInst *inst)
 {
+	nsegment **result = palloc(sizeof(nsegment *));
 	npoint *np = DatumGetNpoint(temporalinst_value(inst));
-	nsegment *ns = nsegment_make(np->rid, np->pos, np->pos);
-	ArrayType *result = nsegmentarr_to_array(&ns, 1);
-	pfree(ns);
-	return result;
-}
-
-/* Set of segments taken by the temporal value */
-
-ArrayType *
-tnpointi_positions(TemporalI *ti)
-{
-	int count;
-	/* The following function removes duplicate values */
-	Datum *values = temporali_values1(ti, &count);
-	nsegment **segments = palloc(sizeof(nsegment *) * count);
-	for (int i = 0; i < count; i++)
-	{
-		npoint *np = DatumGetNpoint(values[i]);
-		segments[i] = nsegment_make(np->rid, np->pos, np->pos);
-	}
-	ArrayType *result = nsegmentarr_to_array(segments, count);
-	for (int i = 0; i < count; i++)
-		pfree(segments[i]);
-	pfree(segments); pfree(values);
+	result[0] = nsegment_make(np->rid, np->pos, np->pos);
 	return result;
 }
 
 nsegment **
-tnpointseq_stepw_positions1(TemporalSeq *seq, int *count)
+tnpointi_positions(TemporalI *ti, int *count)
+{
+	int count1;
+	/* The following function removes duplicate values */
+	Datum *values = temporali_values1(ti, &count1);
+	nsegment **result = palloc(sizeof(nsegment *) * count1);
+	for (int i = 0; i < count1; i++)
+	{
+		npoint *np = DatumGetNpoint(values[i]);
+		result[i] = nsegment_make(np->rid, np->pos, np->pos);
+	}
+	*count = count1;
+	return result;
+}
+
+nsegment **
+tnpointseq_stepw_positions(TemporalSeq *seq, int *count)
 {
 	int count1;
 	/* The following function removes duplicate values */
@@ -303,7 +297,7 @@ tnpointseq_stepw_positions1(TemporalSeq *seq, int *count)
 }
 
 nsegment *
-tnpointseq_linear_positions1(TemporalSeq *seq)
+tnpointseq_linear_positions(TemporalSeq *seq)
 {
 	TemporalInst *inst = temporalseq_inst_n(seq, 0);
 	npoint *np = DatumGetNpoint(temporalinst_value(inst));
@@ -320,31 +314,21 @@ tnpointseq_linear_positions1(TemporalSeq *seq)
 }
 
 nsegment **
-tnpointseq_positions1(TemporalSeq *seq, int *count)
+tnpointseq_positions(TemporalSeq *seq, int *count)
 {
 	if (MOBDB_FLAGS_GET_LINEAR(seq->flags))
 	{
 		nsegment **result = palloc(sizeof(nsegment *));
-		result[0] = tnpointseq_linear_positions1(seq);
+		result[0] = tnpointseq_linear_positions(seq);
 		*count = 1;
 		return result;
 	}
 	else
-		return tnpointseq_stepw_positions1(seq, count);
-}
-
-ArrayType *
-tnpointseq_positions(TemporalSeq *seq)
-{
-	int count;
-	nsegment **segments = tnpointseq_positions1(seq, &count);
-	ArrayType *result = nsegmentarr_to_array(segments, count);
-	pfree(segments);
-	return result;
+		return tnpointseq_stepw_positions(seq, count);
 }
 
 nsegment **
-tnpoints_stepw_positions1(TemporalS *ts, int *count)
+tnpoints_stepw_positions(TemporalS *ts, int *count)
 {
 	int count1;
 	/* The following function removes duplicate values */
@@ -360,38 +344,49 @@ tnpoints_stepw_positions1(TemporalS *ts, int *count)
 }
 
 nsegment **
-tnpoints_linear_positions1(TemporalS *ts, int *count)
+tnpoints_linear_positions(TemporalS *ts, int *count)
 {
-	nsegment **result = palloc(sizeof(nsegment *) * ts->count);
+	nsegment **segments = palloc(sizeof(nsegment *) * ts->count);
 	for (int i = 0; i < ts->count; i++) 
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
-		result[i] = tnpointseq_linear_positions1(seq);
+		segments[i] = tnpointseq_linear_positions(seq);
 	}
-	*count = ts->count;
+	nsegment **result = segments;
+	int count1 = ts->count;
+	if (count1 > 1)
+		result = nsegmentarr_normalize(segments, &count1);
+	*count = count1;
 	return result;
 }
 
 nsegment **
-tnpoints_positions1(TemporalS *ts, int *count)
+tnpoints_positions(TemporalS *ts, int *count)
 {
 	nsegment **result;
 	if (MOBDB_FLAGS_GET_LINEAR(ts->flags))
-		result = tnpoints_linear_positions1(ts, count);
+		result = tnpoints_linear_positions(ts, count);
 	else
-		result = tnpoints_stepw_positions1(ts, count);
+		result = tnpoints_stepw_positions(ts, count);
 	return result;
 }
 
-ArrayType *
-tnpoints_positions(TemporalS *ts)
+nsegment **
+tnpoint_positions_internal(Temporal *temp, int *count)
 {
-	int count;
-	nsegment **segments = tnpoints_positions1(ts, &count);
-	ArrayType *result = nsegmentarr_to_array(segments, count);
-	for (int i = 0; i < count; i++)
-		pfree(segments[i]);
-	pfree(segments);
+	nsegment **result = NULL; /* make the compiler quiet */
+	ensure_valid_duration(temp->duration);
+	if (temp->duration == TEMPORALINST) 
+	{
+		result = tnpointinst_positions((TemporalInst *)temp);
+		*count = 1;
+	}
+	else if (temp->duration == TEMPORALI) 
+		result = tnpointi_positions((TemporalI *)temp, count);
+	else if (temp->duration == TEMPORALSEQ) 
+		result = tnpointseq_positions((TemporalSeq *)temp, count);
+	else if (temp->duration == TEMPORALS) 
+		result = tnpoints_positions((TemporalS *)temp, count);
 	return result;
 }
 
@@ -401,16 +396,12 @@ PGDLLEXPORT Datum
 tnpoint_positions(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	ArrayType *result = NULL; /* make the compiler quiet */
-	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST) 
-		result = tnpointinst_positions((TemporalInst *)temp);
-	else if (temp->duration == TEMPORALI) 
-		result = tnpointi_positions((TemporalI *)temp);
-	else if (temp->duration == TEMPORALSEQ) 
-		result = tnpointseq_positions((TemporalSeq *)temp);
-	else if (temp->duration == TEMPORALS) 
-		result = tnpoints_positions((TemporalS *)temp);
+	int count;
+	nsegment **segments = tnpoint_positions_internal(temp, &count);
+	ArrayType *result = nsegmentarr_to_array(segments, count);
+	for (int i = 0; i < count; i++)
+		pfree(segments[i]);
+	pfree(segments);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }

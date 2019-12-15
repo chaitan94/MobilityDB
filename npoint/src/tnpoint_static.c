@@ -12,6 +12,7 @@
 
 #include "tnpoint_static.h"
 
+#include <assert.h>
 #include <libpq/pqformat.h>
 #include <executor/spi.h>
 #include <liblwgeom.h>
@@ -45,6 +46,49 @@ nsegmentarr_to_array(nsegment **nsegmentarr, int count)
 {
 	return construct_array((Datum *)nsegmentarr, count, type_oid(T_NSEGMENT), 
 		sizeof(nsegment), false, 'd');
+}
+
+/*****************************************************************************/
+
+static int
+nsegment_sort_cmp(nsegment **l, nsegment **r)
+{
+	return nsegment_cmp_internal(*l, *r);
+}
+
+void
+nsegmentarr_sort(nsegment **segments, int count)
+{
+	qsort(segments, count, sizeof(nsegment *),
+		  (qsort_comparator) &nsegment_sort_cmp);
+}
+
+nsegment **
+nsegmentarr_normalize(nsegment **segments, int *count)
+{
+	assert(*count != 0);
+	nsegmentarr_sort(segments, *count);
+	int newcount = 0;
+	nsegment **result = palloc(sizeof(nsegment *) * *count);
+	nsegment *current = segments[0];
+	for (int i = 1; i < *count; i++)
+	{
+		nsegment *seg = segments[i];
+		if (current->rid == seg->rid) 
+		{
+			current->pos1 = Min(current->pos1, seg->pos1);
+			current->pos2 = Max(current->pos2, seg->pos2);
+			pfree(seg);
+		} 
+		else 
+		{
+			result[newcount++] = current;
+			current = seg;
+		}
+	}
+	result[newcount++] = current;
+	*count = newcount;
+	return result;
 }
 
 /*****************************************************************************

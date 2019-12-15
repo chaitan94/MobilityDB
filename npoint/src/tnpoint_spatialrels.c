@@ -28,7 +28,7 @@
 
 /*****************************************************************************
  * Generic binary functions for tnpoint <rel> geo
- *****************************************************************************/
+ ***************************************************************************** /
 
 static bool
 spatialrel_tnpointinst_geo(TemporalInst *inst, Datum geo, 
@@ -73,7 +73,7 @@ spatialrel_tnpoints_geo(TemporalS *ts, Datum geo,
 	pfree(DatumGetPointer(geom));
 	return result;
 }
-
+*/
 /*****************************************************************************
  * Generic binary functions for tnpoint <rel> tnpoint
  *****************************************************************************/
@@ -211,8 +211,8 @@ static bool
 spatialrel3_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, Datum param, 
 	Datum (*operator)(Datum, Datum, Datum))
 {
-	Datum geom1 = tnpoints_trajectory(ts1);
-	Datum geom2 = tnpoints_trajectory(ts2);
+	Datum geom1 = tnpoints_geom(ts1);
+	Datum geom2 = tnpoints_geom(ts2);
 	bool result = DatumGetBool(operator(geom1, geom2, param));
 	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
 	return result;
@@ -299,8 +299,8 @@ relate_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
 static text *
 relate_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
 {
-	Datum geom1 = tnpoints_trajectory(ts1);
-	Datum geom2 = tnpoints_trajectory(ts2);
+	Datum geom1 = tnpoints_geom(ts1);
+	Datum geom2 = tnpoints_geom(ts2);
 	text *result = DatumGetTextP(geom_relate(geom1, geom2));
 	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
 	return result;
@@ -311,23 +311,13 @@ relate_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
  *****************************************************************************/
 
 static bool
-spatialrel_tnpoint_geo(Temporal *temp, Datum geom,
+spatialrel_tnpoint_geo(Temporal *temp, Datum geo,
 	Datum (*operator)(Datum, Datum), bool invert)
 {
-	bool result = false;
-	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST)
-		result = spatialrel_tnpointinst_geo((TemporalInst *)temp, geom,
-			operator, invert);
-	else if (temp->duration == TEMPORALI)
-		result = spatialrel_tnpointi_geo((TemporalI *)temp, geom,
-			operator, invert);
-	else if (temp->duration == TEMPORALSEQ)
-		result = spatialrel_tnpointseq_geo((TemporalSeq *)temp, geom,
-			operator, invert);
-	else if (temp->duration == TEMPORALS)
-		result = spatialrel_tnpoints_geo((TemporalS *)temp, geom,
-			operator, invert);
+	Datum geom = tnpoint_geom(temp);
+	bool result = invert ? DatumGetBool(operator(geo, geom)) :
+		DatumGetBool(operator(geom, geo));
+	pfree(DatumGetPointer(geom));
 	return result;
 }
 

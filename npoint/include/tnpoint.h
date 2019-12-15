@@ -78,12 +78,11 @@ extern Datum tnpoint_positions(PG_FUNCTION_ARGS);
 extern Datum tnpointinst_route(PG_FUNCTION_ARGS);
 extern Datum tnpoint_routes(PG_FUNCTION_ARGS);
 
-extern ArrayType *tnpointinst_positions(TemporalInst *inst);
-extern ArrayType *tnpointi_positions(TemporalI *ti);
-extern nsegment **tnpointseq_positions1(TemporalSeq *seq, int *count);
-extern ArrayType *tnpointseq_positions(TemporalSeq *seq);
-extern nsegment **tnpoints_positions1(TemporalS *t, int *count);
-extern ArrayType *tnpoints_positions(TemporalS *ts);
+extern nsegment **tnpointinst_positions(TemporalInst *inst);
+extern nsegment **tnpointi_positions(TemporalI *ti, int *count);
+extern nsegment **tnpointseq_positions(TemporalSeq *seq, int *count);
+extern nsegment **tnpoints_positions(TemporalS *ts, int *count);
+extern nsegment **tnpoint_positions_internal(Temporal *temp, int *count);
 
 extern ArrayType *tnpointinst_routes(TemporalInst *inst);
 extern ArrayType *tnpointi_routes(TemporalI *ti);

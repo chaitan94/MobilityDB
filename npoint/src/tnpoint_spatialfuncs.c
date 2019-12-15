@@ -70,144 +70,6 @@ tnpointseq_trajectory1(TemporalInst *inst1, TemporalInst *inst2)
 	return traj;
 }
 
-Datum
-tnpointseq_trajectory(TemporalSeq *seq)
-{
-	Datum *trajs = palloc(sizeof(Datum) * (seq->count - 1));
-	TemporalInst *inst = temporalseq_inst_n(seq, 0);
-	npoint *np1 = DatumGetNpoint(temporalinst_value(inst));
-	Datum line = route_geom(np1->rid);
-	int k = 0;
-	for (int i = 1; i < seq->count; i++)
-	{
-		inst = temporalseq_inst_n(seq, i);
-		npoint *np2 = DatumGetNpoint(temporalinst_value(inst));
-		if (np1->pos < np2->pos)
-		{
-			if (np1->pos == 0 && np2->pos == 1)
-				trajs[k++] = PointerGetDatum(gserialized_copy(
-					(GSERIALIZED *)PG_DETOAST_DATUM(line)));
-			else
-				trajs[k++] = call_function3(LWGEOM_line_substring, line,
-					Float8GetDatum(np1->pos), Float8GetDatum(np2->pos));
-		}
-		else if (np1->pos > np2->pos)
-		{
-			Datum traj;
-			if (np2->pos == 0 && np1->pos == 1)
-				traj = PointerGetDatum(gserialized_copy(
-					(GSERIALIZED *)PG_DETOAST_DATUM(line)));
-			else
-				traj = call_function3(LWGEOM_line_substring, line,
-					Float8GetDatum(np2->pos), Float8GetDatum(np1->pos));
-			trajs[k++] = call_function1(LWGEOM_reverse, traj);
-			pfree(DatumGetPointer(traj));
-		}
-		np1 = np2;
-	}
-
-	Datum result;
-	if (k == 0)
-		result = npoint_as_geom_internal(np1);
-	else if (k == 1)
-		result = trajs[0];
-	else
-	{
-		ArrayType *array = datumarr_to_array(trajs, k, type_oid(T_GEOMETRY));
-		Datum lines = call_function1(LWGEOM_collect_garray, 
-			PointerGetDatum(array));
-		result = call_function1(linemerge, lines);
-		pfree(DatumGetPointer(lines));
-		for (int i = 0; i < k; i++)
-			pfree(DatumGetPointer(trajs[i]));
-		pfree(array);
-	}
-
-	pfree(DatumGetPointer(line));
-	pfree(trajs);
-	return result;
-}
-
-Datum
-tnpoints_trajectory(TemporalS *ts)
-{
-	if (ts->count == 1)
-		return tnpointseq_geom(temporals_seq_n(ts, 0));
-
-	Datum *points = palloc(sizeof(Datum) * ts->count);
-	Datum *segments = palloc(sizeof(Datum) * ts->count);
-	int j = 0, k = 0;
-	for (int i = 0; i < ts->count; i++)
-	{
-		TemporalSeq *seq = temporals_seq_n(ts, i);
-		Datum traj = tnpointseq_geom(seq);
-		GSERIALIZED *gstraj = (GSERIALIZED *)PG_DETOAST_DATUM(traj);
-		if (gserialized_get_type(gstraj) == POINTTYPE)
-			points[j++] = traj;
-		else
-			segments[k++] = traj;
-		POSTGIS_FREE_IF_COPY_P(gstraj, DatumGetPointer(traj));
-	}
-
-	Datum multipoint = (Datum) 0, multilinestring = (Datum) 0;  /* make compiler quiet */
-	if (j > 0)
-	{
-		if (j == 1)
-		{
-			GSERIALIZED *gspoint = (GSERIALIZED *)PG_DETOAST_DATUM(points[0]);
-			multipoint = PointerGetDatum(gserialized_copy(gspoint));
-		}
-		else
-		{
-			ArrayType *array = datumarr_to_array(points, j, type_oid(T_GEOMETRY));
-			multipoint = call_function1(pgis_union_geometry_array,
-				PointerGetDatum(array));
-			pfree(array);
-		}
-	}
-	if (k > 0)
-	{
-		if (k == 1)
-		{
-			GSERIALIZED *gsline = (GSERIALIZED *)PG_DETOAST_DATUM(segments[0]);
-			multilinestring = PointerGetDatum(gserialized_copy(gsline));
-		}
-		else
-		{
-			ArrayType *array = datumarr_to_array(segments, k, type_oid(T_GEOMETRY));
-			Datum lines = call_function1(LWGEOM_collect_garray,
-				PointerGetDatum(array));
-			multilinestring = call_function1(linemerge, lines);
-			pfree(array);
-		}
-	}
-
-	Datum result;
-	if (j > 0 && k > 0)
-	{
-		result = call_function2(geomunion, multipoint, multilinestring);
-		pfree(DatumGetPointer(multipoint)); pfree(DatumGetPointer(multilinestring));
-	}
-	else if (j > 0)
-		result = multipoint;
-	else
-		result = multilinestring;
-
-	pfree(points); pfree(segments);
-	return result;
-}
-
-PG_FUNCTION_INFO_V1(tnpoint_trajectory);
-
-PGDLLEXPORT Datum
-tnpoint_trajectory(PG_FUNCTION_ARGS)
-{
-	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum result = tnpoint_geom(temp);
-	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_DATUM(result);
-}
-
 /*****************************************************************************
  * Geometric positions functions
  * Return the geometric positions covered by the temporal npoint
@@ -223,25 +85,16 @@ tnpointinst_geom(TemporalInst *inst)
 Datum
 tnpointi_geom(TemporalI *ti)
 {
+	/* Instantaneous sequence */
 	if (ti->count == 1)
 		return tnpointinst_geom(temporali_inst_n(ti, 0));
 
 	int count;
-	/* The following function removes duplicate values */
-	Datum *values = temporali_values1(ti, &count);
-	Datum *geoms = palloc(sizeof(Datum) * count);
+	nsegment **segments = tnpointi_positions(ti, &count);
+	Datum result = nsegmentarr_to_geom_internal(segments, count);
 	for (int i = 0; i < count; i++)
-	{
-		npoint *np = DatumGetNpoint(values[i]);
-		geoms[i] = npoint_as_geom_internal(np);
-	}
-	ArrayType *array = datumarr_to_array(geoms, count, type_oid(T_GEOMETRY));
-	Datum result = call_function1(LWGEOM_collect_garray, PointerGetDatum(array));
-	pfree(values);
-	for (int i = 0; i < count; i++)
-		pfree(DatumGetPointer(geoms[i]));
-	pfree(geoms);
-	pfree(array);
+		pfree(segments[i]);
+	pfree(segments);
 	return result;
 }
 
@@ -253,7 +106,7 @@ tnpointseq_geom(TemporalSeq *seq)
 		return tnpointinst_geom(temporalseq_inst_n(seq, 0));
 
 	int count;
-	nsegment **segments = tnpointseq_positions1(seq, &count);
+	nsegment **segments = tnpointseq_positions(seq, &count);
 	Datum result = nsegmentarr_to_geom_internal(segments, count);
 	for (int i = 0; i < count; i++)
 		pfree(segments[i]);
@@ -264,11 +117,12 @@ tnpointseq_geom(TemporalSeq *seq)
 Datum
 tnpoints_geom(TemporalS *ts)
 {
+	/* Singleton sequence set */
 	if (ts->count == 1)
 		return tnpointseq_geom(temporals_seq_n(ts, 0));
 
 	int count;
-	nsegment **segments = tnpoints_positions1(ts, &count);
+	nsegment **segments = tnpoints_positions(ts, &count);
 	Datum result = nsegmentarr_to_geom_internal(segments, count);
 	for (int i = 0; i < count; i++)
 		pfree(segments[i]);
@@ -279,19 +133,25 @@ tnpoints_geom(TemporalS *ts)
 Datum
 tnpoint_geom(Temporal *temp)
 {
-	Datum result = 0;
-	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST) 
-		result = tnpointinst_geom((TemporalInst *)temp);
-	else if (temp->duration == TEMPORALI) 
-		result = tnpointi_geom((TemporalI *)temp);
-	else if (temp->duration == TEMPORALSEQ) 
-		result = tnpointseq_geom((TemporalSeq *)temp);
-	else if (temp->duration == TEMPORALS) 
-		result = tnpoints_geom((TemporalS *)temp);
+	int count;
+	nsegment **segments = tnpoint_positions_internal(temp, &count);
+	Datum result = nsegmentarr_to_geom_internal(segments, count);
+	for (int i = 0; i < count; i++)
+		pfree(segments[i]);
+	pfree(segments);
 	return result;
 }
 
+PG_FUNCTION_INFO_V1(tnpoint_trajectory);
+
+PGDLLEXPORT Datum
+tnpoint_trajectory(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	Datum result = tnpoint_geom(temp);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_DATUM(result);
+}
 
 /*****************************************************************************
  * Length functions

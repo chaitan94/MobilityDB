@@ -25,6 +25,7 @@
 extern ArrayType *int64arr_to_array(int64 *int64arr, int count);
 extern ArrayType *npointarr_to_array(npoint **npointarr, int count);
 extern ArrayType *nsegmentarr_to_array(nsegment **nsegmentarr, int count);
+extern nsegment **nsegmentarr_normalize(nsegment **segments, int *count);
 
 extern Datum npoint_in(PG_FUNCTION_ARGS);
 extern Datum npoint_out(PG_FUNCTION_ARGS);
@@ -72,6 +73,7 @@ extern Datum nsegment_le(PG_FUNCTION_ARGS);
 extern Datum nsegment_gt(PG_FUNCTION_ARGS);
 extern Datum nsegment_ge(PG_FUNCTION_ARGS);
 
+extern int nsegment_cmp_internal(nsegment *ns1, nsegment *ns2);
 extern bool nsegment_eq_internal(nsegment *np1, nsegment *np2);
 extern bool nsegment_ne_internal(nsegment *np1, nsegment *np2);
 extern bool nsegment_lt_internal(nsegment *np1, nsegment *np2);
