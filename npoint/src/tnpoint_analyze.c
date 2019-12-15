@@ -19,8 +19,8 @@
 #include "postgis.h"
 #include "tpoint.h"
 #include "tpoint_selfuncs.h"
-
-
+#include "tpoint_analyze.h"
+#include "tnpoint_spatialfuncs.h"
 
 /*****************************************************************************/
 
