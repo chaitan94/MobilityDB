@@ -721,14 +721,14 @@ tnpointi_at_geometry(TemporalI *ti, Datum geom)
 
 /* This function assumes that inst1 and inst2 have same rid */
 static TemporalSeq **
-tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
+tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2, bool linear,
 	bool lower_inc, bool upper_inc, Datum geom, int *count)
 {
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
 	npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
 
 	/* Constant sequence */
-	if (np1->pos == np2->pos)
+	if (np1->pos == np2->pos || linear)
 	{
 		Datum point = npoint_as_geom_internal(np1);
 		bool inter = DatumGetBool(call_function2(intersects, point, geom));
@@ -744,7 +744,7 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 		instants[1] = inst2;
 		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
 		result[0] = temporalseq_from_temporalinstarr(instants, 2, 
-			lower_inc, upper_inc, true, false);
+			lower_inc, upper_inc, linear, false);
 		*count = 1;
 		return result;
 	}
@@ -790,7 +790,7 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 				instants[0] = temporalinst_make(PointerGetDatum(intnp), time,
 					type_oid(T_NPOINT));
 				result[k++] = temporalseq_from_temporalinstarr(instants, 1, 
-					true, true, true, false);
+					true, true, linear, false);
 				pfree(instants[0]);
 				pfree(intnp);
 			}
@@ -820,7 +820,7 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2,
 			instants[1] = temporalinst_make(PointerGetDatum(intnp2), upper1,
 				type_oid(T_NPOINT));
 			result[k++] = temporalseq_from_temporalinstarr(instants, 2,
-				lower_inc1, upper_inc1, true, false);
+				lower_inc1, upper_inc1, linear, false);
 
 			pfree(instants[0]); pfree(instants[1]);
 			pfree(DatumGetPointer(inter1)); pfree(DatumGetPointer(inter2));
@@ -867,6 +867,7 @@ tnpointseq_at_geometry2(TemporalSeq *seq, Datum geom, int *count)
 	}
 
 	/* Temporal sequence has at least 2 instants */
+	bool linear = MOBDB_FLAGS_GET_LINEAR(seq->flags);
 	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * (seq->count - 1));
 	int *countseqs = palloc0(sizeof(int) * (seq->count - 1));
 	int totalseqs = 0;
@@ -876,7 +877,7 @@ tnpointseq_at_geometry2(TemporalSeq *seq, Datum geom, int *count)
 	{
 		TemporalInst *inst2 = temporalseq_inst_n(seq, i + 1);
 		bool upper_inc = (i == seq->count - 2)? seq->period.upper_inc: false;
-		sequences[i] = tnpointseq_at_geometry1(inst1, inst2, 
+		sequences[i] = tnpointseq_at_geometry1(inst1, inst2, linear,
 			lower_inc, upper_inc, geom, &countseqs[i]);
 		totalseqs += countseqs[i];
 		inst1 = inst2;
@@ -916,7 +917,7 @@ tnpointseq_at_geometry(TemporalSeq *seq, Datum geom)
 		return NULL;
 
 	TemporalS *result = temporals_from_temporalseqarr(sequences, count, 
-		true, true);
+		MOBDB_FLAGS_GET_LINEAR(seq->flags), true);
 
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
@@ -955,7 +956,7 @@ tnpoints_at_geometry(TemporalS *ts, Datum geom)
 			pfree(sequences[i]);
 	}
 	TemporalS *result = temporals_from_temporalseqarr(allsequences, totalseqs, 
-		true, true);
+		MOBDB_FLAGS_GET_LINEAR(ts->flags), true);
 
 	for (int i = 0; i < totalseqs; i++)
 		pfree(allsequences[i]);

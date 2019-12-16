@@ -60,8 +60,8 @@ spatialrel3_tnpoint_geom(Temporal *temp, Datum geom, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
 	Datum geom1 = tnpoint_geom(temp);
-	Datum result = invert ? DatumGetBool(operator(geom, geom1, param)) :
-		DatumGetBool(operator(geom1, geom, param));
+	Datum result = invert ? operator(geom, geom1, param) : 
+		operator(geom1, geom, param);
 	pfree(DatumGetPointer(geom1));
 	return result;
 }
@@ -72,7 +72,7 @@ spatialrel3_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2, Datum param,
 {
 	Datum geom1 = tnpoint_geom(temp1);
 	Datum geom2 = tnpoint_geom(temp2);
-	Datum result = DatumGetBool(operator(geom1, geom2, param));
+	Datum result = operator(geom1, geom2, param);
 	pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
 	return result;
 }

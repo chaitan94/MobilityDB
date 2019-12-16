@@ -1,9 +1,9 @@
-﻿/*****************************************************************************/
+﻿-------------------------------------------------------------------------------
 
 DROP INDEX IF EXISTS tbl_tnpoint_gist_idx;
 DROP INDEX IF EXISTS tbl_tnpoint_spgist_idx;
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 DROP TABLE if exists test_tnpointboundboxops;
 CREATE TABLE test_tnpointboundboxops(
@@ -14,7 +14,7 @@ CREATE TABLE test_tnpointboundboxops(
 	gistidx bigint,
 	spgistidx bigint );
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 -- <type> op tnpoint
 
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
@@ -71,7 +71,7 @@ SELECT '<@', 'stbox', 'tnpoint', count(*) FROM tbl_stbox, tbl_tnpoint WHERE b <@
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
 SELECT '~=', 'stbox', 'tnpoint', count(*) FROM tbl_stbox, tbl_tnpoint WHERE b ~= temp;
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 --  tnpoint op <type>
 
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
@@ -137,11 +137,11 @@ SELECT '<@', 'tnpoint', 'tnpoint', count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 
 INSERT INTO test_tnpointboundboxops(op, leftarg, rightarg, noidx)
 SELECT '~=', 'tnpoint', 'tnpoint', count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp ~= t2.temp;
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 CREATE INDEX tbl_tnpoint_gist_idx ON tbl_tnpoint USING GIST(temp);
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 -- <type> op tnpoint
 
 UPDATE test_tnpointboundboxops
@@ -222,7 +222,7 @@ UPDATE test_tnpointboundboxops
 SET gistidx = ( SELECT count(*) FROM tbl_stbox, tbl_tnpoint WHERE b ~= temp )
 WHERE op = '~=' and leftarg = 'stbox' and rightarg = 'tnpoint';
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 -- tnpoint op <type>
 
 UPDATE test_tnpointboundboxops
@@ -316,13 +316,13 @@ UPDATE test_tnpointboundboxops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp ~= t2.temp )
 WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 DROP INDEX IF EXISTS tbl_tnpoint_gist_idx;
 
 CREATE INDEX tbl_tnpoint_spgist_idx ON tbl_tnpoint USING SPGIST(temp);
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 -- <type> op tnpoint
 
 UPDATE test_tnpointboundboxops
@@ -403,7 +403,7 @@ UPDATE test_tnpointboundboxops
 SET spgistidx = ( SELECT count(*) FROM tbl_stbox, tbl_tnpoint WHERE b ~= temp )
 WHERE op = '~=' and leftarg = 'stbox' and rightarg = 'tnpoint';
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 -- tnpoint op <type>
 
 UPDATE test_tnpointboundboxops
@@ -497,14 +497,14 @@ UPDATE test_tnpointboundboxops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp ~= t2.temp )
 WHERE op = '~=' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 SELECT * FROM test_tnpointboundboxops
 WHERE noidx <> gistidx or noidx <> spgistidx or gistidx <> spgistidx; 
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 DROP INDEX IF EXISTS tbl_tnpoint_spgist_idx;
 DROP TABLE if exists test_tnpointboundboxops;
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------

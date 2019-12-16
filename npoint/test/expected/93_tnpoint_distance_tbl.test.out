@@ -1,4 +1,3 @@
-/*****************************************************************************/
 SELECT MAX(maxValue(t1.g <-> t2.temp)) FROM tbl_geompoint t1, tbl_tnpoint t2;
        max        
 ------------------
@@ -29,4 +28,3 @@ SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp <-> t2.temp IS
    100
 (1 row)
 
-/*****************************************************************************/

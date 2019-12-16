@@ -1,4 +1,4 @@
-﻿/*****************************************************************************/
+﻿-------------------------------------------------------------------------------
 
 SELECT st_astext(trajectory(tnpoint 'Npoint(1, 0.5)@2000-01-01'));
 SELECT st_astext(trajectory(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}'));
@@ -37,7 +37,7 @@ SELECT speed(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Np
 SELECT azimuth(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
 SELECT azimuth(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 SELECT nearestApproachInstant(tnpoint 'Npoint(1, 0.5)@2000-01-01', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))');
 SELECT nearestApproachInstant(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))');
@@ -89,7 +89,7 @@ SELECT nearestApproachInstant(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.
 SELECT nearestApproachInstant(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
 SELECT nearestApproachInstant(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 SELECT nearestApproachDistance(tnpoint 'Npoint(1, 0.5)@2000-01-01', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))');
 SELECT nearestApproachDistance(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))');
@@ -141,7 +141,7 @@ SELECT nearestApproachDistance(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0
 SELECT nearestApproachDistance(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
 SELECT nearestApproachDistance(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 SELECT ST_AsText(shortestLine(tnpoint 'Npoint(1, 0.5)@2000-01-01', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))'));
 SELECT ST_AsText(shortestLine(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', geometry 'Polygon((50 50,50 100,100 100,100 50,50 50))'));
@@ -193,5 +193,5 @@ SELECT ST_AsText(shortestLine(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.
 SELECT ST_AsText(shortestLine(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]'));
 SELECT ST_AsText(shortestLine(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}',  tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}'));
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 

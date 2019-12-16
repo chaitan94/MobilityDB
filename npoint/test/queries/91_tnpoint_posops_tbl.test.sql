@@ -1,9 +1,9 @@
-﻿/*****************************************************************************/
+﻿-------------------------------------------------------------------------------
 
 DROP INDEX IF EXISTS tbl_tnpoint_gist_idx;
 DROP INDEX IF EXISTS tbl_tnpoint_spgist_idx;
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 DROP TABLE IF EXISTS test_tnpointrelativeposops;
 CREATE TABLE test_tnpointrelativeposops(
@@ -14,7 +14,7 @@ CREATE TABLE test_tnpointrelativeposops(
 	gistidx bigint,
 	spgistidx bigint );
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
 SELECT '<<', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g << temp;
@@ -87,7 +87,7 @@ SELECT '&<#', 'periodset', 'tnpoint', count(*) FROM tbl_periodset, tbl_tnpoint W
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
 SELECT '#&>', 'periodset', 'tnpoint', count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps #&> temp;
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
 SELECT '<<', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << g;
@@ -186,11 +186,11 @@ SELECT '&<#', 'tnpoint', 'tnpoint', count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
 SELECT '#&>', 'tnpoint', 'tnpoint', count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp #&> t2.temp;
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 CREATE INDEX tbl_tnpoint_gist_idx ON tbl_tnpoint USING GIST(temp);
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g << temp )
@@ -296,7 +296,7 @@ UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps #&> temp )
 WHERE op = '#&>' and leftarg = 'periodset' and rightarg = 'tnpoint';
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << g )
@@ -441,12 +441,12 @@ UPDATE test_tnpointrelativeposops
 SET gistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp #&> t2.temp )
 WHERE op = '#&>' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 DROP INDEX IF EXISTS tbl_tnpoint_gist_idx;
 CREATE INDEX tbl_tnpoint_spgist_idx ON tbl_tnpoint USING SPGIST(temp);
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g << temp )
@@ -552,7 +552,7 @@ UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps #&> temp )
 WHERE op = '#&>' and leftarg = 'periodset' and rightarg = 'tnpoint';
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << g )
@@ -697,14 +697,14 @@ UPDATE test_tnpointrelativeposops
 SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp #&> t2.temp )
 WHERE op = '#&>' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 SELECT * FROM test_tnpointrelativeposops
 WHERE noidx <> gistidx or noidx <> spgistidx or gistidx <> spgistidx; 
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------
 
 DROP INDEX IF EXISTS tbl_tnpoint_spgist_idx;
 DROP TABLE test_tnpointrelativeposops;
 
-/*****************************************************************************/
+-------------------------------------------------------------------------------

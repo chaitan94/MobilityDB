@@ -1,6 +1,6 @@
-﻿/*****************************************************************************
- * Constructors
- *****************************************************************************/
+﻿-------------------------------------------------------------------------------
+--  Constructors
+-------------------------------------------------------------------------------
 
 SELECT MAX(getPosition(startValue(tnpointinst(t1.np, t2.t)))) FROM tbl_npoint t1, tbl_timestamptz t2;
 
@@ -16,53 +16,53 @@ WITH test(temp) as (
 SELECT tnpoints(array_agg(t.seq ORDER BY startTimestamp(t.seq))) FROM tbl_tnpointseq t GROUP BY k%10 )
 SELECT MAX(getPosition(startValue(temp))) FROM test;
 
-/******************************************************************************
- * Transformation functions
- ******************************************************************************/
+-------------------------------------------------------------------------------
+--  Transformation functions
+-------------------------------------------------------------------------------
 
 SELECT DISTINCT duration(tnpointinst(inst)) FROM tbl_tnpointinst;
 SELECT DISTINCT duration(tnpointi(inst)) FROM tbl_tnpointinst;
 SELECT DISTINCT duration(tnpointseq(inst)) FROM tbl_tnpointinst;
 SELECT DISTINCT duration(tnpoints(inst)) FROM tbl_tnpointinst;
 
-/******************************************************************************/
+-------------------------------------------------------------------------------
 
 SELECT DISTINCT duration(tnpointinst(ti)) FROM tbl_tnpointi WHERE numInstants(ti) = 1;
 SELECT DISTINCT duration(tnpointi(ti)) FROM tbl_tnpointi;
 SELECT DISTINCT duration(tnpointseq(ti)) FROM tbl_tnpointi WHERE numInstants(ti) = 1;
 SELECT DISTINCT duration(tnpoints(ti)) FROM tbl_tnpointi;
 
-/******************************************************************************/
+-------------------------------------------------------------------------------
 
 SELECT DISTINCT duration(tnpointinst(seq)) FROM tbl_tnpointseq WHERE numInstants(seq) = 1;
 SELECT DISTINCT duration(tnpointi(seq)) FROM tbl_tnpointseq WHERE numInstants(seq) = 1;
 SELECT DISTINCT duration(tnpointseq(seq)) FROM tbl_tnpointseq;
 SELECT DISTINCT duration(tnpoints(seq)) FROM tbl_tnpointseq;
 
-/******************************************************************************/
+-------------------------------------------------------------------------------
 
 SELECT DISTINCT duration(tnpointinst(ts)) FROM tbl_tnpoints WHERE numInstants(ts) = 1;
 SELECT DISTINCT duration(tnpointi(ts)) FROM tbl_tnpoints WHERE duration(ts) = '00:00:00';
 SELECT DISTINCT duration(tnpointseq(ts)) FROM tbl_tnpoints WHERE numSequences(ts) = 1;
 SELECT DISTINCT duration(tnpoints(ts)) FROM tbl_tnpoints;
 
-/******************************************************************************
- * Append functions
- ******************************************************************************/
+-------------------------------------------------------------------------------
+--  Append functions
+-------------------------------------------------------------------------------
 
 SELECT MAX(numInstants(appendInstant(temp, shift(endInstant(temp), '5 min')))) FROM tbl_tnpoint;
 
-/******************************************************************************
- * Cast functions
- ******************************************************************************/
+-------------------------------------------------------------------------------
+--  Cast functions
+-------------------------------------------------------------------------------
 
 SELECT count(*) FROM tbl_tnpoint where temp::tgeompoint is not null;
 
 SELECT count(*) FROM tbl_tnpoint WHERE temp = (temp::tgeompoint)::tnpoint;
 
-/******************************************************************************
- * Accessor functions
- ******************************************************************************/
+-------------------------------------------------------------------------------
+--  Accessor functions
+-------------------------------------------------------------------------------
 
 SELECT DISTINCT duration(temp) FROM tbl_tnpoint ORDER BY 1;
 
@@ -134,9 +134,9 @@ SELECT MAX(timespan(sequenceN(ts, numSequences(ts)))) FROM tbl_tnpoints;
 
 SELECT MAX(array_length(sequences(ts),1)) FROM tbl_tnpoints;
 
-/******************************************************************************
- * Restriction functions
- ******************************************************************************/
+-------------------------------------------------------------------------------
+--  Restriction functions
+-------------------------------------------------------------------------------
 
 SELECT COUNT(*) FROM tbl_tnpoint, tbl_npoint 
 WHERE atValue(temp, np) IS NOT NULL;
@@ -191,9 +191,9 @@ WHERE intersectsPeriod(temp, p) IS NOT NULL;
 SELECT COUNT(*) FROM tbl_tnpoint, tbl_periodset
 WHERE intersectsPeriodSet(temp, ps) IS NOT NULL;
 
-/******************************************************************************
- * Comparison functions and B-tree indexing
- ******************************************************************************/
+-------------------------------------------------------------------------------
+--  Comparison functions and B-tree indexing
+-------------------------------------------------------------------------------
 
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2
 WHERE t1.temp = t2.temp;
