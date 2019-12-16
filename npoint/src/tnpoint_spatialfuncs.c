@@ -440,42 +440,13 @@ tnpoint_speed(PG_FUNCTION_ARGS)
  * Time-weighed centroid for temporal geometry points
  *****************************************************************************/
 
-static Datum
-tnpointi_twcentroid(TemporalI *ti)
-{
-    TemporalI *ti1 = tnpointi_as_tgeompointi(ti);
-    return tgeompointi_twcentroid(ti1);
-}
-
-static Datum
-tnpointseq_twcentroid(TemporalSeq *seq)
-{
-    TemporalSeq *seq1 = tnpointseq_as_tgeompointseq(seq);
-    return tgeompointseq_twcentroid(seq1);
-}
-
-static Datum
-tnpoints_twcentroid(TemporalS *ts)
-{
-    TemporalS *ts1 = tnpoints_as_tgeompoints(ts);
-    return tgeompoints_twcentroid(ts1);
-}
-PG_FUNCTION_INFO_V1(tnpoint_twcentroid);
-
 PGDLLEXPORT Datum
 tnpoint_twcentroid(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Datum result = 0; 
-	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST) 
-		result = temporalinst_value_copy((TemporalInst *)temp);
-	else if (temp->duration == TEMPORALI) 
-		result = tnpointi_twcentroid((TemporalI *)temp);
-	else if (temp->duration == TEMPORALSEQ) 
-		result = tnpointseq_twcentroid((TemporalSeq *)temp);
-	else if (temp->duration == TEMPORALS) 
-		result = tnpoints_twcentroid((TemporalS *)temp);
+	Temporal *tgeom = tnpoint_as_tgeompoint_internal(temp);
+	Datum result = tgeompoint_twcentroid_internal(tgeom);
+	pfree(tgeom);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
