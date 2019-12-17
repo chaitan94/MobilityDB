@@ -125,18 +125,18 @@ CREATE FUNCTION tgeometryinst(geometry, timestamptz)
 
 CREATE FUNCTION tgeometryi(tgeometry[])
     RETURNS tgeometry
-    AS 'MODULE_PATHNAME', 'temporal_make_temporali'
+    AS 'MODULE_PATHNAME', 'temporali_constructor'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tgeometryseq(tgeometry[], lower_inc boolean DEFAULT true, 
     upper_inc boolean DEFAULT true, linear boolean DEFAULT true)
     RETURNS tgeometry
-    AS 'MODULE_PATHNAME', 'temporal_make_temporalseq'
+    AS 'MODULE_PATHNAME', 'temporalseq_constructor'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tgeometrys(tgeometry[])
     RETURNS tgeometry
-    AS 'MODULE_PATHNAME', 'temporal_make_temporals'
+    AS 'MODULE_PATHNAME', 'temporals_constructor'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************/
@@ -148,18 +148,18 @@ CREATE FUNCTION tgeographyinst(geography, timestamptz)
 
 CREATE FUNCTION tgeographyi(tgeography[])
     RETURNS tgeography
-    AS 'MODULE_PATHNAME', 'temporal_make_temporali'
+    AS 'MODULE_PATHNAME', 'temporali_constructor'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tgeographyseq(tgeography[], lower_inc boolean DEFAULT true, 
     upper_inc boolean DEFAULT true, linear boolean DEFAULT true)
     RETURNS tgeography
-    AS 'MODULE_PATHNAME', 'temporal_make_temporalseq'
+    AS 'MODULE_PATHNAME', 'temporalseq_constructor'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tgeographys(tgeography[])
     RETURNS tgeography
-    AS 'MODULE_PATHNAME', 'temporal_make_temporals'
+    AS 'MODULE_PATHNAME', 'temporals_constructor'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

@@ -929,7 +929,7 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 	{
 		bbox_precomputed = true;
 		bbox = palloc0(bboxsize);
-		temporalseq_make_bbox(bbox, instants, count, lower_inc, upper_inc);
+		temporalseq_make_bbox(bbox, instants, count, lower_inc, upper_inc, linear);
 	}
 
 	/*
