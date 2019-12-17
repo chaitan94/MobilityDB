@@ -10,6 +10,11 @@
  *
  *****************************************************************************/
 
+
+/******************************************************************************
+ * Output as region
+ ******************************************************************************/
+
 CREATE FUNCTION asText(tgeometry)
     RETURNS text
     AS 'MODULE_PATHNAME', 'tgeo_as_text'
@@ -44,6 +49,28 @@ CREATE FUNCTION asEWKT(tgeography)
 CREATE FUNCTION asEWKT(tgeography[])
     RETURNS text[]
     AS 'MODULE_PATHNAME', 'tgeoarr_as_ewkt'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************
+ * Output as rtransform
+ ******************************************************************************/
+
+ CREATE FUNCTION asTransform(tgeometry)
+    RETURNS text
+    AS 'MODULE_PATHNAME', 'tgeo_as_transform'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION asTransform(tgeometry[])
+    RETURNS text[]
+    AS 'MODULE_PATHNAME', 'tgeoarr_as_transform'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION asTransform(tgeography)
+    RETURNS text
+    AS 'MODULE_PATHNAME', 'tgeo_as_transform'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION asTransform(tgeography[])
+    RETURNS text[]
+    AS 'MODULE_PATHNAME', 'tgeoarr_as_transform'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/

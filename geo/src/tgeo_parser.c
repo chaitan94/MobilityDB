@@ -146,7 +146,7 @@ tgeoi_parse(char **str, Oid basetype, int *tgeo_srid)
 }
 
 static TemporalSeq *
-tgeoseq_parse(char **str, Oid basetype, bool end, int *tgeo_srid) 
+tgeoseq_parse(char **str, Oid basetype, bool linear, bool end, int *tgeo_srid) 
 {
     p_whitespace(str);
     bool lower_inc = false, upper_inc = false;
@@ -197,7 +197,7 @@ tgeoseq_parse(char **str, Oid basetype, bool end, int *tgeo_srid)
     p_cparen(str);
 
     TemporalSeq *result = temporalseq_from_temporalinstarr(insts, 
-        count, lower_inc, upper_inc, true);
+        count, lower_inc, upper_inc, linear, true);
 
     for (int i = 0; i < count; i++)
         pfree(insts[i]);
@@ -207,7 +207,7 @@ tgeoseq_parse(char **str, Oid basetype, bool end, int *tgeo_srid)
 }
 
 static TemporalS *
-tgeos_parse(char **str, Oid basetype, int *tgeo_srid) 
+tgeos_parse(char **str, Oid basetype, bool linear, int *tgeo_srid) 
 {
     p_whitespace(str);
     /* We are sure to find an opening brace because that was the condition 
@@ -216,13 +216,13 @@ tgeos_parse(char **str, Oid basetype, int *tgeo_srid)
 
     //FIXME: parsing twice
     char *bak = *str;
-    TemporalSeq *seq = tgeoseq_parse(str, basetype, false, tgeo_srid);
+    TemporalSeq *seq = tgeoseq_parse(str, basetype, linear, false, tgeo_srid);
     int count = 1;
     while (p_comma(str)) 
     {
         count++;
         pfree(seq);
-        seq = tgeoseq_parse(str, basetype, false, tgeo_srid);
+        seq = tgeoseq_parse(str, basetype, linear, false, tgeo_srid);
     }
     pfree(seq);
     if (!p_cbrace(str))
@@ -239,10 +239,11 @@ tgeos_parse(char **str, Oid basetype, int *tgeo_srid)
     for (int i = 0; i < count; i++) 
     {
         p_comma(str);
-        seqs[i] = tgeoseq_parse(str, basetype, false, tgeo_srid);
+        seqs[i] = tgeoseq_parse(str, basetype, linear, false, tgeo_srid);
     }
     p_cbrace(str);
-    TemporalS *result = temporals_from_temporalseqarr(seqs, count, true);
+    TemporalS *result = temporals_from_temporalseqarr(seqs, count, 
+        linear, true);
 
     for (int i = 0; i < count; i++)
         pfree(seqs[i]);
@@ -269,7 +270,9 @@ tgeo_parse(char **str, Oid basetype)
         *str += 5;
         int delim = 0;
         tgeo_srid = 0;
-        while ((*str)[delim] != ';' && (*str)[delim] != '\0')
+        /* Delimiter will be either ',' or ';' depending on whether interpolation 
+           is given after */
+        while ((*str)[delim] != ',' && (*str)[delim] != ';' && (*str)[delim] != '\0')
         {
             tgeo_srid = tgeo_srid * 10 + (*str)[delim] - '0'; 
             delim++;
@@ -283,6 +286,14 @@ tgeo_parse(char **str, Oid basetype)
         srid_is_latlong(fcinfo, tgeo_srid);
      */ 
 
+    bool linear = linear_interpolation(basetype);
+    /* Starts with "Interp=Stepwise" */
+    if (strncasecmp(*str,"Interp=Stepwise;",16) == 0)
+    {
+        /* Move str after the semicolon */
+        *str += 16;
+        linear = false;
+    }
     Temporal *result = NULL; /* keep compiler quiet */
     /* Determine the type of the temporal geo */
     if (**str != '{' && **str != '[' && **str != '(')
@@ -292,7 +303,7 @@ tgeo_parse(char **str, Oid basetype)
         result = (Temporal *)tgeoinst_parse(str, basetype, true, &tgeo_srid);
     }
     else if (**str == '[' || **str == '(')
-        result = (Temporal *)tgeoseq_parse(str, basetype, true, &tgeo_srid);        
+        result = (Temporal *)tgeoseq_parse(str, basetype, linear, true, &tgeo_srid);        
     else if (**str == '{')
     {
         bak = *str;
@@ -301,7 +312,7 @@ tgeo_parse(char **str, Oid basetype)
         if (**str == '[' || **str == '(')
         {
             *str = bak;
-            result = (Temporal *)tgeos_parse(str, basetype, &tgeo_srid);
+            result = (Temporal *)tgeos_parse(str, basetype, linear, &tgeo_srid);
         }
         else
         {

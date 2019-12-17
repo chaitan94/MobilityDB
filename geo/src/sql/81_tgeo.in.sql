@@ -129,7 +129,7 @@ CREATE FUNCTION tgeometryi(tgeometry[])
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tgeometryseq(tgeometry[], lower_inc boolean DEFAULT true, 
-    upper_inc boolean DEFAULT true)
+    upper_inc boolean DEFAULT true, linear boolean DEFAULT true)
     RETURNS tgeometry
     AS 'MODULE_PATHNAME', 'temporal_make_temporalseq'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -152,7 +152,7 @@ CREATE FUNCTION tgeographyi(tgeography[])
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tgeographyseq(tgeography[], lower_inc boolean DEFAULT true, 
-    upper_inc boolean DEFAULT true)
+    upper_inc boolean DEFAULT true, linear boolean DEFAULT true)
     RETURNS tgeography
     AS 'MODULE_PATHNAME', 'temporal_make_temporalseq'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -190,6 +190,15 @@ CREATE FUNCTION tgeographyseq(tgeography)
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeographys(tgeography)
     RETURNS tgeography AS 'MODULE_PATHNAME', 'temporal_to_temporals'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION toLinear(tgeometry)
+    RETURNS tgeometry
+    AS 'MODULE_PATHNAME', 'tstepw_to_linear'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION toLinear(tgeography)
+    RETURNS tgeography
+    AS 'MODULE_PATHNAME', 'tstepw_to_linear'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

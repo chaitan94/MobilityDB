@@ -700,9 +700,7 @@ tpointseq_trajectory_append(TemporalSeq *seq, TemporalInst *inst, bool replace)
 Datum 
 tpointseq_trajectory_join(TemporalSeq *seq1, TemporalSeq *seq2, bool last, bool first)
 {
-	// This is and easy solution, but it can be made more efficient I belive
-	// We just have to join two precomputed trajectories (point or line).
-	// Here we recompute it based on the instants.
+	assert(MOBDB_FLAGS_GET_LINEAR(seq1->flags) == MOBDB_FLAGS_GET_LINEAR(seq2->flags));
 	int count1 = last ? seq1->count - 1 : seq1->count;
 	int start2 = first ? 1 : 0;
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * 
@@ -712,7 +710,7 @@ tpointseq_trajectory_join(TemporalSeq *seq1, TemporalSeq *seq2, bool last, bool 
 		instants[k++] = temporalseq_inst_n(seq1, i);
 	for (int i = start2; i < seq2->count; i++)
 		instants[k++] = temporalseq_inst_n(seq2, i);
-	Datum traj = tpointseq_make_trajectory(instants, k);
+	Datum traj = tpointseq_make_trajectory(instants, k, MOBDB_FLAGS_GET_LINEAR(seq1->flags));
 	pfree(instants);
 
 	return traj;

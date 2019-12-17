@@ -590,7 +590,7 @@ temporalseq_join(TemporalSeq *seq1, TemporalSeq *seq2, bool last, bool first)
 	result->count = count;
 	result->valuetypid = valuetypid;
 	result->duration = TEMPORALSEQ;
-	period_set(&result->period, temporalseq_inst_n(seq1, 0)->t, temporalseq_inst_n(seq2, seq2->count)->t,
+	period_set(&result->period, temporalseq_inst_n(seq1, 0)->t, temporalseq_inst_n(seq2, seq2->count-1)->t,
 		seq1->period.lower_inc, seq2->period.upper_inc);
 	MOBDB_FLAGS_SET_LINEAR(result->flags, MOBDB_FLAGS_GET_LINEAR(seq1->flags));
 #ifdef WITH_POSTGIS
@@ -909,7 +909,6 @@ temporalseq_from_temporalinstarr(TemporalInst **instants, int count,
 		free(poly_npoints);
 #endif
 
-	bool linear = MOBDB_FLAGS_GET_LINEAR(instants[0]->flags);
 	if (!linear && count > 1 && !upper_inc &&
 		datum_ne(temporalinst_value(instants[count - 1]), 
 			temporalinst_value(instants[count - 2]), valuetypid))

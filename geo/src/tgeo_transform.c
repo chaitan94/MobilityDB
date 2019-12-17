@@ -5,6 +5,7 @@
 #include <liblwgeom.h>
 #include <math.h>
 
+#include "temporal.h"
 #include "oidcache.h"
 #include "tgeo.h"
 #include "temporalinst.h"
@@ -257,6 +258,24 @@ rtransform_compute(LWGEOM *region_1, LWGEOM *region_2)
  * Cast functions
  *****************************************************************************/
 
+TemporalInst *
+tgeoinst_rtransfrom_to_region(TemporalInst *inst, TemporalInst *region) 
+{
+    Datum rt_value = temporalinst_value(inst);
+    rtransform *rt = DatumGetRtransform(rt_value);
+    Datum region_value = temporalinst_value(region);
+    GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(region_value);
+    LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
+    LWGEOM *lwgeomCopy = lwgeom_clone_deep(lwgeom);
+    apply_rtransform(lwgeomCopy, rt);
+    lwgeom_set_geodetic(lwgeomCopy, MOBDB_FLAGS_GET_GEODETIC(region->flags));
+    GSERIALIZED *newGs = gserialized_from_lwgeom(lwgeomCopy, 0);
+    TemporalInst *result = temporalinst_make(PointerGetDatum(newGs), inst->t, region->valuetypid);
+    lwgeom_free(lwgeom);
+    lwgeom_free(lwgeomCopy);
+    return result;
+}
+
 /* 
 Computes the transformations for all instants with respect to the first instant
 Raises an error if the regions are not colinear enough
@@ -313,7 +332,7 @@ geo_seqarr_to_rtransform(TemporalSeq **sequences, int count)
     Datum firstValue = temporalinst_value(firstInst);
     GSERIALIZED *firstGs = (GSERIALIZED *) DatumGetPointer(firstValue);
     LWGEOM *firstLwgeom = lwgeom_from_gserialized(firstGs);
-    TemporalSeq **newSequences = palloc(sizeof(TemporalSeq *) * count);;
+    TemporalSeq **newSequences = palloc(sizeof(TemporalSeq *) * count);
     newSequences[0] = temporalseq_copy(firstSeq);
     for (int i = 1; i < count; ++i)
     {

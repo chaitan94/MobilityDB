@@ -98,7 +98,7 @@ SELECT tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00],[Po
 
 SELECT asewkt(tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'));
 SELECT asewkt(tgeometryinst(NULL, '2012-01-01 08:00:00'));
-SELECT asewkt(tgeographyinst(ST_Polygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry, 4326), '2012-01-01 08:00:00'));
+SELECT asewkt(tgeographyinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'));
 SELECT asewkt(tgeographyinst(NULL, '2012-01-01 08:00:00'));
 /* Errors */
 SELECT asewkt(tgeometryinst(geometry 'polygon empty', timestamptz '2000-01-01'));

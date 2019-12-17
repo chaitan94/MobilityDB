@@ -15,6 +15,7 @@
 #include <utils/builtins.h>
 #include <utils/timestamp.h>
 
+#include "temporal.h"
 #include "temporaltypes.h"
 #include "oidcache.h"
 #include "temporal_util.h"
@@ -400,7 +401,7 @@ Datum
 tgeo_values_internal(Temporal *temp)
 {
     Datum result = 0;
-    temporal_duration_is_valid(temp->duration);
+    ensure_valid_duration(temp->duration);
     if (temp->duration == TEMPORALINST) 
         result = temporalinst_value_copy((TemporalInst *)temp);
     else if (temp->duration == TEMPORALI) {

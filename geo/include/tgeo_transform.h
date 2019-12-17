@@ -33,6 +33,8 @@ extern rtransform *rtransform_interpolate(const rtransform *rt1, const rtransfor
  * Cast functions
  *****************************************************************************/
 
+extern TemporalInst *tgeoinst_rtransfrom_to_region(TemporalInst *inst, TemporalInst *region);
+
 extern TemporalInst **geo_instarr_to_rtransform(TemporalInst **instants, int count);
 extern TemporalSeq **geo_seqarr_to_rtransform(TemporalSeq **sequences, int count);
 

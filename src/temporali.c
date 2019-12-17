@@ -105,7 +105,7 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 		hasz = MOBDB_FLAGS_GET_Z(instants[0]->flags);
 		isgeodetic = MOBDB_FLAGS_GET_GEODETIC(instants[0]->flags);
 		srid = tpoint_srid_internal((Temporal *) instants[0]);
-		Datum value = temporalinst_value((TemporalInst *) instants[0]);
+		Datum value = temporalinst_value(instants[0]);
 		GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
 		geo_type = gserialized_get_type(gs);
 		if (geo_type == LINETYPE)
