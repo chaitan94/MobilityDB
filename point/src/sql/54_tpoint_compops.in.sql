@@ -20,7 +20,7 @@ CREATE FUNCTION temporal_eq(geometry(Point), tgeompoint)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_eq(tgeompoint, geometry(Point))
 	RETURNS tbool
-	AS 'MODULE_PATHNAME', 'teq_temporal_base'
+	AS 'MODULE_PATHNAME', 'temporal_base'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_eq(tgeompoint, tgeompoint)
 	RETURNS tbool

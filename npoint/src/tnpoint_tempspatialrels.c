@@ -1441,7 +1441,7 @@ tdwithin_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	Datum dist)
 {
 	TemporalSeq *distSeq = distance_tnpointseq_tnpointseq(seq1, seq2);
-	TemporalS *result = tfunc4_temporalseq_base_stepwcross(distSeq, dist, 
+	TemporalS *result = tfunc4_temporalseq_base_cross(distSeq, dist, 
 		&datum2_le2, FLOAT8OID, BOOLOID, true);
 	pfree(distSeq);
 	return result;
@@ -1453,7 +1453,7 @@ tdwithin_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, Datum dist)
 	TemporalS *distS = distance_tnpoints_tnpoints(ts1, ts2);
 	if (distS == NULL)
 		return NULL;
-	TemporalS *result = tfunc4_temporals_base_stepwcross(distS, dist, 
+	TemporalS *result = tfunc4_temporals_base_cross(distS, dist, 
 		&datum2_le2, FLOAT8OID, BOOLOID, true);
 	pfree(distS);
 	return result;
