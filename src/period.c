@@ -350,13 +350,14 @@ PGDLLEXPORT Datum
 period_in(PG_FUNCTION_ARGS) 
 {
 	char *input = PG_GETARG_CSTRING(0);
-	Period *result = period_parse(&input);
+	Period *result = period_parse(&input, true);
 	PG_RETURN_POINTER(result);
 }
 
 /* Convert to string */
 
-static void unquote(char *str) 
+static void
+unquote(char *str) 
 {
 	char *last = str;
 	while (*str != '\0') 
@@ -370,7 +371,7 @@ static void unquote(char *str)
 	*last = '\0';
 }
 
-char*
+char *
 period_to_string(Period *p) 
 {
 	char *lower = call_output(TIMESTAMPTZOID, p->lower);

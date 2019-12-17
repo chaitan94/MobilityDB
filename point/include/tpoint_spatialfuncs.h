@@ -20,6 +20,23 @@
 
 /*****************************************************************************/
 
+/* Parameter tests */
+
+extern void ensure_same_srid_tpoint(Temporal *temp1, Temporal *temp2);
+extern void ensure_same_srid_tpoint_gs(Temporal *temp, GSERIALIZED *gs);
+extern void ensure_same_dimensionality_tpoint(Temporal *temp1, Temporal *temp2);
+extern void ensure_same_dimensionality_tpoint_gs(Temporal *temp, GSERIALIZED *gs);
+extern void ensure_has_Z_tpoint(Temporal *temp);
+extern void ensure_has_not_Z_tpoint(Temporal *temp);
+extern void ensure_point_type(GSERIALIZED *gs);
+extern void ensure_non_empty(GSERIALIZED *gs);
+extern void ensure_has_Z(GSERIALIZED *gs);
+extern void ensure_has_not_Z(GSERIALIZED *gs);
+extern void ensure_has_M(GSERIALIZED *gs);
+extern void ensure_has_not_M(GSERIALIZED *gs);
+
+/* Utility functions */
+
 extern POINT2D gs_get_point2d(GSERIALIZED *gs);
 extern POINT3DZ gs_get_point3dz(GSERIALIZED *gs);
 extern POINT3DM gs_get_point3dm(GSERIALIZED *gs);
@@ -27,14 +44,6 @@ extern POINT4D gs_get_point4d(GSERIALIZED *gs);
 extern POINT2D datum_get_point2d(Datum value);
 extern POINT3DZ datum_get_point3dz(Datum value);
 extern bool datum_point_eq(Datum geopoint1, Datum geopoint2);
-extern void tpoint_same_srid(Temporal *temp1, Temporal *temp2);
-extern void tpoint_gs_same_srid(Temporal *temp, GSERIALIZED *gs);
-extern void tpoint_same_dimensionality(Temporal *temp1, Temporal *temp2);
-extern void tpoint_gs_same_dimensionality(Temporal *temp, GSERIALIZED *gs);
-extern void tpoint_check_Z_dimension(Temporal *temp1, Temporal *temp2);
-extern void tpoint_gs_check_Z_dimension(Temporal *temp, GSERIALIZED *gs);
-extern void gserialized_check_point(GSERIALIZED *gs);
-extern void gserialized_check_M_dimension(GSERIALIZED *gs);
 extern GSERIALIZED* geometry_serialize(LWGEOM* geom);
 
 /* Functions for spatial reference systems */
@@ -61,6 +70,7 @@ extern TemporalS *tgeogpoints_to_tgeompoints(TemporalS *ts);
 
 extern Datum tpoint_trajectory(PG_FUNCTION_ARGS);
 
+extern Datum tpoint_trajectory_internal(Temporal *temp);
 extern Datum tpointseq_make_trajectory(TemporalInst **instants, int count, bool linear);
 extern Datum tpointseq_trajectory_append(TemporalSeq *seq, TemporalInst *inst, bool replace);
 extern Datum tpointseq_trajectory_join(TemporalSeq *seq1, TemporalSeq *seq2, bool last, bool first);

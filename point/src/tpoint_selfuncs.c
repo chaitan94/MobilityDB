@@ -53,14 +53,6 @@ nd_increment(ND_IBOX *ibox, int ndims, int *counter)
 	return true;
 }
 
-/* Zero out an ND_BOX */
-static int
-nd_box_init(ND_BOX *a)
-{
-	memset(a, 0, sizeof(ND_BOX));
-	return true;
-}
-
 /*
  * Given a position in the n-d histogram (i,j,k,l) return the
  * position in the 1-d values array.
@@ -921,13 +913,13 @@ tpoint_sel(PG_FUNCTION_ARGS)
 		}
 	}
 
-    /* 
+	/* 
 	 * Transform the constant into an STBOX
 	 */
-    memset(&constBox, 0, sizeof(STBOX));
-    found = tpoint_const_to_stbox(other, &constBox);
-    /* In the case of unknown constant */
-    if (!found)
+	memset(&constBox, 0, sizeof(STBOX));
+	found = tpoint_const_to_stbox(other, &constBox);
+	/* In the case of unknown constant */
+	if (!found)
 		PG_RETURN_FLOAT8(default_tpoint_selectivity(cachedOp));
 
 	assert(MOBDB_FLAGS_GET_X(constBox.flags) || MOBDB_FLAGS_GET_T(constBox.flags));

@@ -911,10 +911,10 @@ temporali_shift(TemporalI *ti, Interval *interval)
 			DirectFunctionCall2(timestamptz_pl_interval,
 			TimestampTzGetDatum(inst->t), PointerGetDatum(interval)));
 	}
-	/* Recompute the bounding box */
-    void *bbox = temporali_bbox_ptr(result); 
-    temporali_make_bbox(bbox, instants, ti->count);
-    pfree(instants);
+	/* Shift bounding box */
+	void *bbox = temporali_bbox_ptr(result); 
+	shift_bbox(bbox, ti->valuetypid, interval);
+	pfree(instants);
 	return result;
 }
 

@@ -245,7 +245,7 @@ temporals_from_temporalseqarr(TemporalSeq **sequences, int count,
 	if (bboxsize != 0) 
 	{
 		void *bbox = ((char *) result) + pdata + pos;
-		temporals_make_bbox(bbox, newsequences, newcount);
+		temporals_make_bbox(bbox, newsequences, newcount, linear);
 		result->offsets[newcount] = pos;
 	}
 #ifdef WITH_POSTGIS
@@ -917,20 +917,28 @@ tstepws_to_linear(TemporalS *ts)
 
 /* Values of a TemporalS with stepwise interpolation */
 
-ArrayType *
-temporals_values(TemporalS *ts)
+Datum *
+temporals_values1(TemporalS *ts, int *count)
 {
-	Datum *values = palloc(sizeof(Datum *) * ts->totalcount);
+	Datum *result = palloc(sizeof(Datum *) * ts->totalcount);
 	int k = 0;
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
 		for (int j = 0; j < seq->count; j++)
-			values[k++] = temporalinst_value(temporalseq_inst_n(seq, j));
+			result[k++] = temporalinst_value(temporalseq_inst_n(seq, j));
 	}
-	datum_sort(values, k, ts->valuetypid);
-	int newcount = datum_remove_duplicates(values, k, ts->valuetypid);
-	ArrayType *result = datumarr_to_array(values, newcount, ts->valuetypid);
+	datum_sort(result, k, ts->valuetypid);
+	*count = datum_remove_duplicates(result, k, ts->valuetypid);
+	return result;
+}
+
+ArrayType *
+temporals_values(TemporalS *ts)
+{
+	int count;
+	Datum *values = temporals_values1(ts, &count);
+	ArrayType *result = datumarr_to_array(values, count, ts->valuetypid);
 	pfree(values);
 	return result;
 }
@@ -1395,14 +1403,14 @@ temporals_shift(TemporalS *ts, Interval *interval)
 		seq->period.upper = DatumGetTimestampTz(
 				DirectFunctionCall2(timestamptz_pl_interval,
 				TimestampTzGetDatum(seq->period.upper), PointerGetDatum(interval)));
-		/* Recompute the bounding box of the sequence */
+		/* Shift bounding box */
 		void *bbox = temporalseq_bbox_ptr(seq); 
-		temporalseq_make_bbox(bbox, instants, seq->count, 
-			seq->period.lower_inc, seq->period.upper_inc);		
+		shift_bbox(bbox, seq->valuetypid, interval);
+	
 	}
-	/* Recompute the bounding box of the sequence set */
+	/* Shift bounding box */
 	void *bbox = temporals_bbox_ptr(result); 
-	temporals_make_bbox(bbox, sequences, ts->count);
+	shift_bbox(bbox, ts->valuetypid, interval);
 	pfree(sequences);
 	pfree(instants);
 	return result;

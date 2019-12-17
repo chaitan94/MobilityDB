@@ -34,23 +34,23 @@
 static void
 pg_error(const char *fmt, va_list ap)
 {
-    char errmsg[PGC_ERRMSG_MAXLEN + 1];
+	char errmsg[PGC_ERRMSG_MAXLEN + 1];
 
-    vsnprintf (errmsg, PGC_ERRMSG_MAXLEN, fmt, ap);
+	vsnprintf (errmsg, PGC_ERRMSG_MAXLEN, fmt, ap);
 
-    errmsg[PGC_ERRMSG_MAXLEN]='\0';
-    ereport(ERROR, (errmsg_internal("%s", errmsg)));
+	errmsg[PGC_ERRMSG_MAXLEN]='\0';
+	ereport(ERROR, (errmsg_internal("%s", errmsg)));
 }
 
 static void
 pg_notice(const char *fmt, va_list ap)
 {
-    char errmsg[PGC_ERRMSG_MAXLEN + 1];
+	char errmsg[PGC_ERRMSG_MAXLEN + 1];
 
-    vsnprintf (errmsg, PGC_ERRMSG_MAXLEN, fmt, ap);
+	vsnprintf (errmsg, PGC_ERRMSG_MAXLEN, fmt, ap);
 
-    errmsg[PGC_ERRMSG_MAXLEN]='\0';
-    ereport(NOTICE, (errmsg_internal("%s", errmsg)));
+	errmsg[PGC_ERRMSG_MAXLEN]='\0';
+	ereport(NOTICE, (errmsg_internal("%s", errmsg)));
 }
 
 void temporalgeom_init()
@@ -163,7 +163,7 @@ tpoint_typmod_in(ArrayType *arr, int is_geography)
 	 */
 	deconstruct_array(arr, CSTRINGOID, -2, false, 'c', &elem_values, NULL, &n);
 	uint8_t duration = 0, geometry_type = 0;
-	int z = 0, m = 0;
+	int hasZ = 0, hasM = 0;
 	char *s;
 	
 	switch(n)
@@ -187,15 +187,15 @@ tpoint_typmod_in(ArrayType *arr, int is_geography)
 						
 			/* Geometry type */
 			s = DatumGetCString(elem_values[1]);
-			if (geometry_type_from_string(s, &geometry_type, &z, &m) == LW_FAILURE) 
+			if (geometry_type_from_string(s, &geometry_type, &hasZ, &hasM) == LW_FAILURE) 
 				ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 						errmsg("Invalid geometry type modifier: %s", s)));
-			if (geometry_type != POINTTYPE || m)
+			if (geometry_type != POINTTYPE || hasM)
 				ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 					errmsg("Only point geometries without M dimension accepted")));
 
 			TYPMOD_SET_TYPE(typmod, geometry_type);
-			if (z)
+			if (hasZ)
 				TYPMOD_SET_Z(typmod);
 		
 			/* SRID */
@@ -224,23 +224,23 @@ tpoint_typmod_in(ArrayType *arr, int is_geography)
 					TYPMOD_SET_SRID(typmod, SRID_UNKNOWN);
 				/* Geometry type */
 				s = DatumGetCString(elem_values[1]);
-				if (geometry_type_from_string(s, &geometry_type, &z, &m) == LW_FAILURE)
+				if (geometry_type_from_string(s, &geometry_type, &hasZ, &hasM) == LW_FAILURE)
 					ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 							errmsg("Invalid geometry type modifier: %s", s)));
-				if (geometry_type != POINTTYPE || m)
+				if (geometry_type != POINTTYPE || hasM)
 					ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 						errmsg("Only point geometries without M dimension accepted")));
 
 				TYPMOD_SET_TYPE(typmod, geometry_type);
-				if (z)
+				if (hasZ)
 					TYPMOD_SET_Z(typmod);
 				/* Shift to restore the 4 bits of the duration */
 				TYPMOD_SET_DURATION(typmod, duration);
 			}
-			else if (geometry_type_from_string(s, &geometry_type, &z, &m))
+			else if (geometry_type_from_string(s, &geometry_type, &hasZ, &hasM))
 			{
 				/* Type modifier is (Geometry, SRID) */
-				if (geometry_type != POINTTYPE || m)
+				if (geometry_type != POINTTYPE || hasM)
 					ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 						errmsg("Only point geometries without M dimension accepted")));
 
@@ -253,7 +253,7 @@ tpoint_typmod_in(ArrayType *arr, int is_geography)
 					TYPMOD_SET_SRID(typmod, SRID_UNKNOWN);
 				
 				TYPMOD_SET_TYPE(typmod, geometry_type);
-				if (z)
+				if (hasZ)
 					TYPMOD_SET_Z(typmod);
 				/* SRID */
 				s = DatumGetCString(elem_values[1]);
@@ -277,7 +277,7 @@ tpoint_typmod_in(ArrayType *arr, int is_geography)
 			{
 				TYPMOD_SET_DURATION(typmod, duration);
 			}
-			else if (geometry_type_from_string(s, &geometry_type, &z, &m)) 
+			else if (geometry_type_from_string(s, &geometry_type, &hasZ, &hasM)) 
 			{
 				if (geometry_type != POINTTYPE)
 					ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -292,7 +292,7 @@ tpoint_typmod_in(ArrayType *arr, int is_geography)
 					TYPMOD_SET_SRID(typmod, SRID_UNKNOWN);
 
 				TYPMOD_SET_TYPE(typmod, geometry_type);
-				if (z)
+				if (hasZ)
 					TYPMOD_SET_Z(typmod);
 
 				/* Shift to restore the 4 bits of the duration */
@@ -404,10 +404,10 @@ PGDLLEXPORT Datum tpoint_enforce_typmod(PG_FUNCTION_ARGS)
 
 /* Construct a temporal instant point from two arguments */
 
-PG_FUNCTION_INFO_V1(tpoint_make_temporalinst);
+PG_FUNCTION_INFO_V1(tpointinst_constructor);
  
 PGDLLEXPORT Datum
-tpoint_make_temporalinst(PG_FUNCTION_ARGS) 
+tpointinst_constructor(PG_FUNCTION_ARGS) 
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	if ((gserialized_get_type(gs) != POINTTYPE) || gserialized_is_empty(gs) ||
@@ -451,9 +451,9 @@ tpoint_ever_eq(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-	gserialized_check_point(gs);
-	tpoint_gs_same_srid(temp, gs);
-	tpoint_gs_same_dimensionality(temp, gs);
+	ensure_point_type(gs);
+	ensure_same_srid_tpoint_gs(temp, gs);
+	ensure_same_dimensionality_tpoint_gs(temp, gs);
 	/* Bounding box test */
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
@@ -499,9 +499,9 @@ tpoint_always_eq(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-	gserialized_check_point(gs);
-	tpoint_gs_same_srid(temp, gs);
-	tpoint_gs_same_dimensionality(temp, gs);
+	ensure_point_type(gs);
+	ensure_same_srid_tpoint_gs(temp, gs);
+	ensure_same_dimensionality_tpoint_gs(temp, gs);
 	bool result = false;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
@@ -655,9 +655,9 @@ tpoint_at_value(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-	gserialized_check_point(gs);
-	tpoint_gs_same_srid(temp, gs);
-	tpoint_gs_same_dimensionality(temp, gs);
+	ensure_point_type(gs);
+	ensure_same_srid_tpoint_gs(temp, gs);
+	ensure_same_dimensionality_tpoint_gs(temp, gs);
 	/* Bounding box test */
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
@@ -709,9 +709,9 @@ tpoint_minus_value(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-	gserialized_check_point(gs);
-	tpoint_gs_same_srid(temp, gs);
-	tpoint_gs_same_dimensionality(temp, gs);
+	ensure_point_type(gs);
+	ensure_same_srid_tpoint_gs(temp, gs);
+	ensure_same_dimensionality_tpoint_gs(temp, gs);
 	/* Bounding box test */
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
@@ -786,9 +786,9 @@ tpoint_at_values(PG_FUNCTION_ARGS)
 	for (int i = 0; i < count; i++)
 	{
 		GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(values[i]);
-		gserialized_check_point(gs);
-		tpoint_gs_same_srid(temp, gs);
-		tpoint_gs_same_dimensionality(temp, gs);
+		ensure_point_type(gs);
+		ensure_same_srid_tpoint_gs(temp, gs);
+		ensure_same_dimensionality_tpoint_gs(temp, gs);
 	}
 	
 	Oid valuetypid = temp->valuetypid;
@@ -840,9 +840,9 @@ tpoint_minus_values(PG_FUNCTION_ARGS)
 	for (int i = 0; i < count; i++)
 	{
 		GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(values[i]);
-		gserialized_check_point(gs);
-		tpoint_gs_same_srid(temp, gs);
-		tpoint_gs_same_dimensionality(temp, gs);
+		ensure_point_type(gs);
+		ensure_same_srid_tpoint_gs(temp, gs);
+		ensure_same_dimensionality_tpoint_gs(temp, gs);
 	}
 	
 	Oid valuetypid = temp->valuetypid;

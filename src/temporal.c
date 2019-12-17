@@ -451,7 +451,7 @@ type_has_precomputed_trajectory(Oid valuetypid)
 } 
  
 /*****************************************************************************
- * Assertion tests
+ * Parameter tests
  *****************************************************************************/
 
 /* Used for the dispatch functions */
@@ -782,10 +782,10 @@ PGDLLEXPORT Datum temporal_enforce_typmod(PG_FUNCTION_ARGS)
 
  /* Make temporal instant value from two arguments */
 
-PG_FUNCTION_INFO_V1(temporal_make_temporalinst);
+PG_FUNCTION_INFO_V1(temporalinst_constructor);
 
 PGDLLEXPORT Datum
-temporal_make_temporalinst(PG_FUNCTION_ARGS)
+temporalinst_constructor(PG_FUNCTION_ARGS)
 {
 	Datum value = PG_GETARG_ANYDATUM(0);
 	TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
@@ -796,10 +796,10 @@ temporal_make_temporalinst(PG_FUNCTION_ARGS)
 
 /* Make a TemporalI from an array of TemporalInst */
 
-PG_FUNCTION_INFO_V1(temporal_make_temporali);
+PG_FUNCTION_INFO_V1(temporali_constructor);
 
 PGDLLEXPORT Datum
-temporal_make_temporali(PG_FUNCTION_ARGS)
+temporali_constructor(PG_FUNCTION_ARGS)
 {
 	ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
 	int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
@@ -830,10 +830,10 @@ temporal_make_temporali(PG_FUNCTION_ARGS)
 
 /* Make a TemporalSeq from an array of TemporalInst */
 
-PG_FUNCTION_INFO_V1(temporal_make_temporalseq);
+PG_FUNCTION_INFO_V1(temporalseq_constructor);
 
 PGDLLEXPORT Datum
-temporal_make_temporalseq(PG_FUNCTION_ARGS)
+temporalseq_constructor(PG_FUNCTION_ARGS)
 {
 	ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
 	bool lower_inc = PG_GETARG_BOOL(1);
@@ -869,10 +869,10 @@ temporal_make_temporalseq(PG_FUNCTION_ARGS)
 
 /* Make a TemporalS from an array of TemporalSeq */
 
-PG_FUNCTION_INFO_V1(temporal_make_temporals);
+PG_FUNCTION_INFO_V1(temporals_constructor);
 
 PGDLLEXPORT Datum
-temporal_make_temporals(PG_FUNCTION_ARGS)
+temporals_constructor(PG_FUNCTION_ARGS)
 {
 	ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
 	int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
