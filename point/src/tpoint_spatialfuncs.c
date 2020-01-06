@@ -3,9 +3,9 @@
  * tpoint_spatialfuncs.c
  *	  Spatial functions for temporal points.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -421,7 +421,7 @@ TemporalInst *
 tgeompointinst_transform(TemporalInst *inst, Datum srid)
 {
 	return tfunc2_temporalinst(inst, srid, &datum_transform,
-		type_oid(T_GEOMETRY), true);
+		type_oid(T_GEOMETRY));
 }
 
 PG_FUNCTION_INFO_V1(tpoint_transform);
@@ -432,7 +432,7 @@ tpoint_transform(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum srid = PG_GETARG_DATUM(1);
 	Temporal *result = tfunc2_temporal(temp, srid, &datum_transform,
-		type_oid(T_GEOMETRY), true);
+		type_oid(T_GEOMETRY));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
@@ -452,7 +452,7 @@ tgeompoint_to_tgeogpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result = tfunc1_temporal(temp, &geom_to_geog,
-		type_oid(T_GEOGRAPHY), true);
+		type_oid(T_GEOGRAPHY));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
@@ -464,22 +464,25 @@ tgeompoint_to_tgeogpoint(PG_FUNCTION_ARGS)
 TemporalInst *
 tgeogpointinst_to_tgeompointinst(TemporalInst *inst)
 {
-	return tfunc1_temporalinst(inst, &geog_to_geom, type_oid(T_GEOMETRY),
-		true);
+	return tfunc1_temporalinst(inst, &geog_to_geom, type_oid(T_GEOMETRY));
 }
 
 TemporalSeq *
 tgeogpointseq_to_tgeompointseq(TemporalSeq *seq)
 {
-	return tfunc1_temporalseq(seq, &geog_to_geom, type_oid(T_GEOMETRY),
-		true);
+	return tfunc1_temporalseq(seq, &geog_to_geom, type_oid(T_GEOMETRY));
 }
 
 TemporalS *
 tgeogpoints_to_tgeompoints(TemporalS *ts)
 {
-	return tfunc1_temporals(ts, &geog_to_geom, type_oid(T_GEOMETRY),
-		true);
+	return tfunc1_temporals(ts, &geog_to_geom, type_oid(T_GEOMETRY));
+}
+
+Temporal *
+tgeogpoint_to_tgeompoint_internal(Temporal *temp)
+{
+	return tfunc1_temporal(temp, &geog_to_geom, type_oid(T_GEOMETRY));
 }
 
 PG_FUNCTION_INFO_V1(tgeogpoint_to_tgeompoint);
@@ -489,7 +492,7 @@ tgeogpoint_to_tgeompoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Temporal *result = tfunc1_temporal(temp, &geog_to_geom,
-		type_oid(T_GEOMETRY), true);
+		type_oid(T_GEOMETRY));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
@@ -506,7 +509,7 @@ tpoint_setprecision(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum size = PG_GETARG_DATUM(1);
 	Temporal *result = tfunc2_temporal(temp, size, &datum_setprecision,
-		temp->valuetypid, true);
+		temp->valuetypid);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
@@ -840,7 +843,7 @@ static Datum
 tgeogpoints_trajectory(TemporalS *ts)
 {
 	TemporalS *tsgeom = tfunc1_temporals(ts, &geog_to_geom,
-		type_oid(T_GEOMETRY), true);
+		type_oid(T_GEOMETRY));
 	Datum geomtraj = tgeompoints_trajectory(tsgeom);
 	Datum result = call_function1(geography_from_geometry, geomtraj);
 	pfree(DatumGetPointer(geomtraj));
@@ -1230,11 +1233,11 @@ tgeompointi_twcentroid(TemporalI *ti)
 	TemporalI *tiz = NULL; /* keep compiler quiet */
 	if (hasz)
 		tiz = temporali_from_temporalinstarr(instantsz, ti->count);
-	double avgx = temporali_twavg(tix);
-	double avgy = temporali_twavg(tiy);
+	double avgx = tnumberi_twavg(tix);
+	double avgy = tnumberi_twavg(tiy);
 	double avgz;
 	if (hasz)
-		avgz = temporali_twavg(tiz);
+		avgz = tnumberi_twavg(tiz);
 	LWPOINT *lwpoint;
 	if (hasz)
 		lwpoint = lwpoint_make3dz(srid, avgx, avgy, avgz);
@@ -1303,13 +1306,13 @@ tgeompointseq_twcentroid(TemporalSeq *seq)
 		seqz = temporalseq_from_temporalinstarr(instantsz,
 			seq->count, seq->period.lower_inc, seq->period.upper_inc,
 			MOBDB_FLAGS_GET_LINEAR(seq->flags), true);
-	double twavgx = tfloatseq_twavg(seqx);
-	double twavgy = tfloatseq_twavg(seqy);
+	double twavgx = tnumberseq_twavg(seqx);
+	double twavgy = tnumberseq_twavg(seqy);
 	double twavgz;
 	LWPOINT *lwpoint;
 	if (hasz)
 	{
-		twavgz = tfloatseq_twavg(seqz);
+		twavgz = tnumberseq_twavg(seqz);
 		lwpoint = lwpoint_make3dz(srid, twavgx, twavgy, twavgz);
 	}
 	else
@@ -1403,13 +1406,13 @@ tgeompoints_twcentroid(TemporalS *ts)
 		tsz = temporals_from_temporalseqarr(sequencesz,
 		ts->count, MOBDB_FLAGS_GET_LINEAR(ts->flags), true);
 
-	double twavgx = tfloats_twavg(tsx);
-	double twavgy = tfloats_twavg(tsy);
+	double twavgx = tnumbers_twavg(tsx);
+	double twavgy = tnumbers_twavg(tsy);
 	double twavgz;
 	LWPOINT *lwpoint;
 	if (hasz)
 	{
-		twavgz = tfloats_twavg(tsz);
+		twavgz = tnumbers_twavg(tsz);
 		lwpoint = lwpoint_make3dz(srid, twavgx, twavgy, twavgz);
 	}
 	else
@@ -1432,7 +1435,6 @@ tgeompoints_twcentroid(TemporalS *ts)
 	
 	return result;
 }
-
 
 Datum
 tgeompoint_twcentroid_internal(Temporal *temp)

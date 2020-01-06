@@ -4,9 +4,9 @@
  *	Temporal mathematical operators (+, -, *, /) and functions (round, 
  *	degrees).
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -609,8 +609,7 @@ temporal_round(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum digits = PG_GETARG_DATUM(1);
-	Temporal *result = tfunc2_temporal(temp, digits, &datum_round, FLOAT8OID, 
-		false);
+	Temporal *result = tfunc2_temporal(temp, digits, &datum_round, FLOAT8OID);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
@@ -621,8 +620,7 @@ PGDLLEXPORT Datum
 temporal_degrees(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Temporal *result = tfunc1_temporal(temp, &datum_degrees, FLOAT8OID,
-		false);
+	Temporal *result = tfunc1_temporal(temp, &datum_degrees, FLOAT8OID);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }

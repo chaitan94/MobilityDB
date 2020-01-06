@@ -3,9 +3,9 @@
  * temporals.c
  *	  Basic functions for temporal sequence sets.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -657,7 +657,7 @@ temporals_to_string(TemporalS *ts, char *(*value_out)(Oid, Datum))
 	size_t outlen = 0;
 	char str[20];
 	if (linear_interpolation(ts->valuetypid) && 
-		!MOBDB_FLAGS_GET_LINEAR(ts->flags))
+		! MOBDB_FLAGS_GET_LINEAR(ts->flags))
 		sprintf(str, "Interp=Stepwise;");
 	else
 		str[0] = '\0';
@@ -2192,32 +2192,21 @@ temporals_intersects_periodset(TemporalS *ts, PeriodSet *ps)
  * Local aggregate functions 
  *****************************************************************************/
 
-/* Integral of the temporal integer */
+/* Integral of the temporal numbers */
 
 double
-tints_integral(TemporalS *ts)
+tnumbers_integral(TemporalS *ts)
 {
 	double result = 0;
 	for (int i = 0; i < ts->count; i++)
-		result += tintseq_integral(temporals_seq_n(ts, i)); 
+		result += tnumberseq_integral(temporals_seq_n(ts, i)); 
 	return result;
 }
 
-/* Integral of the temporal float */
+/* Time-weighted average of the temporal number */
 
 double
-tfloats_integral(TemporalS *ts)
-{
-	double result = 0;
-	for (int i = 0; i < ts->count; i++)
-		result += tfloatseq_integral(temporals_seq_n(ts, i)); 
-	return result;
-}
-
-/* Time-weighted average of the temporal integer */
-
-double
-tints_twavg(TemporalS *ts)
+tnumbers_twavg(TemporalS *ts)
 {
 	double duration = temporals_interval_double(ts);
 	double result;
@@ -2225,30 +2214,11 @@ tints_twavg(TemporalS *ts)
 	{
 		result = 0;
 		for (int i = 0; i < ts->count; i++)
-			result += tintseq_twavg(temporals_seq_n(ts, i)); 
+			result += tnumberseq_twavg(temporals_seq_n(ts, i)); 
 		return result / ts->count;
 	}
 	else
-		result = tints_integral(ts) / duration;
-	return result;
-}
-
-/* Time-weighted average of the temporal float */
-
-double
-tfloats_twavg(TemporalS *ts)
-{
-	double duration = temporals_interval_double(ts);
-	double result;
-	if (duration == 0)
-	{
-		result = 0;
-		for (int i = 0; i < ts->count; i++)
-			result += tfloatseq_twavg(temporals_seq_n(ts, i)); 
-		return result / ts->count;
-	}
-	else
-		result = tfloats_integral(ts) / duration;
+		result = tnumbers_integral(ts) / duration;
 	return result;
 }
 
@@ -2264,22 +2234,22 @@ tfloats_twavg(TemporalS *ts)
 bool
 temporals_eq(TemporalS *ts1, TemporalS *ts2)
 {
-	/* If number of sequences are not equal */
-	if (ts1->count != ts2->count)
+	/* If number of sequences or flags are not equal */
+	if (ts1->count != ts2->count || ts1->flags != ts2->flags)
 		return false;
 
 	/* If bounding boxes are not equal */
 	void *box1 = temporals_bbox_ptr(ts1);
 	void *box2 = temporals_bbox_ptr(ts2);
-	if (!temporal_bbox_eq(ts1->valuetypid, box1, box2))
+	if (! temporal_bbox_eq(ts1->valuetypid, box1, box2))
 		return false;
 
-	/* We need to compare the composing sequences */
+	/* Compare the composing sequences */
 	for (int i = 0; i < ts1->count; i++)
 	{
 		TemporalSeq *seq1 = temporals_seq_n(ts1, i);
 		TemporalSeq *seq2 = temporals_seq_n(ts2, i);
-		if (!temporalseq_eq(seq1, seq2))
+		if (! temporalseq_eq(seq1, seq2))
 			return false;
 	}
 	return true;
@@ -2314,8 +2284,13 @@ temporals_cmp(TemporalS *ts1, TemporalS *ts2)
 		return -1;
 	else if (ts2->count < ts1->count) /* ts2 has less sequences than ts1 */
 		return 1;
-	else
-		return 0;
+	/* Compare flags */
+	if (ts1->flags < ts2->flags)
+		return -1;
+	if (ts1->flags > ts2->flags)
+		return 1;
+	/* The two values are equal */
+	return 0;
 }
 
 /*****************************************************************************

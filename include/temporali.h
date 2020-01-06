@@ -3,9 +3,9 @@
  * temporali.h
  *	  Basic functions for temporal instant sets.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -109,7 +109,7 @@ extern bool temporali_intersects_periodset(TemporalI *ti, PeriodSet *ps);
 
 /* Local aggregate functions */
 
-extern double temporali_twavg(TemporalI *ti);
+extern double tnumberi_twavg(TemporalI *ti);
 
 /* Comparison functions */
 

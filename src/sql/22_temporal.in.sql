@@ -3,9 +3,9 @@
  * temporal.sql
  *	  Basic functions for generic temporal types.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse, 
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -1358,20 +1358,20 @@ CREATE FUNCTION intersectsPeriodSet(ttext, periodset)
 
 CREATE FUNCTION integral(tint)
 	RETURNS float
-	AS 'MODULE_PATHNAME', 'tint_integral'
+	AS 'MODULE_PATHNAME', 'tnumber_integral'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION integral(tfloat)
 	RETURNS float
-	AS 'MODULE_PATHNAME', 'tfloat_integral'
+	AS 'MODULE_PATHNAME', 'tnumber_integral'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION twAvg(tint)
 	RETURNS float
-	AS 'MODULE_PATHNAME', 'tint_twavg'
+	AS 'MODULE_PATHNAME', 'tnumber_twavg'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION twAvg(tfloat)
 	RETURNS float
-	AS 'MODULE_PATHNAME', 'tfloat_twavg'
+	AS 'MODULE_PATHNAME', 'tnumber_twavg'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 	
 /******************************************************************************

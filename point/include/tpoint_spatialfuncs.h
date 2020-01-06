@@ -3,9 +3,9 @@
  * tpoint_spatialfuncs.h
  *	  Spatial functions for temporal points.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse, 
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -65,6 +65,7 @@ extern TemporalInst *tgeogpointinst_to_tgeompointinst(TemporalInst *inst);
 extern TemporalI *tgeogpointi_to_tgeompointi(TemporalI *ti);
 extern TemporalSeq *tgeogpointseq_to_tgeompointseq(TemporalSeq *seq);
 extern TemporalS *tgeogpoints_to_tgeompoints(TemporalS *ts);
+extern Temporal *tgeogpoint_to_tgeompoint_internal(Temporal *temp);
 
 /* Trajectory functions */
 
@@ -89,6 +90,7 @@ extern Datum tpoint_speed(PG_FUNCTION_ARGS);
 extern Datum tgeompoint_twcentroid(PG_FUNCTION_ARGS);
 extern Datum tpoint_azimuth(PG_FUNCTION_ARGS);
 
+extern Datum tgeompoint_twcentroid_internal(Temporal *temp);
 extern Datum tgeompointi_twcentroid(TemporalI *ti);
 extern Datum tgeompointseq_twcentroid(TemporalSeq *seq);
 extern Datum tgeompoints_twcentroid(TemporalS *ts);

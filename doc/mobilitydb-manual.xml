@@ -41,7 +41,7 @@
 
 		<pubdate>18.11.2019</pubdate>
 		<abstract>
-			<para>MobilityDB is an extension to the PostgreSQL object-relational database system and its spatial extension PostGIS. It allows temporal and spatio-temporal objects to be stored in the database, that is, objects whose attribute values and/or location evolves in time. MobilityDB includes functions for analysis and processing of temporal and spatio-temporal objects and provides support for GiST and SP-GiST indexes. MobilityDB is open source and its code is available on <ulink url="https://github.com/ULB-CoDE-WIT/MobilityDB">Github</ulink>.</para>
+			<para>MobilityDB is an extension to the PostgreSQL object-relational database system and its spatial extension PostGIS. It allows temporal and spatio-temporal objects to be stored in the database, that is, objects whose attribute values and/or location evolves in time. MobilityDB includes functions for analysis and processing of temporal and spatio-temporal objects and provides support for GiST and SP-GiST indexes. MobilityDB is open source and its code is available on <ulink url="https://github.com/ULB-CoDE-WIT/MobilityDB">Github</ulink>. An adapter for the Python programming language is also available on <ulink url="https://github.com/ULB-CoDE-WIT/MobilityDB-Python">Github</ulink>.</para>
 
 			<para>
 				<inlinemediaobject>
@@ -172,7 +172,7 @@ SELECT tstzrange '[2012-01-01 08:00:00, 2012-01-01 08:30:00)'::period;
 				<programlisting>
 {timestampset, period, periodset} @&gt; time
 				</programlisting>
-			Furthermore, for conciseness, the time part of the timestamps is omitted in the examples. Recall that in that case PostgreSQL assumes the time <varname>00:00:00</varname>.
+			In the following, for conciseness, the time part of the timestamps is omitted in the examples. Recall that in that case PostgreSQL assumes the time <varname>00:00:00</varname>.
 			</para>
 
 			<sect2>
@@ -306,7 +306,7 @@ SELECT numTimestamps(periodset '{[2012-01-01, 2012-01-03), (2012-01-03, 2012-01-
 					</listitem>
 
 					<listitem>
-						<para><varname>startTimestamp</varname>: Start timestamp</para>
+						<para>Start timestamp</para>
 						<para><varname>startTimestamp({timestampset, periodset}): timestamptz</varname></para>
 						<programlisting>
 SELECT startTimestamp(periodset '{[2012-01-01, 2012-01-03), (2012-01-03, 2012-01-05)}');
@@ -1701,10 +1701,19 @@ SELECT valueRange(tfloat '{1@2012-01-01, 2@2012-01-03, 3@2012-01-05}');
 
 				<listitem>
 					<para>Time</para>
+					<para><varname>getTimestamp(ttypeinst): timestamptz</varname></para>
+					<programlisting>
+SELECT getTimestamp(tint '1@2012-01-01');
+-- "2012-01-01"
+					</programlisting>
+				</listitem>
+
+				<listitem>
+					<para>Time</para>
 					<para><varname>getTime(ttype): periodset</varname></para>
 					<programlisting>
 SELECT getTime(tint '[1@2012-01-01, 1@2012-01-15)');
--- "{[2012-01-01 ,2012-01-15)}"
+-- "{[2012-01-01, 2012-01-15)}"
 					</programlisting>
 				</listitem>
 
@@ -1941,7 +1950,7 @@ SELECT twAvg(tfloat '{[1@2012-01-01, 2@2012-01-03), [2@2012-01-04, 2@2012-01-06)
 
 		<sect1>
 			<title>Spatial Functions</title>
-			<para>In the following functions we specify with the symbol &Z_support; that the function supports 3D points and with the symbol &geography_support; that the function is available for geographies.</para>
+			<para>In the following, we specify with the symbol &Z_support; that the function supports 3D points and with the symbol &geography_support; that the function is available for geographies.</para>
 
 			<itemizedlist>
 				<listitem>
@@ -3611,7 +3620,7 @@ SELECT tcontains(geometry 'Polygon((1 1,1 2,2 2,2 1,1 1))',
 					</listitem>
 
 					<listitem>
-						<para>Temporal covers</para>
+						<para>Temporal covers &geography_support;</para>
 						<para><varname>tcovers({geo, tpoint}, {geo, tpoint}): tbool</varname></para>
 						<programlisting>
 SELECT tcovers(geometry 'Polygon((1 1,1 2,2 2,2 1,1 1))',
@@ -3621,7 +3630,7 @@ SELECT tcovers(geometry 'Polygon((1 1,1 2,2 2,2 1,1 1))',
 					</listitem>
 
 					<listitem>
-						<para>Temporal covered by</para>
+						<para>Temporal covered by &geography_support;</para>
 						<para><varname>tcoveredby({geo, tpoint}, {geo, tpoint}): tbool</varname></para>
 						<programlisting>
 SELECT tcoveredby(tgeompoint '[Point(1 1)@2012-01-02, Point(3 3)@2012-01-04)',
@@ -3651,7 +3660,7 @@ SELECT tequals(geometry 'Point(1 1)',
 					</listitem>
 
 					<listitem>
-						<para>Temporal intersects &Z_support;</para>
+						<para>Temporal intersects &Z_support; &geography_support;</para>
 					<para><varname>tintersects({geo, tpoint}, {geo, tpoint}): tbool</varname></para>
 						<programlisting>
 SELECT tintersects(geometry 'MultiPoint(1 1,2 2)',
@@ -3682,12 +3691,15 @@ SELECT twithin(geometry 'Point(1 1)',
 					</listitem>
 
 					<listitem>
-						<para>Temporal distance within</para>
+						<para>Temporal distance within &Z_support; &geography_support;</para>
 						<para><varname>tdwithin({geo, tpoint}, {geo, tpoint}, double): tbool</varname></para>
 						<programlisting>
 SELECT tdwithin(geometry 'Polygon((1 1,1 2,2 2,2 1,1 1))',
 	tgeompoint '[Point(0 0)@2012-01-01, Point(3 0)@2012-01-04)', 1);
 -- "{[f@2012-01-01, t@2012-01-02, t@2012-01-03], (f@2012-01-03, f@2012-01-04)}"
+SELECT tdwithin(tgeompoint '[Point(1 0)@2000-01-01, Point(1 4)@2000-01-05]', 
+	tgeompoint 'Interp=Stepwise;[Point(1 2)@2000-01-01, Point(1 3)@2000-01-05]', 1);
+-- "{[f@2000-01-01, t@2000-01-02, t@2000-01-04], (f@2000-01-04, t@2000-01-05]}"
 						</programlisting>
 					</listitem>
 

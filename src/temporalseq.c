@@ -3,9 +3,9 @@
  * temporalseq.c
  *	  Basic functions for temporal sequences.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse, 
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -31,8 +31,9 @@
 
 #ifdef WITH_POSTGIS
 #include "tpoint.h"
-#include "tpoint_spatialfuncs.h"
 #include "tpoint_boxops.h"
+#include "tpoint_spatialfuncs.h"
+#include "tpoint_distance.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
 #include "tnpoint_tempspatialrels.h"
@@ -1031,22 +1032,6 @@ intersection_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
  * interpolation.
  *****************************************************************************/
 
-static bool
-temporalseq_add_crossing(TemporalInst *inst1, TemporalInst *next1, 
-	bool linear1, TemporalInst *inst2, TemporalInst *next2, bool linear2,
-	TemporalInst **cross1, TemporalInst **cross2)
-{
-	/* Determine whether there is a crossing */
-	TimestampTz crosstime;
-	bool cross = temporalseq_intersect_at_timestamp(inst1, next1, linear1,
-		inst2, next2, linear2, &crosstime);
-	if (!cross)
-		return false;
-	*cross1 = temporalseq_at_timestamp1(inst1, next1, linear1, crosstime);
-	*cross2 = temporalseq_at_timestamp1(inst2, next2, linear2, crosstime);
-	return true;
-}
-
 bool
 synchronize_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	TemporalSeq **sync1, TemporalSeq **sync2, bool crossings)
@@ -1064,10 +1049,10 @@ synchronize_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	{
 		TemporalInst *inst1 = temporalseq_at_timestamp(seq1, inter->lower);
 		TemporalInst *inst2 = temporalseq_at_timestamp(seq2, inter->lower);
-		*sync1 = temporalseq_from_temporalinstarr(&inst1, 1, 
-			true, true, linear1, false);
-		*sync2 = temporalseq_from_temporalinstarr(&inst2, 1, 
-			true, true, linear2, false);
+		*sync1 = temporalseq_from_temporalinstarr(&inst1, 1, true, true, 
+			linear1, false);
+		*sync2 = temporalseq_from_temporalinstarr(&inst2, 1, true, true, 
+			linear2, false);
 		pfree(inst1); pfree(inst2); pfree(inter);
 		return true;
 	}
@@ -1087,14 +1072,12 @@ synchronize_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	int i = 0, j = 0, k = 0, l = 0;
 	if (timestamp_cmp_internal(inst1->t, inter->lower) < 0)
 	{
-		inst1 = temporalseq_at_timestamp(seq1, inter->lower);
-		tofreeinst = inst1;
+		inst1 = tofreeinst = temporalseq_at_timestamp(seq1, inter->lower);
 		i = temporalseq_find_timestamp(seq1, inter->lower);
 	}
 	else if (timestamp_cmp_internal(inst2->t, inter->lower) < 0)
 	{
-		inst2 = temporalseq_at_timestamp(seq2, inter->lower);
-		tofreeinst = inst2;
+		inst2 = tofreeinst = temporalseq_at_timestamp(seq2, inter->lower);
 		j = temporalseq_find_timestamp(seq2, inter->lower);
 	}
 	int count = (seq1->count - i + seq2->count - j) * 2;
@@ -1126,13 +1109,18 @@ synchronize_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 		}
 		/* If not the first instant add potential crossing before adding
 		   the new instants */
-		TemporalInst *cross1, *cross2;
-		if (crossings && (linear1 || linear2) && k > 0 && 
-			temporalseq_add_crossing(instants1[k - 1], inst1, linear1,
-				instants2[k - 1], inst2, linear2, &cross1, &cross2))
+		if (crossings && (linear1 || linear2) && k > 0)
 		{
-			instants1[k] = cross1; instants2[k++] = cross2;
-			tofree[l++] = cross1; tofree[l++] = cross2; 
+			TimestampTz crosstime;
+			if (temporalseq_intersect_at_timestamp(instants1[k - 1],
+				inst1, linear1, instants2[k - 1], inst2, linear2, &crosstime))
+			{
+				instants1[k] = tofree[l++] = temporalseq_at_timestamp1(
+					instants1[k - 1], inst1, linear1, crosstime);
+				instants2[k] = tofree[l++] = temporalseq_at_timestamp1(
+					instants2[k - 1], inst2, linear2, crosstime);
+				k++;
+			}
 		}
 		instants1[k] = inst1; instants2[k++] = inst2;
 		if (i == seq1->count || j == seq2->count)
@@ -1143,7 +1131,7 @@ synchronize_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	/* We are sure that k != 0 due to the period intersection test above */
 	/* The last two values of sequences with stepwise interpolation and 
 	   exclusive upper bound must be equal */
-	if (! inter->upper_inc && k > 1 && ! linear2)
+	if (! inter->upper_inc && k > 1 && ! linear1)
 	{
 		if (datum_ne(temporalinst_value(instants1[k - 2]), 
 			temporalinst_value(instants1[k - 1]), seq1->valuetypid))
@@ -1222,79 +1210,6 @@ tnumberseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 }
 
 #ifdef WITH_POSTGIS
-/* 
- * Find the single timestamptz at which two temporal point segments are at the
- * minimum distance. This function is used for computing temporal distance.
- * The function assumes that the two segments are not both constants.
- */
-bool
-tpointseq_min_dist_at_timestamp(TemporalInst *start1, TemporalInst *end1, 
-	TemporalInst *start2, TemporalInst *end2, TimestampTz *t)
-{
-	double denum, fraction;
-	if (MOBDB_FLAGS_GET_Z(start1->flags)) /* 3D */
-	{
-		POINT3DZ p1 = datum_get_point3dz(temporalinst_value(start1));
-		POINT3DZ p2 = datum_get_point3dz(temporalinst_value(end1));
-		POINT3DZ p3 = datum_get_point3dz(temporalinst_value(start2));
-		POINT3DZ p4 = datum_get_point3dz(temporalinst_value(end2));
-		/* The following basically computes d/dx (Euclidean distance) = 0.
-		   To reduce problems related to floating point arithmetic, t1 and t2
-		   are shifted, respectively, to 0 and 1 before computing d/dx */
-		double dx1 = p2.x - p1.x;
-		double dy1 = p2.y - p1.y;
-		double dz1 = p2.z - p1.z;
-		double dx2 = p4.x - p3.x;
-		double dy2 = p4.y - p3.y;
-		double dz2 = p4.z - p3.z;
-		
-		double f1 = p3.x * (dx1 - dx2);
-		double f2 = p1.x * (dx2 - dx1);
-		double f3 = p3.y * (dy1 - dy2);
-		double f4 = p1.y * (dy2 - dy1);
-		double f5 = p3.z * (dz1 - dz2);
-		double f6 = p1.z * (dz2 - dz1);
-
-		denum = dx1*(dx1-2*dx2) + dy1*(dy1-2*dy2) + dz1*(dz1-2*dz2) + 
-			dx2*dx2 + dy2*dy2 + dz2*dz2;
-		if (denum == 0)
-			return false;
-
-		fraction = (f1 + f2 + f3 + f4 + f5 + f6) / denum;
-	}
-	else /* 2D */
-	{
-		POINT2D p1 = datum_get_point2d(temporalinst_value(start1));
-		POINT2D p2 = datum_get_point2d(temporalinst_value(end1));
-		POINT2D p3 = datum_get_point2d(temporalinst_value(start2));
-		POINT2D p4 = datum_get_point2d(temporalinst_value(end2));
-		/* The following basically computes d/dx (Euclidean distance) = 0.
-		   To reduce problems related to floating point arithmetic, t1 and t2
-		   are shifted, respectively, to 0 and 1 before computing d/dx */
-		double dx1 = p2.x - p1.x;
-		double dy1 = p2.y - p1.y;
-		double dx2 = p4.x - p3.x;
-		double dy2 = p4.y - p3.y;
-		
-		double f1 = p3.x * (dx1 - dx2);
-		double f2 = p1.x * (dx2 - dx1);
-		double f3 = p3.y * (dy1 - dy2);
-		double f4 = p1.y * (dy2 - dy1);
-
-		denum = dx1*(dx1-2*dx2) + dy1*(dy1-2*dy2) + dy2*dy2 + dx2*dx2;
-		/* If the segments are parallel */
-		if (denum == 0)
-			return false;
-
-		fraction = (f1 + f2 + f3 + f4) / denum;
-	}
-	if (fraction <= EPSILON || fraction >= (1.0 - EPSILON))
-		return false;
-	double duration = (double)(end1->t - start1->t);
-	*t = (double) (start1->t) + (duration * fraction);
-	return true;
-}
-
 bool
 tpointseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1, bool linear1,
 	TemporalInst *start2, TemporalInst *end2, bool linear2, TimestampTz *t)
@@ -1370,7 +1285,7 @@ temporalseq_to_string(TemporalSeq *seq, bool component, char *(*value_out)(Oid, 
 	char **strings = palloc((int) (sizeof(char *)) * seq->count);
 	size_t outlen = 0;
 	char str[20];
-	if (!component && linear_interpolation(seq->valuetypid) && 
+	if (! component && linear_interpolation(seq->valuetypid) && 
 		!MOBDB_FLAGS_GET_LINEAR(seq->flags))
 		sprintf(str, "Interp=Stepwise;");
 	else
@@ -3615,10 +3530,10 @@ temporalseq_intersects_periodset(TemporalSeq *seq, PeriodSet *ps)
  * Local aggregate functions 
  *****************************************************************************/
 
-/* Integral of the temporal integer */
+/* Integral of the temporal numbers with stepwise interpolation */
 
 double
-tintseq_integral(TemporalSeq *seq)
+tstepwseq_integral(TemporalSeq *seq)
 {
 	double result = 0;
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
@@ -3626,16 +3541,17 @@ tintseq_integral(TemporalSeq *seq)
 	{
 		TemporalInst *inst2 = temporalseq_inst_n(seq, i);
 		double duration = (double) (inst2->t - inst1->t);
-		result += (double) DatumGetInt32(temporalinst_value(inst1)) * duration;
+		result += datum_double(temporalinst_value(inst1), inst1->valuetypid) * 
+			duration;
 		inst1 = inst2;
 	}
 	return result;
 }
 
-/* Integral of the temporal float */
+/* Integral of the temporal float with linear interpolation */
 
 double
-tfloatseq_integral(TemporalSeq *seq)
+tlinearseq_integral(TemporalSeq *seq)
 {
 	double result = 0;
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
@@ -3653,32 +3569,28 @@ tfloatseq_integral(TemporalSeq *seq)
 	return result;
 }
 
-/* Time-weighted average of temporal integer */
-
 double
-tintseq_twavg(TemporalSeq *seq)
+tnumberseq_integral(TemporalSeq *seq)
 {
-	double duration = (double) (seq->period.upper - seq->period.lower);
-	double result;
-	if (duration == 0)
-		result = (double) DatumGetInt32(temporalinst_value(temporalseq_inst_n(seq, 0)));
+	if (MOBDB_FLAGS_GET_LINEAR(seq->flags))
+		return tlinearseq_integral(seq);
 	else
-		result = tintseq_integral(seq) / duration;
-	return result;
+		return tstepwseq_integral(seq);
 }
 
-/* Time-weighted average of temporal float */
+/* Time-weighted average of temporal numbers */
 
 double
-tfloatseq_twavg(TemporalSeq *seq)
+tnumberseq_twavg(TemporalSeq *seq)
 {
 	double duration = (double) (seq->period.upper - seq->period.lower);
 	double result;
 	if (duration == 0)
-		/* The temporal sequence contains a single temporal instant */
-		result = DatumGetFloat8(temporalinst_value(temporalseq_inst_n(seq, 0)));
+		/* Instantaneous sequence */
+		result = datum_double(temporalinst_value(temporalseq_inst_n(seq, 0)),
+			seq->valuetypid);
 	else
-		result = tfloatseq_integral(seq) / duration;
+		result = tnumberseq_integral(seq) / duration;
 	return result;
 }
 
@@ -3694,23 +3606,23 @@ tfloatseq_twavg(TemporalSeq *seq)
 bool
 temporalseq_eq(TemporalSeq *seq1, TemporalSeq *seq2)
 {
-	/* If number of sequences or the periods are not equal */
-	if (seq1->count != seq2->count || 
+	/* If number of sequences, flags, or periods are not equal */
+	if (seq1->count != seq2->count || seq1->flags != seq2->flags ||
 			! period_eq_internal(&seq1->period, &seq2->period)) 
 		return false;
 
 	/* If bounding boxes are not equal */
 	void *box1 = temporalseq_bbox_ptr(seq1);
 	void *box2 = temporalseq_bbox_ptr(seq2);
-	if (!temporal_bbox_eq(seq1->valuetypid, box1, box2))
+	if (! temporal_bbox_eq(seq1->valuetypid, box1, box2))
 		return false;
 	
-	/* We need to compare the composing instants */
+	/* Compare the composing instants */
 	for (int i = 0; i < seq1->count; i++)
 	{
 		TemporalInst *inst1 = temporalseq_inst_n(seq1, i);
 		TemporalInst *inst2 = temporalseq_inst_n(seq2, i);
-		if (!temporalinst_eq(inst1, inst2))
+		if (! temporalinst_eq(inst1, inst2))
 			return false;
 	}
 	return true;
@@ -3744,6 +3656,12 @@ temporalseq_cmp(TemporalSeq *seq1, TemporalSeq *seq2)
 		return -1;
 	else if (seq2->count < seq1->count) /* seq2 has less instants than seq1 */
 		return 1;
+	/* Compare flags */
+	if (seq1->flags < seq2->flags)
+		return -1;
+	if (seq1->flags > seq2->flags)
+		return 1;
+	/* The two values are equal */
 	return 0;
 }
 

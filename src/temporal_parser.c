@@ -8,9 +8,9 @@
  * one to create the type. This is the only approach we can see at the moment
  * which is both correct and simple.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -337,15 +337,12 @@ timestampset_parse(char **str)
 
 	/* First parsing */
 	char *bak = *str;
-	TimestampTz t = timestamp_parse(str);
-	/* keep compiler quiet */
-	if (t == 0) 
-	{}
+	timestamp_parse(str);
 	int count = 1;
 	while (p_comma(str)) 
 	{
 		count++;
-		t = timestamp_parse(str);
+		timestamp_parse(str);
 	}
 	if (!p_cbrace(str))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
@@ -501,12 +498,12 @@ temporalseq_parse(char **str, Oid basetype, bool linear, bool end, bool make)
 
 	/* First parsing */
 	char *bak = *str;
-	TemporalInst *inst = temporalinst_parse(str, basetype, false, false);
+	temporalinst_parse(str, basetype, false, false);
 	int count = 1;
 	while (p_comma(str)) 
 	{
 		count++;
-		inst = temporalinst_parse(str, basetype, false, false);
+		temporalinst_parse(str, basetype, false, false);
 	}
 	if (p_cbracket(str))
 		upper_inc = true;
