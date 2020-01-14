@@ -3,9 +3,9 @@
  * temporal_util.c
  *	  Miscellaneous utility functions for temporal types.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -77,7 +77,7 @@ double_pad(size_t size)
 bool
 get_typbyval_fast(Oid type)
 {
-	base_type_all_oid(type);
+	ensure_temporal_base_type_all(type);
 	bool result = false;
 	if (type == BOOLOID || type == INT4OID || type == FLOAT8OID || 
 		type == TIMESTAMPTZOID)
@@ -102,7 +102,7 @@ get_typbyval_fast(Oid type)
 int
 get_typlen_fast(Oid type)
 {
-	base_type_all_oid(type);
+	ensure_temporal_base_type_all(type);
 	int result = 0;
 	if (type == BOOLOID)
 		result = 1;
@@ -145,7 +145,7 @@ double
 datum_double(Datum d, Oid valuetypid)
 {
 	double result = 0.0;
-	numeric_base_type_oid(valuetypid);
+	ensure_numeric_base_type(valuetypid);
 	if (valuetypid == INT4OID)
 		result = (double)(DatumGetInt32(d));
 	if (valuetypid == FLOAT8OID)
@@ -220,8 +220,7 @@ call_function1(PGFunction func, Datum arg1)
 	FmgrInfo flinfo;
 	memset(&flinfo, 0, sizeof(flinfo));
 	flinfo.fn_mcxt = CurrentMemoryContext;
-	InitFunctionCallInfoData(fcinfo, NULL, 1, DEFAULT_COLLATION_OID, NULL, NULL);
-	fcinfo.flinfo = &flinfo;
+	InitFunctionCallInfoData(fcinfo, &flinfo, 1, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo.arg[0] = arg1;
 	fcinfo.argnull[0] = false;
 	result = (*func) (&fcinfo);
@@ -248,8 +247,7 @@ call_function2(PGFunction func, Datum arg1, Datum arg2)
 	FmgrInfo flinfo;
 	memset(&flinfo, 0, sizeof(flinfo)) ;
 	flinfo.fn_mcxt = CurrentMemoryContext;
-	InitFunctionCallInfoData(fcinfo, NULL, 2, DEFAULT_COLLATION_OID, NULL, NULL);
-	fcinfo.flinfo = &flinfo;
+	InitFunctionCallInfoData(fcinfo, &flinfo, 2, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo.arg[0] = arg1;
 	fcinfo.argnull[0] = false;
 	fcinfo.arg[1] = arg2;
@@ -280,8 +278,7 @@ call_function3(PGFunction func, Datum arg1, Datum arg2, Datum arg3)
 	FmgrInfo flinfo;
 	memset(&flinfo, 0, sizeof(flinfo)) ;
 	flinfo.fn_mcxt = CurrentMemoryContext;
-	InitFunctionCallInfoData(fcinfo, NULL, 3, DEFAULT_COLLATION_OID, NULL, NULL);
-	fcinfo.flinfo = &flinfo;
+	InitFunctionCallInfoData(fcinfo, &flinfo, 3, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo.arg[0] = arg1;
 	fcinfo.argnull[0] = false;
 	fcinfo.arg[1] = arg2;
@@ -316,8 +313,7 @@ call_function4(PGFunction func, Datum arg1, Datum arg2, Datum arg3, Datum arg4)
 	FmgrInfo flinfo;
 	memset(&flinfo, 0, sizeof(flinfo)) ;
 	flinfo.fn_mcxt = CurrentMemoryContext;
-	InitFunctionCallInfoData(fcinfo, NULL, 4, DEFAULT_COLLATION_OID, NULL, NULL);
-	fcinfo.flinfo = &flinfo;
+	InitFunctionCallInfoData(fcinfo, &flinfo, 4, DEFAULT_COLLATION_OID, NULL, NULL);
 	fcinfo.arg[0] = arg1;
 	fcinfo.argnull[0] = false;
 	fcinfo.arg[1] = arg2;
@@ -512,7 +508,7 @@ datum_sort(Datum *values, int count, Oid type)
 void
 timestamp_sort(TimestampTz *times, int count)
 {
-	qsort(times, count, sizeof(Timestamp),
+	qsort(times, count, sizeof(TimestampTz),
 		  (qsort_comparator) &timestamp_sort_cmp);
 	qsort(times, count, sizeof(TimestampTz), 
 		(qsort_comparator) &timestamp_sort_cmp);
@@ -610,7 +606,7 @@ text_cmp(text *arg1, text *arg2, Oid collid)
 bool
 datum_eq(Datum l, Datum r, Oid type)
 {
-	base_type_all_oid(type);
+	ensure_temporal_base_type_all(type);
 	bool result = false;
 	if (type == BOOLOID || type == INT4OID || type == FLOAT8OID)
 		result = l == r;
@@ -642,7 +638,7 @@ datum_ne(Datum l, Datum r, Oid type)
 bool
 datum_lt(Datum l, Datum r, Oid type)
 {
-	base_type_oid(type);
+	ensure_temporal_base_type(type);
 	bool result = false;
 	if (type == BOOLOID)
 		result = DatumGetBool(l) < DatumGetBool(r);
@@ -689,8 +685,8 @@ datum_ge(Datum l, Datum r, Oid type)
 bool
 datum_eq2(Datum l, Datum r, Oid typel, Oid typer)
 {
-	base_type_all_oid(typel);
-	base_type_all_oid(typer);
+	ensure_temporal_base_type_all(typel);
+	ensure_temporal_base_type_all(typer);
 	bool result = false;
 	if ((typel == BOOLOID && typer == BOOLOID) ||
 		(typel == INT4OID && typer == INT4OID) ||

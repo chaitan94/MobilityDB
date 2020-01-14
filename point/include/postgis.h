@@ -4,9 +4,9 @@
  *	  PostGIS definitions that are needed in the extension but are not 
  *	  exported in PostGIS headers
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -250,6 +250,16 @@ extern void lwgeom_set_handlers(lwallocator allocator,
         lwreallocator reallocator, lwfreeor freeor, lwreporter errorreporter,
         lwreporter noticereporter);
 
+/******************************************************************/
+
+typedef struct
+{
+	double xmin, ymin, zmin;
+	double xmax, ymax, zmax;
+	int32_t srid;
+}
+	BOX3D;
+
 /******************************************************************
 * GBOX structure.
 * We include the flags (information about dimensionality),
@@ -422,6 +432,7 @@ extern POINT4D getPoint4d(const POINTARRAY *pa, uint32_t n);
  * will set point's z=0 (or NaN) if pa is 2d
  * NOTE: point is a real POINT3D *not* a pointer
  */
+extern POINT3DZ getPoint3dz(const POINTARRAY *pa, uint32_t n);
 extern POINT3DM getPoint3dm(const POINTARRAY *pa, uint32_t n);
 
 extern LWPOINT* lwline_get_lwpoint(const LWLINE *line, uint32_t where);
@@ -534,6 +545,11 @@ extern GBOX* gbox_new(uint8_t flags);
 * Return a copy of the #GBOX, based on dimensionality of flags.
 */
 extern GBOX* gbox_copy(const GBOX *gbox);
+
+/**
+* Return false if any of the dimensions is NaN or infinite
+*/
+extern int gbox_is_valid(const GBOX *gbox);
 
 /**
 * Update the merged #GBOX to be large enough to include itself and the new box.
