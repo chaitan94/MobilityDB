@@ -433,7 +433,6 @@ temporali_expand_period(Period *period, TemporalI *ti, TemporalInst *inst)
 {
 	TemporalInst *inst1 = temporali_inst_n(ti, 0);
 	period_set(period, inst1->t, inst->t, true, true);
-	return;
 }
 
 static void
@@ -441,7 +440,6 @@ temporalseq_expand_period(Period *period, TemporalSeq *seq, TemporalInst *inst)
 {
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
 	period_set(period, inst1->t, inst->t, seq->period.lower_inc, true);
-	return;
 }
 
 static void
@@ -450,7 +448,6 @@ temporals_expand_period(Period *period, TemporalS *ts, TemporalInst *inst)
 	TemporalSeq *seq = temporals_seq_n(ts, 0);
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
 	period_set(period, inst1->t, inst->t, seq->period.lower_inc, true);
-	return;
 }
 
 static void
@@ -461,7 +458,6 @@ tnumber_expand_tbox(TBOX *box, Temporal *temp, TemporalInst *inst)
 	memset(&box1, 0, sizeof(TBOX));
 	temporalinst_bbox(&box1, inst);
 	tbox_expand(box, &box1);
-	return;
 }
 
 bool 
@@ -559,7 +555,6 @@ number_to_box(TBOX *box, Datum value, Oid valuetypid)
 		box->xmin = box->xmax = DatumGetFloat8(value);
 	MOBDB_FLAGS_SET_X(box->flags, true);
 	MOBDB_FLAGS_SET_T(box->flags, false);
-	return;
 }
 
 /* Transform an integer to a box */
@@ -570,7 +565,6 @@ int_to_tbox_internal(TBOX *box, int i)
 	box->xmin = box->xmax = (double)i;
 	MOBDB_FLAGS_SET_X(box->flags, true);
 	MOBDB_FLAGS_SET_T(box->flags, false);
-	return;
 }
 
 PG_FUNCTION_INFO_V1(int_to_tbox);
@@ -592,7 +586,6 @@ float_to_tbox_internal(TBOX *box, double d)
 	box->xmin = box->xmax = d;
 	MOBDB_FLAGS_SET_X(box->flags, true);
 	MOBDB_FLAGS_SET_T(box->flags, false);
-	return;
 }
 
 PG_FUNCTION_INFO_V1(float_to_tbox);
@@ -638,7 +631,6 @@ range_to_tbox_internal(TBOX *box, RangeType *range)
 	}
 	MOBDB_FLAGS_SET_X(box->flags, true);
 	MOBDB_FLAGS_SET_T(box->flags, false);
-	return;
 }
 
 /* Transform an integer range to a box */
@@ -650,7 +642,6 @@ intrange_to_tbox_internal(TBOX *box, RangeType *range)
 	box->xmax = (double)(DatumGetInt32(upper_datum(range)));
 	MOBDB_FLAGS_SET_X(box->flags, true);
 	MOBDB_FLAGS_SET_T(box->flags, false);
-	return;
 }
 
 PG_FUNCTION_INFO_V1(intrange_to_tbox);
@@ -673,7 +664,6 @@ floatrange_to_tbox_internal(TBOX *box, RangeType *range)
 	box->xmax = DatumGetFloat8(upper_datum(range));
 	MOBDB_FLAGS_SET_X(box->flags, true);
 	MOBDB_FLAGS_SET_T(box->flags, false);
-	return;
 }
 
 PG_FUNCTION_INFO_V1(floatrange_to_tbox);
@@ -695,7 +685,6 @@ timestamp_to_tbox_internal(TBOX *box, TimestampTz t)
 	box->tmin = box->tmax = t;
 	MOBDB_FLAGS_SET_X(box->flags, false);
 	MOBDB_FLAGS_SET_T(box->flags, true);
-	return;
 }
 
 PG_FUNCTION_INFO_V1(timestamp_to_tbox);
@@ -719,7 +708,6 @@ timestampset_to_tbox_internal(TBOX *box, TimestampSet *ts)
 	box->tmax = p->upper;
 	MOBDB_FLAGS_SET_X(box->flags, false);
 	MOBDB_FLAGS_SET_T(box->flags, true);
-	return;
 }
 
 PG_FUNCTION_INFO_V1(timestampset_to_tbox);
@@ -743,7 +731,6 @@ period_to_tbox_internal(TBOX *box, Period *p)
 	box->tmax = p->upper;
 	MOBDB_FLAGS_SET_X(box->flags, false);
 	MOBDB_FLAGS_SET_T(box->flags, true);
-	return;
 }
 
 PG_FUNCTION_INFO_V1(period_to_tbox);
@@ -767,7 +754,6 @@ periodset_to_tbox_internal(TBOX *box, PeriodSet *ps)
 	box->tmax = p->upper;
 	MOBDB_FLAGS_SET_X(box->flags, false);
 	MOBDB_FLAGS_SET_T(box->flags, true);
-	return;
 }
 
 PG_FUNCTION_INFO_V1(periodset_to_tbox);

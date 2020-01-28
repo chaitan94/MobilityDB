@@ -413,7 +413,7 @@ temporali_to_string(TemporalI *ti, char *(*value_out)(Oid, Datum))
 void
 temporali_write(TemporalI *ti, StringInfo buf)
 {
-	pq_sendint(buf, ti->count, 4);
+	pq_sendint(buf, (uint32) ti->count, 4);
 	for (int i = 0; i < ti->count; i++)
 	{
 		TemporalInst *inst = temporali_inst_n(ti, i);
@@ -803,22 +803,6 @@ temporali_always_eq(TemporalI *ti, Datum value)
 	return true;
 }
 
-/* Is the temporal value ever not equal to the value? */
-
-bool
-temporali_ever_ne(TemporalI *ti, Datum value)
-{
-	return ! temporali_always_eq(ti, value);
-}
-
-/* Is the temporal value always not equal to the value? */
-
-bool
-temporali_always_ne(TemporalI *ti, Datum value)
-{
-	return ! temporali_ever_eq(ti, value);
-}
-
 /*****************************************************************************/
 
 /* Is the temporal value ever less than to the value? */
@@ -833,7 +817,7 @@ temporali_ever_lt(TemporalI *ti, Datum value)
 		memset(&box, 0, sizeof(TBOX));
 		temporali_bbox(&box, ti);
 		double d = datum_double(value, ti->valuetypid);
-		if (d >= box.xmax)
+		if (d <= box.xmin)
 			return false;
 	}
 
@@ -858,7 +842,7 @@ temporali_ever_le(TemporalI *ti, Datum value)
 		memset(&box, 0, sizeof(TBOX));
 		temporali_bbox(&box, ti);
 		double d = datum_double(value, ti->valuetypid);
-		if (d > box.xmax)
+		if (d < box.xmin)
 			return false;
 	}
 
@@ -883,7 +867,7 @@ temporali_always_lt(TemporalI *ti, Datum value)
 		memset(&box, 0, sizeof(TBOX));
 		temporali_bbox(&box, ti);
 		double d = datum_double(value, ti->valuetypid);
-		if (d >= box.xmin)
+		if (d <= box.xmax)
 			return false;
 	}
 
@@ -908,7 +892,7 @@ temporali_always_le(TemporalI *ti, Datum value)
 		memset(&box, 0, sizeof(TBOX));
 		temporali_bbox(&box, ti);
 		double d = datum_double(value, ti->valuetypid);
-		if (d > box.xmin)
+		if (d < box.xmax)
 			return false;
 	}
 
@@ -919,38 +903,6 @@ temporali_always_le(TemporalI *ti, Datum value)
 			return false;
 	}
 	return true;
-}
-
-/* Is the temporal value ever not equal to the value? */
-
-bool
-temporali_ever_gt(TemporalI *ti, Datum value)
-{
-	return ! temporali_always_le(ti, value);
-}
-
-/* Is the temporal value ever not equal to the value? */
-
-bool
-temporali_ever_ge(TemporalI *ti, Datum value)
-{
-	return ! temporali_always_lt(ti, value);
-}
-
-/* Is the temporal value always not equal to the value? */
-
-bool
-temporali_always_gt(TemporalI *ti, Datum value)
-{
-	return ! temporali_ever_le(ti, value);
-}
-
-/* Is the temporal value always not equal to the value? */
-
-bool
-temporali_always_ge(TemporalI *ti, Datum value)
-{
-	return ! temporali_ever_lt(ti, value);
 }
 
 /*****************************************************************************
