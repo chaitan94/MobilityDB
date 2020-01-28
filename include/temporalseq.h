@@ -84,7 +84,6 @@ extern int tfloatseq_ranges1(RangeType **result, TemporalSeq *seq);
 extern PeriodSet *temporalseq_get_time(TemporalSeq *seq);
 extern void *temporalseq_bbox_ptr(TemporalSeq *seq);
 extern void temporalseq_bbox(void *box, TemporalSeq *seq);
-extern RangeType *tnumberseq_value_range(TemporalSeq *seq);
 extern RangeType *tfloatseq_range(TemporalSeq *seq);
 extern ArrayType *tfloatseq_ranges(TemporalSeq *seq);
 extern Datum temporalseq_min_value(TemporalSeq *seq);
@@ -101,18 +100,12 @@ extern TemporalSeq *temporalseq_shift(TemporalSeq *seq,
 	Interval *interval);
 
 extern bool temporalseq_ever_eq(TemporalSeq *seq, Datum value);
-extern bool temporalseq_ever_ne(TemporalSeq *seq, Datum value);
 extern bool temporalseq_ever_lt(TemporalSeq *seq, Datum value);
 extern bool temporalseq_ever_le(TemporalSeq *seq, Datum value);
-extern bool temporalseq_ever_gt(TemporalSeq *seq, Datum value);
-extern bool temporalseq_ever_ge(TemporalSeq *seq, Datum value);
 
 extern bool temporalseq_always_eq(TemporalSeq *seq, Datum value);
-extern bool temporalseq_always_ne(TemporalSeq *seq, Datum value);
 extern bool temporalseq_always_lt(TemporalSeq *seq, Datum value);
 extern bool temporalseq_always_le(TemporalSeq *seq, Datum value);
-extern bool temporalseq_always_gt(TemporalSeq *seq, Datum value);
-extern bool temporalseq_always_ge(TemporalSeq *seq, Datum value);
 
 /* Restriction Functions */
 
@@ -127,7 +120,6 @@ extern int temporalseq_at_values1(TemporalSeq **result, TemporalSeq *seq, Datum 
 extern TemporalS *temporalseq_at_values(TemporalSeq *seq, Datum *values, int count);
 extern int temporalseq_minus_values1(TemporalSeq **result, TemporalSeq *seq, Datum *values, 
 	int count);
-extern TemporalS *temporalseq_minus_values(TemporalSeq *seq, Datum *values, int count);
 extern TemporalS *temporalseq_minus_values(TemporalSeq *seq, Datum *values, int count);
 extern int tnumberseq_at_range2(TemporalSeq **result, TemporalSeq *seq, RangeType *range);
 extern TemporalS *tnumberseq_at_range(TemporalSeq *seq, RangeType *range);
