@@ -306,7 +306,7 @@ temporali_make_bbox(void *box, TemporalInst **instants, int count)
 /* Make the bounding box a temporal sequence from its values */
 void
 temporalseq_make_bbox(void *box, TemporalInst **instants, int count, 
-	bool lower_inc, bool upper_inc)
+	bool lower_inc, bool upper_inc, bool linear)
 {
 	/* Only external types have bounding box */
 	ensure_temporal_base_type(instants[0]->valuetypid);

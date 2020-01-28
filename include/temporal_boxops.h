@@ -48,7 +48,7 @@ extern void temporalinst_make_bbox(void *bbox, Datum value, TimestampTz t,
 	Oid valuetypid);
 extern void temporali_make_bbox(void *bbox, TemporalInst **inst, int count);
 extern void temporalseq_make_bbox(void *bbox, TemporalInst** inst, int count, 
-	bool lower_inc, bool upper_inc);
+	bool lower_inc, bool upper_inc, bool linear);
 extern void temporals_make_bbox(void *bbox, TemporalSeq **seqs, int count);
 
 /* Shift the bounding box of a Temporal with an Interval */
