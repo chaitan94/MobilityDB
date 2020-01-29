@@ -70,6 +70,7 @@ extern Datum LWGEOM_isempty(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_length_linestring(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_line_locate_point(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_line_interpolate_point(PG_FUNCTION_ARGS);
+extern Datum LWGEOM_line_substring(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_makepoint(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_numgeometries_collection(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_numpoints_linestring(PG_FUNCTION_ARGS);
