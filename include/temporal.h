@@ -260,9 +260,15 @@ typedef int (*qsort_comparator) (const void *a, const void *b);
 #define PG_GETARG_ANYDATUM(i) (get_typlen(get_fn_expr_argtype(fcinfo->flinfo, i)) == -1 ? \
 	PointerGetDatum(PG_GETARG_VARLENA_P(i)) : PG_GETARG_DATUM(i))
 
-#define FREE_DATUM(value, valuetypid) \
+#define DATUM_FREE(value, valuetypid) \
 	do { \
-		if (get_typlen_fast(valuetypid) == -1) \
+		if (! get_typbyval_fast(valuetypid)) \
+			pfree(DatumGetPointer(value)); \
+	} while (0)
+
+#define DATUM_FREE_IF_COPY(value, valuetypid, n) \
+	do { \
+		if (! get_typbyval_fast(valuetypid) && DatumGetPointer(value) != PG_GETARG_POINTER(n)) \
 			pfree(DatumGetPointer(value)); \
 	} while (0)
 
@@ -425,6 +431,7 @@ extern TemporalInst *temporal_at_timestamp_internal(Temporal *temp, TimestampTz 
 extern Temporal *temporal_at_periodset_internal(Temporal *temp, PeriodSet *ps);
 extern void temporal_period(Period *p, Temporal *temp);
 extern char *temporal_to_string(Temporal *temp, char *(*value_out)(Oid, Datum));
+extern void *temporal_bbox_ptr(const Temporal *temp);
 extern void temporal_bbox(void *box, const Temporal *temp);
 
 /* Comparison functions */
