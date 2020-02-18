@@ -261,7 +261,7 @@ typedef int (*qsort_comparator) (const void *a, const void *b);
 	PointerGetDatum(PG_GETARG_VARLENA_P(i)) : PG_GETARG_DATUM(i))
 
 #define DATUM_FREE(value, valuetypid) \
-	do { \
+	do { \overlaps
 		if (! get_typbyval_fast(valuetypid)) \
 			pfree(DatumGetPointer(value)); \
 	} while (0)
