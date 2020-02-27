@@ -662,13 +662,17 @@ period_ne(PG_FUNCTION_ARGS)
 int
 period_cmp_internal(Period *p1, Period *p2)
 {
-	int cmp = period_cmp_bounds(p1->lower, p2->lower, true, true, 
-		p1->lower_inc, p2->lower_inc);
-	if (cmp == 0)
-		cmp = period_cmp_bounds(p1->upper, p2->upper, false, false, 
-			p1->upper_inc, p2->upper_inc);
-
-	return cmp;
+	int cmp = timestamp_cmp_internal(p1->lower, p2->lower);
+	if (cmp != 0)
+		return cmp;
+	if (p1->lower_inc != p2->lower_inc)
+		return p1->lower_inc ? -1 : 1;
+	cmp = timestamp_cmp_internal(p1->upper, p2->upper);
+	if (cmp != 0)
+		return cmp;
+	if (p1->upper_inc != p2->upper_inc)
+		return p1->upper_inc ? 1 : -1;
+	return 0;
 }
 
 PG_FUNCTION_INFO_V1(period_cmp);

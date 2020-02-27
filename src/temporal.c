@@ -858,7 +858,7 @@ tlinearseq_constructor(PG_FUNCTION_ARGS)
 		}
 	}
 
-	Temporal *result = (Temporal *)temporalseq_from_temporalinstarr(instants,
+	Temporal *result = (Temporal *)temporalseq_make(instants,
 		count, lower_inc, upper_inc, false, true);
 	pfree(instants);
 	PG_FREE_IF_COPY(array, 0);
@@ -895,7 +895,7 @@ temporalseq_constructor(PG_FUNCTION_ARGS)
 		}
 	}
 
-	Temporal *result = (Temporal *)temporalseq_from_temporalinstarr(instants, 
+	Temporal *result = (Temporal *)temporalseq_make(instants, 
 		count, lower_inc, upper_inc, linear, true);
 	pfree(instants);
 	PG_FREE_IF_COPY(array, 0);
@@ -937,7 +937,7 @@ temporals_constructor(PG_FUNCTION_ARGS)
 		}
 	}
 
-	Temporal *result = (Temporal *)temporals_from_temporalseqarr(sequences, count,
+	Temporal *result = (Temporal *)temporals_make(sequences, count,
 		linear, true);
 	
 	pfree(sequences);

@@ -359,6 +359,55 @@ same_stbox_stbox(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(same_stbox_stbox_internal(box1, box2));
 }
 
+/* adjacent? */
+
+bool
+adjacent_stbox_stbox_internal(const STBOX *box1, const STBOX *box2)
+{
+	/* The boxes should have at least one common dimension XY(Z) or T  */
+	assert((MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags)) ||
+		   (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags)));
+	STBOX *inter = stbox_intersection_internal(box1, box2);
+	if (inter == NULL)
+		return false;
+	/* Boxes are adjacent if they share n dimensions and their intersection is
+	 * at most of n-1 dimensions */
+	bool hasx = MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags);
+	bool hasz = MOBDB_FLAGS_GET_Z(box1->flags) && MOBDB_FLAGS_GET_Z(box2->flags);
+	bool hast = MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags);
+	if (!hasx && hast)
+		return inter->tmin == inter->tmax;
+	else if (hasx && !hast)
+	{
+		if (hasz)
+			return inter->xmin == inter->xmax || inter->ymin == inter->ymax ||
+				inter->zmin == inter->zmax;
+		else
+			return inter->xmin == inter->xmax || inter->ymin == inter->ymax;
+	}
+	else
+	{
+		if (hasz)
+			return inter->xmin == inter->xmax || inter->ymin == inter->ymax ||
+				   inter->zmin == inter->zmax || inter->tmin == inter->tmax;
+		else
+			return inter->xmin == inter->xmax || inter->ymin == inter->ymax ||
+				   inter->tmin == inter->tmax;
+	}
+}
+
+PG_FUNCTION_INFO_V1(adjacent_stbox_stbox);
+
+PGDLLEXPORT Datum
+adjacent_stbox_stbox(PG_FUNCTION_ARGS)
+{
+	STBOX *box1 = PG_GETARG_STBOX_P(0);
+	STBOX *box2 = PG_GETARG_STBOX_P(1);
+	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
+		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
+	PG_RETURN_BOOL(adjacent_stbox_stbox_internal(box1, box2));
+}
+
 /*****************************************************************************/
 
 /* Functions computing the bounding box at the creation of a temporal point */
@@ -949,6 +998,112 @@ same_bbox_tpoint_tpoint(PG_FUNCTION_ARGS)
 	temporal_bbox(&box1, temp1);
 	temporal_bbox(&box2, temp2);
 	bool result = same_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp1, 0);
+	PG_FREE_IF_COPY(temp2, 1);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************
+ * adjacent
+ *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_geo_tpoint);
+
+PGDLLEXPORT Datum
+adjacent_bbox_geo_tpoint(PG_FUNCTION_ARGS)
+{
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tpoint_gs(temp, gs);
+	ensure_same_dimensionality_tpoint_gs(temp, gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	if (!geo_to_stbox_internal(&box1, gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+	temporal_bbox(&box2, temp);
+	bool result = adjacent_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(gs, 0);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_stbox_tpoint);
+
+PGDLLEXPORT Datum
+adjacent_bbox_stbox_tpoint(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = adjacent_stbox_stbox_internal(box, &box1);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_tpoint_geo);
+
+PGDLLEXPORT Datum
+adjacent_bbox_tpoint_geo(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	ensure_same_srid_tpoint_gs(temp, gs);
+	ensure_same_dimensionality_tpoint_gs(temp, gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	if (!geo_to_stbox_internal(&box2, gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+	temporal_bbox(&box1, temp);
+	bool result = adjacent_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_tpoint_stbox);
+
+PGDLLEXPORT Datum
+adjacent_bbox_tpoint_stbox(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	STBOX *box = PG_GETARG_STBOX_P(1);
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = adjacent_stbox_stbox_internal(&box1, box);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_tpoint_tpoint);
+
+PGDLLEXPORT Datum
+adjacent_bbox_tpoint_tpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tpoint(temp1, temp2);
+	ensure_same_dimensionality_tpoint(temp1, temp2);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp1);
+	temporal_bbox(&box2, temp2);
+	bool result = adjacent_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
 	PG_RETURN_BOOL(result);
