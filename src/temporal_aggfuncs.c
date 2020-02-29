@@ -917,14 +917,14 @@ temporalseq_tagg1(TemporalSeq **result,	TemporalSeq *seq1, TemporalSeq *seq2,
 
 	/* Compute the aggregation on the period before the 
 	 * intersection of the intervals */
-	if (timestamp_cmp_internal(lower1, lower) < 0 ||
-		(lower1_inc && !lower_inc && timestamp_cmp_internal(lower1, lower) == 0))
+	int cmp1 = timestamp_cmp_internal(lower1, lower);
+	int cmp2 = timestamp_cmp_internal(lower2, lower);
+	if (cmp1 < 0 || (lower1_inc && !lower_inc && cmp1 == 0))
 	{
 		period_set(&period, lower1, lower, lower1_inc, !lower_inc);
 		sequences[k++] = temporalseq_at_period(seq1, &period);
 	}
-	else if (timestamp_cmp_internal(lower2, lower) < 0 ||
-		(lower2_inc && !lower_inc && timestamp_cmp_internal(lower2, lower) == 0))
+	else if (cmp2 < 0 || (lower2_inc && !lower_inc && cmp2 == 0))
 	{
 		period_set(&period, lower2, lower, lower2_inc, !lower_inc);
 		sequences[k++] = temporalseq_at_period(seq2, &period);
@@ -952,14 +952,14 @@ temporalseq_tagg1(TemporalSeq **result,	TemporalSeq *seq1, TemporalSeq *seq2,
 	
 	/* Compute the aggregation on the period after the intersection 
 	 * of the intervals */
-	if (timestamp_cmp_internal(upper, upper1) < 0 ||
-		(!upper_inc && upper1_inc && timestamp_cmp_internal(upper, upper1) == 0))
+	cmp1 = timestamp_cmp_internal(upper, upper1);
+	cmp2 = timestamp_cmp_internal(upper, upper2);
+	if (cmp1 < 0 || (!upper_inc && upper1_inc && cmp1 == 0))
 	{
 		period_set(&period, upper, upper1, !upper_inc, upper1_inc);
 		sequences[k++] = temporalseq_at_period(seq1, &period);
 	}
-	else if (timestamp_cmp_internal(upper, upper2) < 0 ||
-		(!upper_inc && upper2_inc && timestamp_cmp_internal(upper, upper2) == 0))
+	else if (cmp2 < 0 || (!upper_inc && upper2_inc && cmp2 == 0))
 	{
 		period_set(&period, upper, upper2, !upper_inc, upper2_inc);
 		sequences[k++] = temporalseq_at_period(seq2, &period);
@@ -1010,8 +1010,8 @@ temporalseq_tagg(TemporalSeq **sequences1, int count1, TemporalSeq **sequences2,
 		int countstep = temporalseq_tagg1(&sequences[k], seq1, seq2, func, crossings);
 		k += countstep - 1;
 		/* If both upper bounds are equal */
-		if (timestamp_cmp_internal(seq1->period.upper, seq2->period.upper) == 0 &&
-			seq1->period.upper_inc == seq2->period.upper_inc)
+		int cmp = timestamp_cmp_internal(seq1->period.upper, seq2->period.upper);
+		if (cmp == 0 && seq1->period.upper_inc == seq2->period.upper_inc)
 		{
 			k++; i++; j++;
 			if (i == count1 || j == count2)
@@ -1020,9 +1020,8 @@ temporalseq_tagg(TemporalSeq **sequences1, int count1, TemporalSeq **sequences2,
 			seq2 = sequences2[j];
 		}
 		/* If upper bound of seq1 is less than or equal to the upper bound of seq2 */
-		else if (timestamp_cmp_internal(seq1->period.upper, seq2->period.upper) < 0 ||
-			(!seq1->period.upper_inc && seq2->period.upper_inc &&
-			timestamp_cmp_internal(seq1->period.upper, seq2->period.upper) == 0))
+		else if (cmp < 0 ||
+			(!seq1->period.upper_inc && seq2->period.upper_inc && cmp == 0))
 		{
 			i++;
 			if (i == count1)
@@ -1802,7 +1801,7 @@ temporal_tagg_finalfn(PG_FUNCTION_ARGS)
 	assert(values[0]->duration == TEMPORALINST ||
 		values[0]->duration == TEMPORALSEQ);
 	if (values[0]->duration == TEMPORALINST)
-		result = (Temporal *)temporali_from_temporalinstarr(
+		result = (Temporal *)temporali_make(
 			(TemporalInst **)values, state->length);
 	else if (values[0]->duration == TEMPORALSEQ)
 		result = (Temporal *)temporals_make(
@@ -1884,12 +1883,12 @@ temporalinst_tavg_finalfn(TemporalInst **instants, int count)
 	for (int i = 0; i < count; i++)
 	{
 		TemporalInst *inst = instants[i];
-		double2 *value = (double2 *)DatumGetPointer(temporalinst_value(inst));
+		double2 *value = (double2 *)DatumGetPointer(temporalinst_value_ptr(inst));
 		double tavg = value->a / value->b;
 		newinstants[i] = temporalinst_make(Float8GetDatum(tavg), inst->t,
 			FLOAT8OID);
 	}
-	TemporalI *result = temporali_from_temporalinstarr(newinstants, count);
+	TemporalI *result = temporali_make(newinstants, count);
 
 	for (int i = 0; i < count; i++)
 		pfree(newinstants[i]);
@@ -1909,7 +1908,7 @@ temporalseq_tavg_finalfn(TemporalSeq **sequences, int count)
 		for (int j = 0; j < seq->count; j++)
 		{
 			TemporalInst *inst = temporalseq_inst_n(seq, j);
-			double2 *value2 = (double2 *)DatumGetPointer(temporalinst_value(inst));
+			double2 *value2 = (double2 *)DatumGetPointer(temporalinst_value_ptr(inst));
 			double value = value2->a / value2->b;
 			instants[j] = temporalinst_make(Float8GetDatum(value), inst->t,
 				FLOAT8OID);

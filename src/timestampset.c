@@ -79,13 +79,13 @@ timestampset_bbox(TimestampSet *ts)
 /* Construct a TimestampSet from an array of TimestampTz */
 
 TimestampSet *
-timestampset_from_timestamparr_internal(TimestampTz *times, int count)
+timestampset_make_internal(TimestampTz *times, int count)
 {
 	Period bbox;
 	/* Test the validity of the timestamps */
 	for (int i = 0; i < count - 1; i++)
 	{
-		if (timestamp_cmp_internal(times[i], times[i + 1]) >= 0)
+		if (times[i] >= times[i + 1])
 			ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION),
 				errmsg("Invalid value for timestamp set")));
 	}
@@ -258,7 +258,7 @@ timestampset_recv(PG_FUNCTION_ARGS)
 	TimestampTz *times = palloc(sizeof(TimestampTz) * count);
 	for (int i = 0; i < count; i++)
 		times[i] = call_recv(TIMESTAMPTZOID, buf);
-	TimestampSet *result = timestampset_from_timestamparr_internal(times, count);
+	TimestampSet *result = timestampset_make_internal(times, count);
 	pfree(times);
 	PG_RETURN_POINTER(result);
 }
@@ -269,10 +269,10 @@ timestampset_recv(PG_FUNCTION_ARGS)
 
 /* Construct a TimestampSet from an array of TimestampTz */
 
-PG_FUNCTION_INFO_V1(timestampset_from_timestamparr);
+PG_FUNCTION_INFO_V1(timestampset_make);
 
 PGDLLEXPORT Datum
-timestampset_from_timestamparr(PG_FUNCTION_ARGS)
+timestampset_make(PG_FUNCTION_ARGS)
 {
 	ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
 	int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
@@ -284,7 +284,7 @@ timestampset_from_timestamparr(PG_FUNCTION_ARGS)
 	}
 	
 	TimestampTz *times = timestamparr_extract(array, &count);
-	TimestampSet *result = timestampset_from_timestamparr_internal(times, count);
+	TimestampSet *result = timestampset_make_internal(times, count);
 	
 	pfree(times);
 	PG_FREE_IF_COPY(array, 0);
@@ -304,7 +304,7 @@ PGDLLEXPORT Datum
 timestamp_to_timestampset(PG_FUNCTION_ARGS)
 {
 	TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
-	TimestampSet *result = timestampset_from_timestamparr_internal(&t, 1);
+	TimestampSet *result = timestampset_make_internal(&t, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -437,7 +437,7 @@ timestampset_shift_internal(TimestampSet *ts, Interval *interval)
 			DirectFunctionCall2(timestamptz_pl_interval,
 			TimestampTzGetDatum(t), PointerGetDatum(interval)));
 	}
-	TimestampSet *result = timestampset_from_timestamparr_internal(times, ts->count);
+	TimestampSet *result = timestampset_make_internal(times, ts->count);
 	pfree(times);
 	return result;
 }
@@ -513,7 +513,7 @@ timestampset_eq_internal(TimestampSet *ts1, TimestampSet *ts2)
 	{
 		TimestampTz t1 = timestampset_time_n(ts1, i);
 		TimestampTz t2 = timestampset_time_n(ts2, i);
-		if (timestamp_cmp_internal(t1, t2) != 0)
+		if (t1 != t2)
 			return false;
 	}
 	/* All timestamps of the two TimestampSet are equal */

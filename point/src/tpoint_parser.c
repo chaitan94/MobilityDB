@@ -28,9 +28,27 @@ stbox_parse(char **str)
 	TimestampTz tmin, tmax, ttmp;
 	bool hasx = false, hasz = false, hast = false, geodetic = false;
 	char *nextstr;
+	int srid = 0;
+	bool hassrid = false;
 
 	p_whitespace(str);
-	if (strncasecmp(*str, "STBOX", 5) == 0) 
+	if (strncasecmp(*str,"SRID=",5) == 0)
+	{
+		/* Move str to the start of the numeric part */
+		*str += 5;
+		int delim = 0;
+		/* Delimiter will be either ',' or ';' depending on whether interpolation
+		   is given after */
+		while ((*str)[delim] != ',' && (*str)[delim] != ';' && (*str)[delim] != '\0')
+		{
+			srid = srid * 10 + (*str)[delim] - '0';
+			delim++;
+		}
+		/* Set str to the start of the temporal point */
+		*str += delim + 1;
+		hassrid = true;
+	}
+	if (strncasecmp(*str, "STBOX", 5) == 0)
 	{
 		*str += 5;
 		p_whitespace(str);
@@ -62,6 +80,8 @@ stbox_parse(char **str)
 			hast = true;
 		}
 		p_whitespace(str);
+		if (!hassrid)
+			srid = 4326;
 	}
 	else
 		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
@@ -80,6 +100,9 @@ stbox_parse(char **str)
 	if (!hasx && !hast)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
 			errmsg("Could not parse STBOX")));
+	if (!hasx && hassrid)
+		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+			errmsg("An SRID is specified but not coordinates are given")));
 
 	if (hasx)
 	{
@@ -196,6 +219,7 @@ stbox_parse(char **str)
 			errmsg("Could not parse STBOX: Missing closing parenthesis")));
 	
 	STBOX *result = stbox_new(hasx, hasz, hast, geodetic);
+	result->srid = srid;
 	if (hasx)
 	{
 		if (xmin > xmax)
@@ -322,7 +346,7 @@ tpointi_parse(char **str, Oid basetype, int *tpoint_srid)
 		insts[i] = tpointinst_parse(str, basetype, false, tpoint_srid);
 	}
 	p_cbrace(str);
-	TemporalI *result = temporali_from_temporalinstarr(insts, count);
+	TemporalI *result = temporali_make(insts, count);
 
 	for (int i = 0; i < count; i++)
 		pfree(insts[i]);

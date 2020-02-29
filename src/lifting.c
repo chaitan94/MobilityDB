@@ -94,7 +94,7 @@ tfunc1_temporali(TemporalI *ti, Datum (*func)(Datum), Oid restypid)
 		TemporalInst *inst = temporali_inst_n(ti, i);
 		instants[i] = tfunc1_temporalinst(inst, func, restypid);
 	}
-	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
+	TemporalI *result = temporali_make(instants, ti->count);
 	for (int i = 0; i < ti->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -186,7 +186,7 @@ tfunc2_temporali(TemporalI *ti, Datum param,
 		TemporalInst *inst = temporali_inst_n(ti, i);
 		instants[i] = tfunc2_temporalinst(inst, param, func, restypid);
 	}
-	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
+	TemporalI *result = temporali_make(instants, ti->count);
 	for (int i = 0; i < ti->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -288,7 +288,7 @@ tfunc2_temporali_base(TemporalI *ti, Datum value,
 		instants[i] = tfunc2_temporalinst_base(inst, value, func,
 			restypid, invert);
 	}
-	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
+	TemporalI *result = temporali_make(instants, ti->count);
 	for (int i = 0; i < ti->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -385,7 +385,7 @@ tfunc3_temporali_base(TemporalI *ti, Datum value, Datum param,
 		instants[i] = tfunc3_temporalinst_base(inst, value, param, func,
 			restypid, invert);
 	}
-	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
+	TemporalI *result = temporali_make(instants, ti->count);
 	for (int i = 0; i < ti->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -462,7 +462,7 @@ tfunc4_temporali_base(TemporalI *ti, Datum value, Oid valuetypid,
 		instants[i] = tfunc4_temporalinst_base(inst, value, valuetypid, func,
 			restypid, invert);
 	}
-	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
+	TemporalI *result = temporali_make(instants, ti->count);
 	for (int i = 0; i < ti->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -758,7 +758,7 @@ sync_tfunc2_temporalinst_temporalinst(TemporalInst *inst1, TemporalInst *inst2,
 	Datum (*func)(Datum, Datum), Oid restypid)
 {
 	/* Test whether the two temporal values overlap on time */
-	if (timestamp_cmp_internal(inst1->t, inst2->t) != 0)
+	if (inst1->t != inst2->t)
 		return NULL;
 
 	Datum resvalue = func(temporalinst_value(inst1), temporalinst_value(inst2));
@@ -870,7 +870,7 @@ sync_tfunc2_temporali_temporali(TemporalI *ti1, TemporalI *ti2,
 		return NULL;
 	}
 
-	TemporalI *result = temporali_from_temporalinstarr(instants, k);
+	TemporalI *result = temporali_make(instants, k);
 
 	for (i = 0; i < k; i++)
 		pfree(instants[i]);
@@ -902,7 +902,7 @@ sync_tfunc2_temporalseq_temporali(TemporalSeq *seq, TemporalI *ti,
 			instants[k++] = temporalinst_make(resvalue, inst->t, restypid);
 			DATUM_FREE(value1, seq->valuetypid); DATUM_FREE(resvalue, restypid);
 		}
-		if (timestamp_cmp_internal(seq->period.upper, inst->t) < 0)
+		if (seq->period.upper < inst->t)
 			break;
 	}
 	if (k == 0)
@@ -911,7 +911,7 @@ sync_tfunc2_temporalseq_temporali(TemporalSeq *seq, TemporalI *ti,
 		return NULL;
 	}
 
-	TemporalI *result = temporali_from_temporalinstarr(instants, k);
+	TemporalI *result = temporali_make(instants, k);
 
 	for (int i = 0; i < k; i++)
 		pfree(instants[i]);
@@ -968,7 +968,7 @@ sync_tfunc2_temporals_temporali(TemporalS *ts, TemporalI *ti,
 		return NULL;
 	}
 
-	TemporalI *result = temporali_from_temporalinstarr(instants, k);
+	TemporalI *result = temporali_make(instants, k);
 	for (i = 0; i < k; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -996,7 +996,7 @@ sync_tfunc2_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 		return NULL;
 
 	/* If the two sequences intersect at an instant */
-	if (timestamp_cmp_internal(inter->lower, inter->upper) == 0)
+	if (inter->lower == inter->upper)
 	{
 		Datum value1, value2;
 		temporalseq_value_at_timestamp(seq1, inter->lower, &value1);
@@ -1023,13 +1023,13 @@ sync_tfunc2_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	TemporalInst *inst2 = temporalseq_inst_n(seq2, 0);
 	TemporalInst *tofreeinst = NULL;
 	int i = 0, j = 0, k = 0, l = 0;
-	if (timestamp_cmp_internal(inst1->t, inter->lower) < 0)
+	if (inst1->t < inter->lower)
 	{
 		inst1 = temporalseq_at_timestamp(seq1, inter->lower);
 		tofreeinst = inst1;
 		i = temporalseq_find_timestamp(seq1, inter->lower);
 	}
-	else if (timestamp_cmp_internal(inst2->t, inter->lower) < 0)
+	else if (inst2->t < inter->lower)
 	{
 		inst2 = temporalseq_at_timestamp(seq2, inter->lower);
 		tofreeinst = inst2;
@@ -1046,8 +1046,7 @@ sync_tfunc2_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	bool linear1 = MOBDB_FLAGS_GET_LINEAR(seq1->flags);
 	bool linear2 = MOBDB_FLAGS_GET_LINEAR(seq2->flags);
 	while (i < seq1->count && j < seq2->count &&
-		(timestamp_cmp_internal(inst1->t, inter->upper) <= 0 ||
-		timestamp_cmp_internal(inst2->t, inter->upper) <= 0))
+		(inst1->t <= inter->upper || inst2->t <= inter->upper))
 	{
 		int cmp = timestamp_cmp_internal(inst1->t, inst2->t);
 		if (cmp == 0)
@@ -1137,9 +1136,9 @@ sync_tfunc2_temporals_temporalseq(TemporalS *ts, TemporalSeq *seq,
 			func, restypid, linear, interpoint);
 		if (seq2 != NULL)
 			sequences[k++] = seq2;
-		if (timestamp_cmp_internal(seq->period.upper, seq1->period.upper) < 0 ||
-			(timestamp_cmp_internal(seq->period.upper, seq1->period.upper) == 0 &&
-			(!seq->period.upper_inc || seq1->period.upper_inc)))
+		int cmp = timestamp_cmp_internal(seq->period.upper, seq1->period.upper);
+		if (cmp < 0 ||
+			(cmp == 0 && (!seq->period.upper_inc || seq1->period.upper_inc)))
 			break;
 	}
 	if (k == 0)
@@ -1312,7 +1311,7 @@ sync_tfunc3_temporalinst_temporalinst(TemporalInst *inst1, TemporalInst *inst2,
 	Datum param, Datum (*func)(Datum, Datum, Datum), Oid restypid)
 {
 	/* Test whether the two temporal values overlap on time */
-	if (timestamp_cmp_internal(inst1->t, inst2->t) != 0)
+	if (inst1->t != inst2->t)
 		return NULL;
 	Datum value = func(temporalinst_value(inst1), temporalinst_value(inst2),
 		param);
@@ -1424,7 +1423,7 @@ sync_tfunc3_temporali_temporali(TemporalI *ti1, TemporalI *ti2,
 		return NULL;
 	}
 
-	TemporalI *result = temporali_from_temporalinstarr(instants, k);
+	TemporalI *result = temporali_make(instants, k);
 
 	for (i = 0; i < k; i++)
 		pfree(instants[i]);
@@ -1456,7 +1455,7 @@ sync_tfunc3_temporalseq_temporali(TemporalSeq *seq, TemporalI *ti,
 			instants[k++] = temporalinst_make(value, inst->t, restypid);
 			DATUM_FREE(value1, seq->valuetypid); DATUM_FREE(value, restypid);
 		}
-		if (timestamp_cmp_internal(seq->period.upper, inst->t) < 0)
+		if (seq->period.upper < inst->t)
 			break;
 	}
 	if (k == 0)
@@ -1465,7 +1464,7 @@ sync_tfunc3_temporalseq_temporali(TemporalSeq *seq, TemporalI *ti,
 		return NULL;
 	}
 
-	TemporalI *result = temporali_from_temporalinstarr(instants, k);
+	TemporalI *result = temporali_make(instants, k);
 
 	for (int i = 0; i < k; i++)
 		pfree(instants[i]);
@@ -1522,7 +1521,7 @@ sync_tfunc3_temporals_temporali(TemporalS *ts, TemporalI *ti,
 		return NULL;
 	}
 
-	TemporalI *result = temporali_from_temporalinstarr(instants, k);
+	TemporalI *result = temporali_make(instants, k);
 	for (i = 0; i < k; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -1553,7 +1552,7 @@ sync_tfunc3_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 		return NULL;
 
 	/ * If the two sequences intersect at an instant * /
-	if (timestamp_cmp_internal(inter->lower, inter->upper) == 0)
+	if (inter->lower == inter->upper)
 	{
 		Datum value1, value2;
 		temporalseq_value_at_timestamp(seq1, inter->lower, &value1);
@@ -1579,13 +1578,13 @@ sync_tfunc3_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	TemporalInst *inst2 = temporalseq_inst_n(seq2, 0);
 	TemporalInst *tofreeinst = NULL;
 	int i = 0, j = 0, k = 0, l = 0;
-	if (timestamp_cmp_internal(inst1->t, inter->lower) < 0)
+	if (inst1->t < inter->lower)
 	{
 		inst1 = temporalseq_at_timestamp(seq1, inter->lower);
 		tofreeinst = inst1;
 		i = temporalseq_find_timestamp(seq1, inter->lower);
 	}
-	else if (timestamp_cmp_internal(inst2->t, inter->lower) < 0)
+	else if (inst2->t < inter->lower)
 	{
 		inst2 = temporalseq_at_timestamp(seq2, inter->lower);
 		tofreeinst = inst2;
@@ -1600,8 +1599,7 @@ sync_tfunc3_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	Datum inter1, inter2, value;
 	TimestampTz intertime;
 	while (i < seq1->count && j < seq2->count &&
-		(timestamp_cmp_internal(inst1->t, inter->upper) <= 0 ||
-		timestamp_cmp_internal(inst2->t, inter->upper) <= 0))
+		(inst1->t <= inter->upper || inst2->t <= inter->upper))
 	{
 		int cmp = timestamp_cmp_internal(inst1->t, inst2->t);
 		if (cmp == 0)
@@ -1694,9 +1692,9 @@ sync_tfunc3_temporals_temporalseq(TemporalS *ts, TemporalSeq *seq,
 			param, func, restypid, linear, interpoint);
 		if (seq2 != NULL)
 			sequences[k++] = seq2;
-		if (timestamp_cmp_internal(seq->period.upper, seq1->period.upper) < 0 ||
-			(timestamp_cmp_internal(seq->period.upper, seq1->period.upper) == 0 &&
-			(!seq->period.upper_inc || seq1->period.upper_inc)))
+		int cmp = timestamp_cmp_internal(seq->period.upper, seq1->period.upper);
+		if (cmp < 0 ||
+			(cmp == 0 && !seq->period.upper_inc || seq1->period.upper_inc)))
 			break;
 	}
 	if (k == 0)
@@ -1869,7 +1867,7 @@ sync_tfunc4_temporalinst_temporalinst(TemporalInst *inst1, TemporalInst *inst2,
 	Datum (*func)(Datum, Datum, Oid, Oid), Oid restypid)
 {
 	/* Test whether the two temporal values overlap on time */
-	if (timestamp_cmp_internal(inst1->t, inst2->t) != 0)
+	if (inst1->t != inst2->t)
 		return NULL;
 	Datum value = func(temporalinst_value(inst1), temporalinst_value(inst2),
 		inst1->valuetypid, inst2->valuetypid);
@@ -1984,7 +1982,7 @@ sync_tfunc4_temporali_temporali(TemporalI *ti1, TemporalI *ti2,
 		return NULL;
 	}
 
-	TemporalI *result = temporali_from_temporalinstarr(instants, k);
+	TemporalI *result = temporali_make(instants, k);
 
 	for (i = 0; i < k; i++)
 		pfree(instants[i]);
@@ -2017,7 +2015,7 @@ sync_tfunc4_temporalseq_temporali(TemporalSeq *seq, TemporalI *ti,
 			instants[k++] = temporalinst_make(value, inst->t, restypid);
 			DATUM_FREE(value1, seq->valuetypid); DATUM_FREE(value, restypid);
 		}
-		if (timestamp_cmp_internal(seq->period.upper, inst->t) < 0)
+		if (seq->period.upper < inst->t)
 			break;
 	}
 	if (k == 0)
@@ -2026,7 +2024,7 @@ sync_tfunc4_temporalseq_temporali(TemporalSeq *seq, TemporalI *ti,
 		return NULL;
 	}
 
-	TemporalI *result = temporali_from_temporalinstarr(instants, k);
+	TemporalI *result = temporali_make(instants, k);
 
 	for (int i = 0; i < k; i++)
 		pfree(instants[i]);
@@ -2084,7 +2082,7 @@ sync_tfunc4_temporals_temporali(TemporalS *ts, TemporalI *ti,
 		return NULL;
 	}
 
-	TemporalI *result = temporali_from_temporalinstarr(instants, k);
+	TemporalI *result = temporali_make(instants, k);
 	for (i = 0; i < k; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -2112,7 +2110,7 @@ sync_tfunc4_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 		return NULL;
 
 	/* If the two sequences intersect at an instant */
-	if (timestamp_cmp_internal(inter->lower, inter->upper) == 0)
+	if (inter->lower == inter->upper)
 	{
 		Datum value1, value2;
 		temporalseq_value_at_timestamp(seq1, inter->lower, &value1);
@@ -2139,13 +2137,13 @@ sync_tfunc4_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	TemporalInst *inst2 = temporalseq_inst_n(seq2, 0);
 	TemporalInst *tofreeinst = NULL;
 	int i = 0, j = 0, k = 0, l = 0;
-	if (timestamp_cmp_internal(inst1->t, inter->lower) < 0)
+	if (inst1->t < inter->lower)
 	{
 		inst1 = temporalseq_at_timestamp(seq1, inter->lower);
 		tofreeinst = inst1;
 		i = temporalseq_find_timestamp(seq1, inter->lower);
 	}
-	else if (timestamp_cmp_internal(inst2->t, inter->lower) < 0)
+	else if (inst2->t < inter->lower)
 	{
 		inst2 = temporalseq_at_timestamp(seq2, inter->lower);
 		tofreeinst = inst2;
@@ -2162,8 +2160,7 @@ sync_tfunc4_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	bool linear1 = MOBDB_FLAGS_GET_LINEAR(seq1->flags);
 	bool linear2 = MOBDB_FLAGS_GET_LINEAR(seq2->flags);
 	while (i < seq1->count && j < seq2->count &&
-		(timestamp_cmp_internal(inst1->t, inter->upper) <= 0 ||
-		timestamp_cmp_internal(inst2->t, inter->upper) <= 0))
+		(inst1->t <= inter->upper || inst2->t <= inter->upper))
 	{
 		int cmp = timestamp_cmp_internal(inst1->t, inst2->t);
 		if (cmp == 0)
@@ -2254,9 +2251,9 @@ sync_tfunc4_temporals_temporalseq(TemporalS *ts, TemporalSeq *seq,
 			func, restypid, linear, interpoint);
 		if (seq2 != NULL)
 			sequences[k++] = seq2;
-		if (timestamp_cmp_internal(seq->period.upper, seq1->period.upper) < 0 ||
-			(timestamp_cmp_internal(seq->period.upper, seq1->period.upper) == 0 &&
-			(!seq->period.upper_inc || seq1->period.upper_inc)))
+		int cmp = timestamp_cmp_internal(seq->period.upper, seq1->period.upper);
+		if (cmp < 0 ||
+			(cmp == 0 && (!seq->period.upper_inc || seq1->period.upper_inc)))
 			break;
 	}
 	if (k == 0)
@@ -2443,7 +2440,7 @@ sync_tfunc2_temporalseq_temporalseq_cross1(TemporalSeq **result, TemporalSeq *se
 		return 0;
 
 	/* If the two sequences intersect at an instant */
-	if (timestamp_cmp_internal(inter->lower, inter->upper) == 0)
+	if (inter->lower == inter->upper)
 	{
 		Datum value1, value2;
 		temporalseq_value_at_timestamp(seq1, inter->lower, &value1);
@@ -2465,13 +2462,13 @@ sync_tfunc2_temporalseq_temporalseq_cross1(TemporalSeq **result, TemporalSeq *se
 	TemporalInst *start1 = temporalseq_inst_n(seq1, 0);
 	TemporalInst *start2 = temporalseq_inst_n(seq2, 0);
 	int i = 1, j = 1, k = 0, l = 0;
-	if (timestamp_cmp_internal(start1->t, inter->lower) < 0)
+	if (start1->t < inter->lower)
 	{
 		start1 = temporalseq_at_timestamp(seq1, inter->lower);
 		tofree[l++] = start1;
 		i = temporalseq_find_timestamp(seq1, inter->lower) + 1;
 	}
-	else if (timestamp_cmp_internal(start2->t, inter->lower) < 0)
+	else if (start2->t < inter->lower)
 	{
 		start2 = temporalseq_at_timestamp(seq2, inter->lower);
 		tofree[l++] = start2;
@@ -2510,8 +2507,7 @@ sync_tfunc2_temporalseq_temporalseq_cross1(TemporalSeq **result, TemporalSeq *se
 			end1 = temporalseq_at_timestamp1(start1, end1, end2->t, linear1);
 			tofree[l++] = end1;
 		}
-		bool upper_inc = (timestamp_cmp_internal(end1->t, inter->upper) == 0) ?
-			inter->upper_inc : false;
+		bool upper_inc = (end1->t == inter->upper) ? inter->upper_inc : false;
 		/* The remaining of the loop adds between one and three sequences */
 		Datum endvalue1 = temporalinst_value(end1);
 		Datum endvalue2 = temporalinst_value(end2);
@@ -2824,7 +2820,7 @@ sync_tfunc3_temporalseq_temporalseq_cross1(TemporalSeq **result,
 		return 0;
 
 	/* If the two sequences intersect at an instant */
-	if (timestamp_cmp_internal(inter->lower, inter->upper) == 0)
+	if (inter->lower == inter->upper)
 	{
 		Datum value1, value2;
 		temporalseq_value_at_timestamp(seq1, inter->lower, &value1);
@@ -2846,13 +2842,13 @@ sync_tfunc3_temporalseq_temporalseq_cross1(TemporalSeq **result,
 	TemporalInst *start1 = temporalseq_inst_n(seq1, 0);
 	TemporalInst *start2 = temporalseq_inst_n(seq2, 0);
 	int i = 1, j = 1, k = 0, l = 0;
-	if (timestamp_cmp_internal(start1->t, inter->lower) < 0)
+	if (start1->t < inter->lower)
 	{
 		start1 = temporalseq_at_timestamp(seq1, inter->lower);
 		tofree[l++] = start1;
 		i = temporalseq_find_timestamp(seq1, inter->lower) + 1;
 	}
-	else if (timestamp_cmp_internal(start2->t, inter->lower) < 0)
+	else if (start2->t < inter->lower)
 	{
 		start2 = temporalseq_at_timestamp(seq2, inter->lower);
 		tofree[l++] = start2;
@@ -2891,8 +2887,7 @@ sync_tfunc3_temporalseq_temporalseq_cross1(TemporalSeq **result,
 			end1 = temporalseq_at_timestamp1(start1, end1, end2->t, linear1);
 			tofree[l++] = end1;
 		}
-		bool upper_inc = (timestamp_cmp_internal(end1->t, inter->upper) == 0) ?
-			inter->upper_inc : false;
+		bool upper_inc = (end1->t == inter->upper) ? inter->upper_inc : false;
 		/* The remaining of the loop adds between one and three sequences */
 		Datum endvalue1 = temporalinst_value(end1);
 		Datum endvalue2 = temporalinst_value(end2);
@@ -3216,7 +3211,7 @@ sync_tfunc4_temporalseq_temporalseq_cross1(TemporalSeq **result,
 		return 0;
 
 	/* If the two sequences intersect at an instant */
-	if (timestamp_cmp_internal(inter->lower, inter->upper) == 0)
+	if (inter->lower == inter->upper)
 	{
 		Datum value1, value2;
 		temporalseq_value_at_timestamp(seq1, inter->lower, &value1);
@@ -3238,13 +3233,13 @@ sync_tfunc4_temporalseq_temporalseq_cross1(TemporalSeq **result,
 	TemporalInst *start1 = temporalseq_inst_n(seq1, 0);
 	TemporalInst *start2 = temporalseq_inst_n(seq2, 0);
 	int i = 1, j = 1, k = 0, l = 0;
-	if (timestamp_cmp_internal(start1->t, inter->lower) < 0)
+	if (start1->t < inter->lower)
 	{
 		start1 = temporalseq_at_timestamp(seq1, inter->lower);
 		tofree[l++] = start1;
 		i = temporalseq_find_timestamp(seq1, inter->lower) + 1;
 	}
-	else if (timestamp_cmp_internal(start2->t, inter->lower) < 0)
+	else if (start2->t < inter->lower)
 	{
 		start2 = temporalseq_at_timestamp(seq2, inter->lower);
 		tofree[l++] = start2;
@@ -3284,8 +3279,7 @@ sync_tfunc4_temporalseq_temporalseq_cross1(TemporalSeq **result,
 			end1 = temporalseq_at_timestamp1(start1, end1, end2->t, linear1);
 			tofree[l++] = end1;
 		}
-		bool upper_inc = (timestamp_cmp_internal(end1->t, inter->upper) == 0) ?
-			inter->upper_inc : false;
+		bool upper_inc = (end1->t == inter->upper) ? inter->upper_inc : false;
 		/* The remaining of the loop adds between one and three sequences */
 		Datum endvalue1 = temporalinst_value(end1);
 		Datum endvalue2 = temporalinst_value(end2);
