@@ -28,6 +28,73 @@
 #include "tnpoint_tempspatialrels.h"
 
 /*****************************************************************************
+ * Functions for spatial reference systems
+ *****************************************************************************/
+
+/* Get the spatial reference system identifier (SRID) of a temporal network point */
+
+int
+tnpointinst_srid(const TemporalInst *inst)
+{
+	npoint *np = DatumGetNpoint(temporalinst_value(inst));
+	Datum line = route_geom(np->rid);
+	GSERIALIZED *gs = (GSERIALIZED *)DatumGetPointer(line);
+	int result = gserialized_get_srid(gs);
+	pfree(DatumGetPointer(line));
+	return result;
+}
+
+int
+tnpointi_srid(const TemporalI *ti)
+{
+	TemporalInst *inst = temporali_inst_n(ti, 0);
+	return tnpointinst_srid(inst);
+}
+
+int
+tnpointseq_srid(const TemporalSeq *seq)
+{
+	TemporalInst *inst = temporalseq_inst_n(seq, 0);
+	return tnpointinst_srid(inst);
+}
+
+int
+tnpoints_srid(const TemporalS *ts)
+{
+	TemporalSeq *seq = temporals_seq_n(ts, 0);
+	TemporalInst *inst = temporalseq_inst_n(seq, 0);
+	return tnpointinst_srid(inst);
+}
+
+int
+tnpoint_srid_internal(const Temporal *temp)
+{
+	int result = 0;
+	ensure_valid_duration(temp->duration);
+	ensure_point_base_type(temp->valuetypid) ;
+	if (temp->duration == TEMPORALINST)
+		result = tnpointinst_srid((TemporalInst *)temp);
+	else if (temp->duration == TEMPORALI)
+		result = tnpointi_srid((TemporalI *)temp);
+	else if (temp->duration == TEMPORALSEQ)
+		result = tnpointseq_srid((TemporalSeq *)temp);
+	else if (temp->duration == TEMPORALS)
+		result = tnpoints_srid((TemporalS *)temp);
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(tnpoint_srid);
+
+PGDLLEXPORT Datum
+tnpoint_srid(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	int result = tnpoint_srid_internal(temp);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_INT32(result);
+}
+
+/*****************************************************************************
  * Trajectory functions
  *****************************************************************************/
 

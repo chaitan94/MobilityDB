@@ -46,6 +46,7 @@
 #include "postgis.h"
 #include "tpoint.h"
 #include "tpoint_spatialfuncs.h"
+#include "tnpoint_spatialfuncs.h"
 
 
 /*****************************************************************************
@@ -635,7 +636,13 @@ gserialized_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 		is_copy = VARATT_IS_EXTENDED(temp);
 
 		/* Get trajectory from temporal point */
-		geom = (GSERIALIZED *) DatumGetPointer(tpoint_values_internal(temp));
+		ensure_point_base_type(temp->valuetypid);
+		if (temp->valuetypid == type_oid(T_GEOMETRY) ||
+			temp->valuetypid == type_oid(T_GEOGRAPHY))
+			geom = (GSERIALIZED *) DatumGetPointer(tpoint_values_internal(temp));
+		else /* type_oid(T_NPOINT)) */
+			geom = (GSERIALIZED *) DatumGetPointer(tnpoint_geom(temp));
+
 
 		/* Read the bounds from the gserialized. */
 		if ( LW_FAILURE == gserialized_get_gbox_p(geom, &gbox) )
@@ -685,9 +692,11 @@ gserialized_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 		/* Increment our "good feature" count */
 		notnull_cnt++;
 
-		/* Free up memory if our sample geometry was copied */
+		/* Free up memory if our sample temporal was copied */
 		if ( is_copy )
-			pfree(geom);
+			pfree(temp);
+
+		pfree(geom);
 
 		/* Give backend a chance of interrupting us */
 		vacuum_delay_point();

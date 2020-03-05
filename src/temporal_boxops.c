@@ -205,6 +205,7 @@ temporalseq_make_bbox(void *box, TemporalInst **instants, int count,
 	else if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
 		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
 		tpointinstarr_to_stbox((STBOX *)box, instants, count);
+	 */
 	else if (instants[0]->valuetypid == type_oid(T_NPOINT))
 	{	
 		if (linear)
@@ -212,7 +213,6 @@ temporalseq_make_bbox(void *box, TemporalInst **instants, int count,
 		else
 			tnpointinstarr_stepw_to_stbox((STBOX *)box, instants, count);
 	}
-	 */
 }
 
 /* Transform an array of temporal sequence to a period */
