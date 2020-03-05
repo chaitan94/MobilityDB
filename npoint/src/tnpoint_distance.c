@@ -120,7 +120,7 @@ distance_tnpointseq_geo(TemporalSeq *seq, Datum geo)
 	allinstants[k++] = temporalinst_make(geom_distance2d(geo, endGeom), 
 		inst1->t, FLOAT8OID);
 
-	TemporalSeq *result = temporalseq_from_temporalinstarr(allinstants, k,
+	TemporalSeq *result = temporalseq_make(allinstants, k,
 		seq->period.lower_inc, seq->period.upper_inc, true, true);
 
 	for (int i = 0; i < k; i++)
@@ -141,7 +141,7 @@ distance_tnpoints_geo(TemporalS *ts, Datum geo)
 		TemporalSeq *seq = temporals_seq_n(ts, i);
 		sequences[i] = distance_tnpointseq_geo(seq, geo);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, 
+	TemporalS *result = temporals_make(sequences, ts->count, 
 		true, true);
 
 	for (int i = 0; i < ts->count; i++)
@@ -323,7 +323,7 @@ distance_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
 	allinstants[k++] = temporalinst_make(geom_distance2d(endGeom1, endGeom2), start1->t, FLOAT8OID);
 	pfree(DatumGetPointer(endGeom1)); pfree(DatumGetPointer(endGeom2));
 
-	TemporalSeq *result = temporalseq_from_temporalinstarr(allinstants, k, 
+	TemporalSeq *result = temporalseq_make(allinstants, k,
 		seq1->period.lower_inc, seq1->period.upper_inc, true, true);
 
 	for (int i = 0; i < k; i++)
@@ -344,7 +344,7 @@ distance_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
 		TemporalSeq *seq2 = temporals_seq_n(ts2, i);
 		sequences[i] = distance_tnpointseq_tnpointseq(seq1, seq2);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(sequences, ts1->count, 
+	TemporalS *result = temporals_make(sequences, ts1->count, 
 		true, true);
 
 	for (int i = 0; i < ts1->count; i++)

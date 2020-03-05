@@ -243,7 +243,7 @@ tspatialrel_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2,
 
 	pfree(DatumGetPointer(geom1));
 	pfree(DatumGetPointer(geom2));
-	FREE_DATUM(value, valuetypid);
+	DATUM_FREE(value, valuetypid);
 	return result;
 }
 
@@ -261,11 +261,11 @@ tspatialrel_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2,
 		Datum value = operator(geom1, geom2);
 		instants[i] = temporalinst_make(value, inst1->t, valuetypid);
 
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		pfree(DatumGetPointer(geom1));
 		pfree(DatumGetPointer(geom2));
 	}
-	TemporalI *result = temporali_from_temporalinstarr(instants, ti1->count);
+	TemporalI *result = temporali_make(instants, ti1->count);
 
 	for (int i = 0; i < ti1->count; i++)
 		pfree(instants[i]);
@@ -298,10 +298,10 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 		/* Compute the operator at the start instants */
 		instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(startvalue, end1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(instants, 2,
+		result[0] = temporalseq_make(instants, 2,
 			lower_inc, upper_inc, true, false);
 		pfree(instants[0]); pfree(instants[1]);
-		FREE_DATUM(startvalue, valuetypid);
+		DATUM_FREE(startvalue, valuetypid);
 		*count = 1;
 		return;
 	}
@@ -317,10 +317,10 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 		/* Compute the operator at the start instants */
 		instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(startvalue, end1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(instants, 2,
+		result[0] = temporalseq_make(instants, 2,
 			lower_inc, upper_inc, true, false);
 		pfree(instants[0]); pfree(instants[1]);
-		FREE_DATUM(startvalue, valuetypid);
+		DATUM_FREE(startvalue, valuetypid);
 		*count = 1;
 		return;
 	}
@@ -335,7 +335,7 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 	{
 		/* Compute the operator at the start instant */
 		instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(instants, 1, true, true, 
+		result[0] = temporalseq_make(instants, 1, true, true,
 			true, false);
 		pfree(instants[0]);
 
@@ -347,20 +347,20 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 		Datum intvalue = operator(intgeom1, intgeom2);
 		instants[0] = temporalinst_make(intvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(intvalue, end1->t, valuetypid);
-		result[1] = temporalseq_from_temporalinstarr(instants, 2, false, false, 
+		result[1] = temporalseq_make(instants, 2, false, false,
 			true, false);
 		pfree(instants[0]); pfree(instants[1]);
 
 		/* Compute the operator at the end instant */
 		instants[0] = temporalinst_make(endvalue, end1->t, valuetypid);
-		result[2] = temporalseq_from_temporalinstarr(instants, 1, true, true, 
+		result[2] = temporalseq_make(instants, 1, true, true,
 			true, false);
 		pfree(instants[0]);
 
 		pfree(intnp1); pfree(intnp2);
 		pfree(DatumGetPointer(intgeom1)); pfree(DatumGetPointer(intgeom2));
-		FREE_DATUM(startvalue, valuetypid); FREE_DATUM(intvalue, valuetypid); 
-		FREE_DATUM(endvalue, valuetypid);
+		DATUM_FREE(startvalue, valuetypid); DATUM_FREE(intvalue, valuetypid);
+		DATUM_FREE(endvalue, valuetypid);
 		*count = 3;
 		return;
 	}
@@ -371,18 +371,18 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 	{
 		/* Compute the operator at the start instants */
 		instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(instants, 1, true, true, 
+		result[0] = temporalseq_make(instants, 1, true, true,
 			true, false);
 		pfree(instants[0]);
 
 		/* Compute the operator at the end instants */
 		instants[0] = temporalinst_make(endvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(endvalue, end1->t, valuetypid);
-		result[1] = temporalseq_from_temporalinstarr(instants, 2, false, upper_inc, 
+		result[1] = temporalseq_make(instants, 2, false, upper_inc,
 			true, false);
 
 		pfree(instants[0]); pfree(instants[1]);
-		FREE_DATUM(startvalue, valuetypid); FREE_DATUM(endvalue, valuetypid);
+		DATUM_FREE(startvalue, valuetypid); DATUM_FREE(endvalue, valuetypid);
 		*count = 2;
 		return;
 	}
@@ -393,17 +393,17 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 		/* Compute the operator at the start instants */
 		instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(startvalue, end1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(instants, 2, lower_inc, false, 
+		result[0] = temporalseq_make(instants, 2, lower_inc, false,
 			true, false);
 		pfree(instants[0]); pfree(instants[1]);
 
 		/* Compute the operator at the end instants */
 		instants[0] = temporalinst_make(endvalue, end1->t, valuetypid);
-		result[1] = temporalseq_from_temporalinstarr(instants, 1, true, true, 
+		result[1] = temporalseq_make(instants, 1, true, true,
 			true, false);
 		pfree(instants[0]); 
 
-		FREE_DATUM(startvalue, valuetypid); FREE_DATUM(endvalue, valuetypid);
+		DATUM_FREE(startvalue, valuetypid); DATUM_FREE(endvalue, valuetypid);
 		*count = 2;
 		return;
 	}
@@ -413,7 +413,7 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 	/* Compute the operator at the start instants */
 	instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
 	instants[1] = temporalinst_make(startvalue, crosstime, valuetypid);
-	result[0] = temporalseq_from_temporalinstarr(instants, 2, lower_inc, false, 
+	result[0] = temporalseq_make(instants, 2, lower_inc, false,
 		true, false);
 	pfree(instants[0]); pfree(instants[1]);
 
@@ -422,21 +422,21 @@ tspatialrel_tnpointseq_tnpointseq1(TemporalSeq **result,
 	Datum crossgeom = npoint_as_geom_internal(DatumGetNpoint(crossnp));
 	Datum crossvalue = operator(crossgeom, crossgeom);
 	instants[0] = temporalinst_make(crossvalue, crosstime, valuetypid);
-	result[1] = temporalseq_from_temporalinstarr(instants, 1,
+	result[1] = temporalseq_make(instants, 1,
 		true, true, true, false);
 	pfree(instants[0]);
 
 	/* Compute the operator at the end instants */
 	instants[0] = temporalinst_make(endvalue, crosstime, valuetypid);
 	instants[1] = temporalinst_make(endvalue, end1->t, valuetypid);
-	result[2] = temporalseq_from_temporalinstarr(instants, 2, false, upper_inc, 
+	result[2] = temporalseq_make(instants, 2, false, upper_inc,
 		true, false);
 	pfree(instants[0]); pfree(instants[1]);
 
 	pfree(DatumGetPointer(crossnp));
 	pfree(DatumGetPointer(crossgeom));
-	FREE_DATUM(startvalue, valuetypid); FREE_DATUM(crossvalue, valuetypid); 
-	FREE_DATUM(endvalue, valuetypid);
+	DATUM_FREE(startvalue, valuetypid); DATUM_FREE(crossvalue, valuetypid);
+	DATUM_FREE(endvalue, valuetypid);
 	*count = 3;
 	return;
 }
@@ -455,11 +455,11 @@ tspatialrel_tnpointseq_tnpointseq2(TemporalSeq *seq1, TemporalSeq *seq2,
 
 		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
 		TemporalInst *inst = temporalinst_make(value, inst1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(&inst, 1, true, true, 
+		result[0] = temporalseq_make(&inst, 1, true, true,
 			true, false);
 
 		pfree(inst); pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		*count = 1;
 		return result;
 	}
@@ -497,7 +497,7 @@ tspatialrel_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	int count;
 	TemporalSeq **sequences = tspatialrel_tnpointseq_tnpointseq2(
 		seq1, seq2, operator, valuetypid, &count);
-	TemporalS *result = temporals_from_temporalseqarr(sequences, count, 
+	TemporalS *result = temporals_make(sequences, count, 
 		true, true);
 
 	for (int i = 0; i < count; i++)
@@ -532,8 +532,7 @@ tspatialrel_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2,
 		if (sequences[i] != NULL)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, k, 
-		true, true);
+	TemporalS *result = temporals_make(allsequences, k, true, true);
 
 	pfree(sequences); pfree(countseqs);
 	for (int i = 0; i < totalseqs; i++)
@@ -556,7 +555,7 @@ tspatialrel3_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2, D
 
 	pfree(DatumGetPointer(geom1));
 	pfree(DatumGetPointer(geom2));
-	FREE_DATUM(value, valuetypid);
+	DATUM_FREE(value, valuetypid);
 	return result;
 }
 
@@ -574,11 +573,11 @@ tspatialrel3_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2, Datum param,
 		Datum value = operator(geom1, geom2, param);
 		instants[i] = temporalinst_make(value, inst1->t, valuetypid);
 
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		pfree(DatumGetPointer(geom1));
 		pfree(DatumGetPointer(geom2));
 	}
-	TemporalI *result = temporali_from_temporalinstarr(instants, ti1->count);
+	TemporalI *result = temporali_make(instants, ti1->count);
 
 	for (int i = 0; i < ti1->count; i++)
 		pfree(instants[i]);
@@ -611,11 +610,11 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 		/* Compute the operator at the start instants */
 		instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(startvalue, end1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(instants, 2,
+		result[0] = temporalseq_make(instants, 2,
 			lower_inc, upper_inc, true, false);
 
 		pfree(instants[0]); pfree(instants[1]);
-		FREE_DATUM(startvalue, valuetypid);
+		DATUM_FREE(startvalue, valuetypid);
 		*count = 1;
 		return;
 	}
@@ -631,11 +630,11 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 		/* Compute the operator at the start instants */
 		instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(startvalue, end1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(instants, 2,
+		result[0] = temporalseq_make(instants, 2,
 			lower_inc, upper_inc, true, false);
 
 		pfree(instants[0]); pfree(instants[1]);
-		FREE_DATUM(startvalue, valuetypid);
+		DATUM_FREE(startvalue, valuetypid);
 		*count = 1;
 		return;
 	}
@@ -650,7 +649,7 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 	{
 		/* Compute the operator at the start instant */
 		instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(instants, 1, true, true, 
+		result[0] = temporalseq_make(instants, 1, true, true,
 			true, false);
 		pfree(instants[0]);
 
@@ -662,20 +661,20 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 		Datum intvalue = operator(intgeom1, intgeom2, param);
 		instants[0] = temporalinst_make(intvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(intvalue, end1->t, valuetypid);
-		result[1] = temporalseq_from_temporalinstarr(instants, 2, false, false, 
+		result[1] = temporalseq_make(instants, 2, false, false,
 			true, false);
 		pfree(instants[0]); pfree(instants[1]);
 
 		/* Compute the operator at the end instant */
 		instants[0] = temporalinst_make(endvalue, end1->t, valuetypid);
-		result[2] = temporalseq_from_temporalinstarr(instants, 1, true, true, 
+		result[2] = temporalseq_make(instants, 1, true, true,
 			true, false);
 		pfree(instants[0]); 
 
 		pfree(intnp1); pfree(intnp2);
 		pfree(DatumGetPointer(intgeom1)); pfree(DatumGetPointer(intgeom2));
-		FREE_DATUM(startvalue, valuetypid); FREE_DATUM(intvalue, valuetypid); 
-		FREE_DATUM(endvalue, valuetypid);
+		DATUM_FREE(startvalue, valuetypid); DATUM_FREE(intvalue, valuetypid);
+		DATUM_FREE(endvalue, valuetypid);
 		*count = 3;
 		return;
 	}
@@ -686,18 +685,18 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 	{
 		/* Compute the operator at the start instants */
 		instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(instants, 1, true, true, 
+		result[0] = temporalseq_make(instants, 1, true, true,
 			true, false);
 		pfree(instants[0]);
 
 		/* Compute the operator at the end instants */
 		instants[0] = temporalinst_make(endvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(endvalue, end1->t, valuetypid);
-		result[1] = temporalseq_from_temporalinstarr(instants, 2, false, upper_inc, 
+		result[1] = temporalseq_make(instants, 2, false, upper_inc,
 			true, false);
 
 		pfree(instants[0]); pfree(instants[1]);
-		FREE_DATUM(startvalue, valuetypid); FREE_DATUM(endvalue, valuetypid);
+		DATUM_FREE(startvalue, valuetypid); DATUM_FREE(endvalue, valuetypid);
 		*count = 2;
 		return;
 	}
@@ -708,17 +707,17 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 		/* Compute the operator at the start instants */
 		instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
 		instants[1] = temporalinst_make(startvalue, end1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(instants, 2, lower_inc, false, 
+		result[0] = temporalseq_make(instants, 2, lower_inc, false,
 			true, false);
 		pfree(instants[0]); pfree(instants[1]);
 
 		/* Compute the operator at the end instants */
 		instants[0] = temporalinst_make(endvalue, end1->t, valuetypid);
-		result[1] = temporalseq_from_temporalinstarr(instants, 1, true, true, 
+		result[1] = temporalseq_make(instants, 1, true, true,
 			true, false);
 		pfree(instants[0]);
 
-		FREE_DATUM(startvalue, valuetypid); FREE_DATUM(endvalue, valuetypid);
+		DATUM_FREE(startvalue, valuetypid); DATUM_FREE(endvalue, valuetypid);
 		*count = 2;
 		return;
 	}
@@ -727,7 +726,7 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 	/* Compute the operator at the start instants */
 	instants[0] = temporalinst_make(startvalue, start1->t, valuetypid);
 	instants[1] = temporalinst_make(startvalue, crosstime, valuetypid);
-	result[0] = temporalseq_from_temporalinstarr(instants, 2, lower_inc, false, 
+	result[0] = temporalseq_make(instants, 2, lower_inc, false,
 		true, false);
 	pfree(instants[0]); pfree(instants[1]);
 
@@ -736,21 +735,21 @@ tspatialrel3_tnpointseq_tnpointseq1(TemporalSeq **result,
 	Datum crossgeom = npoint_as_geom_internal(DatumGetNpoint(crossnp));
 	Datum crossvalue = operator(crossgeom, crossgeom, param);
 	instants[0] = temporalinst_make(crossvalue, crosstime, valuetypid);
-	result[1] = temporalseq_from_temporalinstarr(instants, 1,
+	result[1] = temporalseq_make(instants, 1,
 		true, true, true, false);
 	pfree(instants[0]);
 
 	/* Compute the operator at the end instants */
 	instants[0] = temporalinst_make(endvalue, crosstime, valuetypid);
 	instants[1] = temporalinst_make(endvalue, end1->t, valuetypid);
-	result[2] = temporalseq_from_temporalinstarr(instants, 2, false, upper_inc, 
+	result[2] = temporalseq_make(instants, 2, false, upper_inc,
 		true, false);
 	pfree(instants[0]); pfree(instants[1]);
 
 	pfree(DatumGetPointer(crossnp));
 	pfree(DatumGetPointer(crossgeom));
-	FREE_DATUM(startvalue, valuetypid); FREE_DATUM(crossvalue, valuetypid); 
-	FREE_DATUM(endvalue, valuetypid);
+	DATUM_FREE(startvalue, valuetypid); DATUM_FREE(crossvalue, valuetypid);
+	DATUM_FREE(endvalue, valuetypid);
 	*count = 3;
 	return;
 }
@@ -769,11 +768,11 @@ tspatialrel3_tnpointseq_tnpointseq2(TemporalSeq *seq1, TemporalSeq *seq2, Datum 
 
 		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
 		TemporalInst *inst = temporalinst_make(value, inst1->t, valuetypid);
-		result[0] = temporalseq_from_temporalinstarr(&inst, 1, true, true, 
+		result[0] = temporalseq_make(&inst, 1, true, true,
 			true, false);
 
 		pfree(inst); pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		*count = 1;
 		return result;
 	}
@@ -812,7 +811,7 @@ tspatialrel3_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2, Datum p
 	int count;
 	TemporalSeq **sequences = tspatialrel3_tnpointseq_tnpointseq2(
 		seq1, seq2, param, operator, valuetypid, &count);
-	TemporalS *result = temporals_from_temporalseqarr(sequences, count, 
+	TemporalS *result = temporals_make(sequences, count, 
 		true, true);
 
 	for (int i = 0; i < count; i++)
@@ -847,7 +846,7 @@ tspatialrel3_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, Datum param,
 		if (sequences[i] != NULL)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences, k, 
+	TemporalS *result = temporals_make(allsequences, k, 
 		true, true);
 
 	pfree(sequences); pfree(countseqs);
@@ -872,7 +871,7 @@ tspatialrel_tnpointinst_geo(TemporalInst *inst, Datum geo,
 	Datum value = invert ? operator(geo, geom) : operator(geom, geo);
 	TemporalInst *result = temporalinst_make(value, inst->t, valuetypid);
 	pfree(DatumGetPointer(geom));
-	FREE_DATUM(value, valuetypid);
+	DATUM_FREE(value, valuetypid);
 	return result;
 }
 
@@ -889,9 +888,9 @@ tspatialrel_tnpointi_geo(TemporalI *ti, Datum geo,
 		instants[i] = temporalinst_make(value, inst->t, valuetypid);
 
 		pfree(DatumGetPointer(geom));
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 	}
-	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
+	TemporalI *result = temporali_make(instants, ti->count);
 	for (int i = 0; i < ti->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -918,10 +917,10 @@ tspatialrel_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo,
 		instants[1] = temporalinst_make(value, inst2->t, valuetypid);
 
 		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
-		result[0] = temporalseq_from_temporalinstarr(instants, 2,
+		result[0] = temporalseq_make(instants, 2,
 			lower_inc, upper_inc, true, false);
 
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		pfree(DatumGetPointer(line)); pfree(DatumGetPointer(intersections));
 		pfree(DatumGetPointer(geom1));
 		pfree(instants[0]); pfree(instants[1]);
@@ -955,9 +954,9 @@ tspatialrel_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo,
 		instants[0] = temporalinst_make(value, inst1->t, valuetypid);
 		instants[1] = temporalinst_make(value, (interinstants[0])->t, 
 			valuetypid);
-		result[k++] = temporalseq_from_temporalinstarr(instants, 2,
+		result[k++] = temporalseq_make(instants, 2,
 			lower_inc, false, true, false);
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		pfree(DatumGetPointer(geom1));
 		pfree(instants[0]); pfree(instants[1]);
 	}
@@ -975,9 +974,9 @@ tspatialrel_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo,
 				operator(intgeom, geo);
 			instants[0] = temporalinst_make(value, (interinstants[i])->t,
 				valuetypid);
-			result[k++] = temporalseq_from_temporalinstarr(instants, 1,
+			result[k++] = temporalseq_make(instants, 1,
 				true, true, true, false);
-			FREE_DATUM(value, valuetypid);
+			DATUM_FREE(value, valuetypid);
 			pfree(DatumGetPointer(intgeom));
 			pfree(instants[0]);
 		}
@@ -998,10 +997,10 @@ tspatialrel_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo,
 				valuetypid);
 			instants[1] = temporalinst_make(intvalue, time2, 
 				valuetypid);
-			result[k++] = temporalseq_from_temporalinstarr(instants, 2,
+			result[k++] = temporalseq_make(instants, 2,
 				false, false, true, false);
 
-			FREE_DATUM(intvalue, valuetypid);
+			DATUM_FREE(intvalue, valuetypid);
 			pfree(DatumGetPointer(intgeom));
 			pfree(DatumGetPointer(intnp));
 			pfree(instants[0]); pfree(instants[1]);
@@ -1016,10 +1015,10 @@ tspatialrel_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo,
 		instants[0] = temporalinst_make(value, (interinstants[countinst - 1])->t,
 			valuetypid);
 		instants[1] = temporalinst_make(value, inst2->t, valuetypid);
-		result[k++] = temporalseq_from_temporalinstarr(instants, 2,
+		result[k++] = temporalseq_make(instants, 2,
 			false, upper_inc, true, false);
 
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		pfree(DatumGetPointer(geom2));
 		pfree(instants[0]); pfree(instants[1]);
 	}
@@ -1045,9 +1044,9 @@ tspatialrel_tnpointseq_geo2(TemporalSeq *seq, Datum geo,
 		TemporalInst *instant = temporalinst_make(value,
 			inst->t, valuetypid);
 		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
-		result[0] = temporalseq_from_temporalinstarr(&instant, 1,
+		result[0] = temporalseq_make(&instant, 1,
 			true, true, true, false);
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		pfree(DatumGetPointer(geom));
 		pfree(instant);
 		*count = 1;
@@ -1095,7 +1094,7 @@ tspatialrel_tnpointseq_geo(TemporalSeq *seq, Datum geo,
 	int count;
 	TemporalSeq **sequences = tspatialrel_tnpointseq_geo2(seq, geo,
 		 operator, valuetypid, &count, invert);
-	TemporalS *result = temporals_from_temporalseqarr(sequences, count, 
+	TemporalS *result = temporals_make(sequences, count, 
 		true, true);
 
 	for (int i = 0; i < count; i++)
@@ -1136,7 +1135,7 @@ tspatialrel_tnpoints_geo(TemporalS *ts, Datum geo,
 		if (sequences[i] != NULL)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences,
+	TemporalS *result = temporals_make(allsequences,
 			totalseqs, true, true);
 
 	for (int i = 0; i < totalseqs; i++)
@@ -1160,7 +1159,7 @@ tspatialrel3_tnpointinst_geo(TemporalInst *inst, Datum geo, Datum param,
 	TemporalInst *result = temporalinst_make(value, inst->t, 
 		valuetypid);
 	pfree(DatumGetPointer(geom));
-	FREE_DATUM(value, valuetypid);
+	DATUM_FREE(value, valuetypid);
 	return result;
 }
 
@@ -1178,9 +1177,9 @@ tspatialrel3_tnpointi_geo(TemporalI *ti, Datum geo, Datum param,
 		instants[i] = temporalinst_make(value, inst->t, 
 			valuetypid);
 		pfree(DatumGetPointer(geom));
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 	}
-	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
+	TemporalI *result = temporali_make(instants, ti->count);
 	for (int i = 0; i < ti->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -1207,10 +1206,10 @@ tspatialrel3_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo
 		instants[0] = temporalinst_make(value, inst1->t, valuetypid);
 		instants[1] = temporalinst_make(value, inst2->t, valuetypid);
 		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
-		result[0] = temporalseq_from_temporalinstarr(instants, 2,
+		result[0] = temporalseq_make(instants, 2,
 			lower_inc, upper_inc, true, false);
 
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		pfree(DatumGetPointer(line)); pfree(DatumGetPointer(intersections));
 		pfree(DatumGetPointer(geom1));
 		pfree(instants[0]); pfree(instants[1]);
@@ -1244,9 +1243,9 @@ tspatialrel3_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo
 			operator(geom1, geo, param);
 		instants[0] = temporalinst_make(value, inst1->t, valuetypid);
 		instants[1] = temporalinst_make(value, (interinstants[0])->t, valuetypid);
-		result[k++] = temporalseq_from_temporalinstarr(instants, 2,
+		result[k++] = temporalseq_make(instants, 2,
 			lower_inc, false, true, false);
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		pfree(DatumGetPointer(geom1));
 		pfree(instants[0]); pfree(instants[1]);
 	}
@@ -1264,9 +1263,9 @@ tspatialrel3_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo
 				operator(intgeom, geo, param);
 			instants[0] = temporalinst_make(value, (interinstants[i])->t,
 				valuetypid);
-			result[k++] = temporalseq_from_temporalinstarr(instants, 1,
+			result[k++] = temporalseq_make(instants, 1,
 				true, true, true, false);
-			FREE_DATUM(value, valuetypid);
+			DATUM_FREE(value, valuetypid);
 			pfree(DatumGetPointer(intgeom));
 			pfree(instants[0]);
 		}
@@ -1285,10 +1284,10 @@ tspatialrel3_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo
 				operator(intgeom, geo, param);
 			instants[0] = temporalinst_make(intvalue, time1, valuetypid);
 			instants[1] = temporalinst_make(intvalue, time2, valuetypid);
-			result[k++] = temporalseq_from_temporalinstarr(instants, 2,
+			result[k++] = temporalseq_make(instants, 2,
 				false, false, true, false);
 
-			FREE_DATUM(intvalue, valuetypid);
+			DATUM_FREE(intvalue, valuetypid);
 			pfree(DatumGetPointer(intgeom)); pfree(DatumGetPointer(intnp));
 			pfree(instants[0]); pfree(instants[1]);
 		}
@@ -1297,14 +1296,14 @@ tspatialrel3_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, Datum geo
 	if (after)
 	{
 		Datum geom2 = npoint_as_geom_internal(np2);
-		Datum value = invert ? operator(geom2, geo, param) :
+		Datum value = invert ? operator(geo, geom2, param) :
 			operator(geom2, geo, param);
 		instants[0] = temporalinst_make(value, (interinstants[countinst - 1])->t,
 			valuetypid);
 		instants[1] = temporalinst_make(value, inst2->t, valuetypid);
-		result[k++] = temporalseq_from_temporalinstarr(instants, 2,
+		result[k++] = temporalseq_make(instants, 2,
 			false, upper_inc, true, false);
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		pfree(DatumGetPointer(geom2));
 		pfree(instants[0]); pfree(instants[1]);
 	}
@@ -1331,9 +1330,9 @@ tspatialrel3_tnpointseq_geo2(TemporalSeq *seq, Datum geo, Datum param,
 		TemporalInst *instant = temporalinst_make(value,
 			inst->t, valuetypid);
 		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
-		result[0] = temporalseq_from_temporalinstarr(&instant, 1,
+		result[0] = temporalseq_make(&instant, 1,
 			true, true, true, false);
-		FREE_DATUM(value, valuetypid);
+		DATUM_FREE(value, valuetypid);
 		pfree(DatumGetPointer(geom));
 		pfree(instant);
 		*count = 1;
@@ -1381,7 +1380,7 @@ tspatialrel3_tnpointseq_geo(TemporalSeq *seq, Datum geo, Datum param,
 	int count;
 	TemporalSeq **sequences = tspatialrel3_tnpointseq_geo2(seq, geo, param,
 		operator, valuetypid, &count, invert);
-	TemporalS *result = temporals_from_temporalseqarr(sequences, count, 
+	TemporalS *result = temporals_make(sequences, count, 
 		true, true);
 
 	for (int i = 0; i < count; i++)
@@ -1422,7 +1421,7 @@ tspatialrel3_tnpoints_geo(TemporalS *ts, Datum geo, Datum param,
 		if (sequences[i] != NULL)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(allsequences,
+	TemporalS *result = temporals_make(allsequences,
 		totalseqs, true, true);
 
 	for (int i = 0; i < totalseqs; i++)
@@ -1441,8 +1440,8 @@ tdwithin_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	Datum dist)
 {
 	TemporalSeq *distSeq = distance_tnpointseq_tnpointseq(seq1, seq2);
-	TemporalS *result = tfunc4_temporalseq_base_cross(distSeq, dist, 
-		&datum2_le2, FLOAT8OID, BOOLOID, true);
+	TemporalS *result = tfunc4_temporalseq_base_cross(distSeq, dist, FLOAT8OID,
+		&datum2_le2, BOOLOID, true);
 	pfree(distSeq);
 	return result;
 }
@@ -1453,8 +1452,8 @@ tdwithin_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, Datum dist)
 	TemporalS *distS = distance_tnpoints_tnpoints(ts1, ts2);
 	if (distS == NULL)
 		return NULL;
-	TemporalS *result = tfunc4_temporals_base_cross(distS, dist, 
-		&datum2_le2, FLOAT8OID, BOOLOID, true);
+	TemporalS *result = tfunc4_temporals_base_cross(distS, dist, FLOAT8OID,
+		&datum2_le2, BOOLOID, true);
 	pfree(distS);
 	return result;
 }

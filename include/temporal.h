@@ -18,6 +18,8 @@
 #include <utils/rangetypes.h>
 
 #include "timetypes.h"
+#include "tbox.h"
+#include "stbox.h"
 
 #ifndef USE_FLOAT4_BYVAL
 #error Postgres needs to be configured with USE_FLOAT4_BYVAL
@@ -102,33 +104,6 @@ struct temporal_duration_struct
  * Struct definitions
  *****************************************************************************/
 
-/* TBOX */
-
-typedef struct 
-{
-	double		xmin;			/* minimum numeric value */
-	double		xmax;			/* maximum numeric value */
-	TimestampTz	tmin;			/* minimum timestamp */
-	TimestampTz	tmax;			/* maximum timestamp */
-	int16		flags;			/* flags */
-} TBOX;
-
-/* STBOX */
-
-typedef struct 
-{
-	double		xmin;			/* minimum x value */
-	double		xmax;			/* maximum x value */
-	double		ymin;			/* minimum y value */
-	double		ymax;			/* maximum y value */
-	double		zmin;			/* minimum z value */
-	double		zmax;			/* maximum z value */
-	TimestampTz	tmin;			/* minimum timestamp */
-	TimestampTz	tmax;			/* maximum timestamp */
-	int32		srid;			/* SRID */
-	int16		flags;			/* flags */
-} STBOX;
-
 /* Temporal */
  
 typedef struct 
@@ -192,7 +167,7 @@ typedef struct
 
 /* bboxunion - Union type for all types of bounding boxes */
 
-union bboxunion 
+union bboxunion
 {
 	Period p;
 	TBOX b;
@@ -232,13 +207,6 @@ typedef int (*qsort_comparator) (const void *a, const void *b);
  * fmgr macros temporal types
  *****************************************************************************/
 
-/* TBOX */
-
-#define DatumGetTboxP(X)	((TBOX *) DatumGetPointer(X))
-#define TboxPGetDatum(X)	PointerGetDatum(X)
-#define PG_GETARG_TBOX_P(n) DatumGetTboxP(PG_GETARG_DATUM(n))
-#define PG_RETURN_TBOX_P(x) return TboxPGetDatum(x)
-
 /* doubleN */
 
 #define DatumGetDouble2P(X)		((double2 *) DatumGetPointer(X))
@@ -262,7 +230,7 @@ typedef int (*qsort_comparator) (const void *a, const void *b);
 	PointerGetDatum(PG_GETARG_VARLENA_P(i)) : PG_GETARG_DATUM(i))
 
 #define DATUM_FREE(value, valuetypid) \
-	do { \overlaps
+	do { \
 		if (! get_typbyval_fast(valuetypid)) \
 			pfree(DatumGetPointer(value)); \
 	} while (0)
@@ -312,6 +280,8 @@ extern Oid range_oid_from_base(Oid valuetypid);
 extern Oid temporal_oid_from_base(Oid valuetypid);
 extern Oid base_oid_from_temporal(Oid temptypid);
 extern bool temporal_type_oid(Oid temptypid);
+extern bool tnumber_type_oid(Oid temptypid);
+extern bool tpoint_type_oid(Oid temptypid);
 
 /* Trajectory functions */
 

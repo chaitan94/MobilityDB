@@ -12,27 +12,11 @@
 
 CREATE FUNCTION gist_tnpoint_consistent(internal, tnpoint, smallint, oid, internal)
 	RETURNS bool
-	AS 'MODULE_PATHNAME', 'gist_tpoint_consistent'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION gist_tnpoint_union(internal, internal)
-	RETURNS stbox
-	AS 'MODULE_PATHNAME', 'gist_tpoint_union'
+	AS 'MODULE_PATHNAME', 'gist_stbox_consistent'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION gist_tnpoint_compress(internal)
 	RETURNS internal
 	AS 'MODULE_PATHNAME', 'gist_tnpoint_compress'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION gist_tnpoint_penalty(internal, internal, internal)
-	RETURNS internal
-	AS 'MODULE_PATHNAME', 'gist_tpoint_penalty'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION gist_tnpoint_picksplit(internal, internal)
-	RETURNS internal
-	AS 'MODULE_PATHNAME', 'gist_tpoint_picksplit'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION gist_tnpoint_same(stbox, stbox, internal)
-	RETURNS internal
-	AS 'MODULE_PATHNAME', 'gist_tpoint_same'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR CLASS gist_tnpoint_ops
@@ -117,11 +101,11 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	OPERATOR	31		#&> (tnpoint, tnpoint),
 	-- functions
 	FUNCTION	1	gist_tnpoint_consistent(internal, tnpoint, smallint, oid, internal),
-	FUNCTION	2	gist_tnpoint_union(internal, internal),
+	FUNCTION	2	gist_stbox_union(internal, internal),
 	FUNCTION	3	gist_tnpoint_compress(internal),
-	FUNCTION	5	gist_tnpoint_penalty(internal, internal, internal),
-	FUNCTION	6	gist_tnpoint_picksplit(internal, internal),
-	FUNCTION	7	gist_tnpoint_same(stbox, stbox, internal);
+	FUNCTION	5	gist_stbox_penalty(internal, internal, internal),
+	FUNCTION	6	gist_stbox_picksplit(internal, internal),
+	FUNCTION	7	gist_stbox_same(stbox, stbox, internal);
 --	FUNCTION	8	gist_tnpoint_distance(internal, tnpoint, smallint, oid, internal),
 	
 /******************************************************************************/
@@ -206,11 +190,11 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	OPERATOR	31		#&> (tnpoint, stbox),
 	OPERATOR	31		#&> (tnpoint, tnpoint),
 	-- functions
-	FUNCTION	1	spgist_tpoint_config(internal, internal),
-	FUNCTION	2	spgist_tpoint_choose(internal, internal),
-	FUNCTION	3	spgist_tpoint_picksplit(internal, internal),
-	FUNCTION	4	spgist_tpoint_inner_consistent(internal, internal),
-	FUNCTION	5	spgist_tpoint_leaf_consistent(internal, internal),
+	FUNCTION	1	spgist_stbox_config(internal, internal),
+	FUNCTION	2	spgist_stbox_choose(internal, internal),
+	FUNCTION	3	spgist_stbox_picksplit(internal, internal),
+	FUNCTION	4	spgist_stbox_inner_consistent(internal, internal),
+	FUNCTION	5	spgist_stbox_leaf_consistent(internal, internal),
 	FUNCTION	6	spgist_tnpoint_compress(internal);
 
 /******************************************************************************/

@@ -36,150 +36,12 @@
 #include "rangetypes_ext.h"
 #include "tbox.h"
 
-#ifdef WITH_POSTGIS
 #include "stbox.h"
 #include "tpoint.h"
 #include "tpoint_boxops.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
 #include "tnpoint_boxops.h"
-#endif
-
-/*****************************************************************************
- * TBOX functions
- *****************************************************************************/
-
-/* contains? */
-
-bool
-contains_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
-{
-	/* The boxes should have at least one common dimension X or T  */
-	assert((MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags)) ||
-		(MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags)));
-	if (MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags)) 
-		if (box2->xmin < box1->xmin || box2->xmax > box1->xmax)
-			return false;
-	if (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags)) 
-		if (box2->tmin < box1->tmin || box2->tmax > box1->tmax)
-			return false;
-	return true;
-}
-
-PG_FUNCTION_INFO_V1(contains_tbox_tbox);
-
-PGDLLEXPORT Datum
-contains_tbox_tbox(PG_FUNCTION_ARGS)
-{
-	TBOX *box1 = PG_GETARG_TBOX_P(0);
-	TBOX *box2 = PG_GETARG_TBOX_P(1);
-	PG_RETURN_BOOL(contains_tbox_tbox_internal(box1, box2));
-}
-
-/* contained? */
-
-bool
-contained_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
-{
-	return contains_tbox_tbox_internal(box2, box1);
-}
-
-PG_FUNCTION_INFO_V1(contained_tbox_tbox);
-
-PGDLLEXPORT Datum
-contained_tbox_tbox(PG_FUNCTION_ARGS)
-{
-	TBOX *box1 = PG_GETARG_TBOX_P(0);
-	TBOX *box2 = PG_GETARG_TBOX_P(1);
-	PG_RETURN_BOOL(contained_tbox_tbox_internal(box1, box2));
-}
-
-/* overlaps? */
-
-bool
-overlaps_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
-{
-	/* The boxes should have at least one common dimension X or T  */
-	assert((MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags)) ||
-		(MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags)));
-	if (MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags)) 
-		if (box1->xmax < box2->xmin || box1->xmin > box2->xmax)
-			return false;
-	if (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags)) 
-		if (box1->tmax < box2->tmin || box1->tmin > box2->tmax)
-			return false;
-	return true;
-}
-
-PG_FUNCTION_INFO_V1(overlaps_tbox_tbox);
-
-PGDLLEXPORT Datum
-overlaps_tbox_tbox(PG_FUNCTION_ARGS)
-{
-	TBOX *box1 = PG_GETARG_TBOX_P(0);
-	TBOX *box2 = PG_GETARG_TBOX_P(1);
-	PG_RETURN_BOOL(overlaps_tbox_tbox_internal(box1, box2));
-}
-
-/* same? */
-
-bool
-same_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
-{
-	/* The boxes should have at least one common dimension X or T  */
-	assert((MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags)) ||
-		(MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags)));
-	if (MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags)) 
-		if (box1->xmin != box2->xmin || box1->xmax != box2->xmax)
-			return false;
-	if (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags)) 
-		if (box1->tmin != box2->tmin || box1->tmax != box2->tmax)
-			return false;
-	return true;
-}
-
-PG_FUNCTION_INFO_V1(same_tbox_tbox);
-
-PGDLLEXPORT Datum
-same_tbox_tbox(PG_FUNCTION_ARGS)
-{
-	TBOX *box1 = PG_GETARG_TBOX_P(0);
-	TBOX *box2 = PG_GETARG_TBOX_P(1);
-	PG_RETURN_BOOL(same_tbox_tbox_internal(box1, box2));
-}
-
-/* adjacent? */
-
-bool
-adjacent_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
-{
-	/* The boxes should have at least one common dimension X or T  */
-	assert((MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags)) ||
-		   (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags)));
-	TBOX *inter = tbox_intersection_internal(box1, box2);
-	if (inter == NULL)
-		return false;
-	/* Boxes are adjacent if they share n dimensions and their intersection is
-	 * at most of n-1 dimensions */
-	bool hasx = MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags);
-	bool hast = MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags);
-	if (!hasx && hast)
-		return inter->tmin == inter->tmax;
-	else if (hasx && !hast)
-		return inter->xmin == inter->xmax;
-	else
-		return inter->xmin == inter->xmax || inter->tmin == inter->tmax;
-}
-
-PG_FUNCTION_INFO_V1(adjacent_tbox_tbox);
-
-PGDLLEXPORT Datum
-adjacent_tbox_tbox(PG_FUNCTION_ARGS)
-{
-	TBOX *box1 = PG_GETARG_TBOX_P(0);
-	TBOX *box2 = PG_GETARG_TBOX_P(1);
-	PG_RETURN_BOOL(adjacent_tbox_tbox_internal(box1, box2));
-}
 
 /* Size of bounding box */
 
@@ -190,12 +52,10 @@ temporal_bbox_size(Oid valuetypid)
 		return sizeof(Period);
 	if (valuetypid == INT4OID || valuetypid == FLOAT8OID)
 		return sizeof(TBOX);
-#ifdef WITH_POSTGIS
-	if (valuetypid == type_oid(T_GEOGRAPHY) || 
+	if (valuetypid == type_oid(T_GEOGRAPHY) ||
 		valuetypid == type_oid(T_GEOMETRY) || 
 		valuetypid == type_oid(T_NPOINT)) 
 		return sizeof(STBOX);
-#endif
 	/* Types without bounding box, for example, tdoubleN */
 	return 0;
 }
@@ -214,12 +74,10 @@ temporal_bbox_eq(Oid valuetypid, void *box1, void *box2)
 		result = period_eq_internal((Period *)box1, (Period *)box2);
 	else if (valuetypid == INT4OID || valuetypid == FLOAT8OID)
 		result = tbox_eq_internal((TBOX *)box1, (TBOX *)box2);
-#ifdef WITH_POSTGIS
-	else if (valuetypid == type_oid(T_GEOGRAPHY) || 
+	else if (valuetypid == type_oid(T_GEOGRAPHY) ||
 		valuetypid == type_oid(T_GEOMETRY) || 
 		valuetypid == type_oid(T_NPOINT))
 		result = stbox_cmp_internal((STBOX *)box1, (STBOX *)box2) == 0;
-#endif
 	/* Types without bounding box, for example, doubleN */
 	return result;
 } 
@@ -234,12 +92,10 @@ temporal_bbox_cmp(Oid valuetypid, void *box1, void *box2)
 		result = period_cmp_internal((Period *)box1, (Period *)box2);
 	else if (valuetypid == INT4OID || valuetypid == FLOAT8OID)
 		result = tbox_cmp_internal((TBOX *)box1, (TBOX *)box2);
-#ifdef WITH_POSTGIS
-	else if (valuetypid == type_oid(T_GEOGRAPHY) || 
+	else if (valuetypid == type_oid(T_GEOGRAPHY) ||
 		valuetypid == type_oid(T_GEOMETRY) || 
 		valuetypid == type_oid(T_NPOINT))
 		result = stbox_cmp_internal((STBOX *)box1, (STBOX *)box2);
-#endif
 	/* Types without bounding box, for example, doubleN */
 	return result;
 } 
@@ -253,28 +109,26 @@ temporal_bbox_cmp(Oid valuetypid, void *box1, void *box2)
 /* Make the bounding box a temporal instant from its values */
 
 void
-temporalinst_make_bbox(void *box, Datum value, TimestampTz t, Oid valuetypid) 
+temporalinst_make_bbox(void *box, TemporalInst *inst)
 {
 	/* Only external types have bounding box */
-	ensure_temporal_base_type(valuetypid);
-	if (valuetypid == BOOLOID || valuetypid == TEXTOID)
-		period_set((Period *)box, t, t, true, true);
-	else if (valuetypid == INT4OID || valuetypid == FLOAT8OID) 
+	ensure_temporal_base_type(inst->valuetypid);
+	if (inst->valuetypid == BOOLOID || inst->valuetypid == TEXTOID)
+		period_set((Period *)box, inst->t, inst->t, true, true);
+	else if (inst->valuetypid == INT4OID || inst->valuetypid == FLOAT8OID)
 	{
-		double dvalue = datum_double(value, valuetypid);
+		double dvalue = datum_double(temporalinst_value(inst), inst->valuetypid);
 		TBOX *result = (TBOX *)box;
 		result->xmin = result->xmax = dvalue;
-		result->tmin = result->tmax = t;
+		result->tmin = result->tmax = inst->t;
 		MOBDB_FLAGS_SET_X(result->flags, true);
 		MOBDB_FLAGS_SET_T(result->flags, true);
 	}
-#ifdef WITH_POSTGIS
-	else if (valuetypid == type_oid(T_GEOGRAPHY) || 
-		valuetypid == type_oid(T_GEOMETRY)) 
-		tpointinst_make_stbox((STBOX *)box, value, t);
-	else if (valuetypid == type_oid(T_NPOINT)) 
-		tnpointinst_make_stbox((STBOX *)box, value, t);
-#endif
+	else if (inst->valuetypid == type_oid(T_GEOGRAPHY) ||
+		inst->valuetypid == type_oid(T_GEOMETRY))
+		tpointinst_make_stbox((STBOX *)box, inst);
+	else if (inst->valuetypid == type_oid(T_NPOINT))
+		tnpointinst_make_stbox((STBOX *)box, inst);
 }
 
 /* Transform an array of temporal instant to a period */
@@ -302,15 +156,12 @@ tbox_expand(TBOX *box1, const TBOX *box2)
 static void
 tnumberinstarr_to_tbox(TBOX *box, TemporalInst **instants, int count) 
 {
-	Oid valuetypid = instants[0]->valuetypid;
-	Datum value = temporalinst_value(instants[0]);
-	temporalinst_make_bbox(box, value, instants[0]->t, valuetypid);
+	temporalinst_make_bbox(box, instants[0]);
 	for (int i = 1; i < count; i++)
 	{
 		TBOX box1;
 		memset(&box1, 0, sizeof(TBOX));
-		value = temporalinst_value(instants[i]);
-		temporalinst_make_bbox(&box1, value, instants[i]->t, valuetypid);
+		temporalinst_make_bbox(&box1, instants[i]);
 		tbox_expand(box, &box1);
 	}
 }
@@ -327,13 +178,11 @@ temporali_make_bbox(void *box, TemporalInst **instants, int count)
 	else if (instants[0]->valuetypid == INT4OID || 
 		instants[0]->valuetypid == FLOAT8OID)
 		tnumberinstarr_to_tbox((TBOX *)box, instants, count);
-#ifdef WITH_POSTGIS
-	else if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
+	else if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) ||
 		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
 		tpointinstarr_to_stbox((STBOX *)box, instants, count);
-	else if (instants[0]->valuetypid == type_oid(T_NPOINT)) 
+	else if (instants[0]->valuetypid == type_oid(T_NPOINT))
 		tnpointinstarr_stepw_to_stbox((STBOX *)box, instants, count);
-#endif
 }
 
 /* Make the bounding box a temporal sequence from its values */
@@ -350,21 +199,20 @@ temporalseq_make_bbox(void *box, TemporalInst **instants, int count,
 			lower_inc, upper_inc);
 	else if (valuetypid == INT4OID || valuetypid == FLOAT8OID) 
 		tnumberinstarr_to_tbox((TBOX *)box, instants, count);
-#ifdef WITH_POSTGIS
 	/* This code is currently not used since for temporal points the bounding
 	 * box is computed from the trajectory for efficiency reasons. It is left
-	 * here in case this is no longer the case */
+	 * here in case this is no longer the case
 	else if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
 		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
 		tpointinstarr_to_stbox((STBOX *)box, instants, count);
-	else if (instants[0]->valuetypid == type_oid(T_NPOINT)) 
+	else if (instants[0]->valuetypid == type_oid(T_NPOINT))
 	{	
 		if (linear)
 			tnpointinstarr_linear_to_stbox((STBOX *)box, instants, count);
 		else
 			tnpointinstarr_stepw_to_stbox((STBOX *)box, instants, count);
 	}
-#endif
+	 */
 }
 
 /* Transform an array of temporal sequence to a period */
@@ -401,13 +249,11 @@ temporals_make_bbox(void *box, TemporalSeq **sequences, int count)
 		temporalseqarr_to_period_internal((Period *)box, sequences, count);
 	else if (valuetypid == INT4OID || valuetypid == FLOAT8OID) 
 		tnumberseqarr_to_tbox_internal((TBOX *)box, sequences, count);
-#ifdef WITH_POSTGIS
-	else if (sequences[0]->valuetypid == type_oid(T_GEOMETRY) || 
+	else if (sequences[0]->valuetypid == type_oid(T_GEOMETRY) ||
 		sequences[0]->valuetypid == type_oid(T_GEOGRAPHY)) 
 		tpointseqarr_to_stbox((STBOX *)box, sequences, count);
-	else if (sequences[0]->valuetypid == type_oid(T_NPOINT)) 
+	else if (sequences[0]->valuetypid == type_oid(T_NPOINT))
 		tnpointseqarr_to_stbox((STBOX *)box, sequences, count);
-#endif
 }
 
 /*****************************************************************************
@@ -440,7 +286,6 @@ shift_bbox(void *box, Oid valuetypid, Interval *interval)
 			TimestampTzGetDatum(tbox->tmax), PointerGetDatum(interval)));
 		return;
 	}
-#ifdef WITH_POSTGIS
 	else if (valuetypid == type_oid(T_GEOGRAPHY) ||
 		valuetypid == type_oid(T_GEOMETRY))
 	{
@@ -453,7 +298,6 @@ shift_bbox(void *box, Oid valuetypid, Interval *interval)
 			TimestampTzGetDatum(stbox->tmax), PointerGetDatum(interval)));
 		return;
 	}
-#endif
 }
 
 /*****************************************************************************
@@ -489,7 +333,7 @@ tnumber_expand_tbox(TBOX *box, Temporal *temp, TemporalInst *inst)
 	temporal_bbox(box, temp);
 	TBOX box1;
 	memset(&box1, 0, sizeof(TBOX));
-	temporalinst_bbox(&box1, inst);
+	temporalinst_make_bbox(&box1, inst);
 	tbox_expand(box, &box1);
 }
 
@@ -508,14 +352,12 @@ temporali_expand_bbox(void *box, TemporalI *ti, TemporalInst *inst)
 		tnumber_expand_tbox((TBOX *)box, (Temporal *)ti, inst);
 		result = true;
 	}
-#ifdef WITH_POSTGIS
-	else if (ti->valuetypid == type_oid(T_GEOGRAPHY) || 
+	else if (ti->valuetypid == type_oid(T_GEOGRAPHY) ||
 		ti->valuetypid == type_oid(T_GEOMETRY)) 
 	{
 		tpoint_expand_stbox((STBOX *)box, (Temporal *)ti, inst);
 		result = true;
 	}
-#endif
 	return result;
 }
 
@@ -534,14 +376,12 @@ temporalseq_expand_bbox(void *box, TemporalSeq *seq, TemporalInst *inst)
 		tnumber_expand_tbox((TBOX *)box, (Temporal *)seq, inst);
 		result = true;
 	}
-#ifdef WITH_POSTGIS
-	if (seq->valuetypid == type_oid(T_GEOGRAPHY) || 
+	if (seq->valuetypid == type_oid(T_GEOGRAPHY) ||
 		seq->valuetypid == type_oid(T_GEOMETRY)) 
 	{
 		tpoint_expand_stbox((STBOX *)box, (Temporal *)seq, inst);
 		result = true;
 	}
-#endif
 	return result;
 }
 
@@ -560,14 +400,12 @@ temporals_expand_bbox(void *box, TemporalS *ts, TemporalInst *inst)
 		tnumber_expand_tbox((TBOX *)box, (Temporal *)ts, inst);
 		result = true;
 	}
-#ifdef WITH_POSTGIS
-	if (ts->valuetypid == type_oid(T_GEOGRAPHY) || 
+	if (ts->valuetypid == type_oid(T_GEOGRAPHY) ||
 		ts->valuetypid == type_oid(T_GEOMETRY)) 
 	{
 		tpoint_expand_stbox((STBOX *)box, (Temporal *)ts, inst);
 		result = true;
 	}
-#endif
 	return result;
 }
 

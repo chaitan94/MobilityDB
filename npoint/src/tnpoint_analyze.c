@@ -28,58 +28,26 @@ static void
 tnpoint_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 	int sample_rows, double total_rows)
 {
-	int d, i;						/* Counters */
 	int notnull_cnt = 0;			/* # not null rows in the sample */
 	int null_cnt = 0;				/* # null rows in the sample */
-	int	slot_idx = 0;				/* slot for storing the statistics */
+	int slot_idx = 2;				/* Starting slot for storing temporal statistics */
 	double total_width = 0;			/* # of bytes used by sample */
-	ND_BOX sum;						/* Sum of extents of sample boxes */
-	const ND_BOX **sample_boxes;	/* ND_BOXes for each of the sample features */
-	ND_BOX sample_extent;			/* Extent of the raw sample */
-	int   ndims = 2;				/* Dimensionality of the sample */
-	float8 *time_lengths;
-	PeriodBound *time_lowers,
-		   *time_uppers;
 
-	/* Initialize sum */
-	nd_box_init(&sum);
+	PeriodBound *time_lowers = (PeriodBound *) palloc(sizeof(PeriodBound) * sample_rows);
+	PeriodBound *time_uppers = (PeriodBound *) palloc(sizeof(PeriodBound) * sample_rows);
+	float8 *time_lengths = (float8 *) palloc(sizeof(float8) * sample_rows);
 
 	/*
-	 * This is where gserialized_analyze_nd
-	 * should put its' custom parameters.
+	 * First scan for obtaining the number of nulls and not nulls, the total
+	 * width and the temporal extents
 	 */
-	/* void *mystats = stats->extra_data; */
-
-	/*
-	 * We might need less space, but don't think
-	 * its worth saving...
-	 */
-	sample_boxes = palloc(sizeof(ND_BOX *) * sample_rows);
-
-	time_lowers = (PeriodBound *) palloc(sizeof(PeriodBound) * sample_rows);
-	time_uppers = (PeriodBound *) palloc(sizeof(PeriodBound) * sample_rows);
-	time_lengths = (float8 *) palloc(sizeof(float8) * sample_rows);
-
-	/*
-	 * First scan:
-	 *  o read boxes
-	 *  o find dimensionality of the sample
-	 *  o find extent of the sample
-	 *  o count null-infinite/not-null values
-	 *  o compute total_width
-	 *  o compute total features's box area (for avgFeatureArea)
-	 *  o sum features box coordinates (for standard deviation)
-	 */
-	for (i = 0; i < sample_rows; i++)
+	for (int i = 0; i < sample_rows; i++)
 	{
 		Datum value;
 		Temporal *temp;
-		GSERIALIZED *traj;
 		Period period;
 		PeriodBound period_lower,
 				period_upper;
-		GBOX gbox;
-		ND_BOX *nd_box;
 		bool is_null;
 		bool is_copy;
 
@@ -101,8 +69,7 @@ tnpoint_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 		/* How many bytes does this sample use? */
 		total_width += VARSIZE(temp);
 
-		/* Get trajectory and period from temporal point */
-		traj = (GSERIALIZED *) DatumGetPointer(tnpoint_geom(temp));
+		/* Get period from temporal point */
 		temporal_period(&period, temp);
 
 		/* Remember time bounds and length for further usage in histograms */
@@ -112,57 +79,12 @@ tnpoint_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 		time_lengths[notnull_cnt] = period_to_secs(period_upper.val, 
 			period_lower.val);
 
-		/* Read the bounds from the trajectory. */
-		if (LW_FAILURE == gserialized_get_gbox_p(traj, &gbox))
-		{
-			/* Skip empties too. */
-			continue;
-		}
-
-		/* Check bounds for validity (finite and not NaN) */
-		if (! gbox_is_valid(&gbox))
-		{
-			continue;
-		}
-
-		/* If we're in 2D/3D mode, zero out the higher dimensions for "safety" 
-		 * If we're in 3D mode set ndims to 3 */
-		if (! MOBDB_FLAGS_GET_Z(temp->flags))
-			gbox.zmin = gbox.zmax = gbox.mmin = gbox.mmax = 0.0;
-		else
-		{
-			gbox.mmin = gbox.mmax = 0.0;
-			ndims = 3;
-		}
-
-		/* Convert gbox to n-d box */
-		nd_box = palloc0(sizeof(ND_BOX));
-		nd_box_from_gbox(&gbox, nd_box);
-
-		/* Cache n-d bounding box */
-		sample_boxes[notnull_cnt] = nd_box;
-
-		/* Initialize sample extent before merging first entry */
-		if (! notnull_cnt)
-			nd_box_init_bounds(&sample_extent, ndims);
-
-		/* Add current sample to overall sample extent */
-		nd_box_merge(nd_box, &sample_extent, ndims);
-
-		/* Add bounds coordinates to sums for stddev calculation */
-		for (d = 0; d < ndims; d++)
-		{
-			sum.min[d] += nd_box->min[d];
-			sum.max[d] += nd_box->max[d];
-		}
-
 		/* Increment our "good feature" count */
 		notnull_cnt++;
 
 		/* Free up memory if our sample temporal point was copied */
 		if (is_copy)
 			pfree(temp);
-		pfree(traj);
 
 		/* Give backend a chance of interrupting us */
 		vacuum_delay_point();
@@ -181,11 +103,9 @@ tnpoint_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 
 		/* Compute statistics for spatial dimension */
 		/* 2D Mode */
-		gserialized_compute_stats(stats, sample_rows, total_rows, notnull_cnt,
-			sample_boxes, &sum, &sample_extent, &slot_idx, 2);
+		gserialized_compute_stats(stats, fetchfunc, sample_rows, total_rows, 2);
 		/* ND Mode */
-		gserialized_compute_stats(stats, sample_rows, total_rows, notnull_cnt,
-			sample_boxes, &sum, &sample_extent, &slot_idx, ndims);
+		gserialized_compute_stats(stats, fetchfunc, sample_rows, total_rows, 0);
 
 		/* Compute statistics for time dimension */
 		period_compute_stats1(stats, notnull_cnt, &slot_idx,

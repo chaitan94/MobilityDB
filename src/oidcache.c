@@ -48,16 +48,14 @@ const char *_type_names[] =
 	"timestamptz",
 	"tint",
 	"tstzrange",
-	"ttext"
-#ifdef WITH_POSTGIS
-	,"geometry",
+	"ttext",
+	"geometry",
 	"geography",
 	"tgeompoint",
 	"tgeogpoint",
 	"npoint",
 	"nsegment",
 	"tnpoint",
-#endif
 };
 
 const char *_op_names[] = 

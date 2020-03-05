@@ -23,9 +23,9 @@
  
 extern TemporalInst *temporalinst_make(Datum value, TimestampTz t, Oid valuetypid);
 extern TemporalInst *temporalinst_copy(TemporalInst *inst);
-extern Datum* temporalinst_value_ptr(TemporalInst *inst);
-extern Datum temporalinst_value(TemporalInst *inst);
-extern Datum temporalinst_value_copy(TemporalInst *inst);
+extern Datum* temporalinst_value_ptr(const TemporalInst *inst);
+extern Datum temporalinst_value(const TemporalInst *inst);
+extern Datum temporalinst_value_copy(const TemporalInst *inst);
 extern void temporalinst_set(TemporalInst *inst, Datum value, TimestampTz t);
 
 /* Input/output functions */
@@ -59,7 +59,6 @@ extern TemporalInst *temporals_to_temporalinst(TemporalS *ts);
 extern ArrayType *temporalinst_values(TemporalInst *inst);
 extern ArrayType *tfloatinst_ranges(TemporalInst *inst);
 extern PeriodSet *temporalinst_get_time(TemporalInst *inst);
-extern void temporalinst_bbox(void *box, TemporalInst *inst);
 extern void temporalinst_period(Period *p, TemporalInst *inst);
 extern ArrayType *temporalinst_timestamps(TemporalInst *inst);
 extern ArrayType *temporalinst_instants_array(TemporalInst *inst);

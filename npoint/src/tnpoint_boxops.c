@@ -44,10 +44,10 @@ npoint_to_stbox_internal(STBOX *box, npoint *np)
 }
 
 void
-tnpointinst_make_stbox(STBOX *box, Datum value, TimestampTz t)
+tnpointinst_make_stbox(STBOX *box, TemporalInst *inst)
 {
-	npoint_to_stbox_internal(box, DatumGetNpoint(value));
-	box->tmin = box->tmax = t;
+	npoint_to_stbox_internal(box, DatumGetNpoint(temporalinst_value(inst)));
+	box->tmin = box->tmax = inst->t;
 	MOBDB_FLAGS_SET_T(box->flags, true);
 	return;
 }
@@ -55,14 +55,12 @@ tnpointinst_make_stbox(STBOX *box, Datum value, TimestampTz t)
 void
 tnpointinstarr_stepw_to_stbox(STBOX *box, TemporalInst **instants, int count)
 {
-	Datum value = temporalinst_value(instants[0]);
-	tnpointinst_make_stbox(box, value, instants[0]->t);
+	tnpointinst_make_stbox(box, instants[0]);
 	for (int i = 1; i < count; i++)
 	{
 		STBOX box1;
 		memset(&box1, 0, sizeof(STBOX));
-		value = temporalinst_value(instants[i]);
-		tnpointinst_make_stbox(&box1, value, instants[i]->t);
+		tnpointinst_make_stbox(&box1, instants[i]);
 		stbox_expand(box, &box1);
 	}
 	return;

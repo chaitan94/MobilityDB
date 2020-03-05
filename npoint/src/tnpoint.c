@@ -63,7 +63,7 @@ tnpointi_as_tgeompointi(TemporalI *ti)
 		TemporalInst *inst = temporali_inst_n(ti, i);
 		instants[i] = tnpointinst_as_tgeompointinst(inst);
 	}
-	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
+	TemporalI *result = temporali_make(instants, ti->count);
 	for (int i = 0; i < ti->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -79,7 +79,7 @@ tnpointseq_as_tgeompointseq(TemporalSeq *seq)
 		TemporalInst *inst = temporalseq_inst_n(seq, i);
 		instants[i] = tnpointinst_as_tgeompointinst(inst);
 	}
-	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, 
+	TemporalSeq *result = temporalseq_make(instants,
 		seq->count, seq->period.lower_inc, seq->period.upper_inc, 
 		MOBDB_FLAGS_GET_LINEAR(seq->flags), false);
 	for (int i = 0; i < seq->count; i++)
@@ -97,7 +97,7 @@ tnpoints_as_tgeompoints(TemporalS *ts)
 		TemporalSeq *seq = temporals_seq_n(ts, i);
 		sequences[i] = tnpointseq_as_tgeompointseq(seq);
 	}
-	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, 
+	TemporalS *result = temporals_make(sequences, ts->count, 
 		MOBDB_FLAGS_GET_LINEAR(ts->flags), false);
 	for (int i = 0; i < ts->count; i++)
 		pfree(sequences[i]);
@@ -166,7 +166,7 @@ tgeompointi_as_tnpointi(TemporalI *ti)
 		}
 		instants[i] = inst1;
 	}
-	TemporalI *result = temporali_from_temporalinstarr(instants, ti->count);
+	TemporalI *result = temporali_make(instants, ti->count);
 	for (int i = 0; i < ti->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -190,7 +190,7 @@ tgeompointseq_as_tnpointseq(TemporalSeq *seq)
 		}
 		instants[i] = inst1;
 	}
-	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, 
+	TemporalSeq *result = temporalseq_make(instants,
 		seq->count, seq->period.lower_inc, seq->period.upper_inc, 
 		MOBDB_FLAGS_GET_LINEAR(seq->flags), false);
 	for (int i = 0; i < seq->count; i++)
@@ -216,7 +216,7 @@ tgeompoints_as_tnpoints(TemporalS *ts)
 		}
 		sequences[i] = seq1;
 	}
-	TemporalS *result = temporals_from_temporalseqarr(sequences, ts->count, 
+	TemporalS *result = temporals_make(sequences, ts->count, 
 		MOBDB_FLAGS_GET_LINEAR(ts->flags), false);
 	for (int i = 0; i < ts->count; i++)
 		pfree(sequences[i]);

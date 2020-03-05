@@ -310,13 +310,12 @@ bool
 linear_interpolation(Oid type)
 {
 	if (type == FLOAT8OID || type == type_oid(T_DOUBLE2) || 
-		type == type_oid(T_DOUBLE3) || type == type_oid(T_DOUBLE4))
+		type == type_oid(T_DOUBLE3) || type == type_oid(T_DOUBLE4) ||
+		type == type_oid(T_GEOGRAPHY) || type == type_oid(T_GEOMETRY))
 		return true;
-#ifdef WITH_POSTGIS
-	if (type == type_oid(T_GEOGRAPHY) || type == type_oid(T_GEOMETRY) || 
+	if (type == type_oid(T_GEOGRAPHY) || type == type_oid(T_GEOMETRY) ||
 		type == type_oid(T_NPOINT))
 		return true;
-#endif
 	return false;
 }
 
@@ -378,14 +377,12 @@ temporal_oid_from_base(Oid valuetypid)
 		result = type_oid(T_TFLOAT);
 	if (valuetypid == TEXTOID) 
 		result = type_oid(T_TTEXT);
-#ifdef WITH_POSTGIS
-	if (valuetypid == type_oid(T_GEOMETRY)) 
+	if (valuetypid == type_oid(T_GEOMETRY))
 		result = type_oid(T_TGEOMPOINT);
 	if (valuetypid == type_oid(T_GEOGRAPHY)) 
 		result = type_oid(T_TGEOGPOINT);
-	if (valuetypid == type_oid(T_NPOINT)) 
+	if (valuetypid == type_oid(T_NPOINT))
 		result = type_oid(T_TNPOINT);
-#endif			
 	return result;
 }
 
@@ -396,21 +393,42 @@ temporal_oid_from_base(Oid valuetypid)
 bool
 temporal_type_oid(Oid temptypid)
 {
-	if (temptypid == type_oid(T_TBOOL) ||
-		temptypid == type_oid(T_TINT) ||
-		temptypid == type_oid(T_TFLOAT) ||
-		temptypid == type_oid(T_TTEXT)
-#ifdef WITH_POSTGIS
-		|| temptypid == type_oid(T_TGEOMPOINT)
-		|| temptypid == type_oid(T_TGEOGPOINT)
-		|| temptypid == type_oid(T_TNPOINT)
-#endif
+	if (temptypid == type_oid(T_TBOOL) || temptypid == type_oid(T_TINT) ||
+		temptypid == type_oid(T_TFLOAT) || temptypid == type_oid(T_TTEXT) ||
+		temptypid == type_oid(T_TGEOMPOINT) ||
+		temptypid == type_oid(T_TGEOGPOINT) ||
+		temptypid == type_oid(T_TNPOINT)
 		)
 		return true;
 	return false;
 }
 
-/* 
+/*
+ * Is the Oid a temporal number type ?
+ * Function used in particular in the indexes.
+ */
+bool
+tnumber_type_oid(Oid temptypid)
+{
+	if (temptypid == type_oid(T_TINT) || temptypid == type_oid(T_TFLOAT))
+		return true;
+	return false;
+}
+
+/*
+ * Is the Oid a temporal point type ?
+ * Function used in particular in the indexes.
+ */
+bool
+tpoint_type_oid(Oid temptypid)
+{
+	if (temptypid == type_oid(T_TGEOMPOINT) ||
+		temptypid == type_oid(T_TGEOGPOINT))
+		return true;
+	return false;
+}
+
+/*
  * Obtain the Oid of the base type from the Oid of the temporal type  
  */
 Oid
@@ -426,14 +444,12 @@ base_oid_from_temporal(Oid temptypid)
 		result = FLOAT8OID;
 	else if (temptypid == type_oid(T_TTEXT)) 
 		result = TEXTOID;
-#ifdef WITH_POSTGIS
-	else if (temptypid == type_oid(T_TGEOMPOINT)) 
+	else if (temptypid == type_oid(T_TGEOMPOINT))
 		result = type_oid(T_GEOMETRY);
 	else if (temptypid == type_oid(T_TGEOGPOINT)) 
 		result = type_oid(T_GEOGRAPHY);
-	else if (temptypid == type_oid(T_TNPOINT)) 
+	else if (temptypid == type_oid(T_TNPOINT))
 		result = type_oid(T_NPOINT);
-#endif
 	return result;
 }
 
@@ -444,11 +460,9 @@ base_oid_from_temporal(Oid temptypid)
 bool
 type_has_precomputed_trajectory(Oid valuetypid) 
 {
-#ifdef WITH_POSTGIS
-	if (valuetypid == type_oid(T_GEOMETRY) || 
+	if (valuetypid == type_oid(T_GEOMETRY) ||
 		valuetypid == type_oid(T_GEOGRAPHY))
 		return true;
-#endif
 	return false;
 } 
  
@@ -486,13 +500,10 @@ void
 ensure_temporal_base_type(Oid valuetypid)
 {
 	if (valuetypid != BOOLOID && valuetypid != INT4OID && 
-		valuetypid != FLOAT8OID && valuetypid != TEXTOID
-#ifdef WITH_POSTGIS
-		&& valuetypid != type_oid(T_GEOMETRY)
-		&& valuetypid != type_oid(T_GEOGRAPHY)
-		&& valuetypid != type_oid(T_NPOINT)
-#endif
-		)
+		valuetypid != FLOAT8OID && valuetypid != TEXTOID &&
+		valuetypid != type_oid(T_GEOMETRY) &&
+		valuetypid != type_oid(T_GEOGRAPHY) &&
+		valuetypid != type_oid(T_NPOINT))
 		elog(ERROR, "unknown base type: %d", valuetypid);
 }
 
@@ -501,28 +512,22 @@ ensure_temporal_base_type_all(Oid valuetypid)
 {
 	if (valuetypid != BOOLOID && valuetypid != INT4OID && 
 		valuetypid != FLOAT8OID && valuetypid != TEXTOID &&
-		valuetypid != TIMESTAMPTZOID && valuetypid !=  type_oid(T_DOUBLE2)
-#ifdef WITH_POSTGIS
-		&& valuetypid != type_oid(T_GEOMETRY)
-		&& valuetypid != type_oid(T_GEOGRAPHY)
-		&& valuetypid != type_oid(T_DOUBLE3)
-		&& valuetypid != type_oid(T_DOUBLE4)
-		&& valuetypid != type_oid(T_NPOINT)
-#endif
-		)
+		valuetypid != TIMESTAMPTZOID && valuetypid != type_oid(T_DOUBLE2) &&
+		valuetypid != type_oid(T_GEOMETRY) &&
+		valuetypid != type_oid(T_GEOGRAPHY) &&
+		valuetypid != type_oid(T_DOUBLE3) &&
+		valuetypid != type_oid(T_DOUBLE4) &&
+		valuetypid != type_oid(T_NPOINT))
 		elog(ERROR, "unknown base type: %d", valuetypid);
 }
 
 void
 ensure_linear_interpolation(Oid valuetypid)
 {
-	if (valuetypid != FLOAT8OID
-#ifdef WITH_POSTGIS
-		&& valuetypid != type_oid(T_GEOMETRY)
-		&& valuetypid != type_oid(T_GEOGRAPHY)
-		&& valuetypid != type_oid(T_NPOINT)
-#endif
-		)
+	if (valuetypid != FLOAT8OID &&
+		valuetypid != type_oid(T_GEOMETRY) &&
+		valuetypid != type_oid(T_GEOGRAPHY) &&
+		valuetypid != type_oid(T_NPOINT))
 		elog(ERROR, "unknown base type with linear interpolation: %d", valuetypid);
 }
 
@@ -530,15 +535,12 @@ void
 ensure_linear_interpolation_all(Oid valuetypid)
 {
 	if (valuetypid != FLOAT8OID &&
-		valuetypid !=  type_oid(T_DOUBLE2)
-#ifdef WITH_POSTGIS
-		&& valuetypid != type_oid(T_GEOMETRY)
-		&& valuetypid != type_oid(T_GEOGRAPHY)
-		&& valuetypid != type_oid(T_DOUBLE3)
-		&& valuetypid != type_oid(T_DOUBLE4)
-		&& valuetypid != type_oid(T_NPOINT)
-#endif
-		)
+		valuetypid != type_oid(T_DOUBLE2) &&
+		valuetypid != type_oid(T_GEOMETRY) &&
+		valuetypid != type_oid(T_GEOGRAPHY) &&
+		valuetypid != type_oid(T_DOUBLE3) &&
+		valuetypid != type_oid(T_DOUBLE4) &&
+		valuetypid != type_oid(T_NPOINT))
 		elog(ERROR, "unknown base type with linear interpolation: %d", valuetypid);
 }
 
@@ -549,8 +551,7 @@ ensure_numeric_base_type(Oid valuetypid)
 		elog(ERROR, "unknown numeric base type: %d", valuetypid);
 }
 
-#ifdef WITH_POSTGIS
-void 
+void
 ensure_point_base_type(Oid valuetypid)
 {
 	if (valuetypid != type_oid(T_GEOMETRY) && 
@@ -558,7 +559,6 @@ ensure_point_base_type(Oid valuetypid)
 		valuetypid != type_oid(T_NPOINT))
 		elog(ERROR, "unknown point base type: %d", valuetypid);
 }
-#endif
 
 /*****************************************************************************
  * Utility functions
@@ -1407,7 +1407,7 @@ temporal_bbox(void *box, const Temporal *temp)
 {
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
-		temporalinst_bbox(box, (TemporalInst *)temp);
+		temporalinst_make_bbox(box, (TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
 		temporali_bbox(box, (TemporalI *)temp);
 	else if (temp->duration == TEMPORALSEQ) 

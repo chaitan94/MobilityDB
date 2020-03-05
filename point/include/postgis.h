@@ -54,6 +54,7 @@ extern Datum ST_Equals(PG_FUNCTION_ARGS);
 extern Datum intersects(PG_FUNCTION_ARGS); /* For 2D */
 extern Datum intersects3d(PG_FUNCTION_ARGS); /* For 3D */
 extern Datum overlaps(PG_FUNCTION_ARGS);
+extern Datum pgis_union_geometry_array(PG_FUNCTION_ARGS);
 extern Datum touches(PG_FUNCTION_ARGS);
 extern Datum within(PG_FUNCTION_ARGS);
 extern Datum relate_full(PG_FUNCTION_ARGS);
@@ -80,6 +81,7 @@ extern Datum LWGEOM_makepoint(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_numgeometries_collection(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_numpoints_linestring(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_pointn_linestring(PG_FUNCTION_ARGS);
+extern Datum LWGEOM_reverse(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_setpoint_linestring(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_shortestline2d(PG_FUNCTION_ARGS); /* For 2D */
 extern Datum LWGEOM_shortestline3d(PG_FUNCTION_ARGS); /* For 3D */

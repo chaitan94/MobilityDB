@@ -33,12 +33,6 @@ extern void periodset_to_tbox_internal(TBOX *box, PeriodSet *ps);
 
 extern void tbox_expand(TBOX *box1, const TBOX *box2);
 
-extern bool overlaps_tbox_tbox_internal(const TBOX *box1, const TBOX *box2);
-extern bool contained_tbox_tbox_internal(const TBOX *box1, const TBOX *box2);
-extern bool contains_tbox_tbox_internal(const TBOX *box1, const TBOX *box2);
-extern bool same_tbox_tbox_internal(const TBOX *box1, const TBOX *box2);
-extern bool adjacent_tbox_tbox_internal(const TBOX *box1, const TBOX *box2);
-
 extern size_t temporal_bbox_size(Oid valuetypid);
 
 /* Comparison of bounding boxes of temporal types */
@@ -48,8 +42,7 @@ extern int temporal_bbox_cmp(Oid valuetypid, void *box1, void *box2);
 
 /* Compute the bounding box at the creation of temporal values */
 
-extern void temporalinst_make_bbox(void *bbox, Datum value, TimestampTz t,  
-	Oid valuetypid);
+extern void temporalinst_make_bbox(void *bbox, TemporalInst *inst);
 extern void temporali_make_bbox(void *bbox, TemporalInst **inst, int count);
 extern void temporalseq_make_bbox(void *bbox, TemporalInst** inst, int count, 
 	bool lower_inc, bool upper_inc, bool linear);
