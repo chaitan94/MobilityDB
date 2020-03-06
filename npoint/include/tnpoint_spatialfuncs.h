@@ -20,6 +20,11 @@
 
 /*****************************************************************************/
 
+extern int tnpointinst_srid(const TemporalInst *inst);
+extern int tnpointi_srid(const TemporalI *ti);
+extern int tnpointseq_srid(const TemporalSeq *seq);
+extern int tnpoints_srid(const TemporalS *ts);
+
 extern Datum tnpoint_trajectory(PG_FUNCTION_ARGS);
 
 extern Datum tnpointseq_trajectory1(TemporalInst *inst1, TemporalInst *inst2);

@@ -45,28 +45,6 @@ tnpointinst_srid(const TemporalInst *inst)
 }
 
 int
-tnpointi_srid(const TemporalI *ti)
-{
-	TemporalInst *inst = temporali_inst_n(ti, 0);
-	return tnpointinst_srid(inst);
-}
-
-int
-tnpointseq_srid(const TemporalSeq *seq)
-{
-	TemporalInst *inst = temporalseq_inst_n(seq, 0);
-	return tnpointinst_srid(inst);
-}
-
-int
-tnpoints_srid(const TemporalS *ts)
-{
-	TemporalSeq *seq = temporals_seq_n(ts, 0);
-	TemporalInst *inst = temporalseq_inst_n(seq, 0);
-	return tnpointinst_srid(inst);
-}
-
-int
 tnpoint_srid_internal(const Temporal *temp)
 {
 	int result = 0;
@@ -75,11 +53,11 @@ tnpoint_srid_internal(const Temporal *temp)
 	if (temp->duration == TEMPORALINST)
 		result = tnpointinst_srid((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI)
-		result = tnpointi_srid((TemporalI *)temp);
+		result = tpointi_srid((TemporalI *)temp);
 	else if (temp->duration == TEMPORALSEQ)
-		result = tnpointseq_srid((TemporalSeq *)temp);
+		result = tpointseq_srid((TemporalSeq *)temp);
 	else if (temp->duration == TEMPORALS)
-		result = tnpoints_srid((TemporalS *)temp);
+		result = tpoints_srid((TemporalS *)temp);
 	return result;
 }
 

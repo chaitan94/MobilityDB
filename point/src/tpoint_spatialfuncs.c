@@ -27,6 +27,7 @@
 #include "tpoint.h"
 #include "tpoint_boxops.h"
 #include "tpoint_distance.h"
+#include "tnpoint_spatialfuncs.h"
 
 /*****************************************************************************
  * Parameter tests
@@ -371,7 +372,14 @@ tpoint_srid_internal(const Temporal *temp)
 	ensure_valid_duration(temp->duration);
 	ensure_point_base_type(temp->valuetypid);
 	if (temp->duration == TEMPORALINST)
-		result = tpointinst_srid((TemporalInst *)temp);
+	{
+		if (temp->valuetypid == type_oid(T_GEOMETRY) ||
+			temp->valuetypid == type_oid(T_GEOGRAPHY))
+			result = tpointinst_srid((TemporalInst *)temp);
+		else /* type_oid(T_TNPOINT) */
+			result = tnpointinst_srid((TemporalInst *)temp);
+
+	}
 	else if (temp->duration == TEMPORALI)
 		result = tpointi_srid((TemporalI *)temp);
 	else if (temp->duration == TEMPORALSEQ)
