@@ -62,7 +62,7 @@ extern Datum *temporali_values1(TemporalI *ti, int *count);
 extern ArrayType *temporali_values(TemporalI *ti);
 extern ArrayType *tfloati_ranges(TemporalI *ti);
 extern PeriodSet *temporali_get_time(TemporalI *ti);
-extern void *temporali_bbox_ptr(TemporalI *ti);
+extern void *temporali_bbox_ptr(const TemporalI *ti);
 extern void temporali_bbox(void *box, TemporalI *ti);
 extern Datum temporali_min_value(TemporalI *ti);
 extern Datum temporali_max_value(TemporalI *ti);
