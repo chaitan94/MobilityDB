@@ -15,14 +15,14 @@ SELECT npoint 'NPoint(1,0.5)' << tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.
 SELECT npoint 'NPoint(1,0.5)' << tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]';
 SELECT npoint 'NPoint(1,0.5)' << tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
-SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' << geometry 'SRID=5676;SRID=5676;Point(1 1)';
-SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' << geometry 'SRID=5676;SRID=5676;Point(1 1)';
-SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' << geometry 'SRID=5676;SRID=5676;Point(1 1)';
-SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' << geometry 'SRID=5676;SRID=5676;Point(1 1)';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' << geometry 'SRID=5676;Point(1 1)';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' << geometry 'SRID=5676;Point(1 1)';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' << geometry 'SRID=5676;Point(1 1)';
+SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' << geometry 'SRID=5676;Point(1 1)';
 
-SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' << geometry 'SRID=5676;SRID=5676;Point empty';
-SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' << geometry 'SRID=5676;SRID=5676;Point empty';
-SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' << geometry 'SRID=5676;SRID=5676;Point empty';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' << geometry 'SRID=5676;Point empty';
+SELECT tnpoint '{NPoint(1,0.5)@2000-01-01, NPoint(2,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03}' << geometry 'SRID=5676;Point empty';
+SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03]' << geometry 'SRID=5676;Point empty';
 SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' << geometry 'SRID=5676;Point empty';
 
 SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' << npoint 'NPoint(1,0.5)';
