@@ -5529,6 +5529,66 @@ SELECT npoint 'Npoint(99999999, 1.0)';
 			</para>
 
 			<sect2>
+				<title>Casting for Static Network Types</title>
+				<para>
+					Values of the <varname>npoint</varname> and <varname>nsegment</varname> types can be converted to the <varname>geometry</varname> type using an explicit <varname>CAST</varname> or using the <varname>::</varname> notation as shown next.
+				</para>
+				<itemizedlist>
+					<listitem>
+						<para>Network point and network segment to geometry</para>
+						<para>Cast: <varname>{npoint, nsegment}::geometry</varname></para>
+						<programlisting>
+SELECT st_astext(npoint(76, 0.33)::geometry);
+-- "POINT(21.6338731332283 50.0545869554067)"
+SELECT st_astext(nsegment(76, 0.33, 0.66)::geometry);
+-- "LINESTRING(21.6338731332283 50.0545869554067,30.7475989651999 53.9185062927473)"
+SELECT st_astext(nsegment(76, 0.33, 0.33)::geometry);
+-- "POINT(21.6338731332283 50.0545869554067)"
+						</programlisting>
+					</listitem>
+				</itemizedlist>
+
+				<para>
+					Similarly, <varname>geometry</varname> values of type point or linestring (restricted to two points) can be converted, respectively, to <varname>npoint</varname> and <varname>nsegment</varname> values using an explicit <varname>CAST</varname> or using the <varname>::</varname> notation. For this, the route that intersects the given points must be found, where a tolerance of 0.00001 units (depending on the coordinate system) is assumed so a point and a route that are close are considered to intersect. If no such route is found, a null value is returned.
+				</para>
+				<itemizedlist>
+					<listitem>
+						<para>Geometry to network point and network segment</para>
+						<para>Cast: <varname>geometry::{npoint, nsegment}</varname></para>
+						<programlisting>
+SELECT geometry 'Point(279.269156511873 811.497076880187)'::npoint;
+-- "NPoint(3,0.781413)"
+SELECT geometry 'LINESTRING(406.729536784738 702.58583437902,
+	383.570801314823 845.137059419277)'::nsegment;
+-- "NSegment(3,0.6,0.9)"
+SELECT geometry 'Point(279.3 811.5)'::npoint;
+-- NULL
+SELECT geometry 'LINESTRING(406.7 702.6,383.6 845.1)'::nsegment;
+-- NULL
+						</programlisting>
+					</listitem>
+				</itemizedlist>
+
+				<para>
+					Finally, <varname>npoint</varname> and <varname>nsegment</varname>  values can be converted to an <varname>stbox</varname>
+				</para>
+				<itemizedlist>
+					<listitem>
+						<para>Network point and network segment to stbox</para>
+						<para>Cast: <varname>{npoint, nsegment}::stbox</varname></para>
+						<programlisting>
+SELECT npoint 'NPoint(1, 0.2)'::stbox;
+-- "SRID=5676;STBOX((69.7903671264648,81.4520950317383),
+	(69.7903747558594,81.4521026611328))"
+SELECT nsegment 'NSegment(1, 0.2, 0.5)'::stbox;
+-- "SRID=5676;STBOX((48.7186622619629,77.7640686035156),
+	(69.7903747558594,81.4521026611328))"
+						</programlisting>
+					</listitem>
+				</itemizedlist>
+			</sect2>
+
+			<sect2>
 				<title>Accessor Functions</title>
 				<itemizedlist>
 					<listitem>
@@ -5553,7 +5613,7 @@ SELECT getPosition(npoint 'Npoint(63, 0.3)');
 
 					<listitem>
 						<para><varname>startPosition</varname>: Start position</para>
-						<para>Signature: <varname>startPosition(npoint): float</varname></para>
+						<para>Signature: <varname>startPosition(nsegment): float</varname></para>
 						<programlisting>
 SELECT startPosition(nsegment 'Nsegment(76, 0.3, 0.5)');
 -- 0.3
@@ -5562,70 +5622,21 @@ SELECT startPosition(nsegment 'Nsegment(76, 0.3, 0.5)');
 
 					<listitem>
 						<para><varname>endPosition</varname>: End position</para>
-						<para>Signature: <varname>endPosition(npoint): float</varname></para>
+						<para>Signature: <varname>endPosition(nsegment): float</varname></para>
 						<programlisting>
 SELECT endPosition(nsegment 'Nsegment(76, 0.3, 0.5)');
 -- 0.5
 						</programlisting>
 					</listitem>
-				</itemizedlist>
-			</sect2>
 
-			<sect2>
-				<title>Casting for Static Network Types</title>
-				<para>
-					Values of the <varname>npoint</varname> and <varname>nsegment</varname> types can be converted to the <varname>geometry</varname> type using an explicit <varname>CAST</varname> or using the <varname>::</varname> notation as shown next.
-				</para>
-				<itemizedlist>
 					<listitem>
-						<para>Network point and network segment to geometry</para>
-						<para>Cast: <varname>npoint::geometry</varname>, <varname>nsegment::geometry</varname></para>
+						<para>Spatial reference identifier</para>
+						<para><varname>SRID({npoint, nsegment}): integer</varname></para>
 						<programlisting>
-SELECT st_astext(npoint(76, 0.33)::geometry);
--- "POINT(21.6338731332283 50.0545869554067)"
-SELECT st_astext(nsegment(76, 0.33, 0.66)::geometry);
--- "LINESTRING(21.6338731332283 50.0545869554067,30.7475989651999 53.9185062927473)"
-SELECT st_astext(nsegment(76, 0.33, 0.33)::geometry);
--- "POINT(21.6338731332283 50.0545869554067)"
-						</programlisting>
-					</listitem>
-				</itemizedlist>
-
-				<para>
-					Similarly, <varname>geometry</varname> values of type point or linestring (restricted to two points) can be converted, respectively, to <varname>npoint</varname> and <varname>nsegment</varname> values using an explicit <varname>CAST</varname> or using the <varname>::</varname> notation. For this, the route that intersects the given points must be found, where a tolerance of 0.00001 units (depending on the coordinate system) is assumed so a point and a route that are close are considered to intersect. If no such route is found, a null value is returned.
-				</para>
-				<itemizedlist>
-					<listitem>
-						<para>Geometry to network point and network segment</para>
-						<para>Cast: <varname>geometry::npoint</varname>, <varname>geometry::nsegment</varname></para>
-						<programlisting>
-SELECT geometry 'Point(279.269156511873 811.497076880187)'::npoint;
--- "NPoint(3,0.781413)"
-SELECT geometry 'LINESTRING(406.729536784738 702.58583437902,
-	383.570801314823 845.137059419277)'::nsegment;
--- "NSegment(3,0.6,0.9)"
-SELECT geometry 'Point(279.3 811.5)'::npoint;
--- NULL
-SELECT geometry 'LINESTRING(406.7 702.6,383.6 845.1)'::nsegment;
--- NULL
-						</programlisting>
-					</listitem>
-				</itemizedlist>
-
-				<para>
-					Finally, <varname>npoint</varname> and <varname>nsegment</varname>  values can be converted to an <varname>stbox</varname>
-				</para>
-				<itemizedlist>
-					<listitem>
-						<para>Network point and network segment to stbox</para>
-						<para>Cast: <varname>npoint::stbox</varname>, <varname>nsegment::stbox</varname></para>
-						<programlisting>
-SELECT npoint 'NPoint(1, 0.2)'::stbox;
--- "SRID=5676;STBOX((69.7903671264648,81.4520950317383),
-	(69.7903747558594,81.4521026611328))"
-SELECT nsegment 'NSegment(1, 0.2, 0.5)'::stbox;
--- "SRID=5676;STBOX((48.7186622619629,77.7640686035156),
-	(69.7903747558594,81.4521026611328))"
+SELECT SRID(npoint 'Npoint(1, 0.5)@2012-01-01');
+-- 5676
+SELECT SRID(nsegment 'Nsegment(1, 0.5, 0.7)@2012-01-01');
+-- 5676
 						</programlisting>
 					</listitem>
 				</itemizedlist>
@@ -6187,7 +6198,7 @@ CREATE INDEX Trips_Trip_SPGist_Idx ON Trips USING SPGist(Trip);
 					</listitem>
 
 					<listitem>
-						<para><varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, and <varname>~=</varname>, which consider as many dimensions as they are shared by the indexed column and the query argument. These operators work on bounding boxes, not the entire values.</para>
+						<para><varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, and <varname>-|-</varname>, which consider as many dimensions as they are shared by the indexed column and the query argument. These operators work on bounding boxes, not the entire values.</para>
 					</listitem>
 				</itemizedlist>
 			</para>
