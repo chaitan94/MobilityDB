@@ -16,28 +16,28 @@ CREATE TABLE test_tnpointrelativeposops(
 	spgistidx bigint );
 CREATE TABLE
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '<<', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g << temp;
+SELECT '<<', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) << temp;
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '>>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g >> temp;
+SELECT '>>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) >> temp;
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&<', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &< temp;
+SELECT '&<', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) &< temp;
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &> temp;
+SELECT '&>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) &> temp;
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '<<|', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g <<| temp;
+SELECT '<<|', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) <<| temp;
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '|>>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |>> temp;
+SELECT '|>>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) |>> temp;
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&<|', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &<| temp;
+SELECT '&<|', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) &<| temp;
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '|&>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |&> temp;
+SELECT '|&>', 'geometry', 'tnpoint', count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) |&> temp;
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
 SELECT '<<', 'npoint', 'tnpoint', count(*) FROM tbl_npoint, tbl_tnpoint WHERE np << temp;
@@ -112,28 +112,28 @@ INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
 SELECT '#&>', 'periodset', 'tnpoint', count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps #&> temp;
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '<<', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << g;
+SELECT '<<', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << ST_SetSRID(g, 5676);
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '>>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp >> g;
+SELECT '>>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp >> ST_SetSRID(g, 5676);
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&<', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &< g;
+SELECT '&<', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &< ST_SetSRID(g, 5676);
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &> g;
+SELECT '&>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &> ST_SetSRID(g, 5676);
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '<<|', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <<| g;
+SELECT '<<|', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <<| ST_SetSRID(g, 5676);
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '|>>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |>> g;
+SELECT '|>>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |>> ST_SetSRID(g, 5676);
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '&<|', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &<| g;
+SELECT '&<|', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &<| ST_SetSRID(g, 5676);
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
-SELECT '|&>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |&> g;
+SELECT '|&>', 'tnpoint', 'geometry', count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |&> ST_SetSRID(g, 5676);
 INSERT 0 1
 INSERT INTO test_tnpointrelativeposops(op, leftarg, rightarg, noidx)
 SELECT '<<', 'tnpoint', 'npoint', count(*) FROM tbl_tnpoint, tbl_npoint WHERE temp << np;
@@ -246,19 +246,19 @@ INSERT 0 1
 CREATE INDEX tbl_tnpoint_gist_idx ON tbl_tnpoint USING GIST(temp);
 CREATE INDEX
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g << temp )
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) << temp )
 WHERE op = '<<' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g >> temp )
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) >> temp )
 WHERE op = '>>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &< temp )
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) &< temp )
 WHERE op = '&<' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &> temp )
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) &> temp )
 WHERE op = '&>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
@@ -278,19 +278,19 @@ SET gistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &> temp )
 WHERE op = '&>' and leftarg = 'npoint' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g <<| temp )
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) <<| temp )
 WHERE op = '<<|' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |>> temp )
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) |>> temp )
 WHERE op = '|>>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &<| temp )
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) &<| temp )
 WHERE op = '&<|' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |&> temp )
+SET gistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) |&> temp )
 WHERE op = '|&>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
@@ -374,35 +374,35 @@ SET gistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps #&> tem
 WHERE op = '#&>' and leftarg = 'periodset' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << g )
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << ST_SetSRID(g, 5676) )
 WHERE op = '<<' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp >> g )
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp >> ST_SetSRID(g, 5676) )
 WHERE op = '>>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &< g )
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &< ST_SetSRID(g, 5676) )
 WHERE op = '&<' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &> g )
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &> ST_SetSRID(g, 5676) )
 WHERE op = '&>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <<| g )
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <<| ST_SetSRID(g, 5676) )
 WHERE op = '<<|' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |>> g )
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |>> ST_SetSRID(g, 5676) )
 WHERE op = '|>>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &<| g )
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &<| ST_SetSRID(g, 5676) )
 WHERE op = '&<|' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |&> g )
+SET gistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |&> ST_SetSRID(g, 5676) )
 WHERE op = '|&>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
@@ -554,19 +554,19 @@ DROP INDEX
 CREATE INDEX tbl_tnpoint_spgist_idx ON tbl_tnpoint USING SPGIST(temp);
 CREATE INDEX
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g << temp )
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) << temp )
 WHERE op = '<<' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g >> temp )
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) >> temp )
 WHERE op = '>>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &< temp )
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) &< temp )
 WHERE op = '&<' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &> temp )
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) &> temp )
 WHERE op = '&>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
@@ -586,19 +586,19 @@ SET spgistidx = ( SELECT count(*) FROM tbl_npoint, tbl_tnpoint WHERE np &> temp 
 WHERE op = '&>' and leftarg = 'npoint' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g <<| temp )
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) <<| temp )
 WHERE op = '<<|' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |>> temp )
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) |>> temp )
 WHERE op = '|>>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g &<| temp )
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) &<| temp )
 WHERE op = '&<|' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE g |&> temp )
+SET spgistidx = ( SELECT count(*) FROM tbl_geometry, tbl_tnpoint WHERE ST_SetSRID(g, 5676) |&> temp )
 WHERE op = '|&>' and leftarg = 'geometry' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
@@ -682,35 +682,35 @@ SET spgistidx = ( SELECT count(*) FROM tbl_periodset, tbl_tnpoint WHERE ps #&> t
 WHERE op = '#&>' and leftarg = 'periodset' and rightarg = 'tnpoint';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << g )
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp << ST_SetSRID(g, 5676) )
 WHERE op = '<<' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp >> g )
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp >> ST_SetSRID(g, 5676) )
 WHERE op = '>>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &< g )
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &< ST_SetSRID(g, 5676) )
 WHERE op = '&<' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &> g )
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &> ST_SetSRID(g, 5676) )
 WHERE op = '&>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <<| g )
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp <<| ST_SetSRID(g, 5676) )
 WHERE op = '<<|' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |>> g )
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |>> ST_SetSRID(g, 5676) )
 WHERE op = '|>>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &<| g )
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp &<| ST_SetSRID(g, 5676) )
 WHERE op = '&<|' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops
-SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |&> g )
+SET spgistidx = ( SELECT count(*) FROM tbl_tnpoint, tbl_geometry WHERE temp |&> ST_SetSRID(g, 5676) )
 WHERE op = '|&>' and leftarg = 'tnpoint' and rightarg = 'geometry';
 UPDATE 1
 UPDATE test_tnpointrelativeposops

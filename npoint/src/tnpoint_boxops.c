@@ -122,6 +122,28 @@ npoint_to_stbox(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
+bool
+nsegment_to_stbox_internal(STBOX *box, nsegment *ns)
+{
+	Datum geom = nsegment_as_geom_internal(DatumGetNsegment(ns));
+	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	bool result = geo_to_stbox_internal(box, gs);
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(nsegment_to_stbox);
+
+PGDLLEXPORT Datum
+nsegment_to_stbox(PG_FUNCTION_ARGS)
+{
+	nsegment *ns = PG_GETARG_NSEGMENT(0);
+	STBOX *result = palloc0(sizeof(STBOX));
+	nsegment_to_stbox_internal(result, ns);
+	PG_RETURN_POINTER(result);
+}
+
 static bool
 npoint_timestamp_to_stbox_internal(STBOX *box, npoint *np, TimestampTz t)
 {

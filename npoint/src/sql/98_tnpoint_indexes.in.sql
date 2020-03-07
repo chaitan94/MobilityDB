@@ -23,82 +23,39 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	DEFAULT FOR TYPE tnpoint USING gist AS
 	STORAGE stbox,
 	-- strictly left
-	OPERATOR	1		<< (tnpoint, geometry),  
-	OPERATOR	1		<< (tnpoint, stbox),  
-	OPERATOR	1		<< (tnpoint, npoint),  
-	OPERATOR	1		<< (tnpoint, tnpoint),  
+	OPERATOR	1		<< (stbox, stbox),
 	-- overlaps or left
-	OPERATOR	2		&< (tnpoint, geometry),  
-	OPERATOR	2		&< (tnpoint, stbox),  
-	OPERATOR	2		&< (tnpoint, npoint),  
-	OPERATOR	2		&< (tnpoint, tnpoint),  
-	-- overlaps	
-	OPERATOR	3		&& (tnpoint, geometry),  
-	OPERATOR	3		&& (tnpoint, stbox),  
-	OPERATOR	3		&& (tnpoint, npoint),  
-	OPERATOR	3		&& (tnpoint, tnpoint),  
+	OPERATOR	2		&< (stbox, stbox),
+	-- overlaps
+	OPERATOR	3		&& (stbox, stbox),
 	-- overlaps or right
-	OPERATOR	4		&> (tnpoint, geometry),  
-	OPERATOR	4		&> (tnpoint, stbox),  
-	OPERATOR	4		&> (tnpoint, npoint),  
-	OPERATOR	4		&> (tnpoint, tnpoint),  
+	OPERATOR	4		&> (stbox, stbox),
   	-- strictly right
-	OPERATOR	5		>> (tnpoint, geometry),  
-	OPERATOR	5		>> (tnpoint, stbox),  
-	OPERATOR	5		>> (tnpoint, npoint),  
-	OPERATOR	5		>> (tnpoint, tnpoint),  
+	OPERATOR	5		>> (stbox, stbox),
   	-- same
-	OPERATOR	6		~= (tnpoint, geometry),  
-	OPERATOR	6		~= (tnpoint, stbox),  
-	OPERATOR	6		~= (tnpoint, npoint),  
-	OPERATOR	6		~= (tnpoint, tnpoint),  
+	OPERATOR	6		~= (stbox, stbox),
 	-- contains
-	OPERATOR	7		@> (tnpoint, geometry),  
-	OPERATOR	7		@> (tnpoint, stbox),  
-	OPERATOR	7		@> (tnpoint, npoint),  
-	OPERATOR	7		@> (tnpoint, tnpoint),  
+	OPERATOR	7		@> (stbox, stbox),
 	-- contained by
-	OPERATOR	8		<@ (tnpoint, geometry),  
-	OPERATOR	8		<@ (tnpoint, stbox),  
-	OPERATOR	8		<@ (tnpoint, npoint),  
-	OPERATOR	8		<@ (tnpoint, tnpoint),  
+	OPERATOR	8		<@ (stbox, stbox),
 	-- overlaps or below
-	OPERATOR	9		&<| (tnpoint, geometry),  
-	OPERATOR	9		&<| (tnpoint, stbox),  
-	OPERATOR	9		&<| (tnpoint, npoint),  
-	OPERATOR	9		&<| (tnpoint, tnpoint),  
+	OPERATOR	9		&<| (stbox, stbox),
 	-- strictly below
-	OPERATOR	10		<<| (tnpoint, geometry),  
-	OPERATOR	10		<<| (tnpoint, stbox),  
-	OPERATOR	10		<<| (tnpoint, npoint),  
-	OPERATOR	10		<<| (tnpoint, tnpoint),  
+	OPERATOR	10		<<| (stbox, stbox),
 	-- strictly above
-	OPERATOR	11		|>> (tnpoint, geometry),  
-	OPERATOR	11		|>> (tnpoint, stbox),  
-	OPERATOR	11		|>> (tnpoint, npoint),  
-	OPERATOR	11		|>> (tnpoint, tnpoint),  
+	OPERATOR	11		|>> (stbox, stbox),
 	-- overlaps or above
-	OPERATOR	12		|&> (tnpoint, geometry),  
-	OPERATOR	12		|&> (tnpoint, stbox),  
-	OPERATOR	12		|&> (tnpoint, npoint),  
-	OPERATOR	12		|&> (tnpoint, tnpoint),  
+	OPERATOR	12		|&> (stbox, stbox),
 	-- distance
---	OPERATOR	25		<-> (tnpoint, geometry) FOR ORDER BY pg_catalog.float_ops,
---	OPERATOR	25		<-> (tnpoint, stbox) FOR ORDER BY pg_catalog.float_ops,
---	OPERATOR	25		<-> (tnpoint, npoint) FOR ORDER BY pg_catalog.float_ops,
---	OPERATOR	25		<-> (tnpoint, tnpoint) FOR ORDER BY pg_catalog.float_ops,
+--	OPERATOR	25		<-> (stbox, stbox) FOR ORDER BY pg_catalog.float_ops,
 	-- overlaps or before
-	OPERATOR	28		&<# (tnpoint, stbox),
-	OPERATOR	28		&<# (tnpoint, tnpoint),
+	OPERATOR	28		&<# (stbox, stbox),
 	-- strictly before
-	OPERATOR	29		<<# (tnpoint, stbox),
-	OPERATOR	29		<<# (tnpoint, tnpoint),
+	OPERATOR	29		<<# (stbox, stbox),
 	-- strictly after
-	OPERATOR	30		#>> (tnpoint, stbox),
-	OPERATOR	30		#>> (tnpoint, tnpoint),
+	OPERATOR	30		#>> (stbox, stbox),
 	-- overlaps or after
-	OPERATOR	31		#&> (tnpoint, stbox),
-	OPERATOR	31		#&> (tnpoint, tnpoint),
+	OPERATOR	31		#&> (stbox, stbox),
 	-- functions
 	FUNCTION	1	gist_tnpoint_consistent(internal, tnpoint, smallint, oid, internal),
 	FUNCTION	2	gist_stbox_union(internal, internal),
@@ -118,77 +75,37 @@ CREATE FUNCTION spgist_tnpoint_compress(internal)
 CREATE OPERATOR CLASS spgist_tnpoint_ops
 	DEFAULT FOR TYPE tnpoint USING spgist AS
 	-- strictly left
-	OPERATOR	1		<< (tnpoint, geometry),  
-	OPERATOR	1		<< (tnpoint, stbox),  
-	OPERATOR	1		<< (tnpoint, npoint),  
-	OPERATOR	1		<< (tnpoint, tnpoint),  
+	OPERATOR	1		<< (stbox, stbox),
 	-- overlaps or left
-	OPERATOR	2		&< (tnpoint, geometry),  
-	OPERATOR	2		&< (tnpoint, stbox),  
-	OPERATOR	2		&< (tnpoint, npoint),  
-	OPERATOR	2		&< (tnpoint, tnpoint),  
-	-- overlaps	
-	OPERATOR	3		&& (tnpoint, geometry),  
-	OPERATOR	3		&& (tnpoint, stbox),  
-	OPERATOR	3		&& (tnpoint, npoint),  
-	OPERATOR	3		&& (tnpoint, tnpoint),  
+	OPERATOR	2		&< (stbox, stbox),
+	-- overlaps
+	OPERATOR	3		&& (stbox, stbox),
 	-- overlaps or right
-	OPERATOR	4		&> (tnpoint, geometry),  
-	OPERATOR	4		&> (tnpoint, stbox),  
-	OPERATOR	4		&> (tnpoint, npoint),  
-	OPERATOR	4		&> (tnpoint, tnpoint),  
+	OPERATOR	4		&> (stbox, stbox),
   	-- strictly right
-	OPERATOR	5		>> (tnpoint, geometry),  
-	OPERATOR	5		>> (tnpoint, stbox),  
-	OPERATOR	5		>> (tnpoint, npoint),  
-	OPERATOR	5		>> (tnpoint, tnpoint),  
+	OPERATOR	5		>> (stbox, stbox),
   	-- same
-	OPERATOR	6		~= (tnpoint, geometry),  
-	OPERATOR	6		~= (tnpoint, stbox),  
-	OPERATOR	6		~= (tnpoint, npoint),  
-	OPERATOR	6		~= (tnpoint, tnpoint),  
+	OPERATOR	6		~= (stbox, stbox),
 	-- contains
-	OPERATOR	7		@> (tnpoint, geometry),  
-	OPERATOR	7		@> (tnpoint, stbox),  
-	OPERATOR	7		@> (tnpoint, npoint),  
-	OPERATOR	7		@> (tnpoint, tnpoint),  
+	OPERATOR	7		@> (stbox, stbox),
 	-- contained by
-	OPERATOR	8		<@ (tnpoint, geometry),  
-	OPERATOR	8		<@ (tnpoint, stbox),  
-	OPERATOR	8		<@ (tnpoint, npoint),  
-	OPERATOR	8		<@ (tnpoint, tnpoint),  
+	OPERATOR	8		<@ (stbox, stbox),
 	-- overlaps or below
-	OPERATOR	9		&<| (tnpoint, geometry),  
-	OPERATOR	9		&<| (tnpoint, stbox),  
-	OPERATOR	9		&<| (tnpoint, npoint),  
-	OPERATOR	9		&<| (tnpoint, tnpoint),  
+	OPERATOR	9		&<| (stbox, stbox),
 	-- strictly below
-	OPERATOR	10		<<| (tnpoint, geometry),  
-	OPERATOR	10		<<| (tnpoint, stbox),  
-	OPERATOR	10		<<| (tnpoint, npoint),  
-	OPERATOR	10		<<| (tnpoint, tnpoint),  
+	OPERATOR	10		<<| (stbox, stbox),
 	-- strictly above
-	OPERATOR	11		|>> (tnpoint, geometry),  
-	OPERATOR	11		|>> (tnpoint, stbox),  
-	OPERATOR	11		|>> (tnpoint, npoint),  
-	OPERATOR	11		|>> (tnpoint, tnpoint),  
+	OPERATOR	11		|>> (stbox, stbox),
 	-- overlaps or above
-	OPERATOR	12		|&> (tnpoint, geometry),  
-	OPERATOR	12		|&> (tnpoint, stbox),  
-	OPERATOR	12		|&> (tnpoint, npoint),  
-	OPERATOR	12		|&> (tnpoint, tnpoint),  
+	OPERATOR	12		|&> (stbox, stbox),
 	-- overlaps or before
-	OPERATOR	28		&<# (tnpoint, stbox),
-	OPERATOR	28		&<# (tnpoint, tnpoint),
+	OPERATOR	28		&<# (stbox, stbox),
 	-- strictly before
-	OPERATOR	29		<<# (tnpoint, stbox),
-	OPERATOR	29		<<# (tnpoint, tnpoint),
+	OPERATOR	29		<<# (stbox, stbox),
 	-- strictly after
-	OPERATOR	30		#>> (tnpoint, stbox),
-	OPERATOR	30		#>> (tnpoint, tnpoint),
+	OPERATOR	30		#>> (stbox, stbox),
 	-- overlaps or after
-	OPERATOR	31		#&> (tnpoint, stbox),
-	OPERATOR	31		#&> (tnpoint, tnpoint),
+	OPERATOR	31		#&> (stbox, stbox),
 	-- functions
 	FUNCTION	1	spgist_stbox_config(internal, internal),
 	FUNCTION	2	spgist_stbox_choose(internal, internal),

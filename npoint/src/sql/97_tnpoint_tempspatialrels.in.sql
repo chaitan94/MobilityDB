@@ -35,11 +35,7 @@ CREATE FUNCTION tcontains(tnpoint, npoint)
 	RETURNS tbool
 	AS 'MODULE_PATHNAME', 'tcontains_tnpoint_npoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tcontains(tnpoint, tnpoint)
-	RETURNS tbool
-	AS 'MODULE_PATHNAME', 'tcontains_tnpoint_tnpoint'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-	
+
 /*****************************************************************************
  * tcovers
  *****************************************************************************/
@@ -59,10 +55,6 @@ CREATE FUNCTION tcovers(tnpoint, geometry)
 CREATE FUNCTION tcovers(tnpoint, npoint)
 	RETURNS tbool
 	AS 'MODULE_PATHNAME', 'tcovers_tnpoint_npoint'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tcovers(tnpoint, tnpoint)
-	RETURNS tbool
-	AS 'MODULE_PATHNAME', 'tcovers_tnpoint_tnpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
@@ -85,11 +77,7 @@ CREATE FUNCTION tcoveredby(tnpoint, npoint)
 	RETURNS tbool
 	AS 'MODULE_PATHNAME', 'tcoveredby_tnpoint_npoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tcoveredby(tnpoint, tnpoint)
-	RETURNS tbool
-	AS 'MODULE_PATHNAME', 'tcoveredby_tnpoint_tnpoint'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-	
+
 /*****************************************************************************
  * tdisjoint
  *****************************************************************************/
@@ -185,10 +173,6 @@ CREATE FUNCTION ttouches(tnpoint, npoint)
 	RETURNS tbool
 	AS 'MODULE_PATHNAME', 'ttouches_tnpoint_npoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION ttouches(tnpoint, tnpoint)
-	RETURNS tbool
-	AS 'MODULE_PATHNAME', 'ttouches_tnpoint_tnpoint'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
  * twithin
@@ -210,11 +194,7 @@ CREATE FUNCTION twithin(tnpoint, npoint)
 	RETURNS tbool
 	AS 'MODULE_PATHNAME', 'twithin_tnpoint_npoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION twithin(tnpoint, tnpoint)
-	RETURNS tbool
-	AS 'MODULE_PATHNAME', 'twithin_tnpoint_tnpoint'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-	
+
 /*****************************************************************************
  * tdwithin
  *****************************************************************************/

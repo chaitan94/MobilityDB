@@ -1,4 +1,4 @@
-SELECT MAX(maxValue(t1.g <-> t2.temp)) FROM tbl_geompoint t1, tbl_tnpoint t2;
+SELECT MAX(maxValue(ST_SetSRID(t1.g, 5676) <-> t2.temp)) FROM tbl_geompoint t1, tbl_tnpoint t2;
        max        
 ------------------
  130.029093778143
@@ -10,7 +10,7 @@ SELECT MAX(maxValue(t1.np <-> t2.temp)) FROM tbl_npoint t1, tbl_tnpoint t2;
  127.525995927387
 (1 row)
 
-SELECT MAX(maxValue(t1.temp <-> t2.g)) FROM tbl_tnpoint t1, tbl_geompoint t2;
+SELECT MAX(maxValue(t1.temp <-> ST_SetSRID(t2.g, 5676))) FROM tbl_tnpoint t1, tbl_geompoint t2;
        max        
 ------------------
  130.029093778143

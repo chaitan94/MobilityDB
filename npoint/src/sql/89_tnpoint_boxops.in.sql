@@ -51,6 +51,11 @@ CREATE FUNCTION stbox(npoint)
 	AS 'MODULE_PATHNAME', 'npoint_to_stbox'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 	
+CREATE FUNCTION stbox(nsegment)
+	RETURNS stbox
+	AS 'MODULE_PATHNAME', 'nsegment_to_stbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION stbox(npoint, timestamptz)
 	RETURNS stbox
 	AS 'MODULE_PATHNAME', 'npoint_timestamp_to_stbox'
@@ -65,6 +70,10 @@ CREATE FUNCTION stbox(tnpoint)
 	RETURNS stbox
 	AS 'MODULE_PATHNAME', 'tnpoint_to_stbox'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE CAST (npoint AS stbox) WITH FUNCTION stbox(npoint) AS IMPLICIT;
+CREATE CAST (nsegment AS stbox) WITH FUNCTION stbox(nsegment) AS IMPLICIT;
+CREATE CAST (tnpoint AS stbox) WITH FUNCTION stbox(tnpoint) AS IMPLICIT;
 	
 /*****************************************************************************
  * Expand
