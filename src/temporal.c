@@ -423,7 +423,8 @@ bool
 tpoint_type_oid(Oid temptypid)
 {
 	if (temptypid == type_oid(T_TGEOMPOINT) ||
-		temptypid == type_oid(T_TGEOGPOINT))
+		temptypid == type_oid(T_TGEOGPOINT) ||
+		temptypid == type_oid(T_TNPOINT))
 		return true;
 	return false;
 }
