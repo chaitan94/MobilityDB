@@ -69,6 +69,9 @@ index_leaf_consistent_stbox(STBOX *key, STBOX *query, StrategyNumber strategy)
 		case RTSameStrategyNumber:
 			retval = same_stbox_stbox_internal(key, query);
 			break;
+		case RTAdjacentStrategyNumber:
+			retval = adjacent_stbox_stbox_internal(key, query);
+			break;
 		case RTLeftStrategyNumber:
 			retval = left_stbox_stbox_internal(key, query);
 			break;
@@ -150,6 +153,10 @@ gist_internal_consistent_stbox(STBOX *key, STBOX *query, StrategyNumber strategy
 		case RTSameStrategyNumber:
 			retval = contains_stbox_stbox_internal(key, query);
 			break;
+		case RTAdjacentStrategyNumber:
+			if (adjacent_stbox_stbox_internal(key, query))
+				return true;
+			return overlaps_stbox_stbox_internal(key, query);
 		case RTLeftStrategyNumber:
 			retval = !overright_stbox_stbox_internal(key, query);
 			break;
@@ -567,10 +574,10 @@ interval_cmp_upper(const void *i1, const void *i2)
  * Replace negative (or NaN) value with zero.
  */
 static inline float
-non_negative(float val)
+non_negative(float value)
 {
-	if (FLOAT8_GE(val, 0.0f))
-		return val;
+	if (FLOAT8_GE(value, 0.0f))
+		return value;
 	else
 		return 0.0f;
 }
