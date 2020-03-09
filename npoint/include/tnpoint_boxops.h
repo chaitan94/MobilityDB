@@ -43,6 +43,8 @@ extern Datum contained_bbox_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum contained_bbox_tnpoint_npoint(PG_FUNCTION_ARGS);
 extern Datum same_bbox_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum same_bbox_tnpoint_npoint(PG_FUNCTION_ARGS);
+extern Datum adjacent_bbox_npoint_tnpoint(PG_FUNCTION_ARGS);
+extern Datum adjacent_bbox_tnpoint_npoint(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 

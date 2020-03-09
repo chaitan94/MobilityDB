@@ -91,6 +91,22 @@ tnpoint_same_joinsel(PG_FUNCTION_ARGS)
 	PG_RETURN_FLOAT8(0.001);
 }
 
+PG_FUNCTION_INFO_V1(tnpoint_adjacent_sel);
+
+PGDLLEXPORT Datum
+tnpoint_adjacent_sel(PG_FUNCTION_ARGS)
+{
+	PG_RETURN_FLOAT8(0.001);
+}
+
+PG_FUNCTION_INFO_V1(tnpoint_adjacent_joinsel);
+
+PGDLLEXPORT Datum
+tnpoint_adjacent_joinsel(PG_FUNCTION_ARGS)
+{
+	PG_RETURN_FLOAT8(0.001);
+}
+
 /*****************************************************************************/
 
 /*

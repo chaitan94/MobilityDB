@@ -25,6 +25,8 @@ extern Datum tnpoint_contains_sel(PG_FUNCTION_ARGS);
 extern Datum tnpoint_contains_joinsel(PG_FUNCTION_ARGS);
 extern Datum tnpoint_same_sel(PG_FUNCTION_ARGS);
 extern Datum tnpoint_same_joinsel(PG_FUNCTION_ARGS);
+extern Datum tnpoint_adjacent_sel(PG_FUNCTION_ARGS);
+extern Datum tnpoint_adjacent_joinsel(PG_FUNCTION_ARGS);
 extern Datum tnpoint_position_sel(PG_FUNCTION_ARGS);
 extern Datum tnpoint_position_joinsel(PG_FUNCTION_ARGS);
 

@@ -402,4 +402,50 @@ same_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(result);
 }
 
+/*****************************************************************************
+ * adjacent
+ *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_npoint_tnpoint);
+
+PGDLLEXPORT Datum
+adjacent_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	if (!npoint_to_stbox_internal(&box1, np))
+	{
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+	temporal_bbox(&box2, temp);
+	bool result = adjacent_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_tnpoint_npoint);
+
+PGDLLEXPORT Datum
+adjacent_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	npoint *np = PG_GETARG_NPOINT(1);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	if (!npoint_to_stbox_internal(&box2, np))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_RETURN_NULL();
+	}
+	temporal_bbox(&box1, temp);
+	bool result = adjacent_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_BOOL(result);
+}
+
 /*****************************************************************************/

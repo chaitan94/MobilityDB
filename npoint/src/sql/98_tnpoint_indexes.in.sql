@@ -58,6 +58,9 @@ CREATE OPERATOR CLASS gist_tnpoint_ops
 	-- overlaps or above
 	OPERATOR	12		|&> (tnpoint, stbox),
 	OPERATOR	12		|&> (tnpoint, tnpoint),
+	-- adjacent
+	OPERATOR	17		-|- (tnpoint, stbox),
+	OPERATOR	17		-|- (tnpoint, tnpoint),
 	-- distance
 --	OPERATOR	25		<-> (tnpoint, stbox) FOR ORDER BY pg_catalog.float_ops,
 	-- overlaps or before
@@ -126,7 +129,10 @@ CREATE OPERATOR CLASS spgist_tnpoint_ops
 	-- overlaps or above
 	OPERATOR	12		|&> (tnpoint, stbox),
 	OPERATOR	12		|&> (tnpoint, tnpoint),
-	-- overlaps or before
+		-- adjacent
+	OPERATOR	17		-|- (tnpoint, stbox),
+	OPERATOR	17		-|- (tnpoint, tnpoint),
+-- overlaps or before
 	OPERATOR	28		&<# (tnpoint, stbox),
 	OPERATOR	28		&<# (tnpoint, tnpoint),
 	-- strictly before
