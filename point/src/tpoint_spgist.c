@@ -81,9 +81,6 @@
 #include "tpoint.h"
 #include "tpoint_boxops.h"
 #include "tpoint_gist.h"
-#include "tnpoint.h"
-#include "tnpoint_static.h"
-#include "tnpoint_boxops.h"
 
 /*****************************************************************************/
 
@@ -578,9 +575,6 @@ spgist_stbox_inner_consistent(PG_FUNCTION_ARGS)
 			   initialized to +-infinity */
 			geo_to_stbox_internal(&queries[i], 
 				(GSERIALIZED*)PG_DETOAST_DATUM(in->scankeys[i].sk_argument));
-		else if (subtype == type_oid(T_NPOINT))
-			npoint_to_stbox_internal(&queries[i], 
-				DatumGetNpoint(in->scankeys[i].sk_argument));
 		else if (subtype == type_oid(T_STBOX))
 			memcpy(&queries[i], DatumGetSTboxP(in->scankeys[i].sk_argument), sizeof(STBOX));
 		else if (tpoint_type_oid(subtype))
@@ -736,14 +730,6 @@ spgist_stbox_leaf_consistent(PG_FUNCTION_ARGS)
 		{
 			GSERIALIZED *gs = (GSERIALIZED*)PG_DETOAST_DATUM(in->scankeys[i].sk_argument);
 			if (!geo_to_stbox_internal(&query, gs))
-				res = false;
-			else
-				res = index_leaf_consistent_stbox(key, &query, strategy);
-		}
-		else if (subtype == type_oid(T_NPOINT))
-		{
-			npoint *np = DatumGetNpoint(in->scankeys[i].sk_argument);
-			if (!npoint_to_stbox_internal(&query, np))
 				res = false;
 			else
 				res = index_leaf_consistent_stbox(key, &query, strategy);

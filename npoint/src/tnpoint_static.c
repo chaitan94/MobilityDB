@@ -12,6 +12,8 @@
 
 #include "tnpoint_static.h"
 
+#define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H 1
+
 #include <assert.h>
 #include <libpq/pqformat.h>
 #include <executor/spi.h>
