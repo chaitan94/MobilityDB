@@ -349,8 +349,7 @@ tnpoints_cumulative_length(TemporalS *ts)
 		TemporalInst *end = temporalseq_inst_n(sequences[i], seq->count - 1);
 		length += DatumGetFloat8(temporalinst_value(end));
 	}
-	TemporalS *result = temporals_make(sequences,
-		ts->count, MOBDB_FLAGS_GET_LINEAR(ts->flags), false);
+	TemporalS *result = temporals_make(sequences, ts->count, false);
 
 	for (int i = 1; i < ts->count; i++)
 		pfree(sequences[i]);
@@ -451,7 +450,7 @@ tnpoints_speed(TemporalS *ts)
 		return NULL;
 	}
 	/* The resulting sequence set has stepwise interpolation */
-	TemporalS *result = temporals_make(sequences, k, false, true);
+	TemporalS *result = temporals_make(sequences, k, true);
 	for (int i = 0; i < k; i++)
 		pfree(sequences[i]);
 	pfree(sequences);
@@ -635,8 +634,7 @@ tnpointseq_azimuth(TemporalSeq *seq)
 	}
 
 	/* Resulting sequence set has stepwise interpolation */
-	TemporalS *result = temporals_make(sequences, count, 
-		false, true);
+	TemporalS *result = temporals_make(sequences, count, true);
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
 	pfree(sequences);
@@ -661,8 +659,7 @@ tnpoints_azimuth(TemporalS *ts)
 		return NULL;
 
 	/* Resulting sequence set has stepwise interpolation */
-	TemporalS *result = temporals_make(sequences, k, 
-		false, true);
+	TemporalS *result = temporals_make(sequences, k, true);
 
 	for (int i = 0; i < k; i++)
 		pfree(sequences[i]);
@@ -933,8 +930,7 @@ tnpointseq_at_geometry(TemporalSeq *seq, Datum geom)
 	if (sequences == NULL)
 		return NULL;
 
-	TemporalS *result = temporals_make(sequences, count, 
-		MOBDB_FLAGS_GET_LINEAR(seq->flags), true);
+	TemporalS *result = temporals_make(sequences, count, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
@@ -972,8 +968,7 @@ tnpoints_at_geometry(TemporalS *ts, Datum geom)
 		if (sequences[i] != NULL)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_make(allsequences, totalseqs, 
-		MOBDB_FLAGS_GET_LINEAR(ts->flags), true);
+	TemporalS *result = temporals_make(allsequences, totalseqs, true);
 
 	for (int i = 0; i < totalseqs; i++)
 		pfree(allsequences[i]);
@@ -1093,8 +1088,7 @@ tnpointseq_minus_geometry(TemporalSeq *seq, Datum geom)
 	if (sequences == NULL)
 		return NULL;
 
-	TemporalS *result = temporals_make(sequences, count, 
-		true, true);
+	TemporalS *result = temporals_make(sequences, count, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
@@ -1148,8 +1142,7 @@ tnpoints_minus_geometry(TemporalS *ts, GSERIALIZED *gs, STBOX *box2)
 		if (countseqs[i] != 0)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_make(allsequences, totalseqs, 
-		true, true);
+	TemporalS *result = temporals_make(allsequences, totalseqs, true);
 
 	for (int i = 0; i < totalseqs; i++)
 		pfree(allsequences[i]);

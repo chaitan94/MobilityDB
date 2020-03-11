@@ -97,8 +97,7 @@ tnpoints_as_tgeompoints(TemporalS *ts)
 		TemporalSeq *seq = temporals_seq_n(ts, i);
 		sequences[i] = tnpointseq_as_tgeompointseq(seq);
 	}
-	TemporalS *result = temporals_make(sequences, ts->count, 
-		MOBDB_FLAGS_GET_LINEAR(ts->flags), false);
+	TemporalS *result = temporals_make(sequences, ts->count, false);
 	for (int i = 0; i < ts->count; i++)
 		pfree(sequences[i]);
 	pfree(sequences);
@@ -216,8 +215,7 @@ tgeompoints_as_tnpoints(TemporalS *ts)
 		}
 		sequences[i] = seq1;
 	}
-	TemporalS *result = temporals_make(sequences, ts->count, 
-		MOBDB_FLAGS_GET_LINEAR(ts->flags), false);
+	TemporalS *result = temporals_make(sequences, ts->count, false);
 	for (int i = 0; i < ts->count; i++)
 		pfree(sequences[i]);
 	pfree(sequences);

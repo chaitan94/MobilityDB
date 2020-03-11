@@ -141,8 +141,7 @@ distance_tnpoints_geo(TemporalS *ts, Datum geo)
 		TemporalSeq *seq = temporals_seq_n(ts, i);
 		sequences[i] = distance_tnpointseq_geo(seq, geo);
 	}
-	TemporalS *result = temporals_make(sequences, ts->count, 
-		true, true);
+	TemporalS *result = temporals_make(sequences, ts->count, true);
 
 	for (int i = 0; i < ts->count; i++)
 		pfree(sequences[i]);
@@ -344,8 +343,7 @@ distance_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
 		TemporalSeq *seq2 = temporals_seq_n(ts2, i);
 		sequences[i] = distance_tnpointseq_tnpointseq(seq1, seq2);
 	}
-	TemporalS *result = temporals_make(sequences, ts1->count, 
-		true, true);
+	TemporalS *result = temporals_make(sequences, ts1->count, true);
 
 	for (int i = 0; i < ts1->count; i++)
 		pfree(sequences[i]);

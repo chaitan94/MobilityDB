@@ -44,7 +44,7 @@ npoint_to_stbox_internal(STBOX *box, npoint *np)
 }
 
 void
-tnpointinst_make_stbox(STBOX *box, TemporalInst *inst)
+tnpointinst_make_stbox(STBOX *box, const TemporalInst *inst)
 {
 	npoint_to_stbox_internal(box, DatumGetNpoint(temporalinst_value(inst)));
 	box->tmin = box->tmax = inst->t;

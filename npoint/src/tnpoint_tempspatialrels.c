@@ -499,8 +499,7 @@ tspatialrel_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2,
 	int count;
 	TemporalSeq **sequences = tspatialrel_tnpointseq_tnpointseq2(
 		seq1, seq2, operator, valuetypid, &count);
-	TemporalS *result = temporals_make(sequences, count, 
-		true, true);
+	TemporalS *result = temporals_make(sequences, count, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
@@ -534,7 +533,7 @@ tspatialrel_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2,
 		if (sequences[i] != NULL)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_make(allsequences, k, true, true);
+	TemporalS *result = temporals_make(allsequences, k, true);
 
 	pfree(sequences); pfree(countseqs);
 	for (int i = 0; i < totalseqs; i++)
@@ -813,8 +812,7 @@ tspatialrel3_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2, Datum p
 	int count;
 	TemporalSeq **sequences = tspatialrel3_tnpointseq_tnpointseq2(
 		seq1, seq2, param, operator, valuetypid, &count);
-	TemporalS *result = temporals_make(sequences, count, 
-		true, true);
+	TemporalS *result = temporals_make(sequences, count, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
@@ -848,8 +846,7 @@ tspatialrel3_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2, Datum param,
 		if (sequences[i] != NULL)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_make(allsequences, k, 
-		true, true);
+	TemporalS *result = temporals_make(allsequences, k, true);
 
 	pfree(sequences); pfree(countseqs);
 	for (int i = 0; i < totalseqs; i++)
@@ -1096,8 +1093,7 @@ tspatialrel_tnpointseq_geo(TemporalSeq *seq, Datum geo,
 	int count;
 	TemporalSeq **sequences = tspatialrel_tnpointseq_geo2(seq, geo,
 		 operator, valuetypid, &count, invert);
-	TemporalS *result = temporals_make(sequences, count, 
-		true, true);
+	TemporalS *result = temporals_make(sequences, count, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
@@ -1137,8 +1133,7 @@ tspatialrel_tnpoints_geo(TemporalS *ts, Datum geo,
 		if (sequences[i] != NULL)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_make(allsequences,
-			totalseqs, true, true);
+	TemporalS *result = temporals_make(allsequences, totalseqs, true);
 
 	for (int i = 0; i < totalseqs; i++)
 		pfree(allsequences[i]);
@@ -1382,8 +1377,7 @@ tspatialrel3_tnpointseq_geo(TemporalSeq *seq, Datum geo, Datum param,
 	int count;
 	TemporalSeq **sequences = tspatialrel3_tnpointseq_geo2(seq, geo, param,
 		operator, valuetypid, &count, invert);
-	TemporalS *result = temporals_make(sequences, count, 
-		true, true);
+	TemporalS *result = temporals_make(sequences, count, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
@@ -1423,8 +1417,7 @@ tspatialrel3_tnpoints_geo(TemporalS *ts, Datum geo, Datum param,
 		if (sequences[i] != NULL)
 			pfree(sequences[i]);
 	}
-	TemporalS *result = temporals_make(allsequences,
-		totalseqs, true, true);
+	TemporalS *result = temporals_make(allsequences, totalseqs, true);
 
 	for (int i = 0; i < totalseqs; i++)
 		pfree(allsequences[i]);
