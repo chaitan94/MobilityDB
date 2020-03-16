@@ -277,7 +277,12 @@ tnumberinstarr_to_tbox(TBOX *box, TemporalInst **instants, int count)
 	return;
 }
 
-/* Make the bounding box a temporal instant set from its values */
+/* 
+ * Make the bounding box a temporal instant set from its values
+ *
+ * TODO:
+ * Make it handle rtransforms too
+ */
 void 
 temporali_make_bbox(void *box, TemporalInst **instants, int count) 
 {
@@ -291,8 +296,16 @@ temporali_make_bbox(void *box, TemporalInst **instants, int count)
 		tnumberinstarr_to_tbox((TBOX *)box, instants, count);
 #ifdef WITH_POSTGIS
 	else if (instants[0]->valuetypid == type_oid(T_GEOGRAPHY) || 
-		instants[0]->valuetypid == type_oid(T_GEOMETRY)) 
-		tpointinstarr_to_stbox((STBOX *)box, instants, count);
+		instants[0]->valuetypid == type_oid(T_GEOMETRY))
+	{
+		Datum value = temporalinst_value((TemporalInst *) instants[0]);
+		GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+		int geo_type = gserialized_get_type(gs);
+		if (geo_type == POINTTYPE)
+			tpointinstarr_to_stbox((STBOX *)box, instants, count);
+		else if (geo_type == LINETYPE || geo_type == POLYGONTYPE)
+			tregioninstarr_to_stbox((STBOX *)box, instants, count, false);
+	}
 #endif
 	return;
 }
@@ -326,7 +339,7 @@ temporalseq_make_bbox(void *box, TemporalInst **instants, int count,
 		if (geo_type == POINTTYPE)
 			tpointinstarr_to_stbox((STBOX *)box, instants, count);
 		else if (geo_type == LINETYPE || geo_type == POLYGONTYPE)
-			tregioninstarr_to_stbox((STBOX *)box, instants, count);
+			tregioninstarr_to_stbox((STBOX *)box, instants, count, true);
 	}
 #endif
 	return;

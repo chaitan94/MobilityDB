@@ -163,6 +163,24 @@ CREATE FUNCTION tgeographys(tgeography[])
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
+ * Casting
+ ******************************************************************************/
+
+CREATE FUNCTION period(tgeometry)
+    RETURNS period
+    AS 'MODULE_PATHNAME', 'temporal_to_period'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION period(tgeography)
+    RETURNS period
+    AS 'MODULE_PATHNAME', 'temporal_to_period'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+-- Casting CANNOT be implicit to avoid ambiguity
+CREATE CAST (tgeometry AS period) WITH FUNCTION period(tgeometry);
+CREATE CAST (tgeography AS period) WITH FUNCTION period(tgeography);
+
+/******************************************************************************
  * Transformations
  ******************************************************************************/
 
@@ -213,24 +231,6 @@ CREATE FUNCTION appendInstant(tgeography, tgeography)
     RETURNS tgeography
     AS 'MODULE_PATHNAME', 'temporal_append_instant'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-/******************************************************************************
- * Casting
- ******************************************************************************/
-
-CREATE FUNCTION period(tgeometry)
-    RETURNS period
-    AS 'MODULE_PATHNAME', 'temporal_to_period'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION period(tgeography)
-    RETURNS period
-    AS 'MODULE_PATHNAME', 'temporal_to_period'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
--- Casting CANNOT be implicit to avoid ambiguity
-CREATE CAST (tgeometry AS period) WITH FUNCTION period(tgeometry);
-CREATE CAST (tgeography AS period) WITH FUNCTION period(tgeography);
 
 /******************************************************************************
  * Functions

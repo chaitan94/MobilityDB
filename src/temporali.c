@@ -100,6 +100,7 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 	uint line_npoints;
 	uint poly_nrings;
 	uint* poly_npoints;
+	rtransform *prev_rtransform = NULL;
 	if (isgeo)
 	{
 		hasz = MOBDB_FLAGS_GET_Z(instants[0]->flags);
@@ -145,39 +146,41 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 			if (MOBDB_FLAGS_GET_Z(instants[i]->flags) != hasz)
 				ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
 					errmsg("All geometries composing a temporal point must be of the same dimensionality")));
-			if (geo_type == LINETYPE)
+			if (instants[i]->valuetypid == type_oid(T_GEOMETRY) || 
+				instants[i]->valuetypid == type_oid(T_GEOGRAPHY))
 			{
-				Datum value = temporalinst_value((TemporalInst *) instants[i]);
-				GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
-				if (geo_type != gserialized_get_type(gs))
-					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
-						errmsg("All geometries must be of the same type")));
-				LWLINE *line = (LWLINE *) lwgeom_from_gserialized(gs);
-				/* Maybe test better using number of inner rings and number of ponts of each ring */
-				if (line_npoints != line->points->npoints)
-					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
-						errmsg("All regions must contain the same number of points")));
-				lwline_free(line);
-			}
-			else if (geo_type == POLYGONTYPE)
-			{
-				Datum value = temporalinst_value((TemporalInst *) instants[i]);
-				GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
-				if (geo_type != gserialized_get_type(gs))
-					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
-						errmsg("All geometries must be of the same type")));
-				LWPOLY *poly = (LWPOLY *) lwgeom_from_gserialized(gs);
-				/* Maybe test better using number of inner rings and number of ponts of each ring */
-				if (poly_nrings != poly->nrings)
-					ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
-						errmsg("All regions must contain the same number of rings")));
-				for (int j = 0; j < (int) poly_nrings; ++j)
+				if (geo_type == LINETYPE)
 				{
-					if (poly_npoints[j] != poly->rings[j]->npoints)
+					Datum value = temporalinst_value((TemporalInst *) instants[i]);
+					GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+					if (geo_type != gserialized_get_type(gs))
 						ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
-							errmsg("Corresponding rings in each region must contain the same number of points")));
+							errmsg("All geometries must be of the same type")));
+					LWLINE *line = (LWLINE *) lwgeom_from_gserialized(gs);
+					if (line_npoints != line->points->npoints)
+						ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+							errmsg("All regions must contain the same number of points")));
+					lwline_free(line);
 				}
-				lwpoly_free(poly);
+				else if (geo_type == POLYGONTYPE)
+				{
+					Datum value = temporalinst_value((TemporalInst *) instants[i]);
+					GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+					if (geo_type != gserialized_get_type(gs))
+						ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+							errmsg("All geometries must be of the same type")));
+					LWPOLY *poly = (LWPOLY *) lwgeom_from_gserialized(gs);
+					if (poly_nrings != poly->nrings)
+						ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+							errmsg("All regions must contain the same number of rings")));
+					for (int j = 0; j < (int) poly_nrings; ++j)
+					{
+						if (poly_npoints[j] != poly->rings[j]->npoints)
+							ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+								errmsg("Corresponding rings in each region must contain the same number of points")));
+					}
+					lwpoly_free(poly);
+				}
 			}
 		}
 #endif
@@ -195,21 +198,26 @@ temporali_from_temporalinstarr(TemporalInst **instants, int count)
 	 * Only external types have precomputed bounding box, internal types such
 	 * as double2, double3, or double4 do not have one
 	 * Compute before transforming the instants if we handle regions
+	 *
+	 * TODO:
+	 * Place it at the end of the function again
 	 */
 	void *bbox;
+
+#ifdef WITH_POSTGIS
+	/*
+	 * Transform the instants into rtransforms (keep the first instant as a region)
+	 *
+	 */
+	if (count > 1 && isgeo && (geo_type == LINETYPE || geo_type == POLYGONTYPE))
+		instants = geo_instarr_to_rtransform(instants, count);
+#endif
+	
 	if (bboxsize != 0) 
 	{
 		bbox = palloc(bboxsize);
 		temporali_make_bbox(bbox, instants, count);
 	}
-
-#ifdef WITH_POSTGIS
-	/*
-	 * Transform the instants into rtransforms (keep the first instant as a region)
-	 */
-	if (count > 1 && isgeo && (geo_type == LINETYPE || geo_type == POLYGONTYPE))
-		instants = geo_instarr_to_rtransform(instants, count);
-#endif
 
 	/* Add the size of composing instants */
 	for (int i = 0; i < count; i++)

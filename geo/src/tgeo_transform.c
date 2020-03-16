@@ -118,6 +118,20 @@ rtransform_combine(rtransform *rt1, rtransform *rt2)
  * Utility functions
  *****************************************************************************/
 
+/* TODO: find better name */
+static void
+rtransform_combine_inplace(rtransform *rt1, rtransform *rt2)
+{
+    double new_theta = rt1->theta + rt2->theta;
+    if (new_theta > M_PI)
+        new_theta = new_theta - 2*M_PI;
+    else if (new_theta <= -M_PI)
+        new_theta = new_theta + 2*M_PI;
+    rt1->theta = new_theta;
+    rt1->tx += rt2->tx;
+    rt1->ty += rt2->ty;
+}
+
 void
 apply_affine_transform(LWGEOM *geom, 
     double a, double b, double c, 
@@ -291,28 +305,38 @@ geo_instarr_to_rtransform(TemporalInst **instants, int count)
     LWGEOM *firstLwgeom = lwgeom_from_gserialized(firstGs);
     TemporalInst **newInstants = palloc(sizeof(TemporalInst *) * count);;
     newInstants[0] = (TemporalInst *) temporal_copy((Temporal *) firstInst);
+    rtransform *prev_rtransform = NULL;
     for (int i = 1; i < count; ++i)
     {
-        /* 
-        Compute transformation
-        Compute tranformed region
-        Compare regions
-        Create new instant if ok, else throw error
-         */
-        LWGEOM *firstLwgeomCopy = lwgeom_clone_deep(firstLwgeom);
-        Datum value = temporalinst_value((TemporalInst *) instants[i]);
-        GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
-        LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
-        rtransform *rt = rtransform_compute(firstLwgeomCopy, lwgeom);
-        apply_rtransform(firstLwgeomCopy, rt);
-        if (!lwgeom_similar(firstLwgeomCopy, lwgeom))
-            ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
-                        errmsg("All regions must be congruent")));
-        newInstants[i] = temporalinst_make(RtransformGetDatum(rt), instants[i]->t, type_oid(T_RTRANSFORM));
-        pfree(rt);
-        lwgeom_free(firstLwgeomCopy);
-        lwgeom_free(lwgeom);
+        if (instants[i]->valuetypid == type_oid(T_GEOMETRY) || 
+            instants[i]->valuetypid == type_oid(T_GEOGRAPHY))
+        {
+            LWGEOM *firstLwgeomCopy = lwgeom_clone_deep(firstLwgeom);
+            Datum value = temporalinst_value(instants[i]);
+            GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
+            LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
+            if (prev_rtransform != NULL)
+                pfree(prev_rtransform);
+            prev_rtransform = rtransform_compute(firstLwgeomCopy, lwgeom);
+            apply_rtransform(firstLwgeomCopy, prev_rtransform);
+            if (!lwgeom_similar(firstLwgeomCopy, lwgeom))
+                ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+                    errmsg("All regions must be congruent")));
+            newInstants[i] = temporalinst_make(RtransformGetDatum(prev_rtransform), 
+                    instants[i]->t, type_oid(T_RTRANSFORM));
+            lwgeom_free(firstLwgeomCopy);
+            lwgeom_free(lwgeom);
+        }
+        else if (instants[i]->valuetypid == type_oid(T_RTRANSFORM) && prev_rtransform != NULL)
+        {
+            newInstants[i] = (TemporalInst *) temporal_copy((Temporal *) instants[i]);
+            Datum value = temporalinst_value(newInstants[i]);
+            rtransform *rt = DatumGetRtransform(value);
+            rtransform_combine_inplace(rt, prev_rtransform);
+        }
     }
+    if (prev_rtransform != NULL)
+        pfree(prev_rtransform);
     lwgeom_free(firstLwgeom);
     return newInstants;
 }

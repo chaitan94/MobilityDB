@@ -7,11 +7,13 @@
 #include <float.h>
 
 #include "timestampset.h"
+#include "oidcache.h"
 #include "periodset.h"
 #include "temporaltypes.h"
 #include "temporal_util.h"
 #include "stbox.h"
 #include "tgeo.h"
+#include "tgeo_transform.h"
 #include "tpoint_boxops.h"
 
 /*****************************************************************************/
@@ -82,10 +84,13 @@ rotating_geo_to_stbox_internal(STBOX *box, GSERIALIZED *gs)
 /* Functions computing the bounding box at the creation of a temporal geometry */
 
 void
-tregioninst_make_stbox(STBOX *box, Datum value, TimestampTz t)
+tregioninst_make_stbox(STBOX *box, Datum value, TimestampTz t, bool rotating)
 {
     GSERIALIZED *gs = (GSERIALIZED *)PointerGetDatum(value);
-    assert(rotating_geo_to_stbox_internal(box, gs));
+    if (rotating)
+        assert(rotating_geo_to_stbox_internal(box, gs));
+    else
+        assert(geo_to_stbox_internal(box, gs));
     box->tmin = box->tmax = t;
     MOBDB_FLAGS_SET_T(box->flags, true);
     return;
@@ -93,16 +98,29 @@ tregioninst_make_stbox(STBOX *box, Datum value, TimestampTz t)
 
 /* TemporalInst values do not have a precomputed bounding box */
 void
-tregioninstarr_to_stbox(STBOX *box, TemporalInst **instants, int count)
+tregioninstarr_to_stbox(STBOX *box, TemporalInst **instants, int count, bool rotating)
 {
     Datum value = temporalinst_value(instants[0]);
-    tregioninst_make_stbox(box, value, instants[0]->t);
+    tregioninst_make_stbox(box, value, instants[0]->t, rotating);
+    TemporalInst *referenceInst = instants[0];
     for (int i = 1; i < count; i++)
     {
         STBOX box1;
         memset(&box1, 0, sizeof(STBOX));
-        value = temporalinst_value(instants[i]);
-        tregioninst_make_stbox(&box1, value, instants[i]->t);
+        if (instants[i]->valuetypid == type_oid(T_GEOGRAPHY) || 
+            instants[i]->valuetypid == type_oid(T_GEOMETRY))
+        {
+            referenceInst = instants[i];
+            value = temporalinst_value(instants[i]);
+            tregioninst_make_stbox(&box1, value, instants[i]->t, rotating);
+        } 
+        else if (instants[i]->valuetypid == type_oid(T_RTRANSFORM))
+        {
+            TemporalInst *inst = tgeoinst_rtransfrom_to_region(instants[i], referenceInst);
+            value = temporalinst_value(inst);
+            tregioninst_make_stbox(&box1, value, inst->t, rotating);
+            pfree(inst);
+        }
         stbox_expand(box, &box1);
     }
     return;
