@@ -167,17 +167,6 @@ temporalinstarr_to_period(Period *period, TemporalInst **instants, int count,
 	period_set(period, instants[0]->t, instants[count - 1]->t, lower_inc, upper_inc);
 }
 
-/* Expand the first box with the second one */
-
-void
-tbox_expand(TBOX *box1, const TBOX *box2)
-{
-	box1->xmin = Min(box1->xmin, box2->xmin);
-	box1->xmax = Max(box1->xmax, box2->xmax);
-	box1->tmin = Min(box1->tmin, box2->tmin);
-	box1->tmax = Max(box1->tmax, box2->tmax);
-}
-
 /* Transform an array of tnumber instant to a box */
 
 static void

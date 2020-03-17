@@ -22,13 +22,6 @@
 
 /* Functions on generic bounding boxes of temporal types */
 
-extern void tbox_expand(TBOX *box1, const TBOX *box2);
-
-extern bool overlaps_tbox_tbox_internal(const TBOX *box1, const TBOX *box2);
-extern bool contained_tbox_tbox_internal(const TBOX *box1, const TBOX *box2);
-extern bool contains_tbox_tbox_internal(const TBOX *box1, const TBOX *box2);
-extern bool same_tbox_tbox_internal(const TBOX *box1, const TBOX *box2);
-
 extern size_t temporal_bbox_size(Oid valuetypid);
 extern bool temporal_bbox_eq(void *box1, void *box2, Oid valuetypid);
 extern int temporal_bbox_cmp(void *box1, void *box2, Oid valuetypid);

@@ -136,7 +136,7 @@ tgeoi_parse(char **str, Oid basetype, int *tgeo_srid)
         insts[i] = tgeoinst_parse(str, basetype, false, tgeo_srid);
     }
     p_cbrace(str);
-    TemporalI *result = temporali_from_temporalinstarr(insts, count);
+    TemporalI *result = temporali_make(insts, count);
 
     for (int i = 0; i < count; i++)
         pfree(insts[i]);
@@ -196,7 +196,7 @@ tgeoseq_parse(char **str, Oid basetype, bool linear, bool end, int *tgeo_srid)
     p_cbracket(str);
     p_cparen(str);
 
-    TemporalSeq *result = temporalseq_from_temporalinstarr(insts, 
+    TemporalSeq *result = temporalseq_make(insts, 
         count, lower_inc, upper_inc, linear, true);
 
     for (int i = 0; i < count; i++)
@@ -242,8 +242,7 @@ tgeos_parse(char **str, Oid basetype, bool linear, int *tgeo_srid)
         seqs[i] = tgeoseq_parse(str, basetype, linear, false, tgeo_srid);
     }
     p_cbrace(str);
-    TemporalS *result = temporals_from_temporalseqarr(seqs, count, 
-        linear, true);
+    TemporalS *result = temporals_make(seqs, count, true);
 
     for (int i = 0; i < count; i++)
         pfree(seqs[i]);

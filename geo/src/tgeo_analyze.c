@@ -43,83 +43,6 @@
 
 /*****************************************************************************/
 
-/* 
- * This function is used to remove the time part from the sample rows after
- * getting the statistics from the time dimension, to be able to collect
- * spatial statistics in the same stats variable.
- */
-static HeapTuple
-tgeo_remove_timedim(HeapTuple tuple, TupleDesc tupDesc, int tupattnum, 
-    int natts, Datum value)
-{
-    Datum *replValues = (Datum *) palloc(natts * sizeof(Datum));
-    bool *replIsnull = (bool *) palloc(natts * sizeof(bool));
-    bool *doReplace = (bool *) palloc(natts * sizeof(bool));
-
-    for (int i = 0; i < natts; i++)
-    {
-        /* tupattnum is 1-based */
-        if (i == tupattnum - 1)
-        {
-            replValues[i] = 0; // TODO: tgeo_values_internal(DatumGetTemporal(value));
-            replIsnull[i] = false;
-            doReplace[i] = true;
-        }
-        else
-        {
-            replValues[i] = 0;
-            replIsnull[i] = false;
-            doReplace[i] = false;
-        }
-    }
-    HeapTuple result = heap_modify_tuple(tuple, tupDesc, replValues, replIsnull, doReplace);
-    pfree(replValues); pfree(replIsnull); pfree(doReplace);
-    return result;
-}
-
-static void
-tgeo_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
-                     int samplerows, double totalrows)
-{
-    MemoryContext old_context;
-    int duration = TYPMOD_GET_DURATION(stats->attrtypmod);
-    int stawidth;
-
-    /* Compute statistics for the time component */
-    if (duration == TEMPORALINST)
-        temporalinst_compute_stats(stats, fetchfunc, samplerows, totalrows);
-    else
-        temporals_compute_stats(stats, fetchfunc, samplerows, totalrows);
-
-    stawidth = stats->stawidth;
-
-    /* Must copy the target values into anl_context */
-    old_context = MemoryContextSwitchTo(stats->anl_context);
-
-    /* Remove time component for the tuples */
-    for (int i = 0; i < samplerows; i++)
-    {
-        bool isnull;
-        Datum value = fetchfunc(stats, i, &isnull);
-        if (isnull)
-            continue;
-        stats->rows[i] = tgeo_remove_timedim(stats->rows[i],  
-            stats->tupDesc, stats->tupattnum, stats->tupDesc->natts, value);
-    }
-
-    /* Compute statistics for the geometry component */
-    call_function1(gserialized_analyze_nd, PointerGetDatum(stats));
-    stats->compute_stats(stats, fetchfunc, samplerows, totalrows);
-
-    /* Put the total width of the column, variable size */
-    stats->stawidth = stawidth;
-    
-    /* Switch back to the previous context */
-    MemoryContextSwitchTo(old_context);
-
-    return;
-}
-
 PG_FUNCTION_INFO_V1(tgeo_analyze);
 
 PGDLLEXPORT Datum
@@ -145,7 +68,8 @@ tgeo_analyze(PG_FUNCTION_ARGS)
         temporal_extra_info(stats);
 
     /* Set the callback function to compute statistics. */
-    stats->compute_stats = tgeo_compute_stats;
+    // TODO
+    /*stats->compute_stats = tgeo_compute_stats;*/
     PG_RETURN_BOOL(true);
 }
 

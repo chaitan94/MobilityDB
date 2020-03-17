@@ -96,7 +96,6 @@ temporali_make(TemporalInst **instants, int count)
 	uint line_npoints;
 	uint poly_nrings;
 	uint* poly_npoints;
-	rtransform *prev_rtransform = NULL;
 	if (isgeo)
 	{
 		hasz = MOBDB_FLAGS_GET_Z(instants[0]->flags);

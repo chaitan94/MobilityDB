@@ -116,7 +116,8 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
      * duration types in the same column. Similarly for all generic modifiers.
      */
     deconstruct_array(arr, CSTRINGOID, -2, false, 'c', &elem_values, NULL, &n);
-    uint8_t duration = 0, geometry_type = 0;
+    int16 duration = 0;
+    uint8_t geometry_type = 0;
     int z = 0, m = 0;
     char *s;
     

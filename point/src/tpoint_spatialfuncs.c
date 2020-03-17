@@ -801,11 +801,7 @@ tpointseq_trajectory_append(const TemporalSeq *seq, const TemporalInst *inst, bo
 /* Join two trajectories */
 
 Datum 
-<<<<<<< HEAD
-tpointseq_trajectory_join(TemporalSeq *seq1, TemporalSeq *seq2, bool last, bool first)
-=======
 tpointseq_trajectory_join(const TemporalSeq *seq1, const TemporalSeq *seq2, bool last, bool first)
->>>>>>> master
 {
 	assert(MOBDB_FLAGS_GET_LINEAR(seq1->flags) == MOBDB_FLAGS_GET_LINEAR(seq2->flags));
 	int count1 = last ? seq1->count - 1 : seq1->count;

@@ -58,6 +58,18 @@ extern void stbox_shift(STBOX *box, const Interval *interval);
 extern STBOX *stbox_intersection_internal(const STBOX *box1, const STBOX *box2);
 extern int stbox_cmp_internal(const STBOX *box1, const STBOX *box2);
 
+extern Datum contains_stbox_stbox(PG_FUNCTION_ARGS);
+extern Datum contained_stbox_stbox(PG_FUNCTION_ARGS);
+extern Datum overlaps_stbox_stbox(PG_FUNCTION_ARGS);
+extern Datum same_stbox_stbox(PG_FUNCTION_ARGS);
+extern Datum adjacent_stbox_stbox(PG_FUNCTION_ARGS);
+
+extern bool contains_stbox_stbox_internal(const STBOX *box1, const STBOX *box2);
+extern bool contained_stbox_stbox_internal(const STBOX *box1, const STBOX *box2);
+extern bool overlaps_stbox_stbox_internal(const STBOX *box1, const STBOX *box2);
+extern bool same_stbox_stbox_internal(const STBOX *box1, const STBOX *box2);
+extern bool adjacent_stbox_stbox_internal(const STBOX *box1, const STBOX *box2);
+
 /*****************************************************************************/
 
 #endif
