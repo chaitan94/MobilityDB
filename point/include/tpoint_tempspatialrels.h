@@ -3,9 +3,9 @@
  * tpoint_tempspatialrels.h
  *	  Temporal spatial relationships for temporal points.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse, 
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -20,19 +20,12 @@
 
 extern Datum tcontains_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum tcontains_tpoint_geo(PG_FUNCTION_ARGS);
-extern Datum tcontains_tpoint_tpoint(PG_FUNCTION_ARGS);
-
-extern Datum tcontainsproperly_geo_tpoint(PG_FUNCTION_ARGS);
-extern Datum tcontainsproperly_tpoint_geo(PG_FUNCTION_ARGS);
-extern Datum tcontainsproperly_tpoint_tpoint(PG_FUNCTION_ARGS);
 
 extern Datum tcovers_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum tcovers_tpoint_geo(PG_FUNCTION_ARGS);
-extern Datum tcovers_tpoint_tpoint(PG_FUNCTION_ARGS);
 
 extern Datum tcoveredby_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum tcoveredby_tpoint_geo(PG_FUNCTION_ARGS);
-extern Datum tcoveredby_tpoint_tpoint(PG_FUNCTION_ARGS);
 
 extern Datum tdisjoint_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum tdisjoint_tpoint_geo(PG_FUNCTION_ARGS);
@@ -48,11 +41,9 @@ extern Datum tintersects_tpoint_tpoint(PG_FUNCTION_ARGS);
 
 extern Datum ttouches_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum ttouches_tpoint_geo(PG_FUNCTION_ARGS);
-extern Datum ttouches_tpoint_tpoint(PG_FUNCTION_ARGS);
 
 extern Datum twithin_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum twithin_tpoint_geo(PG_FUNCTION_ARGS);
-extern Datum twithin_tpoint_tpoint(PG_FUNCTION_ARGS);
 
 extern Datum tdwithin_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum tdwithin_tpoint_geo(PG_FUNCTION_ARGS);

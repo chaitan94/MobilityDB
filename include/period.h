@@ -3,9 +3,9 @@
  * period.h
  *	  Basic routines for timestamptz periods
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -37,8 +37,8 @@ extern Datum period_constructor4(PG_FUNCTION_ARGS);
 
 /* Casting */
 extern Datum timestamp_to_period(PG_FUNCTION_ARGS);
-extern Datum period_to_range(PG_FUNCTION_ARGS);
-extern Datum range_to_period(PG_FUNCTION_ARGS);
+extern Datum period_to_tstzrange(PG_FUNCTION_ARGS);
+extern Datum tstzrange_to_period(PG_FUNCTION_ARGS);
 
 /* period -> timestamptz */
 extern Datum period_lower(PG_FUNCTION_ARGS);
@@ -72,18 +72,14 @@ extern bool period_ne_internal(Period *p1, Period *p2);
 extern int period_cmp_internal(Period *p1, Period *p2);
 extern bool period_lt_internal(Period *p1, Period *p2);
 extern bool period_le_internal(Period *p1, Period *p2);
-extern bool period_eq_internal(Period *p1, Period *p2);
 extern bool period_ge_internal(Period *p1, Period *p2);
 extern bool period_gt_internal(Period *p1, Period *p2);
 
 /* Assorted support functions */
 
 extern void period_deserialize(Period *p, PeriodBound *lower, PeriodBound *upper);
-extern int period_cmp_bounds(TimestampTz t1, TimestampTz t2, bool lower1, 
-	bool lower2, bool inclusive1, bool inclusive2);
-extern bool period_bounds_adjacent(TimestampTz t1, TimestampTz t2, 
-	bool inclusive1, bool inclusive2);
-extern Period *period_make(TimestampTz lower, TimestampTz upper, 
+extern int period_cmp_bounds(PeriodBound *lower, PeriodBound *upper);
+extern Period *period_make(TimestampTz lower, TimestampTz upper,
 	bool lower_inc, bool upper_inc);
 extern void period_set(Period *p, TimestampTz lower, TimestampTz upper, 
 	bool lower_inc, bool upper_inc);
@@ -92,11 +88,9 @@ extern float8 period_to_secs(TimestampTz t1, TimestampTz t2);
 extern Interval *period_timespan_internal(Period *p);
 extern Period **periodarr_normalize(Period **periods, int count, int *newcount);
 extern Period *period_super_union(Period *p1, Period *p2);
+extern void period_expand(Period *p1, const Period *p2);
 
-/* Used for GiST and SP-GiST */
-
-int	period_cmp_lower(const void **a, const void **b);
-int	period_cmp_upper(const void **a, const void **b);
+extern int period_bound_qsort_cmp(const void *a1, const void *a2);
 
 #endif
 

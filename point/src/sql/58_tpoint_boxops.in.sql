@@ -3,9 +3,9 @@
  * tpoint_boxops.sql
  *	  Bounding box operators for temporal points.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse, 
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -72,65 +72,10 @@ CREATE CAST (periodset AS stbox) WITH FUNCTION stbox(periodset) AS IMPLICIT;
 CREATE CAST (tgeompoint AS stbox) WITH FUNCTION stbox(tgeompoint);
 CREATE CAST (tgeogpoint AS stbox) WITH FUNCTION stbox(tgeogpoint);
 
-/*****************************************************************************
- * Selectively functions for operators
- *****************************************************************************/
-
-CREATE FUNCTION tpoint_sel(internal, oid, internal, integer)
-	RETURNS float
-	AS 'MODULE_PATHNAME', 'tpoint_sel'
-	LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION tpoint_joinsel(internal, oid, internal, smallint, internal)
-	RETURNS float
-	AS 'MODULE_PATHNAME', 'tpoint_joinsel'
-	LANGUAGE C IMMUTABLE STRICT;
-
-/*****************************************************************************
-* stbox operators
-*****************************************************************************/
-
-CREATE FUNCTION stbox_contains(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'contains_stbox_stbox'
+CREATE FUNCTION stboxes(tgeompoint)
+	RETURNS stbox[]
+	AS 'MODULE_PATHNAME', 'tpoint_stboxes'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION stbox_contained(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'contained_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION stbox_overlaps(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overlaps_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION stbox_same(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'same_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE OPERATOR @> (
-	PROCEDURE = stbox_contains,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	COMMUTATOR = <@,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR <@ (
-	PROCEDURE = stbox_contained,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	COMMUTATOR = @>,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR && (
-	PROCEDURE = stbox_overlaps,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	COMMUTATOR = &&,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR ~= (
-	PROCEDURE = stbox_same,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	COMMUTATOR = ~=,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
 
 /*****************************************************************************/
 
@@ -597,6 +542,116 @@ CREATE OPERATOR ~= (
 	PROCEDURE = same_bbox,
 	LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
 	COMMUTATOR = ~=,
+	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+);
+
+/*****************************************************************************
+ * Adjacent
+ *****************************************************************************/
+
+CREATE FUNCTION adjacent_bbox(geometry, tgeompoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_geo_tpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(stbox, tgeompoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_stbox_tpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tgeompoint, geometry)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tpoint_geo'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tgeompoint, stbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tpoint_stbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tgeompoint, tgeompoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tpoint_tpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = geometry, RIGHTARG = tgeompoint,
+	COMMUTATOR = -|-,
+	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = stbox, RIGHTARG = tgeompoint,
+	COMMUTATOR = -|-,
+	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tgeompoint, RIGHTARG = geometry,
+	COMMUTATOR = -|-,
+	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tgeompoint, RIGHTARG = stbox,
+	COMMUTATOR = -|-,
+	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
+	COMMUTATOR = -|-,
+	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+);
+
+/*****************************************************************************/
+
+CREATE FUNCTION adjacent_bbox(geography, tgeogpoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_geo_tpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(stbox, tgeogpoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_stbox_tpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tgeogpoint, geography)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tpoint_geo'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tgeogpoint, stbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tpoint_stbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tgeogpoint, tgeogpoint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tpoint_tpoint'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = geography, RIGHTARG = tgeogpoint,
+	COMMUTATOR = -|-,
+	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = stbox, RIGHTARG = tgeogpoint,
+	COMMUTATOR = -|-,
+	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tgeogpoint, RIGHTARG = geography,
+	COMMUTATOR = -|-,
+	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tgeogpoint, RIGHTARG = stbox,
+	COMMUTATOR = -|-,
+	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
+	COMMUTATOR = -|-,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 

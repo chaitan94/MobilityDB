@@ -3,9 +3,9 @@
  * temporalinst.h
  *	  Basic functions for temporal instants.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -23,9 +23,10 @@
  
 extern TemporalInst *temporalinst_make(Datum value, TimestampTz t, Oid valuetypid);
 extern TemporalInst *temporalinst_copy(TemporalInst *inst);
-extern Datum* temporalinst_value_ptr(TemporalInst *inst);
-extern Datum temporalinst_value(TemporalInst *inst);
-extern Datum temporalinst_value_copy(TemporalInst *inst);
+extern Datum* temporalinst_value_ptr(const TemporalInst *inst);
+extern Datum temporalinst_value(const TemporalInst *inst);
+extern Datum temporalinst_value_copy(const TemporalInst *inst);
+extern void temporalinst_set(TemporalInst *inst, Datum value, TimestampTz t);
 
 /* Input/output functions */
 
@@ -58,19 +59,23 @@ extern TemporalInst *temporals_to_temporalinst(TemporalS *ts);
 extern ArrayType *temporalinst_values(TemporalInst *inst);
 extern ArrayType *tfloatinst_ranges(TemporalInst *inst);
 extern PeriodSet *temporalinst_get_time(TemporalInst *inst);
-extern void temporalinst_bbox(void *box, TemporalInst *inst);
-extern RangeType *tnumberinst_value_range(TemporalInst *inst);
-extern bool temporalinst_ever_eq(TemporalInst *inst, Datum value);
-extern bool temporalinst_always_eq(TemporalInst *inst, Datum value);
 extern void temporalinst_period(Period *p, TemporalInst *inst);
 extern ArrayType *temporalinst_timestamps(TemporalInst *inst);
 extern ArrayType *temporalinst_instants_array(TemporalInst *inst);
 extern TemporalInst *temporalinst_shift(TemporalInst *inst, Interval *interval);
 
+extern bool temporalinst_ever_eq(TemporalInst *inst, Datum value);
+extern bool temporalinst_ever_lt(TemporalInst *inst, Datum value);
+extern bool temporalinst_ever_le(TemporalInst *inst, Datum value);
+
+extern bool temporalinst_always_eq(TemporalInst *inst, Datum value);
+extern bool temporalinst_always_lt(TemporalInst *inst, Datum value);
+extern bool temporalinst_always_le(TemporalInst *inst, Datum value);
+
 /* Restriction Functions */
 
-extern TemporalInst *temporalinst_at_value(TemporalInst *inst, Datum val);
-extern TemporalInst *temporalinst_minus_value(TemporalInst *inst, Datum val);
+extern TemporalInst *temporalinst_at_value(TemporalInst *inst, Datum value);
+extern TemporalInst *temporalinst_minus_value(TemporalInst *inst, Datum value);
 extern TemporalInst *temporalinst_at_values(TemporalInst *inst, Datum *values, int count);
 extern TemporalInst *temporalinst_minus_values(TemporalInst *inst, Datum *values, int count);
 extern TemporalInst *tnumberinst_at_range(TemporalInst *inst, RangeType *range);
@@ -88,8 +93,6 @@ extern TemporalInst *temporalinst_minus_periodset(TemporalInst *inst, PeriodSet 
 
 extern TemporalInst *tnumberinst_at_ranges(TemporalInst *inst, RangeType **normranges, int count);
 extern TemporalInst *tnumberinst_minus_ranges(TemporalInst *inst, RangeType **normranges, int count);
-extern TemporalInst *temporalinst_at_period(TemporalInst *inst, Period *p);
-extern TemporalInst *temporalinst_minus_period(TemporalInst *inst, Period *p);
 
 extern bool temporalinst_intersects_timestamp(TemporalInst *inst, TimestampTz t);
 extern bool temporalinst_intersects_timestampset(TemporalInst *inst, TimestampSet *ts);

@@ -3,9 +3,9 @@
  * tpoint.sql
  *	  Basic functions for temporal points.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -288,46 +288,6 @@ CREATE FUNCTION getTimestamp(tgeogpoint)
 	AS 'MODULE_PATHNAME', 'temporalinst_timestamp'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION ever_eq(tgeompoint, geometry(Point))
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'tpoint_ever_eq'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION ever_eq(tgeogpoint, geography(Point))
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'tpoint_ever_eq'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE OPERATOR ?= (
-	LEFTARG = tgeompoint, RIGHTARG = geometry(Point),
-	PROCEDURE = ever_eq,
-	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
-);
-CREATE OPERATOR ?= (
-	LEFTARG = tgeogpoint, RIGHTARG = geography(Point),
-	PROCEDURE = ever_eq,
-	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
-);
-
-CREATE FUNCTION always_eq(tgeompoint, geometry(Point))
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'tpoint_always_eq'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_eq(tgeogpoint, geography(Point))
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'tpoint_always_eq'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE OPERATOR %= (
-	LEFTARG = tgeompoint, RIGHTARG = geometry(Point),
-	PROCEDURE = always_eq,
-	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
-);
-CREATE OPERATOR %= (
-	LEFTARG = tgeogpoint, RIGHTARG = geography(Point),
-	PROCEDURE = always_eq,
-	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
-);
-
 CREATE FUNCTION shift(tgeompoint, interval)
 	RETURNS tgeompoint
 	AS 'MODULE_PATHNAME', 'temporal_shift'
@@ -498,6 +458,102 @@ CREATE FUNCTION sequences(tgeogpoint)
 	RETURNS tgeogpoint[]
 	AS 'MODULE_PATHNAME', 'temporal_sequences'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * Ever/Always Comparison Functions 
+ *****************************************************************************/
+
+CREATE FUNCTION ever_eq(tgeompoint, geometry(Point))
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'tpoint_ever_eq'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ever_eq(tgeogpoint, geography(Point))
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'tpoint_ever_eq'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR ?= (
+	LEFTARG = tgeompoint, RIGHTARG = geometry(Point),
+	PROCEDURE = ever_eq,
+	NEGATOR = %<>,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+CREATE OPERATOR ?= (
+	LEFTARG = tgeogpoint, RIGHTARG = geography(Point),
+	PROCEDURE = ever_eq,
+	NEGATOR = %<>,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+
+CREATE FUNCTION always_eq(tgeompoint, geometry(Point))
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'tpoint_always_eq'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION always_eq(tgeogpoint, geography(Point))
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'tpoint_always_eq'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR %= (
+	LEFTARG = tgeogpoint, RIGHTARG = geography(Point),
+	PROCEDURE = always_eq,
+	NEGATOR = &<>,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+CREATE OPERATOR %= (
+	LEFTARG = tgeompoint, RIGHTARG = geometry(Point),
+	PROCEDURE = always_eq,
+	NEGATOR = &<>,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+
+CREATE FUNCTION ever_ne(tgeompoint, geometry(Point))
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'tpoint_ever_ne'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ever_ne(tgeogpoint, geography(Point))
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'tpoint_ever_ne'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR &<> (
+	LEFTARG = tgeompoint, RIGHTARG = geometry(Point),
+	PROCEDURE = ever_ne,
+	NEGATOR = %=,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+CREATE OPERATOR &<> (
+	LEFTARG = tgeogpoint, RIGHTARG = geography(Point),
+	PROCEDURE = ever_ne,
+	NEGATOR = %=,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+
+CREATE FUNCTION always_ne(tgeompoint, geometry(Point))
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'tpoint_always_ne'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION always_ne(tgeogpoint, geography(Point))
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'tpoint_always_ne'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR %<> (
+	LEFTARG = tgeogpoint, RIGHTARG = geography(Point),
+	PROCEDURE = always_ne,
+	NEGATOR = ?=,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+CREATE OPERATOR %<> (
+	LEFTARG = tgeompoint, RIGHTARG = geometry(Point),
+	PROCEDURE = always_ne,
+	NEGATOR = ?=,
+	RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+
+/*****************************************************************************
+ * Restriction Functions 
+ *****************************************************************************/
 
 CREATE FUNCTION atValue(tgeompoint, geometry(Point))
 	RETURNS tgeompoint

@@ -14,9 +14,9 @@
  * basic temporal types. In this file they are defined when one of the
  * arguments is a stbox.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -29,401 +29,6 @@
 #include "tpoint.h"
 #include "tpoint_spatialfuncs.h"
 #include "tpoint_boxops.h"
-
-/*****************************************************************************/
-/* STBOX op STBOX */
-
-/* strictly left of? */
-
-bool
-left_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the XY dimension  */
-	assert(MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags));
-	return (box1->xmax < box2->xmin);
-}
-
-PG_FUNCTION_INFO_V1(left_stbox_stbox);
-
-PGDLLEXPORT Datum
-left_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_X(box1->flags) || ! MOBDB_FLAGS_GET_X(box2->flags))
-		PG_RETURN_NULL();
-	bool result = left_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* does not extend to right of? */
-
-bool
-overleft_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the XY dimension  */
-	assert(MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags));
-	return (box1->xmax <= box2->xmax);
-}
-
-PG_FUNCTION_INFO_V1(overleft_stbox_stbox);
-
-PGDLLEXPORT Datum
-overleft_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_X(box1->flags) || ! MOBDB_FLAGS_GET_X(box2->flags))
-		PG_RETURN_NULL();
-	bool result = overleft_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* strictly right of? */
-
-bool
-right_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the XY dimension  */
-	assert(MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags));
-	return (box1->xmin > box2->xmax);
-}
-
-PG_FUNCTION_INFO_V1(right_stbox_stbox);
-
-PGDLLEXPORT Datum
-right_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_X(box1->flags) || ! MOBDB_FLAGS_GET_X(box2->flags))
-		PG_RETURN_NULL();
-	bool result = right_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* does not extend to left of? */
-
-bool
-overright_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the XY dimension  */
-	assert(MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags));
-	return (box1->xmin >= box2->xmin);
-}
-
-PG_FUNCTION_INFO_V1(overright_stbox_stbox);
-
-PGDLLEXPORT Datum
-overright_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_X(box1->flags) || ! MOBDB_FLAGS_GET_X(box2->flags))
-		PG_RETURN_NULL();
-	bool result = overright_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* strictly below of? */
-
-bool
-below_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the XY dimension  */
-	assert(MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags));
-	return (box1->ymax < box2->ymin);
-}
-
-PG_FUNCTION_INFO_V1(below_stbox_stbox);
-
-PGDLLEXPORT Datum
-below_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_X(box1->flags) || ! MOBDB_FLAGS_GET_X(box2->flags))
-		PG_RETURN_NULL();
-	bool result = below_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* does not extend above of? */
-
-bool
-overbelow_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the XY dimension  */
-	assert(MOBDB_FLAGS_GET_X(box1->flags) || MOBDB_FLAGS_GET_X(box2->flags));
-	return (box1->ymax <= box2->ymax);
-}
-
-PG_FUNCTION_INFO_V1(overbelow_stbox_stbox);
-
-PGDLLEXPORT Datum
-overbelow_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_X(box1->flags) || ! MOBDB_FLAGS_GET_X(box2->flags))
-		PG_RETURN_NULL();
-	bool result = overbelow_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* strictly above of? */
-
-bool
-above_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the XY dimension  */
-	assert(MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags));
-	return (box1->ymin > box2->ymax);
-}
-
-PG_FUNCTION_INFO_V1(above_stbox_stbox);
-
-PGDLLEXPORT Datum
-above_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_X(box1->flags) || ! MOBDB_FLAGS_GET_X(box2->flags))
-		PG_RETURN_NULL();
-	bool result = above_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* does not extend below of? */
-
-bool
-overabove_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the XY dimension  */
-	assert(MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags));
-	return (box1->ymin >= box2->ymin);
-}
-
-PG_FUNCTION_INFO_V1(overabove_stbox_stbox);
-
-PGDLLEXPORT Datum
-overabove_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_X(box1->flags) || ! MOBDB_FLAGS_GET_X(box2->flags))
-		PG_RETURN_NULL();
-	bool result = overabove_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* strictly front of? */
-
-bool
-front_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the Z dimension  */
-	assert(MOBDB_FLAGS_GET_Z(box1->flags) && MOBDB_FLAGS_GET_Z(box2->flags));
-	return (box1->zmax < box2->zmin);
-}
-
-PG_FUNCTION_INFO_V1(front_stbox_stbox);
-
-PGDLLEXPORT Datum
-front_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_Z(box1->flags) || ! MOBDB_FLAGS_GET_Z(box2->flags))
-		PG_RETURN_NULL();
-	bool result = front_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* does not extend to the back of? */
-
-bool
-overfront_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the Z dimension  */
-	assert(MOBDB_FLAGS_GET_Z(box1->flags) && MOBDB_FLAGS_GET_Z(box2->flags));
-	return (box1->zmax <= box2->zmax);
-}
-
-PG_FUNCTION_INFO_V1(overfront_stbox_stbox);
-
-PGDLLEXPORT Datum
-overfront_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_Z(box1->flags) || ! MOBDB_FLAGS_GET_Z(box2->flags))
-		PG_RETURN_NULL();
-	bool result = overfront_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* strictly back of? */
-
-bool
-back_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the Z dimension  */
-	assert(MOBDB_FLAGS_GET_Z(box1->flags) && MOBDB_FLAGS_GET_Z(box2->flags));
-	return (box1->zmin > box2->zmax);
-}
-
-PG_FUNCTION_INFO_V1(back_stbox_stbox);
-
-PGDLLEXPORT Datum
-back_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_Z(box1->flags) || ! MOBDB_FLAGS_GET_Z(box2->flags))
-		PG_RETURN_NULL();
-	bool result = back_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* does not extend to the front of? */
-
-bool
-overback_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the Z dimension  */
-	assert(MOBDB_FLAGS_GET_Z(box1->flags) && MOBDB_FLAGS_GET_Z(box2->flags));
-	return (box1->zmin >= box2->zmin);
-}
-
-PG_FUNCTION_INFO_V1(overback_stbox_stbox);
-
-PGDLLEXPORT Datum
-overback_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (MOBDB_FLAGS_GET_GEODETIC(box1->flags) != MOBDB_FLAGS_GET_GEODETIC(box2->flags))
-		elog(ERROR, "Cannot compare geodetic and non-geodetic boxes");
-	if (! MOBDB_FLAGS_GET_Z(box1->flags) || ! MOBDB_FLAGS_GET_Z(box2->flags))
-		PG_RETURN_NULL();
-	bool result = overback_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* strictly before of? */
-
-bool
-before_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the T dimension  */
-	assert(MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags));
-	return (box1->tmax < box2->tmin);
-}
-
-PG_FUNCTION_INFO_V1(before_stbox_stbox);
-
-PGDLLEXPORT Datum
-before_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (! MOBDB_FLAGS_GET_T(box1->flags) || ! MOBDB_FLAGS_GET_T(box2->flags))
-		PG_RETURN_NULL();
-	bool result = before_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* does not extend to the after of? */
-
-bool
-overbefore_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the T dimension  */
-	assert(MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags));
-	return (box1->tmax <= box2->tmax);
-}
-
-PG_FUNCTION_INFO_V1(overbefore_stbox_stbox);
-
-PGDLLEXPORT Datum
-overbefore_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (! MOBDB_FLAGS_GET_T(box1->flags) || ! MOBDB_FLAGS_GET_T(box2->flags))
-		PG_RETURN_NULL();
-	bool result = overbefore_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* strictly after of? */
-
-bool
-after_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the T dimension  */
-	assert(MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags));
-	return (box1->tmin > box2->tmax);
-}
-
-PG_FUNCTION_INFO_V1(after_stbox_stbox);
-
-PGDLLEXPORT Datum
-after_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (! MOBDB_FLAGS_GET_T(box1->flags) || ! MOBDB_FLAGS_GET_T(box2->flags))
-		PG_RETURN_NULL();
-	bool result = after_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
-
-/* does not extend to the before of? */
-
-bool
-overafter_stbox_stbox_internal(STBOX *box1, STBOX *box2)
-{
-	/* Both boxes should have the T dimension  */
-	assert(MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags));
-	return (box1->tmin >= box2->tmin);
-}
-
-PG_FUNCTION_INFO_V1(overafter_stbox_stbox);
-
-PGDLLEXPORT Datum
-overafter_stbox_stbox(PG_FUNCTION_ARGS)
-{
-	STBOX *box1 = PG_GETARG_STBOX_P(0);
-	STBOX *box2 = PG_GETARG_STBOX_P(1);
-	if (! MOBDB_FLAGS_GET_T(box1->flags) || ! MOBDB_FLAGS_GET_T(box2->flags))
-		PG_RETURN_NULL();
-	bool result = overafter_stbox_stbox_internal(box1, box2);
-	PG_RETURN_BOOL(result);
-}
 
 /*****************************************************************************/
 /* geom op Temporal */
@@ -637,7 +242,7 @@ front_geom_tpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	ensure_same_srid_tpoint_gs(temp, gs);
 	ensure_has_Z_tpoint(temp);
-	ensure_has_Z(gs);
+	ensure_has_Z_gs(gs);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -663,7 +268,7 @@ overfront_geom_tpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	ensure_same_srid_tpoint_gs(temp, gs);
 	ensure_has_Z_tpoint(temp);
-	ensure_has_Z(gs);
+	ensure_has_Z_gs(gs);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -688,7 +293,7 @@ back_geom_tpoint(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	ensure_has_Z_tpoint(temp);
-	ensure_has_Z(gs);
+	ensure_has_Z_gs(gs);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -714,7 +319,7 @@ overback_geom_tpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	ensure_same_srid_tpoint_gs(temp, gs);
 	ensure_has_Z_tpoint(temp);
-	ensure_has_Z(gs);
+	ensure_has_Z_gs(gs);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -943,7 +548,7 @@ front_tpoint_geom(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
 	ensure_same_srid_tpoint_gs(temp, gs);
 	ensure_has_Z_tpoint(temp);
-	ensure_has_Z(gs);
+	ensure_has_Z_gs(gs);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -969,7 +574,7 @@ overfront_tpoint_geom(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
 	ensure_same_srid_tpoint_gs(temp, gs);
 	ensure_has_Z_tpoint(temp);
-	ensure_has_Z(gs);
+	ensure_has_Z_gs(gs);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -995,7 +600,7 @@ back_tpoint_geom(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
 	ensure_same_srid_tpoint_gs(temp, gs);
 	ensure_has_Z_tpoint(temp);
-	ensure_has_Z(gs);
+	ensure_has_Z_gs(gs);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -1021,7 +626,7 @@ overback_tpoint_geom(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
 	ensure_same_srid_tpoint_gs(temp, gs);
 	ensure_has_Z_tpoint(temp);
-	ensure_has_Z(gs);
+	ensure_has_Z_gs(gs);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -1050,6 +655,8 @@ left_stbox_tpoint(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1067,6 +674,8 @@ overleft_stbox_tpoint(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1084,6 +693,8 @@ right_stbox_tpoint(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1101,6 +712,8 @@ overright_stbox_tpoint(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1118,6 +731,8 @@ below_stbox_tpoint(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1135,6 +750,8 @@ overbelow_stbox_tpoint(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1152,6 +769,8 @@ above_stbox_tpoint(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1169,6 +788,8 @@ overabove_stbox_tpoint(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1184,6 +805,8 @@ front_stbox_tpoint(PG_FUNCTION_ARGS)
 {
 	STBOX *box = PG_GETARG_STBOX_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1204,6 +827,8 @@ overfront_stbox_tpoint(PG_FUNCTION_ARGS)
 {
 	STBOX *box = PG_GETARG_STBOX_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1224,6 +849,8 @@ back_stbox_tpoint(PG_FUNCTION_ARGS)
 {
 	STBOX *box = PG_GETARG_STBOX_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1244,6 +871,8 @@ overback_stbox_tpoint(PG_FUNCTION_ARGS)
 {
 	STBOX *box = PG_GETARG_STBOX_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1357,6 +986,8 @@ left_tpoint_stbox(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1374,6 +1005,8 @@ overleft_tpoint_stbox(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1391,6 +1024,8 @@ right_tpoint_stbox(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1408,6 +1043,8 @@ overright_tpoint_stbox(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1425,6 +1062,8 @@ below_tpoint_stbox(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1442,6 +1081,8 @@ overbelow_tpoint_stbox(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1459,6 +1100,8 @@ above_tpoint_stbox(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1476,6 +1119,8 @@ overabove_tpoint_stbox(PG_FUNCTION_ARGS)
 	if (! MOBDB_FLAGS_GET_X(box->flags))
 		PG_RETURN_NULL();
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1491,6 +1136,8 @@ front_tpoint_stbox(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	STBOX *box = PG_GETARG_STBOX_P(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1511,6 +1158,8 @@ overfront_tpoint_stbox(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	STBOX *box = PG_GETARG_STBOX_P(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1531,6 +1180,8 @@ back_tpoint_stbox(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	STBOX *box = PG_GETARG_STBOX_P(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
@@ -1551,6 +1202,8 @@ overback_tpoint_stbox(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	STBOX *box = PG_GETARG_STBOX_P(1);
+	ensure_same_geodetic_tpoint_stbox(temp, box);
+	ensure_same_srid_tpoint_stbox(temp, box);
 	STBOX box1;
 	memset(&box1, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);

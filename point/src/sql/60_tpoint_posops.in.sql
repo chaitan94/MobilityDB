@@ -8,170 +8,12 @@
  * time dimensions while temporal geographic points only for the temporal
  * dimension.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse, 
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
-
-/*****************************************************************************
- * stbox
- *****************************************************************************/
-
-CREATE FUNCTION temporal_left(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'left_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_overleft(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overleft_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_right(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'right_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_overright(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overright_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_below(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'below_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_overbelow(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overbelow_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_above(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'above_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_overabove(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overabove_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_before(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'before_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_overbefore(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overbefore_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_after(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'after_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_overafter(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overafter_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_front(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'front_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_overfront(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overfront_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_back(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'back_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_overback(stbox, stbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overback_stbox_stbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE OPERATOR << (
-	PROCEDURE = temporal_left,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	COMMUTATOR = '>>',
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR &< (
-	PROCEDURE = temporal_overleft,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR >> (
-	LEFTARG = stbox, RIGHTARG = stbox,
-	PROCEDURE = temporal_right,
-	COMMUTATOR = '<<',
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR &> (
-	PROCEDURE = temporal_overright,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR <<| (
-	PROCEDURE = temporal_below,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	COMMUTATOR = '|>>',
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR &<| (
-	PROCEDURE = temporal_overbelow,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR |>> (
-	PROCEDURE = temporal_above,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	COMMUTATOR = '<<|',
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR |&> (
-	PROCEDURE = temporal_overabove,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR <</ (
-	LEFTARG = stbox, RIGHTARG = stbox,
-	PROCEDURE = temporal_front,
-	COMMUTATOR = '/>>',
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR &</ (
-	LEFTARG = stbox, RIGHTARG = stbox,
-	PROCEDURE = temporal_overfront,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR />> (
-	LEFTARG = stbox, RIGHTARG = stbox,
-	PROCEDURE = temporal_back,
-	COMMUTATOR = '<</',
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR /&> (
-	LEFTARG = stbox, RIGHTARG = stbox,
-	PROCEDURE = temporal_overback,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR <<# (
-	PROCEDURE = temporal_before,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	COMMUTATOR = '#>>',
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR &<# (
-	PROCEDURE = temporal_overbefore,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR #>> (
-	PROCEDURE = temporal_after,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	COMMUTATOR = '<<#',
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
-CREATE OPERATOR #&> (
-	PROCEDURE = temporal_overafter,
-	LEFTARG = stbox, RIGHTARG = stbox,
-	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
-);
 
 /*****************************************************************************
  * Geometry
@@ -229,7 +71,7 @@ CREATE FUNCTION temporal_overback(geometry, tgeompoint)
 CREATE OPERATOR << (
 	LEFTARG = geometry, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_left,
-	COMMUTATOR = '>>',
+	COMMUTATOR = >>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &< (
@@ -240,7 +82,7 @@ CREATE OPERATOR &< (
 CREATE OPERATOR >> (
 	LEFTARG = geometry, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_right,
-	COMMUTATOR = '<<',
+	COMMUTATOR = <<,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &> (
@@ -251,7 +93,7 @@ CREATE OPERATOR &> (
 CREATE OPERATOR <<| (
 	LEFTARG = geometry, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_below,
-	COMMUTATOR = '|>>',
+	COMMUTATOR = |>>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &<| (
@@ -262,7 +104,7 @@ CREATE OPERATOR &<| (
 CREATE OPERATOR |>> (
 	LEFTARG = geometry, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_above,
-	COMMUTATOR = '<<|',
+	COMMUTATOR = <<|,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR |&> (
@@ -273,7 +115,7 @@ CREATE OPERATOR |&> (
 CREATE OPERATOR <</ (
 	LEFTARG = geometry, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_front,
-	COMMUTATOR = '/>>',
+	COMMUTATOR = />>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &</ (
@@ -284,7 +126,7 @@ CREATE OPERATOR &</ (
 CREATE OPERATOR />> (
 	LEFTARG = geometry, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_back,
-	COMMUTATOR = '<</',
+	COMMUTATOR = <</,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR /&> (
@@ -363,7 +205,7 @@ CREATE FUNCTION temporal_overafter(stbox, tgeompoint)
 CREATE OPERATOR << (
 	LEFTARG = stbox, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_left,
-	COMMUTATOR = '>>',
+	COMMUTATOR = >>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &< (
@@ -374,7 +216,7 @@ CREATE OPERATOR &< (
 CREATE OPERATOR >> (
 	LEFTARG = stbox, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_right,
-	COMMUTATOR = '<<',
+	COMMUTATOR = <<,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &> (
@@ -385,7 +227,7 @@ CREATE OPERATOR &> (
 CREATE OPERATOR <<| (
 	LEFTARG = stbox, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_below,
-	COMMUTATOR = '|>>',
+	COMMUTATOR = |>>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &<| (
@@ -396,7 +238,7 @@ CREATE OPERATOR &<| (
 CREATE OPERATOR |>> (
 	LEFTARG = stbox, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_above,
-	COMMUTATOR = '<<|',
+	COMMUTATOR = <<|,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR |&> (
@@ -407,7 +249,7 @@ CREATE OPERATOR |&> (
 CREATE OPERATOR <</ (
 	LEFTARG = stbox, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_front,
-	COMMUTATOR = '/>>',
+	COMMUTATOR = />>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &</ (
@@ -418,7 +260,7 @@ CREATE OPERATOR &</ (
 CREATE OPERATOR />> (
 	LEFTARG = stbox, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_back,
-	COMMUTATOR = '<</',
+	COMMUTATOR = <</,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR /&> (
@@ -429,7 +271,7 @@ CREATE OPERATOR /&> (
 CREATE OPERATOR <<# (
 	LEFTARG = stbox, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_before,
-	COMMUTATOR = '#>>',
+	COMMUTATOR = #>>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &<# (
@@ -440,7 +282,7 @@ CREATE OPERATOR &<# (
 CREATE OPERATOR #>> (
 	LEFTARG = stbox, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_after,
-	COMMUTATOR = '<<#',
+	COMMUTATOR = <<#,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR #&> (
@@ -471,7 +313,7 @@ CREATE FUNCTION temporal_overafter(stbox, tgeogpoint)
 CREATE OPERATOR <<# (
 	LEFTARG = stbox, RIGHTARG = tgeogpoint,
 	PROCEDURE = temporal_before,
-	COMMUTATOR = '#>>',
+	COMMUTATOR = #>>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &<# (
@@ -482,7 +324,7 @@ CREATE OPERATOR &<# (
 CREATE OPERATOR #>> (
 	LEFTARG = stbox, RIGHTARG = tgeogpoint,
 	PROCEDURE = temporal_after,
-	COMMUTATOR = '<<#',
+	COMMUTATOR = <<#,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR #&> (
@@ -549,7 +391,7 @@ CREATE FUNCTION temporal_overback(tgeompoint, geometry)
 CREATE OPERATOR << (
 	LEFTARG = tgeompoint, RIGHTARG = geometry,
 	PROCEDURE = temporal_left,
-	COMMUTATOR = '>>',
+	COMMUTATOR = >>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &< (
@@ -560,7 +402,7 @@ CREATE OPERATOR &< (
 CREATE OPERATOR >> (
 	LEFTARG = tgeompoint, RIGHTARG = geometry,
 	PROCEDURE = temporal_right,
-	COMMUTATOR = '<<',
+	COMMUTATOR = <<,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &> (
@@ -571,7 +413,7 @@ CREATE OPERATOR &> (
 CREATE OPERATOR <<| (
 	LEFTARG = tgeompoint, RIGHTARG = geometry,
 	PROCEDURE = temporal_below,
-	COMMUTATOR = '|>>',
+	COMMUTATOR = |>>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &<| (
@@ -582,7 +424,7 @@ CREATE OPERATOR &<| (
 CREATE OPERATOR |>> (
 	LEFTARG = tgeompoint, RIGHTARG = geometry,
 	PROCEDURE = temporal_above,
-	COMMUTATOR = '<<|',
+	COMMUTATOR = <<|,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR |&> (
@@ -593,7 +435,7 @@ CREATE OPERATOR |&> (
 CREATE OPERATOR <</ (
 	LEFTARG = tgeompoint, RIGHTARG = geometry,
 	PROCEDURE = temporal_front,
-	COMMUTATOR = '/>>',
+	COMMUTATOR = />>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &</ (
@@ -604,7 +446,7 @@ CREATE OPERATOR &</ (
 CREATE OPERATOR />> (
 	LEFTARG = tgeompoint, RIGHTARG = geometry,
 	PROCEDURE = temporal_back,
-	COMMUTATOR = '<</',
+	COMMUTATOR = <</,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR /&> (
@@ -685,7 +527,7 @@ CREATE FUNCTION temporal_overafter(tgeompoint, stbox)
 CREATE OPERATOR << (
 	LEFTARG = tgeompoint, RIGHTARG = stbox,
 	PROCEDURE = temporal_left,
-	COMMUTATOR = '>>',
+	COMMUTATOR = >>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &< (
@@ -696,7 +538,7 @@ CREATE OPERATOR &< (
 CREATE OPERATOR >> (
 	LEFTARG = tgeompoint, RIGHTARG = stbox,
 	PROCEDURE = temporal_right,
-	COMMUTATOR = '<<',
+	COMMUTATOR = <<,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &> (
@@ -707,7 +549,7 @@ CREATE OPERATOR &> (
 CREATE OPERATOR <<| (
 	LEFTARG = tgeompoint, RIGHTARG = stbox,
 	PROCEDURE = temporal_below,
-	COMMUTATOR = '|>>',
+	COMMUTATOR = |>>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &<| (
@@ -718,7 +560,7 @@ CREATE OPERATOR &<| (
 CREATE OPERATOR |>> (
 	LEFTARG = tgeompoint, RIGHTARG = stbox,
 	PROCEDURE = temporal_above,
-	COMMUTATOR = '<<|',
+	COMMUTATOR = <<|,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR |&> (
@@ -729,7 +571,7 @@ CREATE OPERATOR |&> (
 CREATE OPERATOR <</ (
 	LEFTARG = tgeompoint, RIGHTARG = stbox,
 	PROCEDURE = temporal_front,
-	COMMUTATOR = '/>>',
+	COMMUTATOR = />>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &</ (
@@ -740,7 +582,7 @@ CREATE OPERATOR &</ (
 CREATE OPERATOR />> (
 	LEFTARG = tgeompoint, RIGHTARG = stbox,
 	PROCEDURE = temporal_back,
-	COMMUTATOR = '<</',
+	COMMUTATOR = <</,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR /&> (
@@ -751,7 +593,7 @@ CREATE OPERATOR /&> (
 CREATE OPERATOR <<# (
 	LEFTARG = tgeompoint, RIGHTARG = stbox,
 	PROCEDURE = temporal_before,
-	COMMUTATOR = '#>>',
+	COMMUTATOR = #>>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &<# (
@@ -762,7 +604,7 @@ CREATE OPERATOR &<# (
 CREATE OPERATOR #>> (
 	LEFTARG = tgeompoint, RIGHTARG = stbox,
 	PROCEDURE = temporal_after,
-	COMMUTATOR = '<<#',
+	COMMUTATOR = <<#,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR #&> (
@@ -843,7 +685,7 @@ CREATE FUNCTION temporal_overafter(inst1 tgeompoint, inst2 tgeompoint)
 CREATE OPERATOR << (
 	LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_left,
-	COMMUTATOR = '>>',
+	COMMUTATOR = >>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &< (
@@ -854,7 +696,7 @@ CREATE OPERATOR &< (
 CREATE OPERATOR >> (
 	LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_right,
-	COMMUTATOR = '<<',
+	COMMUTATOR = <<,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &> (
@@ -865,7 +707,7 @@ CREATE OPERATOR &> (
 CREATE OPERATOR <<| (
 	LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_below,
-	COMMUTATOR = '|>>',
+	COMMUTATOR = |>>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &<| (
@@ -876,7 +718,7 @@ CREATE OPERATOR &<| (
 CREATE OPERATOR |>> (
 	LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_above,
-	COMMUTATOR = '<<|',
+	COMMUTATOR = <<|,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR |&> (
@@ -887,7 +729,7 @@ CREATE OPERATOR |&> (
 CREATE OPERATOR <</ (
 	LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_front,
-	COMMUTATOR = '/>>',
+	COMMUTATOR = />>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &</ (
@@ -898,7 +740,7 @@ CREATE OPERATOR &</ (
 CREATE OPERATOR />> (
 	LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_back,
-	COMMUTATOR = '<</',
+	COMMUTATOR = <</,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR /&> (
@@ -909,7 +751,7 @@ CREATE OPERATOR /&> (
 CREATE OPERATOR <<# (
 	LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_before,
-	COMMUTATOR = '#>>',
+	COMMUTATOR = #>>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &<# (
@@ -920,7 +762,7 @@ CREATE OPERATOR &<# (
 CREATE OPERATOR #>> (
 	LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
 	PROCEDURE = temporal_after,
-	COMMUTATOR = '<<#',
+	COMMUTATOR = <<#,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR #&> (
@@ -955,7 +797,7 @@ CREATE FUNCTION temporal_overafter(tgeogpoint, stbox)
 CREATE OPERATOR <<# (
 	LEFTARG = tgeogpoint, RIGHTARG = stbox,
 	PROCEDURE = temporal_before,
-	COMMUTATOR = '#>>',
+	COMMUTATOR = #>>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &<# (
@@ -966,7 +808,7 @@ CREATE OPERATOR &<# (
 CREATE OPERATOR #>> (
 	LEFTARG = tgeogpoint, RIGHTARG = stbox,
 	PROCEDURE = temporal_after,
-	COMMUTATOR = '<<#',
+	COMMUTATOR = <<#,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR #&> (
@@ -999,7 +841,7 @@ CREATE FUNCTION temporal_overafter(tgeogpoint, tgeogpoint)
 CREATE OPERATOR <<# (
 	LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
 	PROCEDURE = temporal_before,
-	COMMUTATOR = '#>>',
+	COMMUTATOR = #>>,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR &<# (
@@ -1010,7 +852,7 @@ CREATE OPERATOR &<# (
 CREATE OPERATOR #>> (
 	LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
 	PROCEDURE = temporal_after,
-	COMMUTATOR = '<<#',
+	COMMUTATOR = <<#,
 	RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
 );
 CREATE OPERATOR #&> (

@@ -3,9 +3,9 @@
  * temporal_compops.c
  *	  Temporal comparison operators (=, <>, <, >, <=, >=).
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -22,32 +22,32 @@
  * Generic dispatch function
  *****************************************************************************/
 
-static Temporal *
-tcomp_temporal_base(Temporal *temp, Datum value, Oid datumtypid,
+Temporal *
+tcomp_temporal_base(Temporal *temp, Datum value, Oid valuetypid,
 	Datum (*func)(Datum, Datum, Oid, Oid), bool invert)
 {
 	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tfunc4_temporalinst_base((TemporalInst *)temp,
-			value, func, datumtypid, BOOLOID, invert);
+			value, valuetypid, func, BOOLOID, invert);
 	else if (temp->duration == TEMPORALI) 
 		result = (Temporal *)tfunc4_temporali_base((TemporalI *)temp,
-			value, func, datumtypid, BOOLOID, invert);
+			value, valuetypid, func, BOOLOID, invert);
 	else if (temp->duration == TEMPORALSEQ) 
 		result = MOBDB_FLAGS_GET_LINEAR(temp->flags) ?
 			/* Result is a TemporalS */
 			(Temporal *)tfunc4_temporalseq_base_cross((TemporalSeq *)temp,
-				value, func, datumtypid, BOOLOID, invert) :
+				value, valuetypid, func, BOOLOID, invert) :
 			/* Result is a TemporalSeq */
 			(Temporal *)tfunc4_temporalseq_base((TemporalSeq *)temp,
-				value, func, datumtypid, BOOLOID, invert);
+				value, valuetypid, func, BOOLOID, invert);
 	else if (temp->duration == TEMPORALS) 
 		result = MOBDB_FLAGS_GET_LINEAR(temp->flags) ?
 			(Temporal *)tfunc4_temporals_base_cross((TemporalS *)temp,
-				value, func, datumtypid, BOOLOID, invert) :
+				value, valuetypid, func, BOOLOID, invert) :
 			(Temporal *)tfunc4_temporals_base((TemporalS *)temp,
-				value, func, datumtypid, BOOLOID, invert);
+				value, valuetypid, func, BOOLOID, invert);
 	return result;
 }
 
@@ -62,9 +62,10 @@ teq_base_temporal(PG_FUNCTION_ARGS)
 {
 	Datum value = PG_GETARG_ANYDATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_eq2, true);
+	DATUM_FREE_IF_COPY(value, valuetypid, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -76,10 +77,11 @@ teq_temporal_base(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum value = PG_GETARG_ANYDATUM(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_eq2, false);
 	PG_FREE_IF_COPY(temp, 0);
+	DATUM_FREE_IF_COPY(value, valuetypid, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -93,8 +95,8 @@ teq_temporal_temporal(PG_FUNCTION_ARGS)
 	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) || 
 		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
 	Temporal *result = linear ?
-		sync_tfunc4_temporal_temporal_cross(temp1, temp2, 
-			&datum2_eq2, BOOLOID) :
+		sync_tfunc4_temporal_temporal_cross(temp1, temp2, &datum2_eq2, 
+			BOOLOID) :
 		sync_tfunc4_temporal_temporal(temp1, temp2, &datum2_eq2, BOOLOID, 
 			linear, NULL);
 	PG_FREE_IF_COPY(temp1, 0);
@@ -115,9 +117,10 @@ tne_base_temporal(PG_FUNCTION_ARGS)
 {
 	Datum value = PG_GETARG_ANYDATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_ne2, true);
+	DATUM_FREE_IF_COPY(value, valuetypid, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -129,10 +132,11 @@ tne_temporal_base(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum value = PG_GETARG_ANYDATUM(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_ne2, false);
 	PG_FREE_IF_COPY(temp, 0);
+	DATUM_FREE_IF_COPY(value, valuetypid, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -146,8 +150,8 @@ tne_temporal_temporal(PG_FUNCTION_ARGS)
 	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) || 
 		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
 	Temporal *result = linear ?
-		sync_tfunc4_temporal_temporal_cross(temp1, temp2, 
-			&datum2_ne2, BOOLOID) :
+		sync_tfunc4_temporal_temporal_cross(temp1, temp2, &datum2_ne2,
+			BOOLOID) :
 		sync_tfunc4_temporal_temporal(temp1, temp2, &datum2_ne2, BOOLOID, 
 			linear, NULL);
 	PG_FREE_IF_COPY(temp1, 0);
@@ -168,9 +172,10 @@ tlt_base_temporal(PG_FUNCTION_ARGS)
 {
 	Datum value = PG_GETARG_ANYDATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_lt2, true);
+	DATUM_FREE_IF_COPY(value, valuetypid, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -182,10 +187,11 @@ tlt_temporal_base(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum value = PG_GETARG_ANYDATUM(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_lt2, false);
 	PG_FREE_IF_COPY(temp, 0);
+	DATUM_FREE_IF_COPY(value, valuetypid, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -199,8 +205,8 @@ tlt_temporal_temporal(PG_FUNCTION_ARGS)
 	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) || 
 		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
 	Temporal *result = linear ?
-		sync_tfunc4_temporal_temporal_cross(temp1, temp2, 
-			&datum2_lt2, BOOLOID) :
+		sync_tfunc4_temporal_temporal_cross(temp1, temp2, &datum2_lt2,
+			BOOLOID) :
 		sync_tfunc4_temporal_temporal(temp1, temp2, &datum2_lt2, BOOLOID, 
 			linear, NULL);
 	PG_FREE_IF_COPY(temp1, 0);
@@ -221,9 +227,10 @@ tle_base_temporal(PG_FUNCTION_ARGS)
 {
 	Datum value = PG_GETARG_ANYDATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_le2, true);
+	DATUM_FREE_IF_COPY(value, valuetypid, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -235,10 +242,11 @@ tle_temporal_base(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum value = PG_GETARG_ANYDATUM(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_le2, false);
 	PG_FREE_IF_COPY(temp, 0);
+	DATUM_FREE_IF_COPY(value, valuetypid, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -252,8 +260,8 @@ tle_temporal_temporal(PG_FUNCTION_ARGS)
 	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) || 
 		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
 	Temporal *result = linear ?
-		sync_tfunc4_temporal_temporal_cross(temp1, temp2, 
-			&datum2_le2, BOOLOID) :
+		sync_tfunc4_temporal_temporal_cross(temp1, temp2, &datum2_le2,
+			BOOLOID) :
 		sync_tfunc4_temporal_temporal(temp1, temp2, &datum2_le2, BOOLOID, 
 			linear, NULL);
 	PG_FREE_IF_COPY(temp1, 0);
@@ -274,9 +282,10 @@ tgt_base_temporal(PG_FUNCTION_ARGS)
 {
 	Datum value = PG_GETARG_ANYDATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_gt2, true);
+	DATUM_FREE_IF_COPY(value, valuetypid, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -288,10 +297,11 @@ tgt_temporal_base(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum value = PG_GETARG_ANYDATUM(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_gt2, false);
 	PG_FREE_IF_COPY(temp, 0);
+	DATUM_FREE_IF_COPY(value, valuetypid, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -305,8 +315,8 @@ tgt_temporal_temporal(PG_FUNCTION_ARGS)
 	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) || 
 		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
 	Temporal *result = linear ?
-		sync_tfunc4_temporal_temporal_cross(temp1, temp2, 
-			&datum2_gt2, BOOLOID) :
+		sync_tfunc4_temporal_temporal_cross(temp1, temp2, &datum2_gt2,
+			BOOLOID) :
 		sync_tfunc4_temporal_temporal(temp1, temp2, &datum2_gt2, BOOLOID, 
 			linear, NULL);
 	PG_FREE_IF_COPY(temp1, 0);
@@ -327,9 +337,10 @@ tge_base_temporal(PG_FUNCTION_ARGS)
 {
 	Datum value = PG_GETARG_ANYDATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_ge2, true);
+	DATUM_FREE_IF_COPY(value, valuetypid, 0);
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
 }
@@ -341,10 +352,11 @@ tge_temporal_base(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum value = PG_GETARG_ANYDATUM(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	Temporal *result = tcomp_temporal_base(temp, value, datumtypid,
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	Temporal *result = tcomp_temporal_base(temp, value, valuetypid,
 		&datum2_ge2, false);
 	PG_FREE_IF_COPY(temp, 0);
+	DATUM_FREE_IF_COPY(value, valuetypid, 1);
 	PG_RETURN_POINTER(result);
 }
 
@@ -358,8 +370,8 @@ tge_temporal_temporal(PG_FUNCTION_ARGS)
 	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) || 
 		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
 	Temporal *result = linear ?
-		sync_tfunc4_temporal_temporal_cross(temp1, temp2, 
-			&datum2_ge2, BOOLOID) :
+		sync_tfunc4_temporal_temporal_cross(temp1, temp2, &datum2_ge2,
+			BOOLOID) :
 		sync_tfunc4_temporal_temporal(temp1, temp2, &datum2_ge2, BOOLOID, 
 			linear, NULL);
 	PG_FREE_IF_COPY(temp1, 0);

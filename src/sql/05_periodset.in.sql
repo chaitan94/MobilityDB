@@ -3,9 +3,9 @@
  * periodset.sql
  *	  Functions for set of periods.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse, 
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -59,7 +59,7 @@ CREATE TYPE periodset (
 
 CREATE FUNCTION periodset(period[])
 	RETURNS periodset
-	AS 'MODULE_PATHNAME', 'periodset_from_periodarr'
+	AS 'MODULE_PATHNAME', 'periodset_make'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

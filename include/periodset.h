@@ -3,9 +3,9 @@
  * periodset.c
  *	Basic functions for set of periods.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -21,9 +21,9 @@
 
 /* Assorted support functions */
 
-extern Period *periodset_per_n(PeriodSet *ps, int index);
-extern Period *periodset_bbox(PeriodSet *ps);
-extern PeriodSet *periodset_from_periodarr_internal(Period **periods, 
+extern Period *periodset_per_n(const PeriodSet *ps, int index);
+extern Period *periodset_bbox(const PeriodSet *ps);
+extern PeriodSet *periodset_make_internal(Period **periods,
 	int count, bool normalize);
 extern PeriodSet *periodset_copy(PeriodSet *ps);
 extern bool periodset_find_timestamp(PeriodSet *ps, TimestampTz t, int *pos);
@@ -31,15 +31,15 @@ extern bool periodset_find_timestamp(PeriodSet *ps, TimestampTz t, int *pos);
 /* Input/output functions */
 
 extern Datum periodset_in(PG_FUNCTION_ARGS);
+extern Datum periodset_out(PG_FUNCTION_ARGS);
 extern Datum periodset_send(PG_FUNCTION_ARGS);
 extern Datum periodset_recv(PG_FUNCTION_ARGS);
-extern Datum periodset_send(PG_FUNCTION_ARGS);
 
 extern char *periodset_to_string(PeriodSet *ps);
 
 /* Constructor function */
 
-extern Datum periodset_from_periodarr(PG_FUNCTION_ARGS);
+extern Datum periodset_make(PG_FUNCTION_ARGS);
 
 /* Cast functions */
 
@@ -53,7 +53,7 @@ extern PeriodSet *timestampset_to_periodset_internal(TimestampSet *ts);
 /* Accessor functions */
 
 extern Datum periodset_mem_size(PG_FUNCTION_ARGS);
-extern Datum periodset_interval(PG_FUNCTION_ARGS);
+extern Datum periodset_timespan(PG_FUNCTION_ARGS);
 extern Datum periodset_num_periods(PG_FUNCTION_ARGS);
 extern Datum periodset_start_period(PG_FUNCTION_ARGS);
 extern Datum periodset_end_period(PG_FUNCTION_ARGS);

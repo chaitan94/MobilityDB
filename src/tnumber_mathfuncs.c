@@ -4,9 +4,9 @@
  *	Temporal mathematical operators (+, -, *, /) and functions (round, 
  *	degrees).
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -16,6 +16,8 @@
 #include <math.h>
 #include <utils/builtins.h>
 
+#include "period.h"
+#include "timeops.h"
 #include "temporaltypes.h"
 #include "temporal_util.h"
 #include "lifting.h"
@@ -146,8 +148,7 @@ tnumberseq_mult_maxmin_at_timestamp(TemporalInst *start1, TemporalInst *end1,
 		/* Minimum/maximum occurs out of the period */
 		return false;
 
-	double duration = (double) (end1->t - start1->t);
-	*t = (double)(start1->t) + (duration * fraction);
+	*t = start1->t + (long) ((double) (end1->t - start1->t) * fraction);
 	return true;	
 }
 
@@ -162,22 +163,22 @@ add_base_temporal(PG_FUNCTION_ARGS)
 {
 	Datum value = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
 	Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-	Oid valuetypid = base_oid_from_temporal(temptypid);
+	Oid restypid = base_oid_from_temporal(temptypid);
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
-	ensure_numeric_base_type(datumtypid);
-	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
+	ensure_numeric_base_type(valuetypid);
+	if (temp->valuetypid == valuetypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
- 		result = tfunc4_temporal_base(temp, value, 
-		 	&datum_add, datumtypid, valuetypid, true);
-	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
+ 		result = tfunc4_temporal_base(temp, value, valuetypid,
+		 	&datum_add, restypid, true);
+	else if (valuetypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_to_tfloat_internal(temp);
-		result = tfunc4_temporal_base(ftemp, value, 
-		 	&datum_add, FLOAT8OID, FLOAT8OID, true);
+		result = tfunc4_temporal_base(ftemp, value, FLOAT8OID,
+		 	&datum_add, FLOAT8OID, true);
 		pfree(ftemp);
 	}
 	PG_FREE_IF_COPY(temp, 1);
@@ -192,22 +193,22 @@ add_temporal_base(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum value = PG_GETARG_DATUM(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
 	Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-	Oid valuetypid = base_oid_from_temporal(temptypid);
+	Oid restypid = base_oid_from_temporal(temptypid);
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
-	ensure_numeric_base_type(datumtypid);
-	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
+	ensure_numeric_base_type(valuetypid);
+	if (temp->valuetypid == valuetypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
- 		result = tfunc4_temporal_base(temp, value,
-		 	&datum_add, datumtypid, valuetypid, true);
-	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
+ 		result = tfunc4_temporal_base(temp, value, valuetypid,
+		 	&datum_add, restypid, false);
+	else if (valuetypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_to_tfloat_internal(temp);
-		result = tfunc4_temporal_base(ftemp, value,
-		 	&datum_add, FLOAT8OID, FLOAT8OID, true);
+		result = tfunc4_temporal_base(ftemp, value, FLOAT8OID,
+		 	&datum_add, FLOAT8OID, false);
 		pfree(ftemp);
 	}
 	PG_FREE_IF_COPY(temp, 0);
@@ -221,20 +222,28 @@ add_temporal_temporal(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+
+	/* Bounding box test */
+	Period p1, p2;
+	temporal_period(&p1, temp1);
+	temporal_period(&p2, temp2);
+	if (! overlaps_period_period_internal(&p1, &p2))
+		PG_RETURN_NULL();
+
 	/* The base types must be equal when the result is a temporal sequence (set) */
-	Temporal *result = NULL;
 	ensure_valid_duration(temp1->duration);
 	ensure_valid_duration(temp2->duration);
 	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) || 
 		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
-	if (temp1->valuetypid == temp2->valuetypid || temp1->duration == TEMPORALINST || 
+	Temporal *result = NULL;
+	if (temp1->valuetypid == temp2->valuetypid || temp1->duration == TEMPORALINST ||
 		temp1->duration == TEMPORALI || temp2->duration == TEMPORALINST || 
 		temp2->duration == TEMPORALI)
 	{
 		Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-		Oid valuetypid = base_oid_from_temporal(temptypid);
+		Oid restypid = base_oid_from_temporal(temptypid);
  		result = sync_tfunc4_temporal_temporal(temp1, temp2, &datum_add,
-		 	valuetypid, linear, NULL);
+			restypid, linear, NULL);
 	}
 	else if (temp1->valuetypid == INT4OID && temp2->valuetypid == FLOAT8OID)
 	{
@@ -268,22 +277,22 @@ sub_base_temporal(PG_FUNCTION_ARGS)
 {
 	Datum value = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
 	Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-	Oid valuetypid = base_oid_from_temporal(temptypid);
+	Oid restypid = base_oid_from_temporal(temptypid);
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
-	ensure_numeric_base_type(datumtypid);
-	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
+	ensure_numeric_base_type(valuetypid);
+	if (temp->valuetypid == valuetypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
- 		result = tfunc4_temporal_base(temp, value,
-		 	&datum_sub, datumtypid, valuetypid, true);
-	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
+ 		result = tfunc4_temporal_base(temp, value, valuetypid,
+		 	&datum_sub, restypid, true);
+	else if (valuetypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_to_tfloat_internal(temp);
-		result = tfunc4_temporal_base(ftemp, value,
-		 	&datum_sub, FLOAT8OID, FLOAT8OID, true);
+		result = tfunc4_temporal_base(ftemp, value, FLOAT8OID,
+		 	&datum_sub, FLOAT8OID, true);
 		pfree(ftemp);
 	}
 	PG_FREE_IF_COPY(temp, 1);
@@ -297,22 +306,22 @@ sub_temporal_base(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum value = PG_GETARG_DATUM(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
 	Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-	Oid valuetypid = base_oid_from_temporal(temptypid);
+	Oid restypid = base_oid_from_temporal(temptypid);
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
-	ensure_numeric_base_type(datumtypid);
-	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
+	ensure_numeric_base_type(valuetypid);
+	if (temp->valuetypid == valuetypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
- 		result = tfunc4_temporal_base(temp, value,
-		 	&datum_sub, datumtypid, valuetypid, true);
-	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
+ 		result = tfunc4_temporal_base(temp, value, valuetypid,
+		 	&datum_sub, restypid, false);
+	else if (valuetypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_to_tfloat_internal(temp);
-		result = tfunc4_temporal_base(ftemp, value,
-		 	&datum_add, FLOAT8OID, FLOAT8OID, true);
+		result = tfunc4_temporal_base(ftemp, value, FLOAT8OID,
+		 	&datum_add, FLOAT8OID, false);
 		pfree(ftemp);
 	}
 	PG_FREE_IF_COPY(temp, 0);
@@ -326,20 +335,28 @@ sub_temporal_temporal(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+
+	/* Bounding box test */
+	Period p1, p2;
+	temporal_period(&p1, temp1);
+	temporal_period(&p2, temp2);
+	if (! overlaps_period_period_internal(&p1, &p2))
+		PG_RETURN_NULL();
+
 	/* The base types must be equal when the result is a temporal sequence (set) */
-	Temporal *result = NULL;
 	ensure_valid_duration(temp1->duration);
 	ensure_valid_duration(temp2->duration);
 	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) || 
 		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
-	if (temp1->valuetypid == temp2->valuetypid || temp1->duration == TEMPORALINST || 
+	Temporal *result = NULL;
+	if (temp1->valuetypid == temp2->valuetypid || temp1->duration == TEMPORALINST ||
 		temp1->duration == TEMPORALI || temp2->duration == TEMPORALINST || 
 		temp2->duration == TEMPORALI)
 	{
 		Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-		Oid valuetypid = base_oid_from_temporal(temptypid);
+		Oid restypid = base_oid_from_temporal(temptypid);
  		result = sync_tfunc4_temporal_temporal(temp1, temp2, &datum_sub,
-		 	valuetypid, linear, NULL);
+			restypid, linear, NULL);
 	}
 	else if (temp1->valuetypid == INT4OID && temp2->valuetypid == FLOAT8OID)
 	{
@@ -373,22 +390,22 @@ mult_base_temporal(PG_FUNCTION_ARGS)
 {
 	Datum value = PG_GETARG_DATUM(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
 	Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-	Oid valuetypid = base_oid_from_temporal(temptypid);
+	Oid restypid = base_oid_from_temporal(temptypid);
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
-	ensure_numeric_base_type(datumtypid);
-	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
+	ensure_numeric_base_type(valuetypid);
+	if (temp->valuetypid == valuetypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
- 		result = tfunc4_temporal_base(temp, value,
-		 	&datum_mult, datumtypid, valuetypid, true);
-	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
+ 		result = tfunc4_temporal_base(temp, value, valuetypid,
+		 	&datum_mult, restypid, true);
+	else if (valuetypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_to_tfloat_internal(temp);
-		result = tfunc4_temporal_base(ftemp, value,
-		 	&datum_mult, FLOAT8OID, FLOAT8OID, true);
+		result = tfunc4_temporal_base(ftemp, value, FLOAT8OID,
+		 	&datum_mult, FLOAT8OID, true);
 		pfree(ftemp);
 	}
 	PG_FREE_IF_COPY(temp, 1);
@@ -402,22 +419,22 @@ mult_temporal_base(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum value = PG_GETARG_DATUM(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
 	Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-	Oid valuetypid = base_oid_from_temporal(temptypid);
+	Oid restypid = base_oid_from_temporal(temptypid);
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
-	ensure_numeric_base_type(datumtypid);
-	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
+	ensure_numeric_base_type(valuetypid);
+	if (temp->valuetypid == valuetypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
- 		result = tfunc4_temporal_base(temp, value,
-		 	&datum_mult, datumtypid, valuetypid, true);
-	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
+ 		result = tfunc4_temporal_base(temp, value, valuetypid,
+		 	&datum_mult, restypid, false);
+	else if (valuetypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_to_tfloat_internal(temp);
-		result = tfunc4_temporal_base(ftemp, value,
-		 	&datum_mult, FLOAT8OID, FLOAT8OID, true);
+		result = tfunc4_temporal_base(ftemp, value, FLOAT8OID,
+		 	&datum_mult, FLOAT8OID, false);
 		pfree(ftemp);
 	}
 	PG_FREE_IF_COPY(temp, 0);
@@ -431,23 +448,31 @@ mult_temporal_temporal(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
-	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) || 
-		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
+
+	/* Bounding box test */
+	Period p1, p2;
+	temporal_period(&p1, temp1);
+	temporal_period(&p2, temp2);
+	if (! overlaps_period_period_internal(&p1, &p2))
+		PG_RETURN_NULL();
+
 	/* The base types must be equal when the result is a temporal sequence (set) */
-	Temporal *result = NULL;
 	ensure_valid_duration(temp1->duration);
 	ensure_valid_duration(temp2->duration);
-	if (temp1->valuetypid == temp2->valuetypid || temp1->duration == TEMPORALINST || 
+	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) ||
+		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
+	Temporal *result = NULL;
+	if (temp1->valuetypid == temp2->valuetypid || temp1->duration == TEMPORALINST ||
 		temp1->duration == TEMPORALI || temp2->duration == TEMPORALINST || 
 		temp2->duration == TEMPORALI)
 	{
 		Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-		Oid valuetypid = base_oid_from_temporal(temptypid);
+		Oid restypid = base_oid_from_temporal(temptypid);
  		result = linear ?
 			sync_tfunc4_temporal_temporal(temp1, temp2, &datum_mult,
-		 		valuetypid, linear, &tnumberseq_mult_maxmin_at_timestamp) :
+				restypid, linear, &tnumberseq_mult_maxmin_at_timestamp) :
 			sync_tfunc4_temporal_temporal(temp1, temp2, &datum_mult,
-		 		valuetypid, linear, NULL);
+				restypid, linear, NULL);
 	}
 	else if (temp1->valuetypid == INT4OID && temp2->valuetypid == FLOAT8OID)
 	{
@@ -485,29 +510,29 @@ PG_FUNCTION_INFO_V1(div_base_temporal);
 PGDLLEXPORT Datum
 div_base_temporal(PG_FUNCTION_ARGS)
 {
-	Datum value = PG_GETARG_DATUM(0);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-	double d = datum_double(value, datumtypid);
-	if (fabs(d) < EPSILON)
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	/* Test whether the denominator will ever be zero */
+	if (temporal_ever_eq_internal(temp, Float8GetDatum(0.0)))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 			errmsg("Division by zero")));
-	
-	Temporal *temp = PG_GETARG_TEMPORAL(1);
+
+	Datum value = PG_GETARG_DATUM(0);
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
 	Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-	Oid valuetypid = base_oid_from_temporal(temptypid);
+	Oid restypid = base_oid_from_temporal(temptypid);
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
-	ensure_numeric_base_type(datumtypid);
-	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
+	ensure_numeric_base_type(valuetypid);
+	if (temp->valuetypid == valuetypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
- 		result = tfunc4_temporal_base(temp, value,
-		 	&datum_div, datumtypid, valuetypid, true);
-	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
+ 		result = tfunc4_temporal_base(temp, value, valuetypid,
+		 	&datum_div, restypid, true);
+	else if (valuetypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_to_tfloat_internal(temp);
-		result = tfunc4_temporal_base(ftemp, value,
-		 	&datum_div, FLOAT8OID, FLOAT8OID, true);
+		result = tfunc4_temporal_base(ftemp, value, FLOAT8OID,
+		 	&datum_div, FLOAT8OID, true);
 		pfree(ftemp);
 	}
 	PG_FREE_IF_COPY(temp, 1);
@@ -520,28 +545,28 @@ PGDLLEXPORT Datum
 div_temporal_base(PG_FUNCTION_ARGS)
 {
 	Datum value = PG_GETARG_DATUM(1);
-	Oid datumtypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
-	double d = datum_double(value, datumtypid);
+	Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 1);
+	double d = datum_double(value, valuetypid);
 	if (fabs(d) < EPSILON)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 			errmsg("Division by zero")));
 
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-	Oid valuetypid = base_oid_from_temporal(temptypid);
+	Oid restypid = base_oid_from_temporal(temptypid);
 	/* The base type and the argument type must be equal for temporal sequences */
 	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
-	ensure_numeric_base_type(datumtypid);
-	if (temp->valuetypid == datumtypid || temp->duration == TEMPORALINST || 
+	ensure_numeric_base_type(valuetypid);
+	if (temp->valuetypid == valuetypid || temp->duration == TEMPORALINST || 
 		temp->duration == TEMPORALI)
- 		result = tfunc4_temporal_base(temp, value,
-		 	&datum_div, datumtypid, valuetypid, true);
-	else if (datumtypid == FLOAT8OID && temp->valuetypid == INT4OID)
+ 		result = tfunc4_temporal_base(temp, value, valuetypid,
+			&datum_div, restypid, false);
+	else if (valuetypid == FLOAT8OID && temp->valuetypid == INT4OID)
 	{
 		Temporal *ftemp = tint_to_tfloat_internal(temp);
-		result = tfunc4_temporal_base(ftemp, value,
-		 	&datum_div, FLOAT8OID, FLOAT8OID, true);
+		result = tfunc4_temporal_base(ftemp, value, FLOAT8OID,
+			&datum_div, FLOAT8OID, false);
 		pfree(ftemp);
 	}
 	PG_FREE_IF_COPY(temp, 0);
@@ -555,23 +580,40 @@ div_temporal_temporal(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
-	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) || 
-		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
+
+	/* Bounding box test */
+	Period p1, p2;
+	temporal_period(&p1, temp1);
+	temporal_period(&p2, temp2);
+	if (! overlaps_period_period_internal(&p1, &p2))
+		PG_RETURN_NULL();
+
+	/* Test whether the denominator will ever be zero during the common timespan */
+	PeriodSet *ps = temporal_get_time_internal(temp1);
+	Temporal *projtemp2 = temporal_at_periodset_internal(temp2, ps);
+    if (projtemp2 == NULL)
+        PG_RETURN_NULL();
+	if (temporal_ever_eq_internal(projtemp2, Float8GetDatum(0.0)))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("Division by zero")));
+
 	/* The base types must be equal when the result is a temporal sequence (set) */
-	Temporal *result = NULL;
 	ensure_valid_duration(temp1->duration);
 	ensure_valid_duration(temp2->duration);
-	if (temp1->valuetypid == temp2->valuetypid || temp1->duration == TEMPORALINST || 
+	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) ||
+		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
+	Temporal *result = NULL;
+	if (temp1->valuetypid == temp2->valuetypid || temp1->duration == TEMPORALINST ||
 		temp1->duration == TEMPORALI || temp2->duration == TEMPORALINST || 
 		temp2->duration == TEMPORALI)
 	{
 		Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-		Oid valuetypid = base_oid_from_temporal(temptypid);
+		Oid restypid = base_oid_from_temporal(temptypid);
  		result = linear ?
 			sync_tfunc4_temporal_temporal(temp1, temp2, &datum_div,
-		 		valuetypid, linear, &tnumberseq_mult_maxmin_at_timestamp) :
+				restypid, linear, &tnumberseq_mult_maxmin_at_timestamp) :
 			sync_tfunc4_temporal_temporal(temp1, temp2, &datum_div,
-		 		valuetypid, linear, NULL);
+				restypid, linear, NULL);
 	}
 	else if (temp1->valuetypid == INT4OID && temp2->valuetypid == FLOAT8OID)
 	{
@@ -609,8 +651,7 @@ temporal_round(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	Datum digits = PG_GETARG_DATUM(1);
-	Temporal *result = tfunc2_temporal(temp, digits, &datum_round, FLOAT8OID, 
-		false);
+	Temporal *result = tfunc2_temporal(temp, digits, &datum_round, FLOAT8OID);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
@@ -621,8 +662,7 @@ PGDLLEXPORT Datum
 temporal_degrees(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Temporal *result = tfunc1_temporal(temp, &datum_degrees, FLOAT8OID,
-		false);
+	Temporal *result = tfunc1_temporal(temp, &datum_degrees, FLOAT8OID);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }

@@ -3,9 +3,9 @@
  * period.c
  *	  Basic routines for timestamptz periods
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse, 
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -44,11 +44,11 @@ period_deparse(bool lower_inc, bool upper_inc, const char *lbound_str,
 	StringInfoData buf;
 
 	initStringInfo(&buf);
-	appendStringInfoChar(&buf, lower_inc ? '[' : '(');
+	appendStringInfoChar(&buf, lower_inc ? (char) '[' : (char) '(');
 	appendStringInfoString(&buf, lbound_str);
 	appendStringInfoString(&buf, ", ");
 	appendStringInfoString(&buf, ubound_str);
-	appendStringInfoChar(&buf, upper_inc ? ']' : ')');
+	appendStringInfoChar(&buf, upper_inc ? (char) ']' : (char) ')');
 	return buf.data;
 }
 
@@ -60,14 +60,14 @@ period_deserialize(Period *p, PeriodBound *lower, PeriodBound *upper)
 {
 	if (lower)
 	{
-		lower->val = p->lower;
+		lower->t = p->lower;
 		lower->inclusive = p->lower_inc;
 		lower->lower = true;
 	}
 
 	if (upper)
 	{
-		upper->val = p->upper;
+		upper->t = p->upper;
 		upper->inclusive = p->upper_inc;
 		upper->lower = false;
 	}
@@ -94,15 +94,13 @@ period_deserialize(Period *p, PeriodBound *lower, PeriodBound *upper)
  * identical: when both bounds are inclusive and hold the same value,
  * but one is an upper bound and the other a lower bound.
  */
-
 int
-period_cmp_bounds(TimestampTz t1, TimestampTz t2, bool lower1, bool lower2, 
-	bool inclusive1, bool inclusive2)
+period_cmp_bounds(PeriodBound *b1, PeriodBound *b2)
 {
 	int32		result;
 
 	/* Compare the values */
-	result = timestamp_cmp_internal(t1, t2);
+	result = timestamp_cmp_internal(b1->t, b2->t);
 
 	/*
 	 * If the comparison is not equal and the bounds are both inclusive or 
@@ -111,69 +109,32 @@ period_cmp_bounds(TimestampTz t1, TimestampTz t2, bool lower1, bool lower2,
 	*/
 	if (result == 0)
 	{
-		if (!inclusive1 && !inclusive2)
+		if (! b1->inclusive && ! b2->inclusive)
 		{
 			/* both are exclusive */
-			if (lower1 == lower2)
+			if (b1->lower == b2->lower)
 				return 0;
 			else
-				return lower1 ? 1 : -1;
+				return b1->lower ? 1 : -1;
 		}
-		else if (!inclusive1)
-			return lower1 ? 1 : -1;
-		else if (!inclusive2)
-			return lower2 ? -1 : 1;
+		else if (! b1->inclusive)
+			return b1->lower ? 1 : -1;
+		else if (! b2->inclusive)
+			return b2->lower ? -1 : 1;
 	}	
 	
 	return result;
 }
 
 /*
- * Check if two bounds A and B are "adjacent", where A is an upper bound and B
- * is a lower bound. For the bounds to be adjacent, each timestamp must
- * satisfy strictly one of the bounds: there are no values which satisfy both
- * bounds (i.e. less than A and greater than B); and there are no values which
- * satisfy neither bound (i.e. greater than A and less than B).
- *
- * If A == B, the periods are adjacent only if the bounds have different
- * inclusive flags (i.e., exactly one of the periods includes the common
- * boundary point).
- */
-
-bool
-period_bounds_adjacent(TimestampTz t1, TimestampTz t2, bool inclusive1, bool inclusive2)
-{
-	int			cmp;
-
-	cmp = timestamp_cmp_internal(t1, t2);
-	if (cmp == 0)
-		return inclusive1 != inclusive2;
-	else 
-		return false;
-}
-
-/*
- * Compare periods by lower bound.
+ * Comparison function for sorting PeriodBounds.
  */
 int
-period_cmp_lower(const void** a, const void** b)
+period_bound_qsort_cmp(const void *a1, const void *a2)
 {
-	Period *i1 = (Period *) *a;
-	Period *i2 = (Period *) *b;
-	return period_cmp_bounds(i1->lower, i2->lower, true, true, 
-		i1->lower_inc, i2->lower_inc);
-}
-
-/*
- * Compare periods by upper bound.
- */
-int
-period_cmp_upper(const void** a, const void** b)
-{
-	Period *i1 = (Period *) *a;
-	Period *i2 = (Period *) *b;
-	return period_cmp_bounds(i1->upper, i2->upper, false, false, 
-		i1->upper_inc, i2->upper_inc);
+	PeriodBound *b1 = (PeriodBound *) a1;
+	PeriodBound *b2 = (PeriodBound *) a2;
+	return period_cmp_bounds(b1, b2);
 }
 
 /*
@@ -299,45 +260,42 @@ periodarr_normalize(Period **periods, int count, int *newcount)
 Period *
 period_super_union(Period *p1, Period *p2)
 {
-	TimestampTz result_lower;
-	TimestampTz result_upper;
-	bool result_lower_inc;
-	bool result_upper_inc;
+	int cmp1 = timestamp_cmp_internal(p1->lower, p2->lower);
+	int cmp2 = timestamp_cmp_internal(p1->upper, p2->upper);
+	bool lower1 = cmp1 < 0 || (cmp1 == 0 && (p1->lower_inc || ! p2->lower_inc));
+	bool upper1 = cmp2 > 0 || (cmp2 == 0 && (p1->upper_inc || ! p2->upper_inc));
 
-	if (period_cmp_bounds(p1->lower, p2->lower, true, true, 
-		p1->lower_inc, p2->lower_inc) <= 0)
-	{
-		result_lower = p1->lower;
-		result_lower_inc = p1->lower_inc;
-	}
-	else
-	{
-		result_lower = p2->lower;
-		result_lower_inc = p2->lower_inc;
-	}
-
-	if (period_cmp_bounds(p1->upper, p2->upper, false, false, 
-		p1->upper_inc, p2->upper_inc) >= 0)
-	{
-		result_upper = p1->upper;
-		result_upper_inc = p1->upper_inc;
-	}
-	else
-	{
-		result_upper = p2->upper;
-		result_upper_inc = p2->upper_inc;
-	}
-
-	/* optimization to avoid constructing a new range */
-	if (result_lower == p1->lower && result_upper == p1->upper)
+	/* optimization to avoid constructing a new period */
+	if (lower1 && upper1)
+		/* p1 contains p2 */
 		return p1;
-	if (result_lower == p2->lower && result_upper == p2->upper)
+	if (! lower1 && ! upper1)
+		/* p2 contains p1 */
 		return p2;
-		
-	return period_make(result_lower, result_upper, 
-		result_lower_inc, result_upper_inc);
+
+	TimestampTz lower = lower1 ? p1->lower : p2->lower;
+	bool lower_inc = lower1 ? p1->lower_inc : p2->lower_inc;
+	TimestampTz upper = upper1 ? p1->upper : p2->upper;
+	bool upper_inc = upper1 ? p1->upper_inc : p2->upper_inc;
+	return period_make(lower, upper, lower_inc, upper_inc);
 }
- 
+
+/* Expand the first period with the second one */
+
+void
+period_expand(Period *p1, const Period *p2)
+{
+	int cmp1 = timestamp_cmp_internal(p1->lower, p2->lower);
+	int cmp2 = timestamp_cmp_internal(p1->upper, p2->upper);
+	bool lower1 = cmp1 < 0 || (cmp1 == 0 && (p1->lower_inc || ! p2->lower_inc));
+	bool upper1 = cmp2 > 0 || (cmp2 == 0 && (p1->upper_inc || ! p2->upper_inc));
+
+	p1->lower = lower1 ? p1->lower : p2->lower;
+	p1->lower_inc = lower1 ? p1->lower_inc : p2->lower_inc;
+	p1->upper = upper1 ? p1->upper : p2->upper;
+	p1->upper_inc = upper1 ? p1->upper_inc : p2->upper_inc;
+}
+
 /*****************************************************************************
  * Input/output functions
  *****************************************************************************/
@@ -374,8 +332,8 @@ unquote(char *str)
 char *
 period_to_string(Period *p) 
 {
-	char *lower = call_output(TIMESTAMPTZOID, p->lower);
-	char *upper = call_output(TIMESTAMPTZOID, p->upper);
+	char *lower = call_output(TIMESTAMPTZOID, TimestampTzGetDatum(p->lower));
+	char *upper = call_output(TIMESTAMPTZOID, TimestampTzGetDatum(p->upper));
 	char *result = period_deparse(p->lower_inc, p->upper_inc, lower, upper);
 	unquote(result);
 	pfree(lower); pfree(upper);
@@ -398,12 +356,12 @@ period_out(PG_FUNCTION_ARGS)
 void
 period_send_internal(Period *p, StringInfo buf)
 {
-	bytea *lower = call_send(TIMESTAMPTZOID, p->lower);
-	bytea *upper = call_send(TIMESTAMPTZOID, p->upper);
+	bytea *lower = call_send(TIMESTAMPTZOID, TimestampTzGetDatum(p->lower));
+	bytea *upper = call_send(TIMESTAMPTZOID, TimestampTzGetDatum(p->upper));
 	pq_sendbytes(buf, VARDATA(lower), VARSIZE(lower) - VARHDRSZ);
 	pq_sendbytes(buf, VARDATA(upper), VARSIZE(upper) - VARHDRSZ);
-	pq_sendbyte(buf, p->lower_inc);
-	pq_sendbyte(buf, p->upper_inc);
+	pq_sendbyte(buf, p->lower_inc ? (uint8) 1 : (uint8) 0);
+	pq_sendbyte(buf, p->upper_inc ? (uint8) 1 : (uint8) 0);
 	pfree(lower);
 	pfree(upper);
 }
@@ -553,7 +511,7 @@ PGDLLEXPORT Datum
 period_lower(PG_FUNCTION_ARGS)
 {
 	Period *p = PG_GETARG_PERIOD(0);
-	PG_RETURN_DATUM(p->lower);
+	PG_RETURN_TIMESTAMPTZ(p->lower);
 }
 
 /* extract upper bound value */
@@ -564,7 +522,7 @@ PGDLLEXPORT Datum
 period_upper(PG_FUNCTION_ARGS)
 {
 	Period *p = PG_GETARG_PERIOD(0);
-	PG_RETURN_DATUM(p->upper);
+	PG_RETURN_TIMESTAMPTZ(p->upper);
 }
 
 /* period -> bool functions */
@@ -648,11 +606,10 @@ period_timespan(PG_FUNCTION_ARGS)
 bool
 period_eq_internal(Period *p1, Period *p2)
 {
-	if (p1->lower_inc != p2->lower_inc || p1->upper_inc != p2->upper_inc)
+	if (p1->lower != p2->lower || p1->upper != p2->upper ||
+		p1->lower_inc != p2->lower_inc || p1->upper_inc != p2->upper_inc)
 		return false;
-	
-	return timestamp_cmp_internal(p1->lower, p2->lower) == 0 && 
-		timestamp_cmp_internal(p1->upper, p2->upper) == 0;
+	return true;
 }
 
 PG_FUNCTION_INFO_V1(period_eq);
@@ -686,13 +643,17 @@ period_ne(PG_FUNCTION_ARGS)
 int
 period_cmp_internal(Period *p1, Period *p2)
 {
-	int cmp = period_cmp_bounds(p1->lower, p2->lower, true, true, 
-		p1->lower_inc, p2->lower_inc);
-	if (cmp == 0)
-		cmp = period_cmp_bounds(p1->upper, p2->upper, false, false, 
-			p1->upper_inc, p2->upper_inc);
-
-	return cmp;
+	int cmp = timestamp_cmp_internal(p1->lower, p2->lower);
+	if (cmp != 0)
+		return cmp;
+	if (p1->lower_inc != p2->lower_inc)
+		return p1->lower_inc ? -1 : 1;
+	cmp = timestamp_cmp_internal(p1->upper, p2->upper);
+	if (cmp != 0)
+		return cmp;
+	if (p1->upper_inc != p2->upper_inc)
+		return p1->upper_inc ? 1 : -1;
+	return 0;
 }
 
 PG_FUNCTION_INFO_V1(period_cmp);
@@ -796,11 +757,11 @@ period_hash(PG_FUNCTION_ARGS)
 		flags |= 0x02;
 
 	/* Apply the hash function to each bound */
-	lower_hash = DatumGetUInt32(call_function1(hashint8, p->lower));
-	upper_hash = DatumGetUInt32(call_function1(hashint8, p->upper));
+	lower_hash = DatumGetUInt32(call_function1(hashint8, TimestampTzGetDatum(p->lower)));
+	upper_hash = DatumGetUInt32(call_function1(hashint8, TimestampTzGetDatum(p->upper)));
 
 	/* Merge hashes of flags and bounds */
-	result = hash_uint32((uint32) flags);
+	result = DatumGetUInt32(hash_uint32((uint32) flags));
 	result ^= lower_hash;
 	result = (result << 1) | (result >> 31);
 	result ^= upper_hash;

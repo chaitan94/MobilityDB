@@ -8,9 +8,9 @@
  * one to create the type. This is the only approach we can see at the moment
  * which is both correct and simple.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -335,15 +335,12 @@ timestampset_parse(char **str)
 
 	/* First parsing */
 	char *bak = *str;
-	TimestampTz t = timestamp_parse(str);
-	/* keep compiler quiet */
-	if (t == 0) 
-	{}
+	timestamp_parse(str);
 	int count = 1;
 	while (p_comma(str)) 
 	{
 		count++;
-		t = timestamp_parse(str);
+		timestamp_parse(str);
 	}
 	if (!p_cbrace(str))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
@@ -357,7 +354,7 @@ timestampset_parse(char **str)
 		times[i] = timestamp_parse(str);
 	}
 	p_cbrace(str);
-	TimestampSet *result = timestampset_from_timestamparr_internal(times, count);
+	TimestampSet *result = timestampset_make_internal(times, count);
 
 	pfree(times);
 
@@ -393,7 +390,7 @@ periodset_parse(char **str)
 		periods[i] = period_parse(str, true);
 	}
 	p_cbrace(str);
-	PeriodSet *result = periodset_from_periodarr_internal(periods, count, true);
+	PeriodSet *result = periodset_make_internal(periods, count, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(periods[i]);
@@ -469,7 +466,7 @@ temporali_parse(char **str, Oid basetype)
 		instants[i] = temporalinst_parse(str, basetype, false, true);
 	}
 	p_cbrace(str);
-	TemporalI *result = temporali_from_temporalinstarr(instants, count);
+	TemporalI *result = temporali_make(instants, count);
 
 	for (int i = 0; i < count; i++)
 		pfree(instants[i]);
@@ -499,12 +496,12 @@ temporalseq_parse(char **str, Oid basetype, bool linear, bool end, bool make)
 
 	/* First parsing */
 	char *bak = *str;
-	TemporalInst *inst = temporalinst_parse(str, basetype, false, false);
+	temporalinst_parse(str, basetype, false, false);
 	int count = 1;
 	while (p_comma(str)) 
 	{
 		count++;
-		inst = temporalinst_parse(str, basetype, false, false);
+		temporalinst_parse(str, basetype, false, false);
 	}
 	if (p_cbracket(str))
 		upper_inc = true;
@@ -535,7 +532,7 @@ temporalseq_parse(char **str, Oid basetype, bool linear, bool end, bool make)
 	if (! make)
 		return NULL;
 
-	TemporalSeq *result = temporalseq_from_temporalinstarr(instants, 
+	TemporalSeq *result = temporalseq_make(instants, 
 		count, lower_inc, upper_inc, linear, true);
 
 	for (int i = 0; i < count; i++)
@@ -584,8 +581,7 @@ temporals_parse(char **str, Oid basetype, bool linear)
 		sequences[i] = temporalseq_parse(str, basetype, linear, false, true);
 	}
 	p_cbrace(str);
-	TemporalS *result = temporals_from_temporalseqarr(sequences, count,
-		linear, true);
+	TemporalS *result = temporals_make(sequences, count, true);
 
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);

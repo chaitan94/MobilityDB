@@ -3,9 +3,9 @@
  * periodset.c
  *	Basic functions for set of periods.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -45,7 +45,7 @@
 /* Pointer to array of offsets of the PeriodSet */
 
 static size_t *
-periodset_offsets_ptr(PeriodSet *ps)
+periodset_offsets_ptr(const PeriodSet *ps)
 {
 	return (size_t *) (((char *)ps) + sizeof(PeriodSet));
 }
@@ -53,7 +53,7 @@ periodset_offsets_ptr(PeriodSet *ps)
 /* Pointer to the first period */
 
 static char * 
-periodset_data_ptr(PeriodSet *ps)
+periodset_data_ptr(const PeriodSet *ps)
 {
 	return (char *)ps + double_pad(sizeof(PeriodSet) + 
 		sizeof(size_t) * (ps->count + 1));
@@ -62,7 +62,7 @@ periodset_data_ptr(PeriodSet *ps)
 /* N-th Period of a PeriodSet */
 
 Period *
-periodset_per_n(PeriodSet *ps, int index)
+periodset_per_n(const PeriodSet *ps, int index)
 {
 	size_t *offsets = periodset_offsets_ptr(ps);
 	return (Period *) (periodset_data_ptr(ps) + offsets[index]);
@@ -71,7 +71,7 @@ periodset_per_n(PeriodSet *ps, int index)
 /* Bounding box of a PeriodSet */
 
 Period *
-periodset_bbox(PeriodSet *ps) 
+periodset_bbox(const PeriodSet *ps)
 {
 	size_t *offsets = periodset_offsets_ptr(ps);
 	assert(offsets[ps->count] != 0);
@@ -81,15 +81,15 @@ periodset_bbox(PeriodSet *ps)
 /* Construct a PeriodSet from an array of Period */
 
 PeriodSet *
-periodset_from_periodarr_internal(Period **periods, int count, bool normalize)
+periodset_make_internal(Period **periods, int count, bool normalize)
 {
 	Period bbox;
 	/* Test the validity of the periods */
 	for (int i = 0; i < count - 1; i++)
 	{
-		if (timestamp_cmp_internal(periods[i]->upper, periods[i + 1]->lower) > 0 ||
-			(timestamp_cmp_internal(periods[i]->upper, periods[i + 1]->lower) == 0 &&
-			periods[i]->upper_inc && periods[i + 1]->lower_inc))
+		int cmp = timestamp_cmp_internal(periods[i]->upper, periods[i + 1]->lower);
+		if (cmp > 0 ||
+			(cmp == 0 && periods[i]->upper_inc && periods[i + 1]->lower_inc))
 			ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION),
 				errmsg("Invalid value for period set")));
 	}
@@ -119,7 +119,6 @@ periodset_from_periodarr_internal(Period **periods, int count, bool normalize)
 		newperiods[0]->lower_inc, newperiods[newcount - 1]->upper_inc);
 	offsets[newcount] = pos;
 	memcpy(((char *) result) + pdata + pos, &bbox, sizeof(Period));
-	pos += double_pad(sizeof(Period));
 	/* Normalize */
 	if (normalize && count > 1)
 	{
@@ -168,12 +167,12 @@ periodset_find_timestamp(PeriodSet *ps, TimestampTz t, int *pos)
 			*pos = middle;
 			return true;
 		}
-		if (timestamp_cmp_internal(t, p->lower) <= 0)
+		if (t <= p->lower)
 			last = middle - 1;
 		else
 			first = middle + 1;
 	}
-	if (timestamp_cmp_internal(t, p->upper) >= 0)
+	if (t >= p->upper)
 		middle++;
 	*pos = middle;
 	return false;
@@ -200,7 +199,7 @@ periodset_in(PG_FUNCTION_ARGS)
 char *
 periodset_to_string(PeriodSet *ps)
 {
-	char **strings = palloc((int) (sizeof(char *) * ps->count));
+	char **strings = palloc(sizeof(char *) * ps->count);
 	size_t outlen = 0;
 
 	for (int i = 0; i < ps->count; i++)
@@ -250,7 +249,7 @@ periodset_send(PG_FUNCTION_ARGS)
 	PeriodSet *ps = PG_GETARG_PERIODSET(0);
 	StringInfoData buf;
 	pq_begintypsend(&buf);
-	pq_sendint(&buf, ps->count, 4);
+	pq_sendint(&buf, (uint32) ps->count, 4);
 	for (int i = 0; i < ps->count; i++)
 	{
 		Period *p = periodset_per_n(ps, i);
@@ -272,7 +271,7 @@ periodset_recv(PG_FUNCTION_ARGS)
 	Period **periods = palloc(sizeof(Period *) * count);
 	for (int i = 0; i < count; i++)
 		periods[i] = period_recv_internal(buf);
-	PeriodSet *result = periodset_from_periodarr_internal(periods, count, false);
+	PeriodSet *result = periodset_make_internal(periods, count, false);
 
 	for (int i = 0; i < count; i++)
 		pfree(periods[i]);
@@ -287,10 +286,10 @@ periodset_recv(PG_FUNCTION_ARGS)
 
 /* Construct a PeriodSet from an array of Period */
 
-PG_FUNCTION_INFO_V1(periodset_from_periodarr);
+PG_FUNCTION_INFO_V1(periodset_make);
 
 PGDLLEXPORT Datum
-periodset_from_periodarr(PG_FUNCTION_ARGS)
+periodset_make(PG_FUNCTION_ARGS)
 {
 	ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
 	int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
@@ -302,7 +301,7 @@ periodset_from_periodarr(PG_FUNCTION_ARGS)
 	}
 	
 	Period **periods = periodarr_extract(array, &count);
-	PeriodSet *result = periodset_from_periodarr_internal(periods, count, true);
+	PeriodSet *result = periodset_make_internal(periods, count, true);
 	
 	pfree(periods);
 	PG_FREE_IF_COPY(array, 0);
@@ -323,7 +322,7 @@ timestamp_to_periodset(PG_FUNCTION_ARGS)
 {
 	TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
 	Period *p = period_make(t, t, true, true);
-	PeriodSet *result = periodset_from_periodarr_internal(&p, 1, false);
+	PeriodSet *result = periodset_make_internal(&p, 1, false);
 	pfree(p);
 	PG_RETURN_POINTER(result);
 }
@@ -339,7 +338,7 @@ timestampset_to_periodset_internal(TimestampSet *ts)
 		TimestampTz t = timestampset_time_n(ts, i);
 		periods[i] = period_make(t, t, true, true);
 	}
-	PeriodSet *result = periodset_from_periodarr_internal(periods, ts->count, false);
+	PeriodSet *result = periodset_make_internal(periods, ts->count, false);
 	for (int i = 0; i < ts->count; i++)
 		pfree(periods[i]);
 	pfree(periods);
@@ -364,7 +363,7 @@ PGDLLEXPORT Datum
 period_to_periodset(PG_FUNCTION_ARGS)
 {
 	Period *p = PG_GETARG_PERIOD(0);
-	PeriodSet *result = periodset_from_periodarr_internal(&p, 1, false);
+	PeriodSet *result = periodset_make_internal(&p, 1, false);
 	PG_RETURN_POINTER(result);
 }
 
@@ -538,7 +537,7 @@ periodset_num_timestamps(PG_FUNCTION_ARGS)
 			d = p->upper;
 			start = !start;
 		}
-		if (timestamp_cmp_internal(prev, d) != 0)
+		if (prev != d)
 		{
 			result++;
 			prev = d;
@@ -628,7 +627,7 @@ periodset_timestamp_n(PG_FUNCTION_ARGS)
 			d = p->upper;
 			start = !start;
 		}
-		if (timestamp_cmp_internal(prev, d) != 0)
+		if (prev != d)
 		{
 			i++;
 			prev = d;
@@ -652,14 +651,14 @@ periodset_timestamps(PG_FUNCTION_ARGS)
 	Period *p = periodset_per_n(ps, 0);
 	times[0] = p->lower;
 	int k = 1;
-	if (timestamp_cmp_internal(p->lower, p->upper) != 0)
+	if (p->lower != p->upper)
 		times[k++] = p->upper;
 	for (int i = 1; i < ps->count; i++)
 	{
 		p = periodset_per_n(ps, i);
-		if (timestamp_cmp_internal(times[k - 1], p->lower) != 0)
+		if (times[k - 1] != p->lower)
 			times[k++] = p->lower;
-		if (timestamp_cmp_internal(times[k - 1], p->upper) != 0)
+		if (times[k - 1] != p->upper)
 			times[k++] = p->upper;
 	}
 	ArrayType *result = timestamparr_to_array(times, k);
@@ -680,7 +679,7 @@ periodset_shift_internal(PeriodSet *ps, Interval *interval)
 		Period *p = periodset_per_n(ps, i);
 		periods[i] = period_shift_internal(p, interval);
 	}
-	PeriodSet *result = periodset_from_periodarr_internal(periods, ps->count, false);
+	PeriodSet *result = periodset_make_internal(periods, ps->count, false);
 	for (int i = 0; i < ps->count; i++)
 		pfree(periods[i]);
 	pfree(periods);

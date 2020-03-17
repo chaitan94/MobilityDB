@@ -5,13 +5,12 @@ ANALYZE tbl_period_big;
 ANALYZE tbl_periodset_big;
 
 DROP INDEX IF EXISTS tbl_timestampset_big_gist_idx;
-DROP INDEX IF EXISTS tbl_timestampset_big_spgist_idx;
-
 DROP INDEX IF EXISTS tbl_period_big_gist_idx;
-DROP INDEX IF EXISTS tbl_period_big_spgist_idx;
-
 DROP INDEX IF EXISTS tbl_periodset_big_gist_idx;
+
+DROP INDEX IF EXISTS tbl_timestampset_big_spgist_idx;
 DROP INDEX IF EXISTS tbl_periodset_big_spgist_idx;
+DROP INDEX IF EXISTS tbl_period_big_spgist_idx;
 
 -------------------------------------------------------------------------------
 
@@ -22,6 +21,7 @@ CREATE INDEX tbl_periodset_big_gist_idx ON tbl_periodset_big USING GIST(ps);
 SELECT count(*) FROM tbl_timestampset_big WHERE ts && period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_timestampset_big WHERE ts @> period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_timestampset_big WHERE ts <@ period '[2001-01-01, 2001-02-01]';
+SELECT count(*) FROM tbl_timestampset_big WHERE ts -|- period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_timestampset_big WHERE ts <<# period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_timestampset_big WHERE ts &<# period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_timestampset_big WHERE ts #>> period '[2001-01-01, 2001-02-01]';
@@ -30,6 +30,7 @@ SELECT count(*) FROM tbl_timestampset_big WHERE ts #&> period '[2001-01-01, 2001
 SELECT count(*) FROM tbl_period_big WHERE p && timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p @> timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p <@ timestamptz '2001-01-01';
+SELECT count(*) FROM tbl_period_big WHERE p -|- timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p <<# timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p &<# timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p #>> timestamptz '2001-01-01';
@@ -38,6 +39,7 @@ SELECT count(*) FROM tbl_period_big WHERE p #&> timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p && timestampset '{2001-01-01, 2001-02-01}';
 SELECT count(*) FROM tbl_period_big WHERE p @> timestampset '{2001-01-01, 2001-02-01}';
 SELECT count(*) FROM tbl_period_big WHERE p <@ timestampset '{2001-01-01, 2001-02-01}';
+SELECT count(*) FROM tbl_period_big WHERE p -|- timestampset '{2001-01-01, 2001-02-01}';
 SELECT count(*) FROM tbl_period_big WHERE p <<# timestampset '{2001-01-01, 2001-02-01}';
 SELECT count(*) FROM tbl_period_big WHERE p &<# timestampset '{2001-01-01, 2001-02-01}';
 SELECT count(*) FROM tbl_period_big WHERE p #>> timestampset '{2001-01-01, 2001-02-01}';
@@ -46,6 +48,7 @@ SELECT count(*) FROM tbl_period_big WHERE p #&> timestampset '{2001-01-01, 2001-
 SELECT count(*) FROM tbl_period_big WHERE p && period '[2001-06-01, 2001-07-01]';
 SELECT count(*) FROM tbl_period_big WHERE p @> period '[2001-06-01, 2001-07-01]';
 SELECT count(*) FROM tbl_period_big WHERE p <@ period '[2001-06-01, 2001-07-01]';
+SELECT count(*) FROM tbl_period_big WHERE p -|- period '[2001-06-01, 2001-07-01]';
 SELECT count(*) FROM tbl_period_big WHERE p <<# period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_period_big WHERE p &<# period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_period_big WHERE p #>> period '[2001-11-01, 2001-12-01]';
@@ -54,6 +57,7 @@ SELECT count(*) FROM tbl_period_big WHERE p #&> period '[2001-11-01, 2001-12-01]
 SELECT count(*) FROM tbl_period_big WHERE p && periodset '{[2001-01-01, 2001-02-01]}';
 SELECT count(*) FROM tbl_period_big WHERE p @> periodset '{[2001-01-01, 2001-02-01]}';
 SELECT count(*) FROM tbl_period_big WHERE p <@ periodset '{[2001-01-01, 2001-02-01]}';
+SELECT count(*) FROM tbl_period_big WHERE p -|- periodset '{[2001-01-01, 2001-02-01]}';
 SELECT count(*) FROM tbl_period_big WHERE p <<# periodset '{[2001-01-01, 2001-02-01]}';
 SELECT count(*) FROM tbl_period_big WHERE p &<# periodset '{[2001-01-01, 2001-02-01]}';
 SELECT count(*) FROM tbl_period_big WHERE p #>> periodset '{[2001-01-01, 2001-02-01]}';
@@ -80,6 +84,7 @@ CREATE INDEX tbl_periodset_big_spgist_idx ON tbl_periodset_big USING SPGIST(ps);
 SELECT count(*) FROM tbl_timestampset_big WHERE ts && period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_timestampset_big WHERE ts @> period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_timestampset_big WHERE ts <@ period '[2001-01-01, 2001-02-01]';
+SELECT count(*) FROM tbl_timestampset_big WHERE ts -|- period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_timestampset_big WHERE ts <<# period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_timestampset_big WHERE ts &<# period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_timestampset_big WHERE ts #>> period '[2001-01-01, 2001-02-01]';
@@ -88,6 +93,7 @@ SELECT count(*) FROM tbl_timestampset_big WHERE ts #&> period '[2001-01-01, 2001
 SELECT count(*) FROM tbl_period_big WHERE p && timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p @> timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p <@ timestamptz '2001-01-01';
+SELECT count(*) FROM tbl_period_big WHERE p -|- timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p <<# timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p &<# timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p #>> timestamptz '2001-01-01';
@@ -96,6 +102,7 @@ SELECT count(*) FROM tbl_period_big WHERE p #&> timestamptz '2001-01-01';
 SELECT count(*) FROM tbl_period_big WHERE p && timestampset '{2001-01-01, 2001-02-01}';
 SELECT count(*) FROM tbl_period_big WHERE p @> timestampset '{2001-01-01, 2001-02-01}';
 SELECT count(*) FROM tbl_period_big WHERE p <@ timestampset '{2001-01-01, 2001-02-01}';
+SELECT count(*) FROM tbl_period_big WHERE p -|- timestampset '{2001-01-01, 2001-02-01}';
 SELECT count(*) FROM tbl_period_big WHERE p <<# timestampset '{2001-01-01, 2001-02-01}';
 SELECT count(*) FROM tbl_period_big WHERE p &<# timestampset '{2001-01-01, 2001-02-01}';
 SELECT count(*) FROM tbl_period_big WHERE p #>> timestampset '{2001-01-01, 2001-02-01}';
@@ -104,6 +111,7 @@ SELECT count(*) FROM tbl_period_big WHERE p #&> timestampset '{2001-01-01, 2001-
 SELECT count(*) FROM tbl_period_big WHERE p && period '[2001-06-01, 2001-07-01]';
 SELECT count(*) FROM tbl_period_big WHERE p @> period '[2001-06-01, 2001-07-01]';
 SELECT count(*) FROM tbl_period_big WHERE p <@ period '[2001-06-01, 2001-07-01]';
+SELECT count(*) FROM tbl_period_big WHERE p -|- period '[2001-06-01, 2001-07-01]';
 SELECT count(*) FROM tbl_period_big WHERE p <<# period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_period_big WHERE p &<# period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_period_big WHERE p #>> period '[2001-11-01, 2001-12-01]';
@@ -112,6 +120,7 @@ SELECT count(*) FROM tbl_period_big WHERE p #&> period '[2001-11-01, 2001-12-01]
 SELECT count(*) FROM tbl_period_big WHERE p && periodset '{[2001-01-01, 2001-02-01]}';
 SELECT count(*) FROM tbl_period_big WHERE p @> periodset '{[2001-01-01, 2001-02-01]}';
 SELECT count(*) FROM tbl_period_big WHERE p <@ periodset '{[2001-01-01, 2001-02-01]}';
+SELECT count(*) FROM tbl_period_big WHERE p -|- periodset '{[2001-01-01, 2001-02-01]}';
 SELECT count(*) FROM tbl_period_big WHERE p <<# periodset '{[2001-01-01, 2001-02-01]}';
 SELECT count(*) FROM tbl_period_big WHERE p &<# periodset '{[2001-01-01, 2001-02-01]}';
 SELECT count(*) FROM tbl_period_big WHERE p #>> periodset '{[2001-01-01, 2001-02-01]}';
@@ -120,6 +129,7 @@ SELECT count(*) FROM tbl_period_big WHERE p #&> periodset '{[2001-01-01, 2001-02
 SELECT count(*) FROM tbl_periodset_big WHERE ps && period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_periodset_big WHERE ps @> period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_periodset_big WHERE ps <@ period '[2001-01-01, 2001-02-01]';
+SELECT count(*) FROM tbl_periodset_big WHERE ps -|- period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_periodset_big WHERE ps <<# period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_periodset_big WHERE ps &<# period '[2001-01-01, 2001-02-01]';
 SELECT count(*) FROM tbl_periodset_big WHERE ps #>> period '[2001-01-01, 2001-02-01]';

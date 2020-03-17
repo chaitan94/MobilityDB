@@ -7,9 +7,9 @@
  * avoid (slow) lookups. The global arrays are initialized at the loading 
  * of the extension.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -49,9 +49,9 @@ typedef enum
 	T_TIMESTAMPTZ,
 	T_TINT,
 	T_TSTZRANGE,
-	T_TTEXT
+	T_TTEXT,
 #ifdef WITH_POSTGIS
-	,T_GEOMETRY,
+	T_GEOMETRY,
 	T_GEOGRAPHY,
 	T_TGEOMPOINT,
 	T_TGEOGPOINT,

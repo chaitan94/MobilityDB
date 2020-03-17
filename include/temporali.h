@@ -3,9 +3,9 @@
  * temporali.h
  *	  Basic functions for temporal instant sets.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -20,11 +20,9 @@
 
 /*****************************************************************************/
 
-extern TemporalInst *temporali_inst_n(TemporalI *ti, int index);
+extern TemporalInst *temporali_inst_n(const TemporalI *ti, int index);
 extern bool temporali_find_timestamp(TemporalI *ti, TimestampTz t, int *pos);
-extern bool temporalinstarr_find_timestamp(TemporalInst **instants, int from, 
-	int count, TimestampTz t, int *pos);
-extern TemporalI *temporali_from_temporalinstarr(TemporalInst **instants, 
+extern TemporalI *temporali_make(TemporalInst **instants,
 	int count);
 extern TemporalI *temporali_copy(TemporalI *ti);
 
@@ -43,9 +41,10 @@ extern char *temporali_to_string(TemporalI *ti, char *(*value_out)(Oid, Datum));
 extern void temporali_write(TemporalI *ti, StringInfo buf);
 extern TemporalI *temporali_read(StringInfo buf, Oid valuetypid);
 
-/* Append function */
+/* Append functions */
 
-extern TemporalI *temporali_append_instant(TemporalI *ti, TemporalInst *inst);
+extern TemporalI *temporali_append_instant(const TemporalI *ti, const TemporalInst *inst);
+extern TemporalI *temporali_append(const TemporalI *ti1, const TemporalI *ti2);
 
 /* Cast functions */
  
@@ -63,9 +62,8 @@ extern TemporalI *temporals_to_temporali(TemporalS *ts);
 extern ArrayType *temporali_values(TemporalI *ti);
 extern ArrayType *tfloati_ranges(TemporalI *ti);
 extern PeriodSet *temporali_get_time(TemporalI *ti);
-extern void *temporali_bbox_ptr(TemporalI *ti);
+extern void *temporali_bbox_ptr(const TemporalI *ti);
 extern void temporali_bbox(void *box, TemporalI *ti);
-extern RangeType *tnumberi_value_range(TemporalI *ti);
 extern Datum temporali_min_value(TemporalI *ti);
 extern Datum temporali_max_value(TemporalI *ti);
 extern void temporali_period(Period *p, TemporalI *ti);
@@ -74,9 +72,15 @@ extern ArrayType *temporali_instants_array(TemporalI *ti);
 extern TimestampTz temporali_start_timestamp(TemporalI *ti);
 extern TimestampTz temporali_end_timestamp(TemporalI *ti);
 extern ArrayType *temporali_timestamps(TemporalI *ti);
-extern bool temporali_ever_eq(TemporalI *ti, Datum value);
-extern bool temporali_always_eq(TemporalI *ti, Datum value);
 extern TemporalI *temporali_shift(TemporalI *ti, Interval *interval);
+
+extern bool temporali_ever_eq(TemporalI *ti, Datum value);
+extern bool temporali_ever_lt(TemporalI *ti, Datum value);
+extern bool temporali_ever_le(TemporalI *ti, Datum value);
+
+extern bool temporali_always_eq(TemporalI *ti, Datum value);
+extern bool temporali_always_lt(TemporalI *ti, Datum value);
+extern bool temporali_always_le(TemporalI *ti, Datum value);
 
 /* Restriction Functions */
 
@@ -108,7 +112,7 @@ extern bool temporali_intersects_periodset(TemporalI *ti, PeriodSet *ps);
 
 /* Local aggregate functions */
 
-extern double temporali_twavg(TemporalI *ti);
+extern double tnumberi_twavg(TemporalI *ti);
 
 /* Comparison functions */
 

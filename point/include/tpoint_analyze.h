@@ -3,15 +3,17 @@
  * tpoint_analyze.h
  *	  Functions for gathering statistics from temporal point columns
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse, 
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
 
 #ifndef __TPOINT_ANALYZE_H__
 #define __TPOINT_ANALYZE_H__
+
+#define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H 1
 
 #include <postgres.h>
 #include <catalog/pg_type.h>
@@ -48,13 +50,12 @@ typedef struct ND_IBOX_T
 } ND_IBOX;
 
 extern int nd_box_init(ND_BOX *a);
-extern int nd_box_init_bounds(ND_BOX *a, int ndims);
-extern int nd_box_merge(const ND_BOX *source, ND_BOX *target, int ndims);
+extern int nd_box_init_bounds(ND_BOX *a);
+extern int nd_box_merge(const ND_BOX *source, ND_BOX *target);
 extern void nd_box_from_gbox(const GBOX *gbox, ND_BOX *nd_box);
 
-extern void gserialized_compute_stats(VacAttrStats *stats, int sample_rows, 
-    int total_rows, double notnull_cnt, const ND_BOX **sample_boxes, 
-    ND_BOX *sum, ND_BOX *sample_extent, int *slot_idx, int ndims);
+extern void gserialized_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
+	int sample_rows, double total_rows, int mode);
 
 extern Datum tpoint_analyze(PG_FUNCTION_ARGS);
 

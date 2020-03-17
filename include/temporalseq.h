@@ -3,9 +3,9 @@
  * temporalseq.h
  *	  Basic functions for temporal sequences.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -20,8 +20,8 @@
 
 /*****************************************************************************/
 
-extern TemporalInst *temporalseq_inst_n(TemporalSeq *seq, int index);
-extern TemporalSeq *temporalseq_from_temporalinstarr(TemporalInst **instants, 
+extern TemporalInst *temporalseq_inst_n(const TemporalSeq *seq, int index);
+extern TemporalSeq *temporalseq_make(TemporalInst **instants, 
 	int count, bool lower_inc, bool upper_inc, bool linear, bool normalize);
 extern TemporalSeq *temporalseq_copy(TemporalSeq *seq);
 extern int temporalseq_find_timestamp(TemporalSeq *seq, TimestampTz t);
@@ -48,9 +48,6 @@ extern bool intersection_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq 
 extern bool synchronize_temporalseq_temporalseq(TemporalSeq *seq1, TemporalSeq *seq2, 
 	TemporalSeq **sync1, TemporalSeq **sync2, bool interpoint);
 
-// To put it in TempDistance.c after adding a function for crossing temporal point segments
-extern bool tpointseq_min_dist_at_timestamp(TemporalInst *start1, TemporalInst *end1, 
-	TemporalInst *start2, TemporalInst *end2, TimestampTz *t);
 extern bool tpointseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1, 
 	bool linear1, TemporalInst *start2, TemporalInst *end2, bool linear2, TimestampTz *t);
 extern bool temporalseq_intersect_at_timestamp(TemporalInst *start1, TemporalInst *end1, 
@@ -64,7 +61,9 @@ extern TemporalSeq *temporalseq_read(StringInfo buf, Oid valuetypid);
 
 /* Append function */
 
-extern TemporalSeq *temporalseq_append_instant(TemporalSeq *seq, TemporalInst *inst);
+extern TemporalSeq *temporalseq_join(const TemporalSeq *seq1, const TemporalSeq *seq2, bool last, bool first);
+extern TemporalSeq *temporalseq_append_instant(const TemporalSeq *seq, const TemporalInst *inst);
+extern Temporal *temporalseq_append(TemporalSeq *seq1, TemporalSeq *seq2);
 
 /* Cast functions */
 
@@ -85,9 +84,8 @@ extern Datum *temporalseq_values1(TemporalSeq *seq, int *count);
 extern ArrayType *temporalseq_values(TemporalSeq *seq);
 extern int tfloatseq_ranges1(RangeType **result, TemporalSeq *seq);
 extern PeriodSet *temporalseq_get_time(TemporalSeq *seq);
-extern void *temporalseq_bbox_ptr(TemporalSeq *seq);
+extern void *temporalseq_bbox_ptr(const TemporalSeq *seq);
 extern void temporalseq_bbox(void *box, TemporalSeq *seq);
-extern RangeType *tnumberseq_value_range(TemporalSeq *seq);
 extern RangeType *tfloatseq_range(TemporalSeq *seq);
 extern ArrayType *tfloatseq_ranges(TemporalSeq *seq);
 extern Datum temporalseq_min_value(TemporalSeq *seq);
@@ -100,10 +98,16 @@ extern TimestampTz temporalseq_start_timestamp(TemporalSeq *seq);
 extern TimestampTz temporalseq_end_timestamp(TemporalSeq *seq);
 extern TimestampTz *temporalseq_timestamps1(TemporalSeq *seq);
 extern ArrayType *temporalseq_timestamps(TemporalSeq *seq);
-extern bool temporalseq_ever_eq(TemporalSeq *seq, Datum value);
-extern bool temporalseq_always_eq(TemporalSeq *seq, Datum value);
 extern TemporalSeq *temporalseq_shift(TemporalSeq *seq, 
 	Interval *interval);
+
+extern bool temporalseq_ever_eq(TemporalSeq *seq, Datum value);
+extern bool temporalseq_ever_lt(TemporalSeq *seq, Datum value);
+extern bool temporalseq_ever_le(TemporalSeq *seq, Datum value);
+
+extern bool temporalseq_always_eq(TemporalSeq *seq, Datum value);
+extern bool temporalseq_always_lt(TemporalSeq *seq, Datum value);
+extern bool temporalseq_always_le(TemporalSeq *seq, Datum value);
 
 /* Restriction Functions */
 
@@ -118,7 +122,6 @@ extern int temporalseq_at_values1(TemporalSeq **result, TemporalSeq *seq, Datum 
 extern TemporalS *temporalseq_at_values(TemporalSeq *seq, Datum *values, int count);
 extern int temporalseq_minus_values1(TemporalSeq **result, TemporalSeq *seq, Datum *values, 
 	int count);
-extern TemporalS *temporalseq_minus_values(TemporalSeq *seq, Datum *values, int count);
 extern TemporalS *temporalseq_minus_values(TemporalSeq *seq, Datum *values, int count);
 extern int tnumberseq_at_range2(TemporalSeq **result, TemporalSeq *seq, RangeType *range);
 extern TemporalS *tnumberseq_at_range(TemporalSeq *seq, RangeType *range);
@@ -138,7 +141,7 @@ extern TemporalS *temporalseq_minus_min(TemporalSeq *seq);
 extern TemporalS *temporalseq_at_max(TemporalSeq *seq);
 extern TemporalS *temporalseq_minus_max(TemporalSeq *seq);
 extern TemporalInst *temporalseq_at_timestamp1(TemporalInst *inst1, 
-	TemporalInst *inst2, bool linear, TimestampTz t);
+	TemporalInst *inst2, TimestampTz t, bool linear);
 extern TemporalInst *temporalseq_at_timestamp(TemporalSeq *seq, TimestampTz t);
 extern bool temporalseq_value_at_timestamp(TemporalSeq *seq, TimestampTz t, Datum *result);
 extern int temporalseq_minus_timestamp1(TemporalSeq **result, TemporalSeq *seq, 
@@ -163,10 +166,8 @@ extern bool temporalseq_intersects_periodset(TemporalSeq *seq, PeriodSet *ps);
 
 /* Local aggregate functions */
 
-extern double tintseq_integral(TemporalSeq *seq);
-extern double tfloatseq_integral(TemporalSeq *seq);
-extern double tintseq_twavg(TemporalSeq *seq);
-extern double tfloatseq_twavg(TemporalSeq *seq);
+extern double tnumberseq_integral(TemporalSeq *seq);
+extern double tnumberseq_twavg(TemporalSeq *seq);
 
 /* Comparison functions */
 

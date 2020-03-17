@@ -3,9 +3,9 @@
  * tpoint_spatialfuncs.sql
  *	  Spatial functions for temporal points.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -59,11 +59,11 @@ CREATE CAST (tgeogpoint AS tgeompoint) WITH FUNCTION tgeompoint(tgeogpoint);
 
 CREATE FUNCTION setprecision(tgeompoint, int)
 	RETURNS tgeompoint
-	AS 'MODULE_PATHNAME', 'tpoint_setprecision'
+	AS 'MODULE_PATHNAME', 'tpoint_set_precision'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION setprecision(tgeogpoint, int)
 	RETURNS tgeogpoint
-	AS 'MODULE_PATHNAME', 'tpoint_setprecision'
+	AS 'MODULE_PATHNAME', 'tpoint_set_precision'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION trajectory(tgeompoint)
@@ -272,5 +272,17 @@ CREATE FUNCTION tgeogpoint(geography)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (geography AS tgeogpoint) WITH FUNCTION tgeogpoint(geography);
+
+/*****************************************************************************/
+
+CREATE FUNCTION geoMeasure(tgeompoint, tfloat, boolean DEFAULT FALSE)
+RETURNS geometry
+AS 'MODULE_PATHNAME', 'tpoint_to_geo_measure'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION geoMeasure(tgeogpoint, tfloat, boolean DEFAULT FALSE)
+RETURNS geography
+AS 'MODULE_PATHNAME', 'tpoint_to_geo_measure'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/

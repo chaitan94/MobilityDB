@@ -3,9 +3,9 @@
  * tpoint_gist.c
  *	  R-tree GiST index for temporal points.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, 
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse, 
  * 		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -65,6 +65,9 @@ index_leaf_consistent_stbox(STBOX *key, STBOX *query, StrategyNumber strategy)
 			break;
 		case RTSameStrategyNumber:
 			retval = same_stbox_stbox_internal(key, query);
+			break;
+		case RTAdjacentStrategyNumber:
+			retval = adjacent_stbox_stbox_internal(key, query);
 			break;
 		case RTLeftStrategyNumber:
 			retval = left_stbox_stbox_internal(key, query);
@@ -147,6 +150,10 @@ gist_internal_consistent_stbox(STBOX *key, STBOX *query, StrategyNumber strategy
 		case RTSameStrategyNumber:
 			retval = contains_stbox_stbox_internal(key, query);
 			break;
+		case RTAdjacentStrategyNumber:
+			if (adjacent_stbox_stbox_internal(key, query))
+				return true;
+			return overlaps_stbox_stbox_internal(key, query);
 		case RTLeftStrategyNumber:
 			retval = !overright_stbox_stbox_internal(key, query);
 			break;
@@ -213,7 +220,7 @@ gist_internal_consistent_stbox(STBOX *key, STBOX *query, StrategyNumber strategy
 bool
 index_tpoint_recheck(StrategyNumber strategy)
 {
-	/* These operators are based on bounding boxes and do not consider 
+	/* These operators are based on bounding boxes and do not consider
 	 * inclusive or exclusive bounds */
 	switch (strategy)
 	{
@@ -235,10 +242,10 @@ index_tpoint_recheck(StrategyNumber strategy)
 	}
 }
 
-PG_FUNCTION_INFO_V1(gist_tpoint_consistent);
+PG_FUNCTION_INFO_V1(gist_stbox_consistent);
 
 PGDLLEXPORT Datum
-gist_tpoint_consistent(PG_FUNCTION_ARGS)
+gist_stbox_consistent(PG_FUNCTION_ARGS)
 {
 	GISTENTRY *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
 	StrategyNumber strategy = (StrategyNumber) PG_GETARG_UINT16(2);
@@ -259,7 +266,7 @@ gist_tpoint_consistent(PG_FUNCTION_ARGS)
 	 */
 	if (subtype == type_oid(T_GEOMETRY) || subtype == type_oid(T_GEOGRAPHY))
 	{
-		/* Since function gist_tpoint_consistent is strict, query is not NULL */
+		/* Since function gist_stbox_consistent is strict, query is not NULL */
 		if (!geo_to_stbox_internal(&query, PG_GETARG_GSERIALIZED_P(1)))
 			PG_RETURN_BOOL(false);										  
 	}
@@ -270,7 +277,7 @@ gist_tpoint_consistent(PG_FUNCTION_ARGS)
 			PG_RETURN_BOOL(false);
 		memcpy(&query, box, sizeof(STBOX));
 	}
-	else if (temporal_type_oid(subtype))
+	else if (tpoint_type_oid(subtype))
 	{
 		Temporal *temp = PG_GETARG_TEMPORAL(1);
 		if (temp == NULL)
@@ -311,9 +318,9 @@ adjust_stbox(STBOX *b, const STBOX *addon)
 		b->zmax = addon->zmax;
 	if (FLOAT8_GT(b->zmin, addon->zmin))
 		b->zmin = addon->zmin;
-	if (timestamp_cmp_internal(b->tmax, addon->tmax) < 0)
+	if (b->tmax < addon->tmax)
 		b->tmax = addon->tmax;
-	if (timestamp_cmp_internal(b->tmin, addon->tmin) > 0)
+	if (b->tmin > addon->tmin)
 		b->tmin = addon->tmin;
 }
 
@@ -321,10 +328,10 @@ adjust_stbox(STBOX *b, const STBOX *addon)
  * The GiST Union method for STBOX
  * Returns the minimal bounding box that encloses all the entries in entryvec
  */
-PG_FUNCTION_INFO_V1(gist_tpoint_union);
+PG_FUNCTION_INFO_V1(gist_stbox_union);
 
 PGDLLEXPORT Datum
-gist_tpoint_union(PG_FUNCTION_ARGS)
+gist_stbox_union(PG_FUNCTION_ARGS)
 {
 	GistEntryVector *entryvec = (GistEntryVector *) PG_GETARG_POINTER(0);
 	int	i;
@@ -356,11 +363,11 @@ rt_stbox_union(STBOX *n, const STBOX *a, const STBOX *b)
 	n->xmax = FLOAT8_MAX(a->xmax, b->xmax);
 	n->ymax = FLOAT8_MAX(a->ymax, b->ymax);
 	n->zmax = FLOAT8_MAX(a->zmax, b->zmax);
-	n->tmax = timestamp_cmp_internal(a->tmax, b->tmax) > 0 ? a->tmax : b->tmax;
+	n->tmax = a->tmax > b->tmax ? a->tmax : b->tmax;
 	n->xmin = FLOAT8_MIN(a->xmin, b->xmin);
 	n->ymin = FLOAT8_MIN(a->ymin, b->ymin);
 	n->zmin = FLOAT8_MIN(a->zmin, b->zmin);
-	n->tmin = timestamp_cmp_internal(a->tmin, b->tmin) < 0 ? a->tmin : b->tmin;
+	n->tmin = a->tmin < b->tmin ? a->tmin : b->tmin;
 }
 
 /*
@@ -378,8 +385,7 @@ size_stbox(const STBOX *box)
 	 * The less-than cases should not happen, but if they do, say "zero".
 	 */
 	if (FLOAT8_LE(box->xmax, box->xmin) || FLOAT8_LE(box->ymax, box->ymin) ||
-		FLOAT8_LE(box->zmax, box->zmin) ||
-		timestamp_cmp_internal(box->tmax, box->tmin) <= 0)
+		FLOAT8_LE(box->zmax, box->zmin) || box->tmax <= box->tmin)
 		return 0.0;
 	
 	/*
@@ -411,10 +417,10 @@ stbox_penalty(const STBOX *original, const STBOX *new)
  * The GiST Penalty method for boxes (also used for points)
  * As in the R-tree paper, we use change in area as our penalty metric
  */
-PG_FUNCTION_INFO_V1(gist_tpoint_penalty);
+PG_FUNCTION_INFO_V1(gist_stbox_penalty);
 
 PGDLLEXPORT Datum
-gist_tpoint_penalty(PG_FUNCTION_ARGS)
+gist_stbox_penalty(PG_FUNCTION_ARGS)
 {
 	GISTENTRY *origentry = (GISTENTRY *) PG_GETARG_POINTER(0);
 	GISTENTRY *newentry = (GISTENTRY *) PG_GETARG_POINTER(1);
@@ -441,9 +447,9 @@ fallafterSplit(GistEntryVector *entryvec, GIST_SPLITVEC *v)
 				 maxoff;
 	STBOX		*unionL = NULL,
 				*unionR = NULL;
-	int			 nbytes;
+	size_t		nbytes;
 	
-	maxoff = entryvec->n - 1;
+	maxoff = (OffsetNumber) (entryvec->n - 1);
 	
 	nbytes = (maxoff + 2) * sizeof(OffsetNumber);
 	v->spl_left = (OffsetNumber *) palloc(nbytes);
@@ -558,10 +564,10 @@ interval_cmp_upper(const void *i1, const void *i2)
  * Replace negative (or NaN) value with zero.
  */
 static inline float
-non_negative(float val)
+non_negative(float value)
 {
-	if (FLOAT8_GE(val, 0.0f))
-		return val;
+	if (FLOAT8_GE(value, 0.0f))
+		return value;
 	else
 		return 0.0f;
 }
@@ -624,7 +630,7 @@ g_stbox_consider_split(ConsiderSplitContext *context, int dimNum,
 		else
 			range = context->boundingBox.tmax - context->boundingBox.tmin;
 		
-		overlap = (leftUpper - rightLower) / range;
+		overlap = (float4) ((leftUpper - rightLower) / range);
 		
 		/* If there is no previous selection, select this */
 		if (context->first)
@@ -721,10 +727,10 @@ common_entry_cmp(const void *i1, const void *i2)
  * http://syrcose.ispras.ru/2011/files/SYRCoSE2011_Proceedings.pdf#page=36
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(gist_tpoint_picksplit);
+PG_FUNCTION_INFO_V1(gist_stbox_picksplit);
 
 PGDLLEXPORT Datum
-gist_tpoint_picksplit(PG_FUNCTION_ARGS)
+gist_stbox_picksplit(PG_FUNCTION_ARGS)
 {
 	GistEntryVector *entryvec = (GistEntryVector *) PG_GETARG_POINTER(0);
 	GIST_SPLITVEC *v = (GIST_SPLITVEC *) PG_GETARG_POINTER(1);
@@ -744,7 +750,7 @@ gist_tpoint_picksplit(PG_FUNCTION_ARGS)
 	
 	memset(&context, 0, sizeof(ConsiderSplitContext));
 	
-	maxoff = entryvec->n - 1;
+	maxoff = (OffsetNumber) (entryvec->n - 1);
 	nentries = context.entriesCount = maxoff - FirstOffsetNumber + 1;
 	
 	/* Allocate arrays for intervals along axes */
@@ -814,9 +820,9 @@ gist_tpoint_picksplit(PG_FUNCTION_ARGS)
 		 */
 		memcpy(intervalsUpper, intervalsLower,
 			   sizeof(SplitInterval) * nentries);
-		qsort(intervalsLower, nentries, sizeof(SplitInterval),
+		qsort(intervalsLower, (size_t) nentries, sizeof(SplitInterval),
 			  interval_cmp_lower);
-		qsort(intervalsUpper, nentries, sizeof(SplitInterval),
+		qsort(intervalsUpper, (size_t) nentries, sizeof(SplitInterval),
 			  interval_cmp_upper);
 		
 		/*----
@@ -1049,7 +1055,7 @@ gist_tpoint_picksplit(PG_FUNCTION_ARGS)
 		 * Calculate minimum number of entries that must be placed in both
 		 * groups, to reach LIMIT_RATIO.
 		 */
-		int			m = ceil(LIMIT_RATIO * (double) nentries);
+		int			m = (int) ceil(LIMIT_RATIO * (double) nentries);
 		
 		/*
 		 * Calculate delta between penalties of join "common entries" to
@@ -1066,7 +1072,7 @@ gist_tpoint_picksplit(PG_FUNCTION_ARGS)
 		 * Sort "common entries" by calculated deltas in order to distribute
 		 * the most ambiguous entries first.
 		 */
-		qsort(commonEntries, commonEntriesCount, sizeof(CommonEntry), common_entry_cmp);
+		qsort(commonEntries, (size_t) commonEntriesCount, sizeof(CommonEntry), common_entry_cmp);
 		
 		/*
 		 * Distribute "common entries" between groups.
@@ -1110,10 +1116,10 @@ gist_tpoint_picksplit(PG_FUNCTION_ARGS)
  * comparisons here without breaking index consistency; therefore, this isn't
  * equivalent to stbox_same().
  */
-PG_FUNCTION_INFO_V1(gist_tpoint_same);
+PG_FUNCTION_INFO_V1(gist_stbox_same);
 
 PGDLLEXPORT Datum
-gist_tpoint_same(PG_FUNCTION_ARGS)
+gist_stbox_same(PG_FUNCTION_ARGS)
 {
 	STBOX *b1 = (STBOX *)DatumGetPointer(PG_GETARG_DATUM(0));
 	STBOX *b2 = (STBOX *)DatumGetPointer(PG_GETARG_DATUM(1));
@@ -1126,7 +1132,7 @@ gist_tpoint_same(PG_FUNCTION_ARGS)
 				   FLOAT8_EQ(b1->xmax, b2->xmax) &&
 				   FLOAT8_EQ(b1->ymax, b2->ymax) &&
 				   FLOAT8_EQ(b1->zmax, b2->zmax) &&
-				   timestamp_cmp_internal(b1->tmax, b2->tmax) == 0);
+				   b1->tmax == b2->tmax);
 	else
 		*result = (b1 == NULL && b2 == NULL);
 	PG_RETURN_POINTER(result);

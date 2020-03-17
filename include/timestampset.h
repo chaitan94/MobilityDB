@@ -3,9 +3,9 @@
  * timestampset.h
  *	  Basic functions for set of timestamps.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -21,24 +21,24 @@
 
 /* assorted support functions */
 
-extern TimestampTz timestampset_time_n(TimestampSet *ts, int index);
-extern Period *timestampset_bbox(TimestampSet *ts);
-extern TimestampSet *timestampset_from_timestamparr_internal(TimestampTz *times, int count);
+extern TimestampTz timestampset_time_n(const TimestampSet *ts, int index);
+extern Period *timestampset_bbox(const TimestampSet *ts);
+extern TimestampSet *timestampset_make_internal(TimestampTz *times, int count);
 extern TimestampSet *timestampset_copy(TimestampSet *ts);
 extern bool timestampset_find_timestamp(TimestampSet *ts, TimestampTz t, int *pos);
 
 /* Input/output functions */
 
 extern Datum timestampset_in(PG_FUNCTION_ARGS);
+extern Datum timestampset_out(PG_FUNCTION_ARGS);
 extern Datum timestampset_send(PG_FUNCTION_ARGS);
 extern Datum timestampset_recv(PG_FUNCTION_ARGS);
-extern Datum timestampset_send(PG_FUNCTION_ARGS);
 
 extern char *timestampset_to_string(TimestampSet *ts);
 
 /* Constructor function */
 
-extern Datum timestampset_from_timestamparr(PG_FUNCTION_ARGS);
+extern Datum timestampset_make(PG_FUNCTION_ARGS);
 
 /* Cast function */
 

@@ -3,9 +3,9 @@
  * tbox.sql
  *	  Basic functions for TBOX bounding box.
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -63,6 +63,22 @@ CREATE TYPE tbox (
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
+ * Casting
+ *****************************************************************************/
+
+CREATE FUNCTION floatrange(tbox)
+	RETURNS floatrange
+	AS 'MODULE_PATHNAME', 'tbox_to_floatrange'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION period(tbox)
+	RETURNS period
+	AS 'MODULE_PATHNAME', 'tbox_to_period'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE CAST (tbox AS floatrange) WITH FUNCTION floatrange(tbox);
+CREATE CAST (tbox AS period) WITH FUNCTION period(tbox);
+
+/*****************************************************************************
  * Accessor functions
  *****************************************************************************/
 
@@ -81,7 +97,200 @@ CREATE FUNCTION Tmin(tbox)
 CREATE FUNCTION Tmax(tbox)
 	RETURNS timestamptz
 	AS 'MODULE_PATHNAME', 'tbox_tmax'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * Modification functions
+ *****************************************************************************/
+
+CREATE FUNCTION expandValue(tbox, float)
+	RETURNS tbox
+	AS 'MODULE_PATHNAME', 'tbox_expand_value'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION expandTemporal(tbox, interval)
+	RETURNS tbox
+	AS 'MODULE_PATHNAME', 'tbox_expand_temporal'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION setPrecision(tbox, int)
+	RETURNS tbox
+	AS 'MODULE_PATHNAME', 'tbox_set_precision'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * Selectivity functions
+ *****************************************************************************/
+
+CREATE FUNCTION tnumber_sel(internal, oid, internal, integer)
+	RETURNS float
+	AS 'MODULE_PATHNAME', 'tnumber_sel'
+	LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION tnumber_joinsel(internal, oid, internal, smallint, internal)
+	RETURNS float
+	AS 'MODULE_PATHNAME', 'tnumber_joinsel'
+	LANGUAGE C IMMUTABLE STRICT;
+
+/*****************************************************************************
+ * Topological operators
+ *****************************************************************************/
+
+CREATE FUNCTION tbox_contains(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'contains_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tbox_contained(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'contained_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tbox_overlaps(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'overlaps_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tbox_same(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'same_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tbox_adjacent(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR @> (
+	PROCEDURE = tbox_contains,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	COMMUTATOR = <@,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR <@ (
+	PROCEDURE = tbox_contained,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	COMMUTATOR = @>,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR && (
+	PROCEDURE = tbox_overlaps,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	COMMUTATOR = &&,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR ~= (
+	PROCEDURE = tbox_same,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	COMMUTATOR = ~=,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = tbox_adjacent,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+
+/*****************************************************************************
+ * Position operators
+ *****************************************************************************/
+
+CREATE FUNCTION temporal_left(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'left_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION temporal_overleft(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'overleft_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION temporal_right(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'right_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION temporal_overright(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'overright_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION temporal_before(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'before_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION temporal_overbefore(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'overbefore_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION temporal_after(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'after_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION temporal_overafter(tbox, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'overafter_tbox_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR << (
+	PROCEDURE = temporal_left,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	COMMUTATOR = >>,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR &< (
+	PROCEDURE = temporal_overleft,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR >> (
+	LEFTARG = tbox, RIGHTARG = tbox,
+	PROCEDURE = temporal_right,
+	COMMUTATOR = <<,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR &> (
+	PROCEDURE = temporal_overright,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR <<# (
+	PROCEDURE = temporal_before,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	COMMUTATOR = #>>,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR &<# (
+	PROCEDURE = temporal_overbefore,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR #>> (
+	PROCEDURE = temporal_after,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	COMMUTATOR = <<#,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR #&> (
+	PROCEDURE = temporal_overafter,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+
+/*****************************************************************************
+ * Set operators
+ *****************************************************************************/
+
+CREATE FUNCTION tbox_union(tbox, tbox)
+	RETURNS tbox
+	AS 'MODULE_PATHNAME', 'tbox_union'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tbox_intersection(tbox, tbox)
+	RETURNS tbox
+	AS 'MODULE_PATHNAME', 'tbox_intersection'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR + (
+	PROCEDURE = tbox_union,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	COMMUTATOR = +
+);
+CREATE OPERATOR * (
+	PROCEDURE = tbox_intersection,
+	LEFTARG = tbox, RIGHTARG = tbox,
+	COMMUTATOR = *
+);
 
 /*****************************************************************************
  * Comparison
