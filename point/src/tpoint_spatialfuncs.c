@@ -42,6 +42,14 @@ ensure_same_geodetic_stbox(const STBOX *box1, const STBOX *box2)
 }
 
 void
+ensure_same_geodetic_tpoint(const Temporal *temp1, const Temporal *temp2)
+{
+	if (MOBDB_FLAGS_GET_GEODETIC(temp1->flags) != MOBDB_FLAGS_GET_GEODETIC(temp2->flags))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("The temporal points must be both planar or both geodetic")));
+}
+
+void
 ensure_same_geodetic_tpoint_stbox(const Temporal *temp, const STBOX *box)
 {
 	if (MOBDB_FLAGS_GET_X(box->flags) &&
@@ -60,20 +68,20 @@ ensure_same_srid_stbox(const STBOX *box1, const STBOX *box2)
 }
 
 void
+ensure_same_srid_tpoint(const Temporal *temp1, const Temporal *temp2)
+{
+	if (tpoint_srid_internal(temp1) != tpoint_srid_internal(temp2))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("The temporal points must be in the same SRID")));
+}
+
+void
 ensure_same_srid_tpoint_stbox(const Temporal *temp, const STBOX *box)
 {
 	if (MOBDB_FLAGS_GET_X(box->flags) &&
 		tpoint_srid_internal(temp) != box->srid)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 			errmsg("The temporal point and the box must be in the same SRID")));
-}
-
-void
-ensure_same_srid_tpoint(const Temporal *temp1, const Temporal *temp2)
-{
-	if (tpoint_srid_internal(temp1) != tpoint_srid_internal(temp2))
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("The temporal points must be in the same SRID")));
 }
 
 void
@@ -103,12 +111,13 @@ ensure_same_dimensionality_tpoint(const Temporal *temp1, const Temporal *temp2)
 }
 
 void
-ensure_common_dimension_stbox(const STBOX *box1, const STBOX *box2)
+ensure_same_dimensionality_tpoint_stbox(const Temporal *temp, const STBOX *box)
 {
-	if (MOBDB_FLAGS_GET_X(box1->flags) != MOBDB_FLAGS_GET_X(box2->flags) &&
-		MOBDB_FLAGS_GET_T(box1->flags) != MOBDB_FLAGS_GET_T(box2->flags))
+	if (MOBDB_FLAGS_GET_X(temp->flags) != MOBDB_FLAGS_GET_X(box->flags) ||
+		MOBDB_FLAGS_GET_Z(temp->flags) != MOBDB_FLAGS_GET_Z(box->flags) ||
+		MOBDB_FLAGS_GET_T(temp->flags) != MOBDB_FLAGS_GET_T(box->flags))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("The boxes must have at least one common dimension")));
+			errmsg("The temporal point and the box must be of the same dimensionality")));
 }
 
 void
@@ -117,6 +126,15 @@ ensure_same_dimensionality_tpoint_gs(const Temporal *temp, const GSERIALIZED *gs
 	if (MOBDB_FLAGS_GET_Z(temp->flags) != FLAGS_GET_Z(gs->flags))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 			errmsg("The temporal point and the geometry must be of the same dimensionality")));
+}
+
+void
+ensure_common_dimension_stbox(const STBOX *box1, const STBOX *box2)
+{
+	if (MOBDB_FLAGS_GET_X(box1->flags) != MOBDB_FLAGS_GET_X(box2->flags) &&
+		MOBDB_FLAGS_GET_T(box1->flags) != MOBDB_FLAGS_GET_T(box2->flags))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("The boxes must have at least one common dimension")));
 }
 
 void
@@ -626,7 +644,7 @@ geogpoint_trajectory(Datum value1, Datum value2)
 /*****************************************************************************/
 
 /* Compute a trajectory from a set of points. The result is either a line or a
- * multipoint depending on whether the interpolation is stepwise or linear */
+ * multipoint depending on whether the interpolation is step or linear */
 static Datum
 pointarr_make_trajectory(Datum *points, int count, bool linear)
 {
@@ -907,16 +925,12 @@ tgeompoints_trajectory(TemporalS *ts)
 	else if (l == 0)
 	{
 		/* Only lines */
-		if (k == 1)
-			result = PointerGetDatum(gserialized_copy(
-					(GSERIALIZED *)(DatumGetPointer(trajectories[0]))));
-		else
-		{
-			ArrayType *array = datumarr_to_array(trajectories, k, type_oid(T_GEOMETRY));
-			/* ST_linemerge is not used to avoid splitting lines at intersections */
-			result = call_function1(LWGEOM_collect_garray, PointerGetDatum(array));
-			pfree(array);
-		}
+		/* k > 1 since otherwise it is a singleton sequence set and this case
+		 * was taken care at the begining of the function */
+		ArrayType *array = datumarr_to_array(trajectories, k, type_oid(T_GEOMETRY));
+		/* ST_linemerge is not used to avoid splitting lines at intersections */
+		result = call_function1(LWGEOM_collect_garray, PointerGetDatum(array));
+		pfree(array);
 	}
 	else
 	{
@@ -1236,7 +1250,7 @@ tpointseq_speed(TemporalSeq *seq)
 		instants[seq->count - 1] = temporalinst_make(Float8GetDatum(speed),
 			seq->period.upper, FLOAT8OID);
 	}
-	/* The resulting sequence has stepwise interpolation */
+	/* The resulting sequence has step interpolation */
 	TemporalSeq *result = temporalseq_make(instants, seq->count,
 		seq->period.lower_inc, seq->period.upper_inc, false, true);
 	for (int i = 0; i < seq->count - 1; i++)
@@ -1261,7 +1275,7 @@ tpoints_speed(TemporalS *ts)
 		pfree(sequences);
 		return NULL;
 	}
-	/* The resulting sequence set has stepwise interpolation */
+	/* The resulting sequence set has step interpolation */
 	TemporalS *result = temporals_make(sequences, k, true);
 
 	for (int i = 0; i < k; i++)
@@ -1615,7 +1629,7 @@ tpointseq_azimuth1(TemporalSeq **result, TemporalSeq *seq)
 			{
 				instants[k++] = temporalinst_make(azimuth, inst1->t, FLOAT8OID);
 				upper_inc = true;
-				/* Resulting sequence has stepwise interpolation */
+				/* Resulting sequence has step interpolation */
 				result[l++] = temporalseq_make(instants, k,
 					lower_inc, upper_inc, false, true);
 				for (int j = 0; j < k; j++)
@@ -1630,7 +1644,7 @@ tpointseq_azimuth1(TemporalSeq **result, TemporalSeq *seq)
 	if (k != 0)
 	{
 		instants[k++] = temporalinst_make(azimuth, inst1->t, FLOAT8OID);
-		/* Resulting sequence has stepwise interpolation */
+		/* Resulting sequence has step interpolation */
 		result[l++] = temporalseq_make(instants, k,
 			lower_inc, upper_inc, false, true);
 	}
@@ -1651,7 +1665,7 @@ tpointseq_azimuth(TemporalSeq *seq)
 		return NULL;
 	}
 	
-	/* Resulting sequence set has stepwise interpolation */
+	/* Resulting sequence set has step interpolation */
 	TemporalS *result = temporals_make(sequences, count, true);
 	for (int i = 0; i < count; i++)
 		pfree(sequences[i]);
@@ -1675,7 +1689,7 @@ tpoints_azimuth(TemporalS *ts)
 	if (k == 0)
 		return NULL;
 
-	/* Resulting sequence set has stepwise interpolation */
+	/* Resulting sequence set has step interpolation */
 	TemporalS *result = temporals_make(sequences, k, true);
 
 	for (int i = 0; i < k; i++)
@@ -1753,7 +1767,7 @@ tpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2, bool linear,
 	Datum value1 = temporalinst_value(inst1);
 	Datum value2 = temporalinst_value(inst2);
 
-	/* Constant segment or stepwise interpolation */
+	/* Constant segment or step interpolation */
 	bool equal = datum_point_eq(value1, value2);
 	if (equal || ! linear)
 	{
@@ -2206,7 +2220,7 @@ tpoint_minus_geometry(PG_FUNCTION_ARGS)
 		result = (Temporal *)tpointseq_minus_geometry((TemporalSeq *)temp,
 			PointerGetDatum(gs));
 	else if (temp->duration == TEMPORALS)
-		result = (Temporal *)tpoints_minus_geometry((TemporalS *)temp, gs, &box2);
+			result = (Temporal *)tpoints_minus_geometry((TemporalS *)temp, gs, &box2);
 
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
@@ -2240,7 +2254,7 @@ NAI_tpointi_geo(TemporalI *ti, Datum geo, Datum (*func)(Datum, Datum))
 
 /*****************************************************************************/
 
-/* NAI between temporal sequence point with stepwise interpolation and a
+/* NAI between temporal sequence point with step interpolation and a
  * geometry/geography */
 
 static TemporalInst *
@@ -3365,7 +3379,7 @@ tpointseq_to_geo_measure_segmentize(TemporalSeq *seq, TemporalSeq *measure)
 	Datum result;
 	/* Instantaneous sequence */
 	if (seq->count == 1)
-		result = segments[0];
+		result = PointerGetDatum(geometry_serialize(points[0]));
 	else
 	{
 		ArrayType *array = datumarr_to_array(segments, seq->count - 1,
