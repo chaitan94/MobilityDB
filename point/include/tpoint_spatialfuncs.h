@@ -81,13 +81,8 @@ extern Datum tpoint_trajectory(PG_FUNCTION_ARGS);
 
 extern Datum tpoint_trajectory_internal(const Temporal *temp);
 extern Datum tpointseq_make_trajectory(TemporalInst **instants, int count, bool linear);
-<<<<<<< HEAD
-extern Datum tpointseq_trajectory_append(TemporalSeq *seq, TemporalInst *inst, bool replace);
-extern Datum tpointseq_trajectory_join(TemporalSeq *seq1, TemporalSeq *seq2, bool last, bool first);
-=======
 extern Datum tpointseq_trajectory_append(const TemporalSeq *seq, const TemporalInst *inst, bool replace);
 extern Datum tpointseq_trajectory_join(const TemporalSeq *seq1, const TemporalSeq *seq2, bool last, bool first);
->>>>>>> master
 
 extern Datum geompoint_trajectory(Datum value1, Datum value2);
 extern Datum geogpoint_trajectory(Datum value1, Datum value2);
