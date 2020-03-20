@@ -762,7 +762,7 @@ temporalinst_hash(TemporalInst *inst)
 	Datum value = temporalinst_value(inst);
 	/* Apply the hash function according to the subtype */
 	uint32 value_hash = 0; 
-	ensure_temporal_base_type(inst->valuetypid);
+	ensure_hashable_base_type(inst->valuetypid);
 	if (inst->valuetypid == BOOLOID)
 		value_hash = DatumGetUInt32(call_function1(hashchar, value));
 	else if (inst->valuetypid == INT4OID)
@@ -774,6 +774,12 @@ temporalinst_hash(TemporalInst *inst)
 	else if (inst->valuetypid == type_oid(T_GEOMETRY) ||
 		inst->valuetypid == type_oid(T_GEOGRAPHY))
 		value_hash = DatumGetUInt32(call_function1(lwgeom_hash, value));
+	else if (inst->valuetypid == type_oid(T_RTRANSFORM))
+	{
+		value_hash = DatumGetUInt32(call_function1(hashfloat8, value));
+		value_hash ^= DatumGetUInt32(call_function1(hashfloat8, value));
+		value_hash ^= DatumGetUInt32(call_function1(hashfloat8, value));
+	}
 	/* Apply the hash function according to the timestamp */
 	time_hash = DatumGetUInt32(call_function1(hashint8, TimestampTzGetDatum(inst->t)));
 

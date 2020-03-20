@@ -297,6 +297,7 @@ extern void ensure_valid_duration_all(int16 type);
 extern void ensure_numrange_type(Oid type);
 extern void ensure_temporal_base_type(Oid valuetypid);
 extern void ensure_temporal_base_type_all(Oid valuetypid);
+extern void ensure_hashable_base_type(Oid valuetypid);
 extern void ensure_linear_interpolation(Oid valuetypid);
 extern void ensure_linear_interpolation_all(Oid valuetypid);
 extern void ensure_numeric_base_type(Oid type);

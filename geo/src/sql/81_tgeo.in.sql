@@ -120,11 +120,19 @@ CREATE CAST (tgeography AS tgeography) WITH FUNCTION tgeography(tgeography, inte
 
 CREATE FUNCTION tgeometryinst(geometry, timestamptz)
     RETURNS tgeometry
-    AS 'MODULE_PATHNAME', 'tgeo_make_temporalinst'
+    AS 'MODULE_PATHNAME', 'tgeoinst_constructor'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeographyinst(geography, timestamptz)
+    RETURNS tgeography
+    AS 'MODULE_PATHNAME', 'tgeoinst_constructor'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tgeometryi(tgeometry[])
     RETURNS tgeometry
+    AS 'MODULE_PATHNAME', 'temporali_constructor'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeographyi(tgeography[])
+    RETURNS tgeography
     AS 'MODULE_PATHNAME', 'temporali_constructor'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
@@ -133,30 +141,16 @@ CREATE FUNCTION tgeometryseq(tgeometry[], lower_inc boolean DEFAULT true,
     RETURNS tgeometry
     AS 'MODULE_PATHNAME', 'temporalseq_constructor'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION tgeometrys(tgeometry[])
-    RETURNS tgeometry
-    AS 'MODULE_PATHNAME', 'temporals_constructor'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-/******************************************************************************/
-
-CREATE FUNCTION tgeographyinst(geography, timestamptz)
-    RETURNS tgeography
-    AS 'MODULE_PATHNAME', 'tgeo_make_temporalinst'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION tgeographyi(tgeography[])
-    RETURNS tgeography
-    AS 'MODULE_PATHNAME', 'temporali_constructor'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE FUNCTION tgeographyseq(tgeography[], lower_inc boolean DEFAULT true, 
     upper_inc boolean DEFAULT true, linear boolean DEFAULT true)
     RETURNS tgeography
     AS 'MODULE_PATHNAME', 'temporalseq_constructor'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tgeometrys(tgeometry[])
+    RETURNS tgeometry
+    AS 'MODULE_PATHNAME', 'temporals_constructor'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeographys(tgeography[])
     RETURNS tgeography
     AS 'MODULE_PATHNAME', 'temporals_constructor'
@@ -293,50 +287,6 @@ CREATE FUNCTION getTimestamp(tgeography)
     RETURNS timestamptz
     AS 'MODULE_PATHNAME', 'temporalinst_timestamp'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-/* TODO */
-
-/*CREATE FUNCTION ever_equals(tgeometry, geometry(Point))
-    RETURNS boolean
-    AS 'MODULE_PATHNAME', 'tgeo_ever_equals'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION ever_equals(tgeography, geography(Point))
-    RETURNS boolean
-    AS 'MODULE_PATHNAME', 'tgeo_ever_equals'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE OPERATOR &= (
-    LEFTARG = tgeometry, RIGHTARG = geometry(Point),
-    PROCEDURE = ever_equals,
-    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
-);
-CREATE OPERATOR &= (
-    LEFTARG = tgeography, RIGHTARG = geography(Point),
-    PROCEDURE = ever_equals,
-    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
-);*/
-
-/* TODO */
-
-/*CREATE FUNCTION always_equals(tgeometry, geometry(Point))
-    RETURNS boolean
-    AS 'MODULE_PATHNAME', 'tgeo_always_equals'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_equals(tgeography, geography(Point))
-    RETURNS boolean
-    AS 'MODULE_PATHNAME', 'tgeo_always_equals'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE OPERATOR @= (
-    LEFTARG = tgeometry, RIGHTARG = geometry(Point),
-    PROCEDURE = always_equals,
-    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
-);
-CREATE OPERATOR @= (
-    LEFTARG = tgeography, RIGHTARG = geography(Point),
-    PROCEDURE = always_equals,
-    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
-);*/
 
 CREATE FUNCTION shift(tgeometry, interval)
     RETURNS tgeometry
@@ -508,6 +458,58 @@ CREATE FUNCTION sequences(tgeography)
     RETURNS tgeography[]
     AS 'MODULE_PATHNAME', 'temporal_sequences'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * Ever/Always Comparison Functions 
+ *****************************************************************************/
+
+ /* TODO */
+
+/*CREATE FUNCTION ever_equals(tgeometry, geometry(Point))
+    RETURNS boolean
+    AS 'MODULE_PATHNAME', 'tgeo_ever_equals'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ever_equals(tgeography, geography(Point))
+    RETURNS boolean
+    AS 'MODULE_PATHNAME', 'tgeo_ever_equals'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR &= (
+    LEFTARG = tgeometry, RIGHTARG = geometry(Point),
+    PROCEDURE = ever_equals,
+    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+CREATE OPERATOR &= (
+    LEFTARG = tgeography, RIGHTARG = geography(Point),
+    PROCEDURE = ever_equals,
+    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);*/
+
+/* TODO */
+
+/*CREATE FUNCTION always_equals(tgeometry, geometry(Point))
+    RETURNS boolean
+    AS 'MODULE_PATHNAME', 'tgeo_always_equals'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION always_equals(tgeography, geography(Point))
+    RETURNS boolean
+    AS 'MODULE_PATHNAME', 'tgeo_always_equals'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR @= (
+    LEFTARG = tgeometry, RIGHTARG = geometry(Point),
+    PROCEDURE = always_equals,
+    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+CREATE OPERATOR @= (
+    LEFTARG = tgeography, RIGHTARG = geography(Point),
+    PROCEDURE = always_equals,
+    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);*/
+
+/*****************************************************************************
+ * Restriction Functions 
+ *****************************************************************************/
 
 /* TODO */
 

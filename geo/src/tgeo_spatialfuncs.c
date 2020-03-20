@@ -20,6 +20,38 @@
 #include "temporaltypes.h"
 
 /*****************************************************************************
+ * Parameter tests
+ *****************************************************************************/
+
+void 
+ensure_same_rings_tgeometryinst(const TemporalInst *ti1, const TemporalInst *ti2)
+{
+    Datum value1 = temporalinst_value(ti1);
+    Datum value2 = temporalinst_value(ti2);
+    GSERIALIZED *gs1 = (GSERIALIZED *) DatumGetPointer(value1);
+    GSERIALIZED *gs2 = (GSERIALIZED *) DatumGetPointer(value2);
+    LWPOLY *poly1 = (LWPOLY *) lwgeom_from_gserialized(gs1);
+    LWPOLY *poly2 = (LWPOLY *) lwgeom_from_gserialized(gs2);
+    ensure_same_rings_lwpoly(poly1, poly2);
+    lwpoly_free(poly1);
+    lwpoly_free(poly2);
+}
+
+void 
+ensure_same_rings_lwpoly(const LWPOLY *poly1, const LWPOLY *poly2)
+{
+    if (poly1->nrings != poly2->nrings)
+        ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+            errmsg("All regions must contain the same number of rings")));
+    for (int i = 0; i < (int) poly1->nrings; ++i)
+    {
+        if (poly1->rings[i]->npoints != poly2->rings[i]->npoints)
+            ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+                errmsg("Corresponding rings in each region must contain the same number of points")));
+    }
+}
+
+/*****************************************************************************
  * Utility functions
  *****************************************************************************/
 

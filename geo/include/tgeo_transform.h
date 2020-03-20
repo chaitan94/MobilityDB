@@ -20,12 +20,16 @@ extern Datum rtransform_send(PG_FUNCTION_ARGS);
  *****************************************************************************/
 
 extern rtransform *rtransform_make(double theta, double tx, double ty);
+extern rtransform *rtransform_copy(const rtransform *rt);
+extern rtransform *rtransform_combine(const rtransform *rt1, const rtransform *rt2);
+
 extern rtransform *rtransform_compute(LWGEOM *region_1, LWGEOM *region_2);
 
 /*****************************************************************************
  * Utility functions
  *****************************************************************************/
 
+extern void rtransform_combine_inplace(rtransform *rt1, const rtransform *rt2);
 extern void apply_rtransform(LWGEOM *region, const rtransform *rt);
 extern rtransform *rtransform_interpolate(const rtransform *rt1, const rtransform *rt2, double ratio);
 
@@ -33,7 +37,8 @@ extern rtransform *rtransform_interpolate(const rtransform *rt1, const rtransfor
  * Cast functions
  *****************************************************************************/
 
-extern TemporalInst *tgeoinst_rtransfrom_to_region(TemporalInst *inst, TemporalInst *region);
+extern TemporalInst *tgeoinst_rtransfrom_to_region(const TemporalInst *inst, const TemporalInst *ref_region);
+extern TemporalInst *tgeoinst_region_to_rtransform(const TemporalInst *inst, const TemporalInst *ref_region);
 
 extern TemporalInst **geo_instarr_to_rtransform(TemporalInst **instants, int count);
 extern TemporalSeq **geo_seqarr_to_rtransform(TemporalSeq **sequences, int count);

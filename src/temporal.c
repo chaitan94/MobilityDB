@@ -523,6 +523,17 @@ ensure_temporal_base_type_all(Oid valuetypid)
 }
 
 void
+ensure_hashable_base_type(Oid valuetypid)
+{
+	if (valuetypid != BOOLOID && valuetypid != INT4OID && 
+		valuetypid != FLOAT8OID && valuetypid != TEXTOID &&
+		valuetypid != type_oid(T_GEOMETRY) &&
+		valuetypid != type_oid(T_GEOGRAPHY) &&
+		valuetypid != type_oid(T_RTRANSFORM))
+		elog(ERROR, "unknown hashable base type: %d", valuetypid);
+}
+
+void
 ensure_linear_interpolation(Oid valuetypid)
 {
 	if (valuetypid != FLOAT8OID &&
@@ -1595,7 +1606,7 @@ temporal_end_value(PG_FUNCTION_ARGS)
 	if (temp->duration == TEMPORALINST) 
 		result = temporalinst_value_copy((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
-		result = temporalinst_value_copy(temporali_inst_n((TemporalI *)temp, 
+		result = temporalinst_value_copy(temporali_standalone_inst_n((TemporalI *)temp, 
 			((TemporalI *)temp)->count - 1));
 	else if (temp->duration == TEMPORALSEQ) 
 		result = temporalinst_value_copy(temporalseq_inst_n((TemporalSeq *)temp, 
@@ -1865,7 +1876,7 @@ temporal_end_instant(PG_FUNCTION_ARGS)
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_copy((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
-		result = (Temporal *)temporalinst_copy(temporali_inst_n((TemporalI *)temp, 
+		result = (Temporal *)temporalinst_copy(temporali_standalone_inst_n((TemporalI *)temp, 
 			((TemporalI *)temp)->count - 1));
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)temporalinst_copy(temporalseq_inst_n((TemporalSeq *)temp, 
@@ -1900,7 +1911,7 @@ temporal_instant_n(PG_FUNCTION_ARGS)
 	{
 		if (n >= 1 && n <= ((TemporalI *)temp)->count)
 			result = (Temporal *)temporalinst_copy(
-				temporali_inst_n((TemporalI *)temp, n - 1));
+				temporali_standalone_inst_n((TemporalI *)temp, n - 1));
 	}
 	else if (temp->duration == TEMPORALSEQ) 
 	{

@@ -21,6 +21,7 @@
 /*****************************************************************************/
 
 extern TemporalInst *temporali_inst_n(const TemporalI *ti, int index);
+extern TemporalInst *temporali_standalone_inst_n(const TemporalI *ti, int index);
 extern bool temporali_find_timestamp(TemporalI *ti, TimestampTz t, int *pos);
 extern TemporalI *temporali_make(TemporalInst **instants,
 	int count);

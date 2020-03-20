@@ -145,13 +145,11 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
             if (geometry_type_from_string(s, &geometry_type, &z, &m) == LW_FAILURE) 
                 ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
                         errmsg("Invalid geometry type modifier: %s", s)));
-            if ((geometry_type != LINETYPE && geometry_type != POLYGONTYPE) || m)
+            if (geometry_type != POLYGONTYPE || z || m)
                 ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-                    errmsg("Only linestring or polygon geometries without M dimension accepted")));
+                    errmsg("Only polygon geometries without Z or M dimension accepted")));
 
             TYPMOD_SET_TYPE(typmod, geometry_type);
-            if (z)
-                TYPMOD_SET_Z(typmod);
         
             /* SRID */
             s = DatumGetCString(elem_values[2]);
@@ -182,22 +180,20 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
                 if (geometry_type_from_string(s, &geometry_type, &z, &m) == LW_FAILURE)
                     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
                             errmsg("Invalid geometry type modifier: %s", s)));
-                if ((geometry_type != LINETYPE && geometry_type != POLYGONTYPE) || m)
+                if (geometry_type != POLYGONTYPE || z || m)
                     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-                        errmsg("Only linestring or polygon geometries without M dimension accepted")));
+                        errmsg("Only polygon geometries without Z or M dimension accepted")));
 
                 TYPMOD_SET_TYPE(typmod, geometry_type);
-                if (z)
-                    TYPMOD_SET_Z(typmod);
                 /* Shift to restore the 4 bits of the duration */
                 TYPMOD_SET_DURATION(typmod, duration);
             }
             else if (geometry_type_from_string(s, &geometry_type, &z, &m))
             {
                 /* Type modifier is (Geometry, SRID) */
-                if ((geometry_type != LINETYPE && geometry_type != POLYGONTYPE) || m)
+                if (geometry_type != POLYGONTYPE || z || m)
                     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-                        errmsg("Only linestring or polygon geometries without M dimension accepted")));
+                        errmsg("Only polygon geometries without Z or M dimension accepted")));
 
                 /* Shift to remove the 4 bits of the duration */
                 TYPMOD_DEL_DURATION(typmod);
@@ -208,8 +204,6 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
                     TYPMOD_SET_SRID(typmod, SRID_UNKNOWN);
                 
                 TYPMOD_SET_TYPE(typmod, geometry_type);
-                if (z)
-                    TYPMOD_SET_Z(typmod);
                 /* SRID */
                 s = DatumGetCString(elem_values[1]);
                 int srid = pg_atoi(s, sizeof(int32), '\0');
@@ -221,7 +215,7 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
             }
             else
                 ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-                    errmsg("Invalid temporal linestring or polygon type modifier: %s", s)));
+                    errmsg("Invalid temporal polygon type modifier: %s", s)));
             break;
         }
         case 1:
@@ -234,9 +228,9 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
             }
             else if (geometry_type_from_string(s, &geometry_type, &z, &m)) 
             {
-                if (geometry_type != LINETYPE && geometry_type != POLYGONTYPE)
+                if (geometry_type != POLYGONTYPE || z || m)
                     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-                        errmsg("Only linestring or polygon geometries accepted")));
+                        errmsg("Only polygon geometries without Z or M dimension accepted")));
 
                 /* Shift to remove the 4 bits of the duration */
                 TYPMOD_DEL_DURATION(typmod);
@@ -247,8 +241,6 @@ tgeo_typmod_in(ArrayType *arr, int is_geography)
                     TYPMOD_SET_SRID(typmod, SRID_UNKNOWN);
 
                 TYPMOD_SET_TYPE(typmod, geometry_type);
-                if (z)
-                    TYPMOD_SET_Z(typmod);
 
                 /* Shift to restore the 4 bits of the duration */
                 TYPMOD_SET_DURATION(typmod, duration);
@@ -310,7 +302,6 @@ tgeo_typmod_out(PG_FUNCTION_ARGS)
     TYPMOD_DEL_DURATION(typmod);
     int32 srid = TYPMOD_GET_SRID(typmod);
     int32 geometry_type = TYPMOD_GET_TYPE(typmod);
-    int32 hasz = TYPMOD_GET_Z(typmod);
 
     /* No duration type or geometry type? Then no typmod at all. 
       Return empty string. */
@@ -328,8 +319,6 @@ tgeo_typmod_out(PG_FUNCTION_ARGS)
     {
         if (duration) str += sprintf(str, ",");
         str += sprintf(str, "%s", lwtype_name(geometry_type));
-        /* Has Z?  */
-        if (hasz) str += sprintf(str, "Z");
         /* Has SRID?  */
         if (srid) str += sprintf(str, ",%d", srid);
     }
@@ -359,17 +348,17 @@ PGDLLEXPORT Datum tgeo_enforce_typmod(PG_FUNCTION_ARGS)
 
 /* Construct a temporal instant geometry or geography from two arguments */
 
-PG_FUNCTION_INFO_V1(tgeo_make_temporalinst);
+PG_FUNCTION_INFO_V1(tgeoinst_constructor);
  
 PGDLLEXPORT Datum
-tgeo_make_temporalinst(PG_FUNCTION_ARGS) 
+tgeoinst_constructor(PG_FUNCTION_ARGS) 
 {
     GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
     int geo_type = gserialized_get_type(gs);
-    if (((geo_type != LINETYPE) && (geo_type != POLYGONTYPE)) || gserialized_is_empty(gs) ||
+    if (geo_type != POLYGONTYPE || gserialized_is_empty(gs) ||
         FLAGS_GET_M(gs->flags) || FLAGS_GET_Z(gs->flags))
         ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), 
-            errmsg("Only non-empty linestring or polygon geometries without Z or M dimension accepted")));
+            errmsg("Only non-empty polygon geometries without Z or M dimension accepted")));
 
     TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
     Oid valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);

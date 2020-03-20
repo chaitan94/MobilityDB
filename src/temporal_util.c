@@ -579,11 +579,11 @@ datum_eq(Datum l, Datum r, Oid type) // change to type_l and type_r? Only useful
 	else if (type == type_oid(T_DOUBLE4))
 		result = double4_eq((double4 *)DatumGetPointer(l), (double4 *)DatumGetPointer(r));
 	else if (type == type_oid(T_GEOMETRY))
-		//	result = DatumGetBool(call_function2(lwgeom_eq, l, r));
-		result = datum_point_eq(l, r);
+		result = DatumGetBool(call_function2(lwgeom_eq, l, r));
+		// result = datum_point_eq(l, r);
 	else if (type == type_oid(T_GEOGRAPHY))
-		//	result = DatumGetBool(call_function2(geography_eq, l, r));
-		result = datum_point_eq(l, r);
+		result = DatumGetBool(call_function2(geography_eq, l, r));
+		// result = datum_point_eq(l, r);
 	else if (type == type_oid(T_RTRANSFORM))
 		result = double3_eq((double3 *)DatumGetPointer(l), (double3 *)DatumGetPointer(r));
 	return result;
@@ -612,6 +612,11 @@ datum_lt(Datum l, Datum r, Oid type)
 		result = DatumGetBool(call_function2(lwgeom_lt, l, r));
 	else if (type == type_oid(T_GEOGRAPHY))
 		result = DatumGetBool(call_function2(geography_lt, l, r));
+	else if (type == type_oid(T_RTRANSFORM)) {
+		// TODO
+		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), 
+            errmsg("TODO")));
+	}
 	return result;
 }
 
@@ -663,6 +668,7 @@ datum_eq2(Datum l, Datum r, Oid typel, Oid typer)
 	else if (typel == type_oid(T_GEOGRAPHY) && typer == type_oid(T_GEOGRAPHY))
 		//	result = DatumGetBool(call_function2(geography_eq, l, r));
 		result = datum_point_eq(l, r);
+	// TODO: handle region cases
 	return result;
 }
 

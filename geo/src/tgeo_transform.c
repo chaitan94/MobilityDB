@@ -91,7 +91,8 @@ rtransform_make(double theta, double tx, double ty)
 {
     if (theta < -M_PI || theta > M_PI)
         ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
-            errmsg("Rotation theta must be between -pi and pi (got: %f)", theta)));
+            errmsg("Rotation theta must be between pi (included) and -pi (not included). Recieved: %f", theta)));
+
     /* If we want a unique representation for rtransform */
     if (theta == -M_PI)
         theta = M_PI;
@@ -104,7 +105,17 @@ rtransform_make(double theta, double tx, double ty)
 }
 
 rtransform *
-rtransform_combine(rtransform *rt1, rtransform *rt2)
+rtransform_copy(const rtransform *rt)
+{
+    rtransform *result = (rtransform *)palloc(sizeof(rtransform));
+    result->theta = rt->theta;
+    result->tx = rt->tx;
+    result->ty = rt->ty;
+    return result;
+}
+
+rtransform *
+rtransform_combine(const rtransform *rt1, const rtransform *rt2)
 {
     double new_theta = rt1->theta + rt2->theta;
     if (new_theta > M_PI)
@@ -119,8 +130,8 @@ rtransform_combine(rtransform *rt1, rtransform *rt2)
  *****************************************************************************/
 
 /* TODO: find better name */
-static void
-rtransform_combine_inplace(rtransform *rt1, rtransform *rt2)
+void
+rtransform_combine_inplace(rtransform *rt1, const rtransform *rt2)
 {
     double new_theta = rt1->theta + rt2->theta;
     if (new_theta > M_PI)
@@ -183,6 +194,10 @@ rtransform_interpolate(const rtransform *rt1, const rtransform *rt2, double rati
     if (ratio < 0 || ratio > 1)
         ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
             errmsg("Interpolation ratio must be between 0 and 1 (got: %f)", ratio)));
+    if (ratio == 0)
+        return rtransform_copy(rt1);
+    else if (ratio == 1)
+        return rtransform_copy(rt2);
 
     if (rt2->theta < rt1->theta)
         return rtransform_interpolate(rt2, rt1, 1-ratio);
@@ -223,22 +238,8 @@ rtransform_compute(LWGEOM *region_1, LWGEOM *region_2)
     POINTARRAY *point_arr_1;
     POINTARRAY *point_arr_2;
 
-    if (region_1->type == POLYGONTYPE)
-    {
-        point_arr_1 = ((LWPOLY *) region_1)->rings[0];
-    }
-    else if (region_1->type == LINETYPE)
-    {
-        point_arr_1 = ((LWLINE *) region_1)->points;
-    }
-    if (region_2->type == POLYGONTYPE)
-    {
-        point_arr_2 = ((LWPOLY *) region_2)->rings[0];
-    }
-    else if (region_2->type == LINETYPE)
-    {
-        point_arr_2 = ((LWLINE *) region_2)->points;
-    }
+    point_arr_1 = ((LWPOLY *) region_1)->rings[0];
+    point_arr_2 = ((LWPOLY *) region_2)->rings[0];
 
     POINT2D p11 = getPoint2d(point_arr_1, 0);
     POINT2D p12 = getPoint2d(point_arr_1, 1);
@@ -273,20 +274,50 @@ rtransform_compute(LWGEOM *region_1, LWGEOM *region_2)
  *****************************************************************************/
 
 TemporalInst *
-tgeoinst_rtransfrom_to_region(TemporalInst *inst, TemporalInst *region) 
+tgeoinst_rtransfrom_to_region(const TemporalInst *inst, const TemporalInst *ref_region) 
 {
     Datum rt_value = temporalinst_value(inst);
     rtransform *rt = DatumGetRtransform(rt_value);
-    Datum region_value = temporalinst_value(region);
+
+    Datum region_value = temporalinst_value(ref_region);
     GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(region_value);
     LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
     LWGEOM *lwgeomCopy = lwgeom_clone_deep(lwgeom);
+
     apply_rtransform(lwgeomCopy, rt);
-    lwgeom_set_geodetic(lwgeomCopy, MOBDB_FLAGS_GET_GEODETIC(region->flags));
+    lwgeom_set_geodetic(lwgeomCopy, MOBDB_FLAGS_GET_GEODETIC(ref_region->flags));
     GSERIALIZED *newGs = gserialized_from_lwgeom(lwgeomCopy, 0);
-    TemporalInst *result = temporalinst_make(PointerGetDatum(newGs), inst->t, region->valuetypid);
+    TemporalInst *result = temporalinst_make(PointerGetDatum(newGs), inst->t, ref_region->valuetypid);
+
     lwgeom_free(lwgeom);
     lwgeom_free(lwgeomCopy);
+
+    return result;
+}
+
+TemporalInst *
+tgeoinst_region_to_rtransform(const TemporalInst *inst, const TemporalInst *ref_region) 
+{
+    Datum region_value = temporalinst_value(inst);
+    GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(region_value);
+    LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
+
+    Datum ref_region_value = temporalinst_value(ref_region);
+    GSERIALIZED *ref_gs = (GSERIALIZED *) DatumGetPointer(ref_region_value);
+    LWGEOM *ref_lwgeom = lwgeom_from_gserialized(ref_gs);
+    LWGEOM *ref_lwgeomCopy = lwgeom_clone_deep(ref_lwgeom);
+
+    rtransform *rt = rtransform_compute(ref_lwgeomCopy, lwgeom);
+    apply_rtransform(ref_lwgeomCopy, rt);
+    if (!lwgeom_similar(ref_lwgeomCopy, lwgeom))
+        ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION), 
+            errmsg("All regions must be congruent")));
+    TemporalInst *result = temporalinst_make(RtransformGetDatum(rt), inst->t, type_oid(T_RTRANSFORM));
+
+    lwgeom_free(lwgeom);
+    lwgeom_free(ref_lwgeom);
+    lwgeom_free(ref_lwgeomCopy);
+
     return result;
 }
 
