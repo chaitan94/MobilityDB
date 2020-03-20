@@ -188,6 +188,16 @@ CREATE FUNCTION tgeompoints(tgeompoint)
 	RETURNS tgeompoint AS 'MODULE_PATHNAME', 'temporal_to_temporals'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tgeompointi(geometry, timestampset)
+	RETURNS tgeompoint AS 'MODULE_PATHNAME', 'temporali_from_base'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeompointseq(geometry, period, boolean DEFAULT true)
+	RETURNS tgeompoint AS 'MODULE_PATHNAME', 'temporalseq_from_base'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeompoints(geometry, periodset, boolean DEFAULT true)
+	RETURNS tgeompoint AS 'MODULE_PATHNAME', 'temporals_from_base'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION tgeogpointinst(tgeogpoint)
 	RETURNS tgeogpoint AS 'MODULE_PATHNAME', 'temporal_to_temporalinst'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -201,13 +211,23 @@ CREATE FUNCTION tgeogpoints(tgeogpoint)
 	RETURNS tgeogpoint AS 'MODULE_PATHNAME', 'temporal_to_temporals'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tgeogpointi(geography, timestampset)
+	RETURNS tgeompoint AS 'MODULE_PATHNAME', 'temporali_from_base'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeogpointseq(geography, period, boolean DEFAULT true)
+	RETURNS tgeompoint AS 'MODULE_PATHNAME', 'temporalseq_from_base'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeogpoints(geography, periodset, boolean DEFAULT true)
+	RETURNS tgeompoint AS 'MODULE_PATHNAME', 'temporals_from_base'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION toLinear(tgeompoint)
 	RETURNS tgeompoint
-	AS 'MODULE_PATHNAME', 'tstepw_to_linear'
+	AS 'MODULE_PATHNAME', 'tstep_to_linear'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION toLinear(tgeogpoint)
 	RETURNS tgeogpoint
-	AS 'MODULE_PATHNAME', 'tstepw_to_linear'
+	AS 'MODULE_PATHNAME', 'tstep_to_linear'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION appendInstant(tgeompoint, tgeompoint)
@@ -217,6 +237,24 @@ CREATE FUNCTION appendInstant(tgeompoint, tgeompoint)
 CREATE FUNCTION appendInstant(tgeogpoint, tgeogpoint)
 	RETURNS tgeogpoint
 	AS 'MODULE_PATHNAME', 'temporal_append_instant'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION append(tgeompoint, tgeompoint)
+	RETURNS tgeompoint
+AS 'MODULE_PATHNAME', 'temporal_append'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION append(tgeogpoint, tgeogpoint)
+	RETURNS tgeogpoint
+	AS 'MODULE_PATHNAME', 'temporal_append'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION append(tgeompoint[])
+	RETURNS tgeompoint
+AS 'MODULE_PATHNAME', 'temporal_append_array'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION append(tgeogpoint[])
+	RETURNS tgeogpoint
+AS 'MODULE_PATHNAME', 'temporal_append_array'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

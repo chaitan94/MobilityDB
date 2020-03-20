@@ -23,7 +23,7 @@
 extern TemporalInst *temporalseq_inst_n(const TemporalSeq *seq, int index);
 extern TemporalSeq *temporalseq_make(TemporalInst **instants, 
 	int count, bool lower_inc, bool upper_inc, bool linear, bool normalize);
-extern TemporalSeq *temporalseq_copy(TemporalSeq *seq);
+extern TemporalSeq *temporalseq_copy(const TemporalSeq *seq);
 extern int temporalseq_find_timestamp(TemporalSeq *seq, TimestampTz t);
 extern Datum temporalseq_value_at_timestamp1(TemporalInst *inst1, 
 	TemporalInst *inst2, bool linear, TimestampTz t);
@@ -59,11 +59,18 @@ extern char *temporalseq_to_string(TemporalSeq *seq, bool component, char *(*val
 extern void temporalseq_write(TemporalSeq *seq, StringInfo buf);
 extern TemporalSeq *temporalseq_read(StringInfo buf, Oid valuetypid);
 
+/* Constructor functions */
+
+extern TemporalSeq *temporalseq_from_base_internal(Datum value, Oid valuetypid, Period *p, bool linear);
+
+extern Datum temporalseq_from_base(PG_FUNCTION_ARGS);
+
 /* Append function */
 
 extern TemporalSeq *temporalseq_join(const TemporalSeq *seq1, const TemporalSeq *seq2, bool last, bool first);
 extern TemporalSeq *temporalseq_append_instant(const TemporalSeq *seq, const TemporalInst *inst);
 extern Temporal *temporalseq_append(TemporalSeq *seq1, TemporalSeq *seq2);
+extern Temporal *temporalseq_append_array(TemporalSeq **sequences, int count);
 
 /* Cast functions */
 
@@ -75,8 +82,8 @@ extern TemporalSeq *tfloatseq_to_tintseq(TemporalSeq *seq);
 extern TemporalSeq *temporalinst_to_temporalseq(TemporalInst *inst, bool linear);
 extern TemporalSeq *temporali_to_temporalseq(TemporalI *ti, bool linear);
 extern TemporalSeq *temporals_to_temporalseq(TemporalS *ts);
-extern int tstepwseq_to_linear1(TemporalSeq **result, TemporalSeq *seq);
-extern TemporalS *tstepwseq_to_linear(TemporalSeq *seq);
+extern int tstepseq_to_linear1(TemporalSeq **result, TemporalSeq *seq);
+extern TemporalS *tstepseq_to_linear(TemporalSeq *seq);
 
 /* Accessor functions */
 

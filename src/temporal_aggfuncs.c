@@ -678,7 +678,7 @@ temporals_transform_tcount(TemporalS *ts)
 static Temporal **
 temporal_transform_tcount(Temporal *temp, int *count)
 {
-	Temporal **result = NULL;
+	Temporal **result;
 	if (temp->duration == TEMPORALINST) 
 	{
 		result = palloc(sizeof(Temporal *));
@@ -696,7 +696,7 @@ temporal_transform_tcount(Temporal *temp, int *count)
 		result[0] = (Temporal *)temporalseq_transform_tcount((TemporalSeq *) temp);
 		*count = 1;
 	}
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 	{
 		result = (Temporal **)temporals_transform_tcount((TemporalS *) temp);
 		*count = ((TemporalS *)temp)->count;
@@ -771,7 +771,7 @@ tnumbers_transform_tavg(TemporalS *ts)
 static Temporal **
 tnumber_transform_tavg(Temporal *temp, int *count)
 {
-	Temporal **result = NULL;
+	Temporal **result;
 	if (temp->duration == TEMPORALINST) 
 	{
 		result = palloc(sizeof(Temporal *));
@@ -789,7 +789,7 @@ tnumber_transform_tavg(Temporal *temp, int *count)
 		result[0] = (Temporal *)tnumberseq_transform_tavg((TemporalSeq *) temp);
 		*count = 1;
 	} 
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 	{
 		result = (Temporal **)tnumbers_transform_tavg((TemporalS *) temp);
 		*count = ((TemporalS *)temp)->count;
@@ -888,7 +888,7 @@ temporalseq_tagg1(TemporalSeq **result,	TemporalSeq *seq1, TemporalSeq *seq2,
 	 * If the two sequences intersect there will be at most 3 sequences in the
 	 * result: one before the intersection, one for the intersection, and one 
 	 * after the intersection. This will be also the case for sequences with 
-	 * stepwise interploation (e.g., tint) that has the last value different 
+	 * step interploation (e.g., tint) that has the last value different
 	 * from the previous one as tint '[1@2000-01-03, 2@2000-01-04]' and 
 	 * tint '[3@2000-01-01, 4@2000-01-05]' whose result for sum would be the 
 	 * following three sequences
@@ -1160,7 +1160,7 @@ temporal_tagg_transfn(FunctionCallInfo fcinfo, SkipList *state,
 	Temporal *temp, Datum (*func)(Datum, Datum), bool crossings)
 {
 	ensure_valid_duration(temp->duration);
-	SkipList *result = NULL;
+	SkipList *result;
 	if (temp->duration == TEMPORALINST) 
 		result =  temporalinst_tagg_transfn(fcinfo, state, (TemporalInst *)temp, 
 			func);
@@ -1170,7 +1170,7 @@ temporal_tagg_transfn(FunctionCallInfo fcinfo, SkipList *state,
 	else if (temp->duration == TEMPORALSEQ) 
 		result =  temporalseq_tagg_transfn(fcinfo, state, (TemporalSeq *)temp, 
 			func, crossings);
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = temporals_tagg_transfn(fcinfo, state, (TemporalS *)temp, 
 			func, crossings);
 	return result;
@@ -1214,7 +1214,7 @@ temporal_extent_transfn(PG_FUNCTION_ARGS)
 {
 	Period *p = PG_ARGISNULL(0) ? NULL : PG_GETARG_PERIOD(0);
 	Temporal *temp = PG_ARGISNULL(1) ? NULL : PG_GETARG_TEMPORAL(1);
-	Period p1, *result = NULL;
+	Period p1, *result;
 
 	/* Can't do anything with null inputs */
 	if (!p && !temp)
@@ -1222,14 +1222,14 @@ temporal_extent_transfn(PG_FUNCTION_ARGS)
 	/* Null period and non-null temporal, return the bbox of the temporal */
 	if (!p)
 	{
-		result = palloc(sizeof(Period));
+		result = palloc0(sizeof(Period));
 		temporal_bbox(result, temp);
 		PG_RETURN_POINTER(result);
 	}
 	/* Non-null period and null temporal, return the period */
 	if (!temp)
 	{
-		result = palloc(sizeof(Period));
+		result = palloc0(sizeof(Period));
 		memcpy(result, p, sizeof(Period));
 		PG_RETURN_POINTER(result);
 	}

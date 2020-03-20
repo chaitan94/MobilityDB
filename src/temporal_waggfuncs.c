@@ -58,7 +58,7 @@ temporali_extend(TemporalSeq **result, TemporalI *ti, Interval *interval)
 }
 
 static int
-tstepwseq_extend(TemporalSeq **result, TemporalSeq *seq, Interval *interval)
+tstepseq_extend(TemporalSeq **result, TemporalSeq *seq, Interval *interval)
 {
 	if (seq->count == 1)
 		return temporalinst_extend(result, temporalseq_inst_n(seq, 0), interval);
@@ -156,16 +156,16 @@ tlinearseq_extend(TemporalSeq **result, TemporalSeq *seq, Interval *interval, bo
 }
 
 static int
-tstepws_extend(TemporalSeq **result, TemporalS *ts, Interval *interval)
+tsteps_extend(TemporalSeq **result, TemporalS *ts, Interval *interval)
 {
 	if (ts->count == 1)
-		return tstepwseq_extend(result, temporals_seq_n(ts, 0), interval);
+		return tstepseq_extend(result, temporals_seq_n(ts, 0), interval);
 
 	int k = 0;
 	for (int i = 0; i < ts->count; i++)
 	{
 		TemporalSeq *seq = temporals_seq_n(ts, i);
-		k += tstepwseq_extend(&result[k], seq, interval);
+		k += tstepseq_extend(&result[k], seq, interval);
 	}
 	return k;
 }
@@ -174,7 +174,7 @@ static int
 tlinears_extend(TemporalSeq **result, TemporalS *ts, Interval *interval, bool min)
 {
 	if (ts->count == 1)
-		return tstepwseq_extend(result, temporals_seq_n(ts, 0), interval);
+		return tstepseq_extend(result, temporals_seq_n(ts, 0), interval);
 
 	int k = 0;
 	for (int i = 0; i < ts->count; i++)
@@ -190,7 +190,7 @@ tlinears_extend(TemporalSeq **result, TemporalS *ts, Interval *interval, bool mi
 static TemporalSeq **
 temporal_extend(Temporal *temp, Interval *interval, bool min, int *count)
 {
-	TemporalSeq **result = NULL;
+	TemporalSeq **result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 	{
@@ -209,16 +209,16 @@ temporal_extend(Temporal *temp, Interval *interval, bool min, int *count)
 		TemporalSeq *seq = (TemporalSeq *)temp;
 		result = palloc(sizeof(TemporalSeq *) * seq->count);
 		if (! MOBDB_FLAGS_GET_LINEAR(temp->flags))
-			*count = tstepwseq_extend(result, seq, interval);
+			*count = tstepseq_extend(result, seq, interval);
 		else
 			*count = tlinearseq_extend(result, seq, interval, min);
 	}
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 	{
 		TemporalS *ts = (TemporalS *)temp;
 		result = palloc(sizeof(TemporalSeq *) * ts->totalcount);
 		if (! MOBDB_FLAGS_GET_LINEAR(temp->flags))
-			*count = tstepws_extend(result, ts, interval);
+			*count = tsteps_extend(result, ts, interval);
 		else
 			*count = tlinears_extend(result, ts, interval, min);
 	}
@@ -302,7 +302,7 @@ static TemporalSeq **
 temporal_transform_wcount(Temporal *temp, Interval *interval, int *count)
 {
 	ensure_valid_duration(temp->duration);
-	TemporalSeq **result = NULL;
+	TemporalSeq **result;
 	if (temp->duration == TEMPORALINST)
 	{
 		TemporalInst *inst = (TemporalInst *)temp;
@@ -321,7 +321,7 @@ temporal_transform_wcount(Temporal *temp, Interval *interval, int *count)
 		result = palloc(sizeof(TemporalSeq *) * seq->count);
 		*count = temporalseq_transform_wcount(result, seq, interval);
 	}
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 	{
 		TemporalS *ts = (TemporalS *)temp;
 		result = palloc(sizeof(TemporalSeq *) * ts->totalcount);
@@ -443,7 +443,7 @@ static TemporalSeq **
 tnumber_transform_wavg(Temporal *temp, Interval *interval, int *count)
 {
 	ensure_valid_duration(temp->duration);
-	TemporalSeq **result = NULL;
+	TemporalSeq **result;
 	if (temp->duration == TEMPORALINST)
 	{	
 		TemporalInst *inst = (TemporalInst *)temp;
@@ -462,7 +462,7 @@ tnumber_transform_wavg(Temporal *temp, Interval *interval, int *count)
 		result = palloc(sizeof(TemporalSeq *) * seq->count);
 		*count = tintseq_transform_wavg(result, seq, interval);
 	}
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 	{
 		TemporalS *ts = (TemporalS *)temp;
 		result = palloc(sizeof(TemporalSeq *) * ts->totalcount);
