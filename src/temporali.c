@@ -1016,7 +1016,7 @@ temporali_ever_eq(TemporalI *ti, Datum value)
 
 	for (int i = 0; i < ti->count; i++) 
 	{
-		Datum valueinst = temporalinst_value(temporali_inst_n(ti, i));
+		Datum valueinst = temporalinst_value(temporali_standalone_inst_n(ti, i));
 		if (datum_eq(valueinst, value, ti->valuetypid))
 			return true;
 	}

@@ -20,6 +20,10 @@
 
 /*****************************************************************************/
 
+extern void ensure_same_srid_tgeo_gs(const Temporal *temp, const GSERIALIZED *gs);
+extern void ensure_same_dimensionality_tgeo_gs(const Temporal *temp, const GSERIALIZED *gs);
+extern void ensure_polygon_type(const GSERIALIZED *gs);
+
 extern void ensure_same_rings_tgeometryinst(const TemporalInst *ti1, const TemporalInst *ti2);
 extern void ensure_same_rings_lwpoly(const LWPOLY *poly1, const LWPOLY *poly2);
 

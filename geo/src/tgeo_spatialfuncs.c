@@ -23,6 +23,30 @@
  * Parameter tests
  *****************************************************************************/
 
+void
+ensure_same_srid_tgeo_gs(const Temporal *temp, const GSERIALIZED *gs)
+{
+    if (tpoint_srid_internal(temp) != gserialized_get_srid(gs))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+            errmsg("The temporal region and the geometry must be in the same SRID")));
+}
+
+void
+ensure_same_dimensionality_tgeo_gs(const Temporal *temp, const GSERIALIZED *gs)
+{
+    if (MOBDB_FLAGS_GET_Z(temp->flags) != FLAGS_GET_Z(gs->flags))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+            errmsg("The temporal region and the geometry must be of the same dimensionality")));
+}
+
+void
+ensure_polygon_type(const GSERIALIZED *gs)
+{
+    if (gserialized_get_type(gs) != POLYGONTYPE)
+        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+            errmsg("Only polygon geometries accepted")));
+}
+
 void 
 ensure_same_rings_tgeometryinst(const TemporalInst *ti1, const TemporalInst *ti2)
 {

@@ -22,6 +22,8 @@
 #include "tgeo_parser.h"
 #include "tpoint.h"
 #include "tpoint_spatialfuncs.h"
+#include "tpoint_boxops.h"
+#include "tgeo_spatialfuncs.h"
 
 /*****************************************************************************
  * Input/output functions
@@ -421,6 +423,129 @@ tgeo_values(PG_FUNCTION_ARGS)
     Datum result = tgeo_values_internal(temp);
     PG_FREE_IF_COPY(temp, 0);
     PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************
+ * Ever/always comparison operators
+ *****************************************************************************/
+
+ /* Is the temporal value ever equal to the value? */
+
+PG_FUNCTION_INFO_V1(tgeo_ever_eq);
+
+PGDLLEXPORT Datum
+tgeo_ever_eq(PG_FUNCTION_ARGS)
+{
+    Temporal *temp = PG_GETARG_TEMPORAL(0);
+    GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+    ensure_polygon_type(gs);
+    ensure_same_srid_tgeo_gs(temp, gs);
+    ensure_same_dimensionality_tgeo_gs(temp, gs);
+    /* Bounding box test */
+    STBOX box1, box2;
+    memset(&box1, 0, sizeof(STBOX));
+    memset(&box2, 0, sizeof(STBOX));
+    if (!geo_to_stbox_internal(&box2, gs))
+    {
+        PG_FREE_IF_COPY(temp, 0);
+        PG_FREE_IF_COPY(gs, 1);
+        PG_RETURN_BOOL(false);
+    }
+    temporal_bbox(&box1, temp);
+    if (!contains_stbox_stbox_internal(&box1, &box2))
+    {
+        PG_FREE_IF_COPY(temp, 0);
+        PG_FREE_IF_COPY(gs, 1);
+        PG_RETURN_BOOL(false);
+    }
+
+    bool result;
+    ensure_valid_duration(temp->duration);
+    if (temp->duration == TEMPORALINST) 
+        result = temporalinst_ever_eq((TemporalInst *)temp, 
+            PointerGetDatum(gs));
+    else if (temp->duration == TEMPORALI) 
+        result = temporali_ever_eq((TemporalI *)temp, 
+            PointerGetDatum(gs));
+    else if (temp->duration == TEMPORALSEQ) 
+        result = temporalseq_ever_eq((TemporalSeq *)temp, 
+            PointerGetDatum(gs));
+    else /* temp->duration == TEMPORALS */
+        result = temporals_ever_eq((TemporalS *)temp, 
+            PointerGetDatum(gs));
+
+    PG_FREE_IF_COPY(temp, 0);
+    PG_FREE_IF_COPY(gs, 1);
+    PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(tgeo_always_eq);
+
+PGDLLEXPORT Datum
+tgeo_always_eq(PG_FUNCTION_ARGS)
+{
+    Temporal *temp = PG_GETARG_TEMPORAL(0);
+    GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+    ensure_polygon_type(gs);
+    ensure_same_srid_tgeo_gs(temp, gs);
+    ensure_same_dimensionality_tgeo_gs(temp, gs);
+    /* The bounding box test is enough to test the predicate */
+    /* TODO: This is not correct anymore when handling region */
+    STBOX box1, box2;
+    memset(&box1, 0, sizeof(STBOX));
+    memset(&box2, 0, sizeof(STBOX));
+    if (!geo_to_stbox_internal(&box2, gs))
+    {
+        PG_FREE_IF_COPY(temp, 0);
+        PG_FREE_IF_COPY(gs, 1);
+        PG_RETURN_BOOL(false);
+    }
+    temporal_bbox(&box1, temp);
+    if (!same_stbox_stbox_internal(&box1, &box2))
+    {
+        PG_FREE_IF_COPY(temp, 0);
+        PG_FREE_IF_COPY(gs, 1);
+        PG_RETURN_BOOL(false);
+    }
+
+    bool result;
+    ensure_valid_duration(temp->duration);
+    if (temp->duration == TEMPORALINST) 
+        result = temporalinst_always_eq((TemporalInst *)temp, 
+            PointerGetDatum(gs));
+    else if (temp->duration == TEMPORALI) 
+        result = temporali_always_eq((TemporalI *)temp, 
+            PointerGetDatum(gs));
+    else if (temp->duration == TEMPORALSEQ) 
+        result = temporalseq_always_eq((TemporalSeq *)temp, 
+            PointerGetDatum(gs));
+    else /* temp->duration == TEMPORALS */
+        result = temporals_always_eq((TemporalS *)temp, 
+            PointerGetDatum(gs));
+
+    PG_FREE_IF_COPY(temp, 0);
+    PG_FREE_IF_COPY(gs, 1);
+    PG_RETURN_BOOL(result);
+}
+
+/* Is the temporal value ever not equal to the value? */
+
+PG_FUNCTION_INFO_V1(tgeo_ever_ne);
+
+PGDLLEXPORT Datum
+tgeo_ever_ne(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_BOOL(! tgeo_always_eq(fcinfo));
+}
+
+/* Is the temporal value always not equal to the value? */
+
+PG_FUNCTION_INFO_V1(tgeo_always_ne);
+
+PGDLLEXPORT Datum
+tgeo_always_ne(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_BOOL(! tgeo_ever_eq(fcinfo));
 }
 
 /*****************************************************************************/

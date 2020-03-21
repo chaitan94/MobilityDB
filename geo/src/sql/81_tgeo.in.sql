@@ -463,49 +463,97 @@ CREATE FUNCTION sequences(tgeography)
  * Ever/Always Comparison Functions 
  *****************************************************************************/
 
- /* TODO */
-
-/*CREATE FUNCTION ever_equals(tgeometry, geometry(Point))
+CREATE FUNCTION ever_eq(tgeometry, geometry(Polygon))
     RETURNS boolean
-    AS 'MODULE_PATHNAME', 'tgeo_ever_equals'
+    AS 'MODULE_PATHNAME', 'tgeo_ever_eq'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION ever_equals(tgeography, geography(Point))
+CREATE FUNCTION ever_eq(tgeography, geography(Polygon))
     RETURNS boolean
-    AS 'MODULE_PATHNAME', 'tgeo_ever_equals'
+    AS 'MODULE_PATHNAME', 'tgeo_ever_eq'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE OPERATOR &= (
-    LEFTARG = tgeometry, RIGHTARG = geometry(Point),
-    PROCEDURE = ever_equals,
+CREATE OPERATOR ?= (
+    LEFTARG = tgeometry, RIGHTARG = geometry(Polygon),
+    PROCEDURE = ever_eq,
+    NEGATOR = %<>,
     RESTRICT = scalarltsel, JOIN = scalarltjoinsel
 );
-CREATE OPERATOR &= (
-    LEFTARG = tgeography, RIGHTARG = geography(Point),
-    PROCEDURE = ever_equals,
+CREATE OPERATOR ?= (
+    LEFTARG = tgeography, RIGHTARG = geography(Polygon),
+    PROCEDURE = ever_eq,
+    NEGATOR = %<>,
     RESTRICT = scalarltsel, JOIN = scalarltjoinsel
-);*/
+);
 
 /* TODO */
 
-/*CREATE FUNCTION always_equals(tgeometry, geometry(Point))
+CREATE FUNCTION always_eq(tgeometry, geometry(Polygon))
     RETURNS boolean
-    AS 'MODULE_PATHNAME', 'tgeo_always_equals'
+    AS 'MODULE_PATHNAME', 'tgeo_always_eq'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_equals(tgeography, geography(Point))
+CREATE FUNCTION always_eq(tgeography, geography(Polygon))
     RETURNS boolean
-    AS 'MODULE_PATHNAME', 'tgeo_always_equals'
+    AS 'MODULE_PATHNAME', 'tgeo_always_eq'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE OPERATOR @= (
-    LEFTARG = tgeometry, RIGHTARG = geometry(Point),
-    PROCEDURE = always_equals,
+CREATE OPERATOR %= (
+    LEFTARG = tgeometry, RIGHTARG = geometry(Polygon),
+    PROCEDURE = always_eq,
+    NEGATOR = &<>,
     RESTRICT = scalarltsel, JOIN = scalarltjoinsel
 );
-CREATE OPERATOR @= (
-    LEFTARG = tgeography, RIGHTARG = geography(Point),
-    PROCEDURE = always_equals,
+CREATE OPERATOR %= (
+    LEFTARG = tgeography, RIGHTARG = geography(Polygon),
+    PROCEDURE = always_eq,
+    NEGATOR = &<>,
     RESTRICT = scalarltsel, JOIN = scalarltjoinsel
-);*/
+);
+
+/* TODO */
+
+CREATE FUNCTION ever_ne(tgeometry, geometry(Polygon))
+    RETURNS boolean
+    AS 'MODULE_PATHNAME', 'tgeo_ever_ne'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION ever_ne(tgeography, geography(Polygon))
+    RETURNS boolean
+    AS 'MODULE_PATHNAME', 'tgeo_ever_ne'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR &<> (
+    LEFTARG = tgeometry, RIGHTARG = geometry(Polygon),
+    PROCEDURE = ever_ne,
+    NEGATOR = %=,
+    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+CREATE OPERATOR &<> (
+    LEFTARG = tgeography, RIGHTARG = geography(Polygon),
+    PROCEDURE = ever_ne,
+    NEGATOR = %=,
+    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+
+CREATE FUNCTION always_ne(tgeometry, geometry(Polygon))
+    RETURNS boolean
+    AS 'MODULE_PATHNAME', 'tgeo_always_ne'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION always_ne(tgeography, geography(Polygon))
+    RETURNS boolean
+    AS 'MODULE_PATHNAME', 'tgeo_always_ne'
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR %<> (
+    LEFTARG = tgeometry, RIGHTARG = geometry(Polygon),
+    PROCEDURE = always_ne,
+    NEGATOR = ?=,
+    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+CREATE OPERATOR %<> (
+    LEFTARG = tgeography, RIGHTARG = geography(Polygon),
+    PROCEDURE = always_ne,
+    NEGATOR = ?=,
+    RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
 
 /*****************************************************************************
  * Restriction Functions 
