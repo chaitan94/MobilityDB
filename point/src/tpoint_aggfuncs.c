@@ -134,7 +134,7 @@ tpoints_transform_tcentroid(TemporalS *ts)
 Temporal **
 tpoint_transform_tcentroid(Temporal *temp, int *count)
 {
-	Temporal **result = NULL;
+	Temporal **result;
 	if (temp->duration == TEMPORALINST) 
 	{
 		result = palloc(sizeof(Temporal *));
@@ -152,7 +152,7 @@ tpoint_transform_tcentroid(Temporal *temp, int *count)
 		result[0] = (Temporal *)tpointseq_transform_tcentroid((TemporalSeq *) temp);
 		*count = 1;
 	}
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 	{
 		result = (Temporal **)tpoints_transform_tcentroid((TemporalS *) temp);
 		*count = ((TemporalS *)temp)->count;
