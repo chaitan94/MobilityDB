@@ -25,9 +25,9 @@ extern Datum distance_tnpoint_geo(PG_FUNCTION_ARGS);
 extern Datum distance_tnpoint_npoint(PG_FUNCTION_ARGS);
 extern Datum distance_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 
-extern TemporalSeq *distance_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2);
-extern TemporalS *distance_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2);
-extern Temporal *distance_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2);
+extern TemporalSeq *distance_tnpointseq_tnpointseq(const TemporalSeq *seq1, const TemporalSeq *seq2);
+extern TemporalS *distance_tnpoints_tnpoints(const TemporalS *ts1, const TemporalS *ts2);
+extern Temporal *distance_tnpoint_tnpoint_internal(const Temporal *temp1, const Temporal *temp2);
 
 /*****************************************************************************/
 

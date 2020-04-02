@@ -277,7 +277,6 @@ npoint_constructor(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
-
 /*
  * Set an nsegment value from arguments
  */
@@ -395,7 +394,7 @@ nsegment_end_position(PG_FUNCTION_ARGS)
 
 /* equality  */
 bool
-npoint_eq_internal(npoint *np1, npoint *np2)
+npoint_eq_internal(const npoint *np1, const npoint *np2)
 {
 	return np1->rid == np2->rid && fabs(np1->pos - np2->pos) < EPSILON;
 }
@@ -412,7 +411,7 @@ npoint_eq(PG_FUNCTION_ARGS)
 
 /* inequality */
 bool
-npoint_ne_internal(npoint *np1, npoint *np2)
+npoint_ne_internal(const npoint *np1, const npoint *np2)
 {
 	return (!npoint_eq_internal(np1, np2));
 }
@@ -429,7 +428,7 @@ npoint_ne(PG_FUNCTION_ARGS)
 
 /* btree comparator */
 int
-npoint_cmp_internal(npoint *np1, npoint *np2)
+npoint_cmp_internal(const npoint *np1, const npoint *np2)
 {
 	if (np1->rid < np2->rid)
 		return -1;
@@ -455,7 +454,7 @@ npoint_cmp(PG_FUNCTION_ARGS)
 
 /* inequality operators using the npoint_cmp function */
 bool
-npoint_lt_internal(npoint *np1, npoint *np2)
+npoint_lt_internal(const npoint *np1, const npoint *np2)
 {
 	int	cmp = npoint_cmp_internal(np1, np2);
 	return (cmp < 0);
@@ -473,7 +472,7 @@ npoint_lt(PG_FUNCTION_ARGS)
 }
 
 bool
-npoint_le_internal(npoint *np1, npoint *np2)
+npoint_le_internal(const npoint *np1, const npoint *np2)
 {
 	int	cmp = npoint_cmp_internal(np1, np2);
 	return (cmp <= 0);
@@ -491,7 +490,7 @@ npoint_le(PG_FUNCTION_ARGS)
 }
 
 bool
-npoint_ge_internal(npoint *np1, npoint *np2)
+npoint_ge_internal(const npoint *np1, const npoint *np2)
 {
 	int	cmp = npoint_cmp_internal(np1, np2);
 	return (cmp >= 0);
@@ -509,7 +508,7 @@ npoint_ge(PG_FUNCTION_ARGS)
 }
 
 bool
-npoint_gt_internal(npoint *np1, npoint *np2)
+npoint_gt_internal(const npoint *np1, const npoint *np2)
 {
 	int	cmp = npoint_cmp_internal(np1, np2);
 	return (cmp > 0);
@@ -530,7 +529,7 @@ npoint_gt(PG_FUNCTION_ARGS)
 
 /* equality  */
 bool
-nsegment_eq_internal(nsegment *ns1, nsegment *ns2)
+nsegment_eq_internal(const nsegment *ns1, const nsegment *ns2)
 {
 	return ns1->rid == ns2->rid && fabs(ns1->pos1 - ns2->pos1) < EPSILON &&
 		fabs(ns1->pos2 - ns2->pos2) < EPSILON;
@@ -548,7 +547,7 @@ nsegment_eq(PG_FUNCTION_ARGS)
 
 /* inequality */
 bool
-nsegment_ne_internal(nsegment *ns1, nsegment *ns2)
+nsegment_ne_internal(const nsegment *ns1, const nsegment *ns2)
 {
 	return (!nsegment_eq_internal(ns1, ns2));
 }
@@ -565,7 +564,7 @@ nsegment_ne(PG_FUNCTION_ARGS)
 
 /* btree comparator */
 int
-nsegment_cmp_internal(nsegment *ns1, nsegment *ns2)
+nsegment_cmp_internal(const nsegment *ns1, const nsegment *ns2)
 {
 	if (ns1->rid < ns2->rid)
 		return -1;
@@ -596,7 +595,7 @@ nsegment_cmp(PG_FUNCTION_ARGS)
 
 /* inequality operators using the nsegment_cmp function */
 bool
-nsegment_lt_internal(nsegment *ns1, nsegment *ns2)
+nsegment_lt_internal(const nsegment *ns1, const nsegment *ns2)
 {
 	int	cmp = nsegment_cmp_internal(ns1, ns2);
 	return (cmp < 0);
@@ -614,7 +613,7 @@ nsegment_lt(PG_FUNCTION_ARGS)
 }
 
 bool
-nsegment_le_internal(nsegment *ns1, nsegment *ns2)
+nsegment_le_internal(const nsegment *ns1, const nsegment *ns2)
 {
 	int	cmp = nsegment_cmp_internal(ns1, ns2);
 	return (cmp <= 0);
@@ -632,7 +631,7 @@ nsegment_le(PG_FUNCTION_ARGS)
 }
 
 bool
-nsegment_ge_internal(nsegment *ns1, nsegment *ns2)
+nsegment_ge_internal(const nsegment *ns1, const nsegment *ns2)
 {
 	int	cmp = nsegment_cmp_internal(ns1, ns2);
 	return (cmp >= 0);
@@ -650,7 +649,7 @@ nsegment_ge(PG_FUNCTION_ARGS)
 }
 
 bool
-nsegment_gt_internal(nsegment *ns1, nsegment *ns2)
+nsegment_gt_internal(const nsegment *ns1, const nsegment *ns2)
 {
 	int	cmp = nsegment_cmp_internal(ns1, ns2);
 	return (cmp > 0);
@@ -783,8 +782,30 @@ rid_from_geom(Datum geom)
 
 /* npoint as geometry */
 
+int
+npoint_srid_internal(const npoint *np)
+{
+	Datum line = route_geom(np->rid);
+	GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(line);
+	int result = gserialized_get_srid(gs);
+	pfree(DatumGetPointer(line));
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(npoint_srid);
+
+PGDLLEXPORT Datum
+npoint_srid(PG_FUNCTION_ARGS)
+{
+	npoint *np = PG_GETARG_NPOINT(0);
+	int result = npoint_srid_internal(np);
+	PG_RETURN_INT32(result);
+}
+
+/* npoint as geometry */
+
 Datum
-npoint_as_geom_internal(npoint *np)
+npoint_as_geom_internal(const npoint *np)
 {
 	Datum line = route_geom(np->rid);
 	Datum result = call_function2(LWGEOM_line_interpolate_point, line, Float8GetDatum(np->pos));
@@ -862,7 +883,7 @@ geom_as_npoint(PG_FUNCTION_ARGS)
 /* nsegment to geometry */
 
 Datum
-nsegment_as_geom_internal(nsegment *ns)
+nsegment_as_geom_internal(const nsegment *ns)
 {
 	Datum line = route_geom(ns->rid);
 	Datum result;

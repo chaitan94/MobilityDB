@@ -26,8 +26,8 @@
  *****************************************************************************/
 
 static TemporalInst **
-distance_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, bool linear,
-	Datum geo, int *count)
+distance_tnpointseq_geo1(const TemporalInst *inst1, const TemporalInst *inst2,
+	bool linear, Datum geo, int *count)
 {
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
 	npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
@@ -89,7 +89,7 @@ distance_tnpointseq_geo1(TemporalInst *inst1, TemporalInst *inst2, bool linear,
 }
 
 static TemporalSeq *
-distance_tnpointseq_geo(TemporalSeq *seq, Datum geo)
+distance_tnpointseq_geo(const TemporalSeq *seq, Datum geo)
 {
 	TemporalInst ***instants = palloc(sizeof(TemporalInst *) * (seq->count - 1));
 	int *countinsts = palloc0(sizeof(int) * (seq->count - 1));
@@ -133,7 +133,7 @@ distance_tnpointseq_geo(TemporalSeq *seq, Datum geo)
 }
 
 static TemporalS *
-distance_tnpoints_geo(TemporalS *ts, Datum geo)
+distance_tnpoints_geo(const TemporalS *ts, Datum geo)
 {
 	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * ts->count);
 	for (int i = 0; i < ts->count; i++)
@@ -151,8 +151,8 @@ distance_tnpoints_geo(TemporalS *ts, Datum geo)
 }
 
 static TemporalInst **
-distance_tnpointseq_tnpointseq1(TemporalInst *start1, TemporalInst *start2,
-	TemporalInst *end1, TemporalInst *end2, int *count)
+distance_tnpointseq_tnpointseq1(const TemporalInst *start1, const TemporalInst *start2,
+	const TemporalInst *end1, const TemporalInst *end2, int *count)
 {
 	npoint *startnp1 = DatumGetNpoint(temporalinst_value(start1));
 	npoint *endnp1 = DatumGetNpoint(temporalinst_value(end1));
@@ -287,7 +287,7 @@ distance_tnpointseq_tnpointseq1(TemporalInst *start1, TemporalInst *start2,
 }
 
 TemporalSeq *
-distance_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
+distance_tnpointseq_tnpointseq(const TemporalSeq *seq1, const TemporalSeq *seq2)
 {
 	TemporalInst ***instants = palloc(sizeof(TemporalInst *) * (seq1->count - 1));
 	int *countinsts = palloc0(sizeof(int) * (seq1->count - 1));
@@ -334,7 +334,7 @@ distance_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
 }
 
 TemporalS *
-distance_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
+distance_tnpoints_tnpoints(const TemporalS *ts1, const TemporalS *ts2)
 {
 	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * ts1->count);
 	for (int i = 0; i < ts1->count; i++)
@@ -489,7 +489,7 @@ distance_tnpoint_npoint(PG_FUNCTION_ARGS)
 /*****************************************************************************/
 
 Temporal *
-distance_tnpoint_tnpoint_internal(Temporal *temp1, Temporal *temp2)
+distance_tnpoint_tnpoint_internal(const Temporal *temp1, const Temporal *temp2)
 {
 	Temporal *sync1, *sync2;
 	/* Return NULL if the temporal points do not intersect in time */

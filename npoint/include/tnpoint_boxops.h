@@ -26,10 +26,10 @@ extern Datum npoint_timestamp_to_stbox(PG_FUNCTION_ARGS);
 extern Datum npoint_period_to_stbox(PG_FUNCTION_ARGS);
 extern Datum tnpoint_to_stbox(PG_FUNCTION_ARGS);
 
-extern bool npoint_to_stbox_internal(STBOX *box, npoint *np);
+extern bool npoint_to_stbox_internal(STBOX *box, const npoint *np);
 extern void tnpointinst_make_stbox(STBOX *box, const TemporalInst *inst);
 extern void tnpointinstarr_disc_to_stbox(STBOX *box, TemporalInst **inst, int count);
-extern void tnpointinstarr_stepw_to_stbox(STBOX *box, TemporalInst **inst, int count);
+extern void tnpointinstarr_step_to_stbox(STBOX *box, TemporalInst **inst, int count);
 extern void tnpointinstarr_linear_to_stbox(STBOX *box, TemporalInst **inst, int count);
 extern void tnpointseqarr_to_stbox(STBOX *box, TemporalSeq **seq, int count);
 

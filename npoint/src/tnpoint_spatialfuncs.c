@@ -28,6 +28,43 @@
 #include "tnpoint_tempspatialrels.h"
 
 /*****************************************************************************
+ * Parameter tests
+ *****************************************************************************/
+
+void
+ensure_same_srid_tnpoint(const Temporal *temp1, const Temporal *temp2)
+{
+	if (tnpoint_srid_internal(temp1) != tnpoint_srid_internal(temp2))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("The temporal network points must be in the same SRID")));
+}
+
+void
+ensure_same_srid_tnpoint_stbox(const Temporal *temp, const STBOX *box)
+{
+	if (MOBDB_FLAGS_GET_X(box->flags) &&
+		tnpoint_srid_internal(temp) != box->srid)
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("The temporal netwokd point and the box must be in the same SRID")));
+}
+
+void
+ensure_same_srid_tnpoint_gs(const Temporal *temp, const GSERIALIZED *gs)
+{
+	if (tnpoint_srid_internal(temp) != gserialized_get_srid(gs))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("The temporal network point and the geometry must be in the same SRID")));
+}
+
+void
+ensure_same_srid_tnpoint_npoint(const Temporal *temp, const npoint *np)
+{
+	if (tnpoint_srid_internal(temp) != npoint_srid_internal(np))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("The temporal network point and the geometry must be in the same SRID")));
+}
+
+/*****************************************************************************
  * Functions for spatial reference systems
  *****************************************************************************/
 
@@ -38,7 +75,7 @@ tnpointinst_srid(const TemporalInst *inst)
 {
 	npoint *np = DatumGetNpoint(temporalinst_value(inst));
 	Datum line = route_geom(np->rid);
-	GSERIALIZED *gs = (GSERIALIZED *)DatumGetPointer(line);
+	GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(line);
 	int result = gserialized_get_srid(gs);
 	pfree(DatumGetPointer(line));
 	return result;
@@ -77,7 +114,7 @@ tnpoint_srid(PG_FUNCTION_ARGS)
  *****************************************************************************/
 
 Datum
-tnpointseq_trajectory1(TemporalInst *inst1, TemporalInst *inst2)
+tnpointseq_trajectory1(const TemporalInst *inst1, const TemporalInst *inst2)
 {
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
 	npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
@@ -121,14 +158,14 @@ tnpointseq_trajectory1(TemporalInst *inst1, TemporalInst *inst2)
  *****************************************************************************/
 
 Datum
-tnpointinst_geom(TemporalInst *inst)
+tnpointinst_geom(const TemporalInst *inst)
 {
 	npoint *np = DatumGetNpoint(temporalinst_value(inst));
 	return npoint_as_geom_internal(np);
 }
 
 Datum
-tnpointi_geom(TemporalI *ti)
+tnpointi_geom(const TemporalI *ti)
 {
 	/* Instantaneous sequence */
 	if (ti->count == 1)
@@ -144,7 +181,7 @@ tnpointi_geom(TemporalI *ti)
 }
 
 Datum
-tnpointseq_geom(TemporalSeq *seq)
+tnpointseq_geom(const TemporalSeq *seq)
 {
 	/* Instantaneous sequence */
 	if (seq->count == 1)
@@ -160,7 +197,7 @@ tnpointseq_geom(TemporalSeq *seq)
 }
 
 Datum
-tnpoints_geom(TemporalS *ts)
+tnpoints_geom(const TemporalS *ts)
 {
 	/* Singleton sequence set */
 	if (ts->count == 1)
@@ -176,7 +213,7 @@ tnpoints_geom(TemporalS *ts)
 }
 
 Datum
-tnpoint_geom(Temporal *temp)
+tnpoint_geom(const Temporal *temp)
 {
 	int count;
 	nsegment **segments = tnpoint_positions_internal(temp, &count);
@@ -199,13 +236,43 @@ tnpoint_trajectory(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
+ * Geographical equality for network points
+ * Two network points may be have different rid but represent the same
+ * geographical point at the intersection of the two rids
+ *****************************************************************************/
+
+bool
+npoint_same_internal(const npoint *np1, const npoint *np2)
+{
+	if (np1->rid == np2->rid && fabs(np1->pos - np2->pos) < EPSILON)
+		return true;
+	Datum point1 = npoint_as_geom_internal(np1);
+	Datum point2 = npoint_as_geom_internal(np2);
+	bool result = false;
+	if (np1->rid != np2->rid && datum_eq(point1, point2, type_oid(T_GEOMETRY)))
+		result = true;
+	pfree(DatumGetPointer(point1)); pfree(DatumGetPointer(point2));
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(npoint_same);
+
+PGDLLEXPORT Datum
+npoint_same(PG_FUNCTION_ARGS)
+{
+	npoint *np1 = PG_GETARG_NPOINT(0);
+	npoint *np2 = PG_GETARG_NPOINT(1);
+	PG_RETURN_BOOL(npoint_same_internal(np1, np2));
+}
+
+/*****************************************************************************
  * Length functions
  *****************************************************************************/
 
 /* Length traversed by the temporal npoint */
 
 static double
-tnpointseq_length(TemporalSeq *seq)
+tnpointseq_length(const TemporalSeq *seq)
 {
 	/* Instantaneous sequence */
 	if (seq->count == 1)
@@ -226,7 +293,7 @@ tnpointseq_length(TemporalSeq *seq)
 }
 
 static double
-tnpoints_length(TemporalS *ts)
+tnpoints_length(const TemporalS *ts)
 {
 	double result = 0;
 	for (int i = 0; i < ts->count; i++)
@@ -260,13 +327,13 @@ tnpoint_length(PG_FUNCTION_ARGS)
 /* Cumulative length traversed by the temporal npoint */
 
 static TemporalInst *
-tnpointinst_set_zero(TemporalInst *inst)
+tnpointinst_set_zero(const TemporalInst *inst)
 {
 	return temporalinst_make(Float8GetDatum(0.0), inst->t, FLOAT8OID);
 }
 
 static TemporalI *
-tnpointi_set_zero(TemporalI *ti)
+tnpointi_set_zero(const TemporalI *ti)
 {
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
 	Datum zero = Float8GetDatum(0.0);
@@ -283,7 +350,7 @@ tnpointi_set_zero(TemporalI *ti)
 }
 
 static TemporalSeq *
-tnpointseq_cumulative_length(TemporalSeq *seq, double prevlength)
+tnpointseq_cumulative_length(const TemporalSeq *seq, double prevlength)
 {
 	/* Instantaneous sequence */
 	if (seq->count == 1)
@@ -338,7 +405,7 @@ tnpointseq_cumulative_length(TemporalSeq *seq, double prevlength)
 }
 
 static TemporalS *
-tnpoints_cumulative_length(TemporalS *ts)
+tnpoints_cumulative_length(const TemporalS *ts)
 {
 	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * ts->count);
 	double length = 0;
@@ -382,7 +449,7 @@ tnpoint_cumulative_length(PG_FUNCTION_ARGS)
  *****************************************************************************/
 
 static TemporalSeq *
-tnpointseq_speed(TemporalSeq *seq)
+tnpointseq_speed(const TemporalSeq *seq)
 {
 	/* Instantaneous sequence */
 	if (seq->count == 1)
@@ -433,7 +500,7 @@ tnpointseq_speed(TemporalSeq *seq)
 }
 
 static TemporalS *
-tnpoints_speed(TemporalS *ts)
+tnpoints_speed(const TemporalS *ts)
 {
 	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * ts->count);
 	int k = 0;
@@ -501,7 +568,8 @@ tnpoint_twcentroid(PG_FUNCTION_ARGS)
  *****************************************************************************/
 
 static TemporalInst **
-tnpointseq_azimuth1(TemporalInst *inst1, TemporalInst *inst2, int *count)
+tnpointseq_azimuth1(const TemporalInst *inst1, const TemporalInst *inst2,
+	int *count)
 {
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
 	npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
@@ -541,7 +609,7 @@ tnpointseq_azimuth1(TemporalInst *inst1, TemporalInst *inst2, int *count)
 }
 
 static int
-tnpointseq_azimuth2(TemporalSeq **result, TemporalSeq *seq)
+tnpointseq_azimuth2(TemporalSeq **result, const TemporalSeq *seq)
 {
 	/* Instantaneous sequence */
 	if (seq->count == 1)
@@ -623,7 +691,7 @@ tnpointseq_azimuth2(TemporalSeq **result, TemporalSeq *seq)
 }
 
 static TemporalS *
-tnpointseq_azimuth(TemporalSeq *seq)
+tnpointseq_azimuth(const TemporalSeq *seq)
 {
 	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * (seq->count - 1));
 	int count = tnpointseq_azimuth2(sequences, seq);
@@ -642,7 +710,7 @@ tnpointseq_azimuth(TemporalSeq *seq)
 }
 
 static TemporalS *
-tnpoints_azimuth(TemporalS *ts)
+tnpoints_azimuth(const TemporalS *ts)
 {
 	if (ts->count == 1)
 		return tnpointseq_azimuth(temporals_seq_n(ts, 0));
@@ -697,7 +765,7 @@ tnpoint_azimuth(PG_FUNCTION_ARGS)
 /* Restrict a temporal npoint to a geometry */
 
 static TemporalInst *
-tnpointinst_at_geometry(TemporalInst *inst, Datum geom)
+tnpointinst_at_geometry(const TemporalInst *inst, Datum geom)
 {
 	Datum point = tnpointinst_geom(inst);
 	bool inter = DatumGetBool(call_function2(intersects, point, geom));
@@ -709,7 +777,7 @@ tnpointinst_at_geometry(TemporalInst *inst, Datum geom)
 }
 
 static TemporalI *
-tnpointi_at_geometry(TemporalI *ti, Datum geom)
+tnpointi_at_geometry(const TemporalI *ti, Datum geom)
 {
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
 	int k = 0;
@@ -735,8 +803,8 @@ tnpointi_at_geometry(TemporalI *ti, Datum geom)
 
 /* This function assumes that inst1 and inst2 have same rid */
 static TemporalSeq **
-tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2, bool linear,
-	bool lower_inc, bool upper_inc, Datum geom, int *count)
+tnpointseq_at_geometry1(const TemporalInst *inst1, const TemporalInst *inst2,
+	bool linear, bool lower_inc, bool upper_inc, Datum geom, int *count)
 {
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
 	npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
@@ -753,11 +821,9 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2, bool linear,
 			return NULL;
 		}
 
-		TemporalInst *instants[2];
-		instants[0] = inst1;
-		instants[1] = inst2;
+		const TemporalInst *instants[]= {inst1, inst2};
 		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
-		result[0] = temporalseq_make(instants, 2,
+		result[0] = temporalseq_make((TemporalInst **) instants, 2,
 			lower_inc, upper_inc, linear, false);
 		*count = 1;
 		return result;
@@ -859,7 +925,7 @@ tnpointseq_at_geometry1(TemporalInst *inst1, TemporalInst *inst2, bool linear,
 }
 
 static TemporalSeq **
-tnpointseq_at_geometry2(TemporalSeq *seq, Datum geom, int *count)
+tnpointseq_at_geometry2(const TemporalSeq *seq, Datum geom, int *count)
 {
 	/* Instantaneous sequence */
 	if (seq->count == 1)
@@ -923,7 +989,7 @@ tnpointseq_at_geometry2(TemporalSeq *seq, Datum geom, int *count)
 }
 
 static TemporalS *
-tnpointseq_at_geometry(TemporalSeq *seq, Datum geom)
+tnpointseq_at_geometry(const TemporalSeq *seq, Datum geom)
 {
 	int count;
 	TemporalSeq **sequences = tnpointseq_at_geometry2(seq, geom, &count);
@@ -940,7 +1006,7 @@ tnpointseq_at_geometry(TemporalSeq *seq, Datum geom)
 }
 
 static TemporalS *
-tnpoints_at_geometry(TemporalS *ts, Datum geom)
+tnpoints_at_geometry(const TemporalS *ts, Datum geom)
 {
 	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
 	int *countseqs = palloc0(sizeof(int) * ts->count);
@@ -1015,7 +1081,7 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 /* Restrict a temporal point to the complement of a geometry */
 
 static TemporalInst *
-tnpointinst_minus_geometry(TemporalInst *inst, Datum geom)
+tnpointinst_minus_geometry(const TemporalInst *inst, Datum geom)
 {
     Datum value = npoint_as_geom_internal(DatumGetNpoint(temporalinst_value(inst)));
 	if (DatumGetBool(call_function2(intersects, value, geom)))
@@ -1024,7 +1090,7 @@ tnpointinst_minus_geometry(TemporalInst *inst, Datum geom)
 }
 
 static TemporalI *
-tnpointi_minus_geometry(TemporalI *ti, Datum geom)
+tnpointi_minus_geometry(const TemporalI *ti, Datum geom)
 {
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
 	int k = 0;
@@ -1052,7 +1118,7 @@ tnpointi_minus_geometry(TemporalI *ti, Datum geom)
  * and then compute the complement of the value obtained.
  */
 static TemporalSeq **
-tnpointseq_minus_geometry1(TemporalSeq *seq, Datum geom, int *count)
+tnpointseq_minus_geometry1(const TemporalSeq *seq, Datum geom, int *count)
 {
 	int countinter;
 	TemporalSeq **sequences = tnpointseq_at_geometry2(seq, geom, &countinter);
@@ -1081,7 +1147,7 @@ tnpointseq_minus_geometry1(TemporalSeq *seq, Datum geom, int *count)
 }
 
 static TemporalS *
-tnpointseq_minus_geometry(TemporalSeq *seq, Datum geom)
+tnpointseq_minus_geometry(const TemporalSeq *seq, Datum geom)
 {
 	int count;
 	TemporalSeq **sequences = tnpointseq_minus_geometry1(seq, geom, &count);
@@ -1098,12 +1164,11 @@ tnpointseq_minus_geometry(TemporalSeq *seq, Datum geom)
 }
 
 static TemporalS *
-tnpoints_minus_geometry(TemporalS *ts, GSERIALIZED *gs, STBOX *box2)
+tnpoints_minus_geometry(const TemporalS *ts,  Datum geom, const STBOX *box2)
 {
 	/* Singleton sequence set */
 	if (ts->count == 1)
-		return tnpointseq_minus_geometry(temporals_seq_n(ts, 0), 
-			PointerGetDatum(gs));
+		return tnpointseq_minus_geometry(temporals_seq_n(ts, 0), geom);
 
 	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
 	int *countseqs = palloc0(sizeof(int) * ts->count);
@@ -1122,7 +1187,7 @@ tnpoints_minus_geometry(TemporalS *ts, GSERIALIZED *gs, STBOX *box2)
 		}
 		else
 		{
-			sequences[i] = tnpointseq_minus_geometry1(seq, PointerGetDatum(gs), 
+			sequences[i] = tnpointseq_minus_geometry1(seq, geom,
 				&countseqs[i]);
 			totalseqs += countseqs[i];
 		}
@@ -1189,7 +1254,8 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 		result = (Temporal *)tnpointseq_minus_geometry((TemporalSeq *)temp, 
 			PointerGetDatum(gs));
 	else if (temp->duration == TEMPORALS) 
-		result = (Temporal *)tnpoints_minus_geometry((TemporalS *)temp, gs, &box2);
+		result = (Temporal *)tnpoints_minus_geometry((TemporalS *)temp,
+			PointerGetDatum(gs), &box2);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
 	if (result == NULL)
@@ -1202,7 +1268,7 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
  *****************************************************************************/
 
 static TemporalInst *
-NAI_tnpointi_geometry(TemporalI *ti, Datum geom)
+NAI_tnpointi_geometry(const TemporalI *ti, Datum geom)
 {
 	TemporalInst *inst = temporali_inst_n(ti, 0);
 	double mindist = DBL_MAX;
@@ -1223,7 +1289,7 @@ NAI_tnpointi_geometry(TemporalI *ti, Datum geom)
 }
 
 static TemporalInst *
-NAI_tnpointseq_geometry(TemporalSeq *seq, Datum geom)
+NAI_tnpointseq_geometry(const TemporalSeq *seq, Datum geom)
 {
 	/* Instantaneous sequence */
 	if (seq->count == 1)
@@ -1268,7 +1334,7 @@ NAI_tnpointseq_geometry(TemporalSeq *seq, Datum geom)
 }
 
 static TemporalInst *
-NAI_tnpoints_geometry(TemporalS *ts, Datum geom)
+NAI_tnpoints_geometry(const TemporalS *ts, Datum geom)
 {
 	TemporalInst *result = NULL;
 	double mindist = DBL_MAX;
@@ -1632,7 +1698,8 @@ shortestline_tnpoint_npoint(PG_FUNCTION_ARGS)
 /* These functions suppose that the temporal values overlap in time */
 
 static Datum
-shortestline_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2)
+shortestline_tnpointinst_tnpointinst(const TemporalInst *inst1,
+	const TemporalInst *inst2)
 {
 	Datum value1 = tnpointinst_geom(inst1);
 	Datum value2 = tnpointinst_geom(inst2);
@@ -1642,7 +1709,7 @@ shortestline_tnpointinst_tnpointinst(TemporalInst *inst1, TemporalInst *inst2)
 }
 
 static Datum
-shortestline_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2)
+shortestline_tnpointi_tnpointi(const TemporalI *ti1, const TemporalI *ti2)
 {
 	/* Compute the distance */
 	TemporalI *dist = tspatialrel_tnpointi_tnpointi(ti1, ti2, 
@@ -1660,7 +1727,8 @@ shortestline_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2)
 }
 
 static Datum
-shortestline_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
+shortestline_tnpointseq_tnpointseq(const TemporalSeq *seq1,
+	const TemporalSeq *seq2)
 {
 	/* Compute the distance */
 	TemporalSeq *dist = distance_tnpointseq_tnpointseq(seq1, seq2);
@@ -1683,7 +1751,7 @@ shortestline_tnpointseq_tnpointseq(TemporalSeq *seq1, TemporalSeq *seq2)
 }
 
 static Datum
-shortestline_tnpoints_tnpoints(TemporalS *ts1, TemporalS *ts2)
+shortestline_tnpoints_tnpoints(const TemporalS *ts1, const TemporalS *ts2)
 {
 	/* Compute the distance */
 	TemporalS *dist = distance_tnpoints_tnpoints(ts1, ts2);

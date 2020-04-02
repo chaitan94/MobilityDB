@@ -25,15 +25,17 @@
 #include "temporal_util.h"
 #include "stbox.h"
 #include "tpoint_boxops.h"
+#include "tpoint_spatialfuncs.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
+#include "tnpoint_spatialfuncs.h"
 
 /*****************************************************************************
  * Transform a temporal npoint to a STBOX
  *****************************************************************************/
 
 bool
-npoint_to_stbox_internal(STBOX *box, npoint *np)
+npoint_to_stbox_internal(STBOX *box, const npoint *np)
 {
 	Datum geom = npoint_as_geom_internal(DatumGetNpoint(np));
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
@@ -53,7 +55,7 @@ tnpointinst_make_stbox(STBOX *box, const TemporalInst *inst)
 }
 
 void
-tnpointinstarr_stepw_to_stbox(STBOX *box, TemporalInst **instants, int count)
+tnpointinstarr_step_to_stbox(STBOX *box, TemporalInst **instants, int count)
 {
 	tnpointinst_make_stbox(box, instants[0]);
 	for (int i = 1; i < count; i++)
@@ -123,7 +125,7 @@ npoint_to_stbox(PG_FUNCTION_ARGS)
 }
 
 bool
-nsegment_to_stbox_internal(STBOX *box, nsegment *ns)
+nsegment_to_stbox_internal(STBOX *box, const nsegment *ns)
 {
 	Datum geom = nsegment_as_geom_internal(DatumGetNsegment(ns));
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
@@ -145,7 +147,7 @@ nsegment_to_stbox(PG_FUNCTION_ARGS)
 }
 
 static bool
-npoint_timestamp_to_stbox_internal(STBOX *box, npoint *np, TimestampTz t)
+npoint_timestamp_to_stbox_internal(STBOX *box, const npoint *np, TimestampTz t)
 {
 	npoint_to_stbox_internal(box, np);
 	box->tmin = box->tmax = t;
@@ -166,7 +168,7 @@ npoint_timestamp_to_stbox(PG_FUNCTION_ARGS)
 }
 
 static bool
-npoint_period_to_stbox_internal(STBOX *box, npoint *np, Period *p)
+npoint_period_to_stbox_internal(STBOX *box, const npoint *np, const Period *p)
 {
 	npoint_to_stbox_internal(box, np);
 	box->tmin = p->lower;
@@ -222,6 +224,49 @@ npoint_expand_spatial(PG_FUNCTION_ARGS)
  * overlaps
  *****************************************************************************/
 
+PG_FUNCTION_INFO_V1(overlaps_bbox_geo_tnpoint);
+
+PGDLLEXPORT Datum
+overlaps_bbox_geo_tnpoint(PG_FUNCTION_ARGS)
+{
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	if (!geo_to_stbox_internal(&box1, gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+	temporal_bbox(&box2, temp);
+	bool result = overlaps_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(gs, 0);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(overlaps_bbox_stbox_tnpoint);
+
+PGDLLEXPORT Datum
+overlaps_bbox_stbox_tnpoint(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_not_geodetic_stbox(box);
+	ensure_same_srid_tnpoint_stbox(temp, box);
+
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = overlaps_stbox_stbox_internal(box, &box1);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
 PG_FUNCTION_INFO_V1(overlaps_bbox_npoint_tnpoint);
 
 PGDLLEXPORT Datum
@@ -229,17 +274,63 @@ overlaps_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
 	if (!npoint_to_stbox_internal(&box1, np))
 	{
 		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
+		PG_RETURN_NULL();
 	}
 	temporal_bbox(&box2, temp);
 	bool result = overlaps_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(overlaps_bbox_tnpoint_geo);
+
+PGDLLEXPORT Datum
+overlaps_bbox_tnpoint_geo(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	ensure_same_srid_tnpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	if (!geo_to_stbox_internal(&box2, gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+	bool result = overlaps_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(overlaps_bbox_tnpoint_stbox);
+
+PGDLLEXPORT Datum
+overlaps_bbox_tnpoint_stbox(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	STBOX *box = PG_GETARG_STBOX_P(1);
+	ensure_not_geodetic_stbox(box);
+	ensure_same_srid_tnpoint_stbox(temp, box);
+
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = overlaps_stbox_stbox_internal(&box1, box);
+	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
 
@@ -250,6 +341,7 @@ overlaps_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -264,9 +356,71 @@ overlaps_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(result);
 }
 
+PG_FUNCTION_INFO_V1(overlaps_bbox_tnpoint_tnpoint);
+
+PGDLLEXPORT Datum
+overlaps_bbox_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint(temp1, temp2);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp1);
+	temporal_bbox(&box2, temp2);
+	bool result = overlaps_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp1, 0);
+	PG_FREE_IF_COPY(temp2, 1);
+	PG_RETURN_BOOL(result);
+}
+
 /*****************************************************************************
  * contains
  *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(contains_bbox_geo_tnpoint);
+
+PGDLLEXPORT Datum
+contains_bbox_geo_tnpoint(PG_FUNCTION_ARGS)
+{
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	if (!geo_to_stbox_internal(&box1, gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+	temporal_bbox(&box2, temp);
+	bool result = contains_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(gs, 0);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(contains_bbox_stbox_tnpoint);
+
+PGDLLEXPORT Datum
+contains_bbox_stbox_tnpoint(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_not_geodetic_stbox(box);
+	ensure_same_srid_tnpoint_stbox(temp, box);
+
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = contains_stbox_stbox_internal(box, &box1);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
 
 PG_FUNCTION_INFO_V1(contains_bbox_npoint_tnpoint);
 
@@ -275,17 +429,63 @@ contains_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
 	if (!npoint_to_stbox_internal(&box1, np))
 	{
 		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
+		PG_RETURN_NULL();
 	}
 	temporal_bbox(&box2, temp);
 	bool result = contains_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(contains_bbox_tnpoint_geo);
+
+PGDLLEXPORT Datum
+contains_bbox_tnpoint_geo(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	ensure_same_srid_tnpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	if (!geo_to_stbox_internal(&box2, gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+	bool result = contains_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(contains_bbox_tnpoint_stbox);
+
+PGDLLEXPORT Datum
+contains_bbox_tnpoint_stbox(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	STBOX *box = PG_GETARG_STBOX_P(1);
+	ensure_not_geodetic_stbox(box);
+	ensure_same_srid_tnpoint_stbox(temp, box);
+
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = contains_stbox_stbox_internal(&box1, box);
+	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
 
@@ -296,6 +496,7 @@ contains_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -310,9 +511,71 @@ contains_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(result);
 }
 
+PG_FUNCTION_INFO_V1(contains_bbox_tnpoint_tnpoint);
+
+PGDLLEXPORT Datum
+contains_bbox_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint(temp1, temp2);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp1);
+	temporal_bbox(&box2, temp2);
+	bool result = contains_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp1, 0);
+	PG_FREE_IF_COPY(temp2, 1);
+	PG_RETURN_BOOL(result);
+}
+
 /*****************************************************************************
  * contained
  *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(contained_bbox_geo_tnpoint);
+
+PGDLLEXPORT Datum
+contained_bbox_geo_tnpoint(PG_FUNCTION_ARGS)
+{
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	if (!geo_to_stbox_internal(&box1, gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+	temporal_bbox(&box2, temp);
+	bool result = contained_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(gs, 0);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(contained_bbox_stbox_tnpoint);
+
+PGDLLEXPORT Datum
+contained_bbox_stbox_tnpoint(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_not_geodetic_stbox(box);
+	ensure_same_srid_tnpoint_stbox(temp, box);
+
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = contained_stbox_stbox_internal(box, &box1);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
 
 PG_FUNCTION_INFO_V1(contained_bbox_npoint_tnpoint);
 
@@ -321,17 +584,63 @@ contained_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
 	if (!npoint_to_stbox_internal(&box1, np))
 	{
 		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
+		PG_RETURN_NULL();
 	}
 	temporal_bbox(&box2, temp);
 	bool result = contained_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(contained_bbox_tnpoint_geo);
+
+PGDLLEXPORT Datum
+contained_bbox_tnpoint_geo(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	ensure_same_srid_tnpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	if (!geo_to_stbox_internal(&box2, gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+	bool result = contained_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(contained_bbox_tnpoint_stbox);
+
+PGDLLEXPORT Datum
+contained_bbox_tnpoint_stbox(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	STBOX *box = PG_GETARG_STBOX_P(1);
+	ensure_not_geodetic_stbox(box);
+	ensure_same_srid_tnpoint_stbox(temp, box);
+
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = contained_stbox_stbox_internal(&box1, box);
+	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
 
@@ -342,6 +651,7 @@ contained_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -356,9 +666,71 @@ contained_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(result);
 }
 
+PG_FUNCTION_INFO_V1(contained_bbox_tnpoint_tnpoint);
+
+PGDLLEXPORT Datum
+contained_bbox_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint(temp1, temp2);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp1);
+	temporal_bbox(&box2, temp2);
+	bool result = contained_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp1, 0);
+	PG_FREE_IF_COPY(temp2, 1);
+	PG_RETURN_BOOL(result);
+}
+
 /*****************************************************************************
  * same
  *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(same_bbox_geo_tnpoint);
+
+PGDLLEXPORT Datum
+same_bbox_geo_tnpoint(PG_FUNCTION_ARGS)
+{
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	if (!geo_to_stbox_internal(&box1, gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+	temporal_bbox(&box2, temp);
+	bool result = same_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(gs, 0);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(same_bbox_stbox_tnpoint);
+
+PGDLLEXPORT Datum
+same_bbox_stbox_tnpoint(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_not_geodetic_stbox(box);
+	ensure_same_srid_tnpoint_stbox(temp, box);
+
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = same_stbox_stbox_internal(box, &box1);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
 
 PG_FUNCTION_INFO_V1(same_bbox_npoint_tnpoint);
 
@@ -367,17 +739,63 @@ same_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
 	if (!npoint_to_stbox_internal(&box1, np))
 	{
 		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
+		PG_RETURN_NULL();
 	}
 	temporal_bbox(&box2, temp);
 	bool result = same_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(same_bbox_tnpoint_geo);
+
+PGDLLEXPORT Datum
+same_bbox_tnpoint_geo(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	ensure_same_srid_tnpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	if (!geo_to_stbox_internal(&box2, gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+	bool result = same_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(same_bbox_tnpoint_stbox);
+
+PGDLLEXPORT Datum
+same_bbox_tnpoint_stbox(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	STBOX *box = PG_GETARG_STBOX_P(1);
+	ensure_not_geodetic_stbox(box);
+	ensure_same_srid_tnpoint_stbox(temp, box);
+
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = same_stbox_stbox_internal(&box1, box);
+	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
 
@@ -388,6 +806,7 @@ same_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -402,9 +821,71 @@ same_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(result);
 }
 
+PG_FUNCTION_INFO_V1(same_bbox_tnpoint_tnpoint);
+
+PGDLLEXPORT Datum
+same_bbox_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint(temp1, temp2);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp1);
+	temporal_bbox(&box2, temp2);
+	bool result = same_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp1, 0);
+	PG_FREE_IF_COPY(temp2, 1);
+	PG_RETURN_BOOL(result);
+}
+
 /*****************************************************************************
  * adjacent
  *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_geo_tnpoint);
+
+PGDLLEXPORT Datum
+adjacent_bbox_geo_tnpoint(PG_FUNCTION_ARGS)
+{
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	if (!geo_to_stbox_internal(&box1, gs))
+	{
+		PG_FREE_IF_COPY(gs, 0);
+		PG_FREE_IF_COPY(temp, 1);
+		PG_RETURN_NULL();
+	}
+	temporal_bbox(&box2, temp);
+	bool result = adjacent_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(gs, 0);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_stbox_tnpoint);
+
+PGDLLEXPORT Datum
+adjacent_bbox_stbox_tnpoint(PG_FUNCTION_ARGS)
+{
+	STBOX *box = PG_GETARG_STBOX_P(0);
+	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_not_geodetic_stbox(box);
+	ensure_same_srid_tnpoint_stbox(temp, box);
+
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = adjacent_stbox_stbox_internal(box, &box1);
+	PG_FREE_IF_COPY(temp, 1);
+	PG_RETURN_BOOL(result);
+}
 
 PG_FUNCTION_INFO_V1(adjacent_bbox_npoint_tnpoint);
 
@@ -413,6 +894,7 @@ adjacent_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -427,6 +909,51 @@ adjacent_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(result);
 }
 
+/*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_tnpoint_geo);
+
+PGDLLEXPORT Datum
+adjacent_bbox_tnpoint_geo(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	ensure_same_srid_tnpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	if (!geo_to_stbox_internal(&box2, gs))
+	{
+		PG_FREE_IF_COPY(temp, 0);
+		PG_FREE_IF_COPY(gs, 1);
+		PG_RETURN_NULL();
+	}
+	bool result = adjacent_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_tnpoint_stbox);
+
+PGDLLEXPORT Datum
+adjacent_bbox_tnpoint_stbox(PG_FUNCTION_ARGS)
+{
+	Temporal *temp = PG_GETARG_TEMPORAL(0);
+	STBOX *box = PG_GETARG_STBOX_P(1);
+	ensure_not_geodetic_stbox(box);
+	ensure_same_srid_tnpoint_stbox(temp, box);
+
+	STBOX box1;
+	memset(&box1, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp);
+	bool result = adjacent_stbox_stbox_internal(&box1, box);
+	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_BOOL(result);
+}
+
 PG_FUNCTION_INFO_V1(adjacent_bbox_tnpoint_npoint);
 
 PGDLLEXPORT Datum
@@ -434,6 +961,7 @@ adjacent_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
@@ -445,6 +973,25 @@ adjacent_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 	temporal_bbox(&box1, temp);
 	bool result = adjacent_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(adjacent_bbox_tnpoint_tnpoint);
+
+PGDLLEXPORT Datum
+adjacent_bbox_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint(temp1, temp2);
+	STBOX box1, box2;
+	memset(&box1, 0, sizeof(STBOX));
+	memset(&box2, 0, sizeof(STBOX));
+	temporal_bbox(&box1, temp1);
+	temporal_bbox(&box2, temp2);
+	bool result = adjacent_stbox_stbox_internal(&box1, &box2);
+	PG_FREE_IF_COPY(temp1, 0);
+	PG_FREE_IF_COPY(temp2, 1);
 	PG_RETURN_BOOL(result);
 }
 

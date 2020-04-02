@@ -63,31 +63,31 @@ extern Datum tnpoint_make_tnpointseq(PG_FUNCTION_ARGS);
 extern Datum tnpoint_as_tgeompoint(PG_FUNCTION_ARGS);
 extern Datum tgeompoint_as_tnpoint(PG_FUNCTION_ARGS);
 
-extern TemporalInst *tnpointinst_as_tgeompointinst(TemporalInst *inst);
-extern TemporalI *tnpointi_as_tgeompointi(TemporalI *ti);
-extern TemporalSeq *tnpointseq_as_tgeompointseq(TemporalSeq *seq);
-extern TemporalS *tnpoints_as_tgeompoints(TemporalS *ts);
-extern Temporal *tnpoint_as_tgeompoint_internal(Temporal *temp);
+extern TemporalInst *tnpointinst_as_tgeompointinst(const TemporalInst *inst);
+extern TemporalI *tnpointi_as_tgeompointi(const TemporalI *ti);
+extern TemporalSeq *tnpointseq_as_tgeompointseq(const TemporalSeq *seq);
+extern TemporalS *tnpoints_as_tgeompoints(const TemporalS *ts);
+extern Temporal *tnpoint_as_tgeompoint_internal(const Temporal *temp);
 
-extern TemporalInst *tgeompointinst_as_tnpointinst(TemporalInst *inst);
-extern TemporalI *tgeompointi_as_tnpointi(TemporalI *ti);
-extern TemporalSeq *tgeompointseq_as_tnpointseq(TemporalSeq *seq);
-extern TemporalS *tgeompoints_as_tnpoints(TemporalS *ts);
+extern TemporalInst *tgeompointinst_as_tnpointinst(const TemporalInst *inst);
+extern TemporalI *tgeompointi_as_tnpointi(const TemporalI *ti);
+extern TemporalSeq *tgeompointseq_as_tnpointseq(const TemporalSeq *seq);
+extern TemporalS *tgeompoints_as_tnpoints(const TemporalS *ts);
 
 extern Datum tnpoint_positions(PG_FUNCTION_ARGS);
 extern Datum tnpointinst_route(PG_FUNCTION_ARGS);
 extern Datum tnpoint_routes(PG_FUNCTION_ARGS);
 
-extern nsegment **tnpointinst_positions(TemporalInst *inst);
-extern nsegment **tnpointi_positions(TemporalI *ti, int *count);
-extern nsegment **tnpointseq_positions(TemporalSeq *seq, int *count);
-extern nsegment **tnpoints_positions(TemporalS *ts, int *count);
-extern nsegment **tnpoint_positions_internal(Temporal *temp, int *count);
+extern nsegment **tnpointinst_positions(const TemporalInst *inst);
+extern nsegment **tnpointi_positions(const TemporalI *ti, int *count);
+extern nsegment **tnpointseq_positions(const TemporalSeq *seq, int *count);
+extern nsegment **tnpoints_positions(const TemporalS *ts, int *count);
+extern nsegment **tnpoint_positions_internal(const Temporal *temp, int *count);
 
-extern ArrayType *tnpointinst_routes(TemporalInst *inst);
-extern ArrayType *tnpointi_routes(TemporalI *ti);
-extern ArrayType *tnpointseq_routes(TemporalSeq *seq);
-extern ArrayType *tnpoints_routes(TemporalS *ts);
+extern ArrayType *tnpointinst_routes(const TemporalInst *inst);
+extern ArrayType *tnpointi_routes(const TemporalI *ti);
+extern ArrayType *tnpointseq_routes(const TemporalSeq *seq);
+extern ArrayType *tnpoints_routes(const TemporalS *ts);
 
 /*****************************************************************************/
 

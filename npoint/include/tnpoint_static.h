@@ -59,12 +59,13 @@ extern Datum npoint_le(PG_FUNCTION_ARGS);
 extern Datum npoint_gt(PG_FUNCTION_ARGS);
 extern Datum npoint_ge(PG_FUNCTION_ARGS);
 
-extern bool npoint_eq_internal(npoint *np1, npoint *np2);
-extern bool npoint_ne_internal(npoint *np1, npoint *np2);
-extern bool npoint_lt_internal(npoint *np1, npoint *np2);
-extern bool npoint_le_internal(npoint *np1, npoint *np2);
-extern bool npoint_gt_internal(npoint *np1, npoint *np2);
-extern bool npoint_ge_internal(npoint *np1, npoint *np2);
+extern bool npoint_same_internal(const npoint *np1, const npoint *np2);
+extern bool npoint_eq_internal(const npoint *np1, const npoint *np2);
+extern bool npoint_ne_internal(const npoint *np1, const npoint *np2);
+extern bool npoint_lt_internal(const npoint *np1, const npoint *np2);
+extern bool npoint_le_internal(const npoint *np1, const npoint *np2);
+extern bool npoint_gt_internal(const npoint *np1, const npoint *np2);
+extern bool npoint_ge_internal(const npoint *np1, const npoint *np2);
 
 extern Datum nsegment_eq(PG_FUNCTION_ARGS);
 extern Datum nsegment_ne(PG_FUNCTION_ARGS);
@@ -73,26 +74,27 @@ extern Datum nsegment_le(PG_FUNCTION_ARGS);
 extern Datum nsegment_gt(PG_FUNCTION_ARGS);
 extern Datum nsegment_ge(PG_FUNCTION_ARGS);
 
-extern int nsegment_cmp_internal(nsegment *ns1, nsegment *ns2);
-extern bool nsegment_eq_internal(nsegment *np1, nsegment *np2);
-extern bool nsegment_ne_internal(nsegment *np1, nsegment *np2);
-extern bool nsegment_lt_internal(nsegment *np1, nsegment *np2);
-extern bool nsegment_le_internal(nsegment *np1, nsegment *np2);
-extern bool nsegment_gt_internal(nsegment *np1, nsegment *np2);
-extern bool nsegment_ge_internal(nsegment *np1, nsegment *np2);
+extern int nsegment_cmp_internal(const nsegment *ns1, const nsegment *ns2);
+extern bool nsegment_eq_internal(const nsegment *ns1, const nsegment *ns2);
+extern bool nsegment_ne_internal(const nsegment *ns1, const nsegment *ns2);
+extern bool nsegment_lt_internal(const nsegment *ns1, const nsegment *ns2);
+extern bool nsegment_le_internal(const nsegment *ns1, const nsegment *ns2);
+extern bool nsegment_gt_internal(const nsegment *ns1, const nsegment *ns2);
+extern bool nsegment_ge_internal(const nsegment *ns1, const nsegment *ns2);
 
 extern bool route_exists(int64 rid);
 extern double route_length(int64 rid);
 extern Datum route_geom(int64 rid);
 extern int64 rid_from_geom(Datum geom);
 
+extern int npoint_srid_internal(const npoint *np);
 extern Datum npoint_as_geom(PG_FUNCTION_ARGS);
 extern Datum geom_as_npoint(PG_FUNCTION_ARGS);
 extern Datum nsegment_as_geom(PG_FUNCTION_ARGS);
 extern Datum geom_as_nsegment(PG_FUNCTION_ARGS);
 
-extern Datum npoint_as_geom_internal(npoint *np);
-extern Datum nsegment_as_geom_internal(nsegment *ns);
+extern Datum npoint_as_geom_internal(const npoint *np);
+extern Datum nsegment_as_geom_internal(const nsegment *ns);
 extern npoint *geom_as_npoint_internal(Datum geom);
 extern nsegment *geom_as_nsegment_internal(Datum line);
 

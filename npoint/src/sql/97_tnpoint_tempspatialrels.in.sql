@@ -8,9 +8,9 @@
  *		tcontains, tcovers, tcoveredby, tdisjoint, equals, tintersects, 
  *		ttouches, twithin, tdwithin, and trelate (with 2 and 3 arguments)
  *
- * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li,
+ * Portions Copyright (c) 2020, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/

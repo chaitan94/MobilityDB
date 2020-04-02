@@ -204,7 +204,7 @@ SELECT MAX(getTimestamp(inst)) FROM tbl_tnpointinst;
 SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp ?= t2.np;
  count 
 -------
-   101
+     0
 (1 row)
 
 SELECT count(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp %= t2.np;
@@ -349,7 +349,7 @@ SELECT COUNT(*) FROM tbl_tnpoint, tbl_npoint
 WHERE atValue(temp, np) IS NOT NULL;
  count 
 -------
-   101
+     0
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tnpoint, tbl_npoint 
@@ -364,7 +364,7 @@ SELECT COUNT(*) FROM tbl_tnpoint,
 WHERE atValues(temp, valuearr) IS NOT NULL;
  count 
 -------
-    30
+     0
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tnpoint, 

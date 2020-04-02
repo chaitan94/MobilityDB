@@ -31,7 +31,7 @@
  *****************************************************************************/
 
 static Datum
-spatialrel_tnpoint_geom(Temporal *temp, Datum geom,
+spatialrel_tnpoint_geom(const Temporal *temp, Datum geom,
 	Datum (*operator)(Datum, Datum), bool invert)
 {
 	Datum geom1 = tnpoint_geom(temp);
@@ -41,7 +41,7 @@ spatialrel_tnpoint_geom(Temporal *temp, Datum geom,
 }
 
 static Datum
-spatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
+spatialrel_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2,
 	Datum (*operator)(Datum, Datum))
 {
 	Datum geom1 = tnpoint_geom(temp1);
@@ -56,7 +56,7 @@ spatialrel_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2,
  *****************************************************************************/
 
 static bool
-spatialrel3_tnpoint_geom(Temporal *temp, Datum geom, Datum param,
+spatialrel3_tnpoint_geom(const Temporal *temp, Datum geom, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
 	Datum geom1 = tnpoint_geom(temp);
@@ -67,8 +67,8 @@ spatialrel3_tnpoint_geom(Temporal *temp, Datum geom, Datum param,
 }
 
 static bool
-spatialrel3_tnpoint_tnpoint(Temporal *temp1, Temporal *temp2, Datum param,
-	Datum (*operator)(Datum, Datum, Datum))
+spatialrel3_tnpoint_tnpoint(const Temporal *temp1,const  Temporal *temp2,
+	Datum param, Datum (*operator)(Datum, Datum, Datum))
 {
 	Datum geom1 = tnpoint_geom(temp1);
 	Datum geom2 = tnpoint_geom(temp2);

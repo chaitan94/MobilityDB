@@ -129,9 +129,9 @@ endif ()
 include("test/scripts/test.cmake")
 
 if (WITH_POSTGIS)
-		include("point/point.cmake")
+		include("tpoint/tpoint.cmake")
 		include("npoint/npoint.cmake")
-endif()
+endif ()
 
 add_custom_command(
 	OUTPUT ${SQLOUT}

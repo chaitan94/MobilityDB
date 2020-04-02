@@ -19,34 +19,31 @@
 
 /*****************************************************************************/
 
-extern bool tnpointseq_intersect_at_timestamp(TemporalInst *start1, 
-	TemporalInst *end1, bool linear1, TemporalInst *start2, TemporalInst *end2, 
-	bool linear2, bool lower_inc, bool upper_inc, TimestampTz *inter);
-extern TemporalInst *tspatialrel_tnpointinst_geo(TemporalInst *inst, Datum geo,
+extern bool tnpointseq_intersection(const TemporalInst *start1,
+	const TemporalInst *end1, const TemporalInst *start2,
+	const TemporalInst *end2, Datum *inter1, Datum *inter2, TimestampTz *t);
+extern TemporalInst *tspatialrel_tnpointinst_geo(const TemporalInst *inst, Datum geo,
 	Datum (*operator)(Datum, Datum), Oid valuetypid, bool invert);
-extern TemporalI *tspatialrel_tnpointi_geo(TemporalI *ti, Datum geo,
+extern TemporalI *tspatialrel_tnpointi_geo(const TemporalI *ti, Datum geo,
 	Datum (*operator)(Datum, Datum), Oid valuetypid, bool invert);
 extern TemporalInst *tspatialrel_tnpointinst_tnpointinst(
-	TemporalInst *inst1, TemporalInst *inst2,
+	const TemporalInst *inst1, const TemporalInst *inst2,
 	Datum (*operator)(Datum, Datum), Oid valuetypid);
-extern TemporalI *tspatialrel_tnpointi_tnpointi(TemporalI *ti1, TemporalI *ti2,
+extern TemporalI *tspatialrel_tnpointi_tnpointi(const TemporalI *ti1, const TemporalI *ti2,
 	Datum (*operator)(Datum, Datum), Oid valuetypid);
 
 extern Datum tcontains_geo_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tcontains_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tcontains_tnpoint_geo(PG_FUNCTION_ARGS);
 extern Datum tcontains_tnpoint_npoint(PG_FUNCTION_ARGS);
-extern Datum tcontains_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tcovers_geo_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tcovers_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tcovers_tnpoint_geo(PG_FUNCTION_ARGS);
 extern Datum tcovers_tnpoint_npoint(PG_FUNCTION_ARGS);
-extern Datum tcovers_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tcoveredby_geo_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tcoveredby_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tcoveredby_tnpoint_geo(PG_FUNCTION_ARGS);
 extern Datum tcoveredby_tnpoint_npoint(PG_FUNCTION_ARGS);
-extern Datum tcoveredby_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tdisjoint_geo_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tdisjoint_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tdisjoint_tnpoint_geo(PG_FUNCTION_ARGS);
@@ -66,12 +63,10 @@ extern Datum ttouches_geo_tnpoint(PG_FUNCTION_ARGS);
 extern Datum ttouches_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum ttouches_tnpoint_geo(PG_FUNCTION_ARGS);
 extern Datum ttouches_tnpoint_npoint(PG_FUNCTION_ARGS);
-extern Datum ttouches_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum twithin_geo_tnpoint(PG_FUNCTION_ARGS);
 extern Datum twithin_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum twithin_tnpoint_geo(PG_FUNCTION_ARGS);
 extern Datum twithin_tnpoint_npoint(PG_FUNCTION_ARGS);
-extern Datum twithin_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tdwithin_geo_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tdwithin_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tdwithin_tnpoint_geo(PG_FUNCTION_ARGS);
