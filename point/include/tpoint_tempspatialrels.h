@@ -59,9 +59,19 @@ extern Datum trelate_pattern_geo_tpoint(PG_FUNCTION_ARGS);
 extern Datum trelate_pattern_tpoint_geo(PG_FUNCTION_ARGS);
 extern Datum trelate_pattern_tpoint_tpoint(PG_FUNCTION_ARGS);
 
+extern Temporal *tspatialrel_tpoint_geo(Temporal *temp, Datum geo,
+	Datum (*func)(Datum, Datum), Oid valuetypid, bool invert);
+extern Temporal *tspatialrel3_tpoint_geo(Temporal *temp, Datum geo, Datum param,
+	Datum (*func)(Datum, Datum, Datum), bool invert);
+
 extern TemporalS *tdwithin_tpointseq_geo(TemporalSeq *seq, Datum geo, Datum dist);
 extern TemporalS *tdwithin_tpoints_geo(TemporalS *ts, Datum geo, Datum dist);
+extern Temporal *tdwithin_tpoint_geo_internal(Temporal *temp, GSERIALIZED *gs, Datum dist);
 
+extern TemporalS *tdwithin_tpointseq_tpointseq(TemporalSeq *seq1, TemporalSeq *seq2,
+	Datum param, Datum (*func)(Datum, Datum, Datum));
+extern TemporalS *tdwithin_tpoints_tpoints(TemporalS *ts1, TemporalS *ts2, Datum d,
+	Datum (*func)(Datum, Datum, Datum));
 /*****************************************************************************/
 
 #endif
