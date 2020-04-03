@@ -86,6 +86,9 @@ extern bool datum_le(Datum l, Datum r, Oid type);
 extern bool datum_gt(Datum l, Datum r, Oid type);
 extern bool datum_ge(Datum l, Datum r, Oid type);
 
+extern bool datum_same(Datum l, Datum r, Oid type);
+extern bool datum_not_same(Datum l, Datum r, Oid type);
+
 extern bool datum_eq2(Datum l, Datum r, Oid typel, Oid typer); 
 extern bool datum_ne2(Datum l, Datum r, Oid typel, Oid typer);
 extern bool datum_lt2(Datum l, Datum r, Oid typel, Oid typer);

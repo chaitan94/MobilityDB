@@ -26,6 +26,7 @@
 #include "oidcache.h"
 #include "temporal_util.h"
 #include "lifting.h"
+#include "tpoint_spatialfuncs.h"
 #include "tpoint_spatialrels.h"
 #include "tpoint_tempspatialrels.h"
 #include "tnpoint.h"
@@ -1917,14 +1918,14 @@ tdisjoint_tnpoint_npoint(PG_FUNCTION_ARGS)
 }
 
 PG_FUNCTION_INFO_V1(tdisjoint_tnpoint_tnpoint);
-
+/*
 PGDLLEXPORT Datum
 tdisjoint_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
 	Temporal *sync1, *sync2;
-	/* Return NULL if the temporal points do not intersect in time */
+	/ * Return NULL if the temporal points do not intersect in time * /
 	if (!synchronize_temporal_temporal(temp1, temp2, &sync1, &sync2, true))
 	{
 		PG_FREE_IF_COPY(temp1, 0);
@@ -1935,6 +1936,26 @@ tdisjoint_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_tnpoint(sync1, sync2, 
 		&geom_disjoint, BOOLOID);
 	pfree(sync1); pfree(sync2); 
+	PG_FREE_IF_COPY(temp1, 0);
+	PG_FREE_IF_COPY(temp2, 1);
+	if (result == NULL)
+		PG_RETURN_NULL();
+	PG_RETURN_POINTER(result);
+}
+*/
+
+PGDLLEXPORT Datum
+tdisjoint_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint(temp1, temp2);
+	Temporal *geomtemp1 = tnpoint_as_tgeompoint_internal(temp1);
+	Temporal *geomtemp2 = tnpoint_as_tgeompoint_internal(temp2);
+	Temporal *result = sync_tfunc2_temporal_temporal_cross(geomtemp1, geomtemp2,
+		&datum2_point_ne, BOOLOID);
+	pfree(geomtemp1);
+	pfree(geomtemp2);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
 	if (result == NULL)
@@ -2019,14 +2040,14 @@ tequals_tnpoint_npoint(PG_FUNCTION_ARGS)
 }
 
 PG_FUNCTION_INFO_V1(tequals_tnpoint_tnpoint);
-
+/*
 PGDLLEXPORT Datum
 tequals_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
 	Temporal *sync1, *sync2;
-	/* Return NULL if the temporal points do not intersect in time */
+	/ * Return NULL if the temporal points do not intersect in time * /
 	if (!synchronize_temporal_temporal(temp1, temp2, &sync1, &sync2, true))
 	{
 		PG_FREE_IF_COPY(temp1, 0);
@@ -2043,6 +2064,26 @@ tequals_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	PG_RETURN_POINTER(result);
 }
+*/
+PGDLLEXPORT Datum
+tequals_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint(temp1, temp2);
+	Temporal *geomtemp1 = tnpoint_as_tgeompoint_internal(temp1);
+	Temporal *geomtemp2 = tnpoint_as_tgeompoint_internal(temp2);
+	Temporal *result = sync_tfunc2_temporal_temporal_cross(geomtemp1, geomtemp2,
+		&datum2_point_eq, BOOLOID);
+	pfree(geomtemp1);
+	pfree(geomtemp2);
+	PG_FREE_IF_COPY(temp1, 0);
+	PG_FREE_IF_COPY(temp2, 1);
+	if (result == NULL)
+		PG_RETURN_NULL();
+	PG_RETURN_POINTER(result);
+}
+
 
 /*****************************************************************************
  * Temporal intersects
@@ -2121,14 +2162,14 @@ tintersects_tnpoint_npoint(PG_FUNCTION_ARGS)
 }
 
 PG_FUNCTION_INFO_V1(tintersects_tnpoint_tnpoint);
-
+/*
 PGDLLEXPORT Datum
 tintersects_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
 	Temporal *sync1, *sync2;
-	/* Return NULL if the temporal points do not intersect in time */
+	/ * Return NULL if the temporal points do not intersect in time * /
 	if (!synchronize_temporal_temporal(temp1, temp2, &sync1, &sync2, true))
 	{
 		PG_FREE_IF_COPY(temp1, 0);
@@ -2139,6 +2180,25 @@ tintersects_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_tnpoint(sync1, sync2, 
 		&geom_intersects2d, BOOLOID);
 	pfree(sync1); pfree(sync2); 
+	PG_FREE_IF_COPY(temp1, 0);
+	PG_FREE_IF_COPY(temp2, 1);
+	if (result == NULL)
+		PG_RETURN_NULL();
+	PG_RETURN_POINTER(result);
+}
+*/
+PGDLLEXPORT Datum
+tintersects_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint(temp1, temp2);
+	Temporal *geomtemp1 = tnpoint_as_tgeompoint_internal(temp1);
+	Temporal *geomtemp2 = tnpoint_as_tgeompoint_internal(temp2);
+	Temporal *result = sync_tfunc2_temporal_temporal_cross(geomtemp1, geomtemp2,
+		&datum2_point_eq, BOOLOID);
+	pfree(geomtemp1);
+	pfree(geomtemp2);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
 	if (result == NULL)
@@ -2482,14 +2542,14 @@ trelate_tnpoint_npoint(PG_FUNCTION_ARGS)
 }
 
 PG_FUNCTION_INFO_V1(trelate_tnpoint_tnpoint);
-
+/*
 PGDLLEXPORT Datum
 trelate_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
 	Temporal *sync1, *sync2;
-	/* Return NULL if the temporal points do not intersect in time */
+	/ * Return NULL if the temporal points do not intersect in time * /
 	if (!synchronize_temporal_temporal(temp1, temp2, &sync1, &sync2, true))
 	{
 		PG_FREE_IF_COPY(temp1, 0);
@@ -2500,6 +2560,25 @@ trelate_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel_tnpoint_tnpoint(sync1, sync2, 
 		&geom_relate, TEXTOID);
 	pfree(sync1); pfree(sync2); 
+	PG_FREE_IF_COPY(temp1, 0);
+	PG_FREE_IF_COPY(temp2, 1);
+	if (result == NULL)
+		PG_RETURN_NULL();
+	PG_RETURN_POINTER(result);
+}
+*/
+PGDLLEXPORT Datum
+trelate_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	ensure_same_srid_tnpoint(temp1, temp2);
+	Temporal *geomtemp1 = tnpoint_as_tgeompoint_internal(temp1);
+	Temporal *geomtemp2 = tnpoint_as_tgeompoint_internal(temp2);
+	Temporal *result = sync_tfunc2_temporal_temporal_cross(geomtemp1, geomtemp2,
+		&geom_relate, TEXTOID);
+	pfree(geomtemp1);
+	pfree(geomtemp2);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
 	if (result == NULL)
@@ -2588,7 +2667,7 @@ trelate_pattern_tnpoint_npoint(PG_FUNCTION_ARGS)
 }
 
 PG_FUNCTION_INFO_V1(trelate_pattern_tnpoint_tnpoint);
-
+/*
 PGDLLEXPORT Datum
 trelate_pattern_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
@@ -2596,7 +2675,7 @@ trelate_pattern_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
 	Datum pattern = PG_GETARG_DATUM(2);
 	Temporal *sync1, *sync2;
-	/* Return NULL if the temporal points do not intersect in time */
+	/ * Return NULL if the temporal points do not intersect in time * /
 	if (!synchronize_temporal_temporal(temp1, temp2, &sync1, &sync2, true))
 	{
 		PG_FREE_IF_COPY(temp1, 0);
@@ -2607,6 +2686,26 @@ trelate_pattern_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *result = tspatialrel3_tnpoint_tnpoint(sync1, sync2, pattern, 
 		&geom_relate_pattern);
 	pfree(sync1); pfree(sync2); 
+	PG_FREE_IF_COPY(temp1, 0);
+	PG_FREE_IF_COPY(temp2, 1);
+	if (result == NULL)
+		PG_RETURN_NULL();
+	PG_RETURN_POINTER(result);
+}
+*/
+PGDLLEXPORT Datum
+trelate_pattern_tnpoint_tnpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	Datum pattern = PG_GETARG_DATUM(2);
+	ensure_same_srid_tnpoint(temp1, temp2);
+	Temporal *geomtemp1 = tnpoint_as_tgeompoint_internal(temp1);
+	Temporal *geomtemp2 = tnpoint_as_tgeompoint_internal(temp2);
+	Temporal *result = sync_tfunc3_temporal_temporal_cross(geomtemp1, geomtemp2,
+		pattern, &geom_relate_pattern, BOOLOID);
+	pfree(geomtemp1);
+	pfree(geomtemp2);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
 	if (result == NULL)

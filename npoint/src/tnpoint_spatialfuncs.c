@@ -244,13 +244,12 @@ tnpoint_trajectory(PG_FUNCTION_ARGS)
 bool
 npoint_same_internal(const npoint *np1, const npoint *np2)
 {
-	if (np1->rid == np2->rid && fabs(np1->pos - np2->pos) < EPSILON)
-		return true;
+	/* Same route identifier */
+	if (np1->rid == np2->rid)
+		return fabs(np1->pos - np2->pos) < EPSILON;
 	Datum point1 = npoint_as_geom_internal(np1);
 	Datum point2 = npoint_as_geom_internal(np2);
-	bool result = false;
-	if (np1->rid != np2->rid && datum_eq(point1, point2, type_oid(T_GEOMETRY)))
-		result = true;
+	bool result = datum_eq(point1, point2, type_oid(T_GEOMETRY));
 	pfree(DatumGetPointer(point1)); pfree(DatumGetPointer(point2));
 	return result;
 }

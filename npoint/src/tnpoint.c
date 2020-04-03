@@ -74,14 +74,19 @@ TemporalSeq *
 tnpointseq_as_tgeompointseq(const TemporalSeq *seq)
 {
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * seq->count);
+	npoint *np = DatumGetNpoint(temporalinst_value(temporalseq_inst_n(seq, 0)));
+	Datum line = route_geom(np->rid);
 	for (int i = 0; i < seq->count; i++)
 	{
 		TemporalInst *inst = temporalseq_inst_n(seq, i);
-		instants[i] = tnpointinst_as_tgeompointinst(inst);
+		np = DatumGetNpoint(temporalinst_value(inst));
+		Datum geom = call_function2(LWGEOM_line_interpolate_point, line, Float8GetDatum(np->pos));
+		instants[i] = temporalinst_make(geom, inst->t, type_oid(T_GEOMETRY));
 	}
 	TemporalSeq *result = temporalseq_make(instants,
 		seq->count, seq->period.lower_inc, seq->period.upper_inc, 
 		MOBDB_FLAGS_GET_LINEAR(seq->flags), false);
+	pfree(DatumGetPointer(line));
 	for (int i = 0; i < seq->count; i++)
 		pfree(instants[i]);
 	pfree(instants);

@@ -627,6 +627,12 @@ datum_same(Datum l, Datum r, Oid type)
 }
 
 bool
+datum_not_same(Datum l, Datum r, Oid type)
+{
+	return ! datum_same(l, r, type);
+}
+
+bool
 datum_lt(Datum l, Datum r, Oid type)
 {
 	ensure_temporal_base_type(type);
