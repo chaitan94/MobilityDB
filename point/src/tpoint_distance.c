@@ -131,7 +131,8 @@ distance_tpointseq_geo(const TemporalSeq *seq, Datum point,
 				instants[k++] = temporalinst_make(func(point, value1),
 					inst1->t, FLOAT8OID);
 				if (inst1->valuetypid == type_oid(T_GEOMETRY))
-					instants[k++] = temporalinst_make(dist, time, FLOAT8OID);
+					instants[k++] = temporalinst_make(Float8GetDatum(dist),
+						time, FLOAT8OID);
 				else
 				{
 					instants[k++] = temporalinst_make(func(point, value),

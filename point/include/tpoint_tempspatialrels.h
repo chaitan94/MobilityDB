@@ -72,6 +72,7 @@ extern TemporalS *tdwithin_tpointseq_tpointseq(TemporalSeq *seq1, TemporalSeq *s
 	Datum param, Datum (*func)(Datum, Datum, Datum));
 extern TemporalS *tdwithin_tpoints_tpoints(TemporalS *ts1, TemporalS *ts2, Datum d,
 	Datum (*func)(Datum, Datum, Datum));
+
 /*****************************************************************************/
 
 #endif
