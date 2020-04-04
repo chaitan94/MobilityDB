@@ -48,12 +48,10 @@ extern bool intersection_temporalseq_temporalseq(const TemporalSeq *seq1, const 
 extern bool synchronize_temporalseq_temporalseq(const TemporalSeq *seq1, const TemporalSeq *seq2,
 	TemporalSeq **sync1, TemporalSeq **sync2, bool interpoint);
 
+/* Intersection functions */
+
 extern bool tlinearseq_intersection_value(const TemporalInst *inst1, const TemporalInst *inst2,
 	Datum value, Oid valuetypid, Datum *inter, TimestampTz *t);
-
-extern bool tpointseq_intersection(const TemporalInst *start1, const TemporalInst *end1,
-	const TemporalInst *start2, const TemporalInst *end2,
-	Datum *inter1, Datum *inter2, TimestampTz *t);
 
 extern bool temporalseq_intersection(const TemporalInst *start1, const TemporalInst *end1, bool linear1,
 	const TemporalInst *start2, const TemporalInst *end2, bool linear2,

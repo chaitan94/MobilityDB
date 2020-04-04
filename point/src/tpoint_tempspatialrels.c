@@ -1992,25 +1992,14 @@ tdwithin_tpoint_geo(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(tdwithin_tpoint_tpoint);
-
-PGDLLEXPORT Datum
-tdwithin_tpoint_tpoint(PG_FUNCTION_ARGS)
+Temporal *
+tdwithin_tpoint_tpoint_internal(Temporal *temp1, Temporal *temp2, Datum dist)
 {
-	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
-	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
-	Datum dist = PG_GETARG_DATUM(2);
-	ensure_same_srid_tpoint(temp1, temp2);
-	ensure_same_dimensionality_tpoint(temp1, temp2);
 	Temporal *sync1, *sync2;
 	/* Return false if the temporal points do not intersect in time
 	   The last parameter crossing must be set to false  */
 	if (!synchronize_temporal_temporal(temp1, temp2, &sync1, &sync2, false))
-	{
-		PG_FREE_IF_COPY(temp1, 0);
-		PG_FREE_IF_COPY(temp2, 1);
-		PG_RETURN_NULL();
-	}
+		return NULL;
 
 	Datum (*func)(Datum, Datum, Datum);
 	ensure_point_base_type(temp1->valuetypid);
@@ -2038,6 +2027,20 @@ tdwithin_tpoint_tpoint(PG_FUNCTION_ARGS)
 			(TemporalS *)sync1, (TemporalS *)sync2, dist, func);
 
 	pfree(sync1); pfree(sync2);
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(tdwithin_tpoint_tpoint);
+
+PGDLLEXPORT Datum
+tdwithin_tpoint_tpoint(PG_FUNCTION_ARGS)
+{
+	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
+	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
+	Datum dist = PG_GETARG_DATUM(2);
+	ensure_same_srid_tpoint(temp1, temp2);
+	ensure_same_dimensionality_tpoint(temp1, temp2);
+	Temporal *result = tdwithin_tpoint_tpoint_internal(temp1, temp2, dist);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
 	PG_RETURN_POINTER(result);

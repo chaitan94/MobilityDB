@@ -35,87 +35,6 @@
 #include "tnpoint_distance.h"
 
 /*****************************************************************************
- * Intersection functions
- *****************************************************************************/
-
-/*
- * Returns whether two segments have network intersection (i.e. network
- * positions are same)
- * This function supposes that the two segments (1) are synchronized,
- * (2) are on the same rid, and (3) are not equal!
- */
-bool
-tnpointseq_intersection(const TemporalInst *start1, const TemporalInst *end1,
-	const TemporalInst *start2, const TemporalInst *end2,
-	Datum *inter1, Datum *inter2, TimestampTz *t)
-{
-	npoint *startnp1 = DatumGetNpoint(temporalinst_value(start1));
-	npoint *endnp1 = DatumGetNpoint(temporalinst_value(end1));
-	npoint *startnp2 = DatumGetNpoint(temporalinst_value(start2));
-	npoint *endnp2 = DatumGetNpoint(temporalinst_value(end2));
-	/* Compute the instant t at which the linear functions of the two segments
-	   are equal: at + b = ct + d that is t = (d - b) / (a - c).
-	   To reduce problems related to floating point arithmetic, t1 and t2
-	   are shifted, respectively, to 0 and 1 before the computation */
-	double x1 = startnp1->pos;
-	double x2 = endnp1->pos;
-	double x3 = startnp2->pos;
-	double x4 = endnp2->pos;
-	double denum = fabs(x2 - x1 - x4 + x3);
-	if (denum == 0)
-		/* Parallel segments */
-		return false;
-
-	double fraction = fabs((x3 - x1) / denum);
-	if (fraction <= EPSILON || fraction >= (1.0 - EPSILON))
-		/* Intersection occurs out of the period */
-		return false;
-	*inter1 = *inter2 =PointerGetDatum(npoint_make(startnp1->rid, fraction));
-	*t = start1->t + (long) ((double) (end1->t - start1->t) * fraction);
-	return true;
-}
-
-/*****************************************************************************
- * Generic binary functions for TNpoint rel Geometry
- * The last argument states whether we are computing tnpoint <trel> geo
- * or geo <trel> tnpoint 
- *****************************************************************************/
-
-TemporalInst *
-tspatialrel_tnpointinst_geo(const TemporalInst *inst, Datum geo,
-	Datum (*func)(Datum, Datum), Oid valuetypid, bool invert)
-{
-	Datum geom = tnpointinst_geom(inst);
-	Datum value = invert ? func(geo, geom) : func(geom, geo);
-	TemporalInst *result = temporalinst_make(value, inst->t, valuetypid);
-	pfree(DatumGetPointer(geom));
-	DATUM_FREE(value, valuetypid);
-	return result;
-}
-
-TemporalI *
-tspatialrel_tnpointi_geo(const TemporalI *ti, Datum geo,
-	Datum (*func)(Datum, Datum), Oid valuetypid, bool invert)
-{
-	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
-	for (int i = 0; i < ti->count; i++)
-	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
-		Datum geom = tnpointinst_geom(inst);
-		Datum value = invert ? func(geo, geom) : func(geom, geo);
-		instants[i] = temporalinst_make(value, inst->t, valuetypid);
-
-		pfree(DatumGetPointer(geom));
-		DATUM_FREE(value, valuetypid);
-	}
-	TemporalI *result = temporali_make(instants, ti->count);
-	for (int i = 0; i < ti->count; i++)
-		pfree(instants[i]);
-	pfree(instants);
-	return result;
-}
-
-/*****************************************************************************
  * Temporal contains
  *****************************************************************************/
 
@@ -577,7 +496,6 @@ tequals_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
-
 /*****************************************************************************
  * Temporal intersects
  *****************************************************************************/
@@ -659,27 +577,6 @@ tintersects_tnpoint_npoint(PG_FUNCTION_ARGS)
     pfree(DatumGetPointer(geom));
 	pfree(geomtemp);
 	PG_FREE_IF_COPY(temp, 0);
-	PG_RETURN_POINTER(result);
-}
-
-PG_FUNCTION_INFO_V1(tintersects_tnpoint_tnpoint);
-
-PGDLLEXPORT Datum
-tintersects_tnpoint_tnpoint(PG_FUNCTION_ARGS)
-{
-	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
-	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
-	ensure_same_srid_tnpoint(temp1, temp2);
-	Temporal *geomtemp1 = tnpoint_as_tgeompoint_internal(temp1);
-	Temporal *geomtemp2 = tnpoint_as_tgeompoint_internal(temp2);
-	Temporal *result = sync_tfunc2_temporal_temporal_cross(geomtemp1, geomtemp2,
-		&datum2_point_eq, BOOLOID);
-	pfree(geomtemp1);
-	pfree(geomtemp2);
-	PG_FREE_IF_COPY(temp1, 0);
-	PG_FREE_IF_COPY(temp2, 1);
-	if (result == NULL)
-		PG_RETURN_NULL();
 	PG_RETURN_POINTER(result);
 }
 
@@ -944,33 +841,9 @@ tdwithin_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp1 = PG_GETARG_TEMPORAL(0);
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
 	Datum dist = PG_GETARG_DATUM(2);
-	Temporal *sync1, *sync2;
-	/* Return NULL if the temporal points do not intersect in time */
-	if (!synchronize_temporal_temporal(temp1, temp2, &sync1, &sync2, true))
-	{
-		PG_FREE_IF_COPY(temp1, 0);
-		PG_FREE_IF_COPY(temp2, 1);
-		PG_RETURN_NULL();
-	}
-
-	Temporal *geomsync1 = tnpoint_as_tgeompoint_internal(sync1);
-	Temporal *geomsync2 = tnpoint_as_tgeompoint_internal(sync2);
-	Temporal *result;
-	ensure_valid_duration(sync1->duration);
-	if (geomsync1->duration == TEMPORALINST)
-		result = (Temporal *)sync_tfunc3_temporalinst_temporalinst((TemporalInst *)geomsync1,
-			(TemporalInst *)geomsync2, dist, geom_dwithin2d, BOOLOID);
-	else if (geomsync1->duration == TEMPORALI)
-		result = (Temporal *)sync_tfunc3_temporali_temporali((TemporalI *)geomsync1,
-			(TemporalI *)geomsync2, dist, geom_dwithin2d, BOOLOID);
-	else if (geomsync1->duration == TEMPORALSEQ)
-		result = (Temporal *)tdwithin_tpointseq_tpointseq((TemporalSeq *)geomsync1,
-			(TemporalSeq *)geomsync2, dist, geom_dwithin2d);
-	else /* geomsync1->duration == TEMPORALS */
-		result = (Temporal *)tdwithin_tpoints_tpoints((TemporalS *)geomsync1,
-			(TemporalS *)geomsync2, dist, geom_dwithin2d);
-
-	pfree(sync1); pfree(sync2); 
+	Temporal *geomsync1 = tnpoint_as_tgeompoint_internal(temp1);
+	Temporal *geomsync2 = tnpoint_as_tgeompoint_internal(temp2);
+	Temporal *result = tdwithin_tpoint_tpoint_internal(temp1, temp2, dist);
 	pfree(geomsync1); pfree(geomsync2);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);

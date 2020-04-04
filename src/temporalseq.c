@@ -1311,7 +1311,7 @@ tnumberseq_intersection(const TemporalInst *start1, const TemporalInst *end1,
 	return true;
 }
 
-bool
+static bool
 tpointseq_intersection(const TemporalInst *start1, const TemporalInst *end1,
 	const TemporalInst *start2, const TemporalInst *end2,
 	Datum *inter1, Datum *inter2, TimestampTz *t)
@@ -1423,6 +1423,43 @@ tpointseq_intersection(const TemporalInst *start1, const TemporalInst *end1,
 	*inter1 = PointerGetDatum(geometry_serialize((LWGEOM *) lwinter1));
 	*inter2 = PointerGetDatum(geometry_serialize((LWGEOM *) lwinter2));
 	lwpoint_free(lwinter1); lwpoint_free(lwinter2);
+	*t = start1->t + (long) ((double) (end1->t - start1->t) * fraction);
+	return true;
+}
+
+/*
+ * Returns whether two segments have network intersection (i.e. network
+ * positions are same)
+ * This function supposes that the two segments (1) are synchronized,
+ * (2) are on the same rid, and (3) are not equal!
+ */
+static bool
+tnpointseq_intersection(const TemporalInst *start1, const TemporalInst *end1,
+	const TemporalInst *start2, const TemporalInst *end2,
+	Datum *inter1, Datum *inter2, TimestampTz *t)
+{
+	npoint *startnp1 = DatumGetNpoint(temporalinst_value(start1));
+	npoint *endnp1 = DatumGetNpoint(temporalinst_value(end1));
+	npoint *startnp2 = DatumGetNpoint(temporalinst_value(start2));
+	npoint *endnp2 = DatumGetNpoint(temporalinst_value(end2));
+	/* Compute the instant t at which the linear functions of the two segments
+	   are equal: at + b = ct + d that is t = (d - b) / (a - c).
+	   To reduce problems related to floating point arithmetic, t1 and t2
+	   are shifted, respectively, to 0 and 1 before the computation */
+	double x1 = startnp1->pos;
+	double x2 = endnp1->pos;
+	double x3 = startnp2->pos;
+	double x4 = endnp2->pos;
+	double denum = fabs(x2 - x1 - x4 + x3);
+	if (denum == 0)
+		/* Parallel segments */
+		return false;
+
+	double fraction = fabs((x3 - x1) / denum);
+	if (fraction <= EPSILON || fraction >= (1.0 - EPSILON))
+		/* Intersection occurs out of the period */
+		return false;
+	*inter1 = *inter2 =PointerGetDatum(npoint_make(startnp1->rid, fraction));
 	*t = start1->t + (long) ((double) (end1->t - start1->t) * fraction);
 	return true;
 }

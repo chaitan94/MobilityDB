@@ -15,22 +15,8 @@
 
 #include <postgres.h>
 #include <catalog/pg_type.h>
-#include "temporal.h"
 
 /*****************************************************************************/
-
-extern bool tnpointseq_intersection(const TemporalInst *start1,
-	const TemporalInst *end1, const TemporalInst *start2,
-	const TemporalInst *end2, Datum *inter1, Datum *inter2, TimestampTz *t);
-extern TemporalInst *tspatialrel_tnpointinst_geo(const TemporalInst *inst, Datum geo,
-	Datum (*operator)(Datum, Datum), Oid valuetypid, bool invert);
-extern TemporalI *tspatialrel_tnpointi_geo(const TemporalI *ti, Datum geo,
-	Datum (*operator)(Datum, Datum), Oid valuetypid, bool invert);
-extern TemporalInst *tspatialrel_tnpointinst_tnpointinst(
-	const TemporalInst *inst1, const TemporalInst *inst2,
-	Datum (*operator)(Datum, Datum), Oid valuetypid);
-extern TemporalI *tspatialrel_tnpointi_tnpointi(const TemporalI *ti1, const TemporalI *ti2,
-	Datum (*operator)(Datum, Datum), Oid valuetypid);
 
 extern Datum tcontains_geo_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tcontains_npoint_tnpoint(PG_FUNCTION_ARGS);
@@ -58,7 +44,6 @@ extern Datum tintersects_geo_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tintersects_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum tintersects_tnpoint_geo(PG_FUNCTION_ARGS);
 extern Datum tintersects_tnpoint_npoint(PG_FUNCTION_ARGS);
-extern Datum tintersects_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum ttouches_geo_tnpoint(PG_FUNCTION_ARGS);
 extern Datum ttouches_npoint_tnpoint(PG_FUNCTION_ARGS);
 extern Datum ttouches_tnpoint_geo(PG_FUNCTION_ARGS);

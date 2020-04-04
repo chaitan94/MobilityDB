@@ -148,9 +148,10 @@ CREATE FUNCTION tintersects(tnpoint, npoint)
 	RETURNS tbool
 	AS 'MODULE_PATHNAME', 'tintersects_tnpoint_npoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+/* Alias for tequals for temporal network points */
 CREATE FUNCTION tintersects(tnpoint, tnpoint)
 	RETURNS tbool
-	AS 'MODULE_PATHNAME', 'tintersects_tnpoint_tnpoint'
+	AS 'MODULE_PATHNAME', 'tequals_tnpoint_tnpoint'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 	
 /*****************************************************************************
