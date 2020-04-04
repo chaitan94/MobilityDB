@@ -738,8 +738,8 @@ WHERE op = '-|-' and leftarg = 'tnpoint' and rightarg = 'tnpoint';
 UPDATE 1
 SELECT * FROM test_tnpoint_boundboxops
 WHERE noidx <> gistidx or noidx <> spgistidx or gistidx <> spgistidx;
- op  | leftarg | rightarg | noidx | gistidx | spgistidx 
------+---------+----------+-------+---------+-----------
+ op | leftarg | rightarg | noidx | gistidx | spgistidx 
+----+---------+----------+-------+---------+-----------
 (0 rows)
 
 DROP INDEX IF EXISTS test_tnpoint_spgist_idx;
