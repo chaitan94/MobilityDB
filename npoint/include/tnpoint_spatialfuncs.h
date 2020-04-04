@@ -30,11 +30,6 @@ extern void ensure_same_srid_tnpoint_npoint(const Temporal *temp, const npoint *
 
 /* Functions for spatial reference systems */
 
-extern int tnpointinst_srid(const TemporalInst *inst);
-extern int tnpointi_srid(const TemporalI *ti);
-extern int tnpointseq_srid(const TemporalSeq *seq);
-extern int tnpoints_srid(const TemporalS *ts);
-
 extern int tnpoint_srid_internal(const Temporal *temp);
 
 extern Datum tnpoint_trajectory(PG_FUNCTION_ARGS);

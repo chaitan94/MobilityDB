@@ -31,7 +31,7 @@
  *****************************************************************************/
 
 ArrayType *
-int64arr_to_array(int64 *int64arr, int count)
+int64arr_to_array(const int64 *int64arr, int count)
 {
 	return construct_array((Datum *)int64arr, count, INT8OID, 8, true, 'd');
 }
@@ -780,7 +780,7 @@ rid_from_geom(Datum geom)
 
 /*****************************************************************************/
 
-/* npoint as geometry */
+/* srid of the npoint */
 
 int
 npoint_srid_internal(const npoint *np)

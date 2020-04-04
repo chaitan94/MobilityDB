@@ -294,6 +294,7 @@ tpointseq_stboxes1(STBOX *result, const TemporalSeq *seq)
 
 	/* Temporal sequence has at least 2 instants */
 	STBOX box;
+	memset(&box, 0, sizeof(STBOX));
 	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
 	for (int i = 0; i < seq->count - 1; i++)
 	{

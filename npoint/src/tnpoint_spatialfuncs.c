@@ -68,7 +68,9 @@ ensure_same_srid_tnpoint_npoint(const Temporal *temp, const npoint *np)
  * Functions for spatial reference systems
  *****************************************************************************/
 
-/* Get the spatial reference system identifier (SRID) of a temporal network point */
+/* Spatial reference system identifier (SRID) of a temporal network point.
+ * For temporal points of duration distinct from TEMPORALINST the SRID is
+ * obtained from the bounding box. */
 
 int
 tnpointinst_srid(const TemporalInst *inst)
@@ -125,29 +127,21 @@ tnpointseq_trajectory1(const TemporalInst *inst1, const TemporalInst *inst2)
 		return npoint_as_geom_internal(np1);
 
 	Datum line = route_geom(np1->rid);
+	if ((np1->pos == 0 && np2->pos == 1) ||
+		(np2->pos == 0 && np1->pos == 1))
+		return line;
+
 	Datum traj;
 	if (np1->pos < np2->pos)
+		traj = call_function3(LWGEOM_line_substring, line,
+			Float8GetDatum(np1->pos), Float8GetDatum(np2->pos));
+	else /* np1->pos < np2->pos */
 	{
-		if (np1->pos == 0 && np2->pos == 1)
-			traj = PointerGetDatum(gserialized_copy(
-				(GSERIALIZED *)PG_DETOAST_DATUM(line)));
-		else
-			traj = call_function3(LWGEOM_line_substring, line,
-				Float8GetDatum(np1->pos), Float8GetDatum(np2->pos));
-	}
-	else
-	{
-		Datum traj2;
-		if (np2->pos == 0 && np1->pos == 1)
-			traj2 = PointerGetDatum(gserialized_copy(
-				(GSERIALIZED *)PG_DETOAST_DATUM(line)));
-		else
-			traj2 = call_function3(LWGEOM_line_substring, line,
-				Float8GetDatum(np2->pos), Float8GetDatum(np1->pos));
+		Datum traj2 = call_function3(LWGEOM_line_substring, line,
+			Float8GetDatum(np2->pos), Float8GetDatum(np1->pos));
 		traj = call_function1(LWGEOM_reverse, traj2);
 		pfree(DatumGetPointer(traj2));
 	}
-
 	pfree(DatumGetPointer(line));
 	return traj;
 }

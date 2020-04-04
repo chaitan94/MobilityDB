@@ -119,8 +119,6 @@ tnpoint_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
 		stats->stawidth = 0;		/* "unknown" */
 		stats->stadistinct = 0.0;	/* "unknown" */
 	}
-
-	return;
 }
 
 /*****************************************************************************/
@@ -131,7 +129,7 @@ PGDLLEXPORT Datum
 tnpoint_analyze(PG_FUNCTION_ARGS)
 {
 	VacAttrStats *stats = (VacAttrStats *) PG_GETARG_POINTER(0);
-	int duration;
+	int16 duration;
 
 	/*
 	 * Call the standard typanalyze function.  It may fail to find needed

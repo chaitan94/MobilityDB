@@ -25,8 +25,7 @@ npoint_parse(char **str)
 	p_whitespace(str);
 
 	if (strncasecmp(*str,"NPOINT",6) != 0)
-		ereport(ERROR,
-			(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
 			errmsg("Could not parse network point")));
 
 	*str += 6;
@@ -36,20 +35,17 @@ npoint_parse(char **str)
 	while ((*str)[delim] != ')' && (*str)[delim] != '\0')
 		delim++;
 	if ((*str)[delim] == '\0')
-		ereport(ERROR,
-			(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
 			errmsg("Could not parse network point")));
 
 	int64 rid;
 	double pos;
 	if (sscanf(*str, "( %ld , %lf )", &rid, &pos) != 2)
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-						errmsg("Could not parse network point")));
+		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+				errmsg("Could not parse network point")));
 	if (pos < 0 || pos > 1)
-		ereport(ERROR,
-			(errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("the relative position must be a real number between 0 and 1")));
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("The relative position must be a real number between 0 and 1")));
 
 	*str += delim + 1;
 
@@ -62,8 +58,7 @@ nsegment_parse(char **str)
 	p_whitespace(str);
 
 	if (strncasecmp(*str,"NSEGMENT",8) != 0)
-		ereport(ERROR,
-			(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
 			errmsg("Could not parse network segment")));
 
 	*str += 8;
@@ -73,21 +68,18 @@ nsegment_parse(char **str)
 	while ((*str)[delim] != ')' && (*str)[delim] != '\0')
 		delim++;
 	if ((*str)[delim] == '\0')
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-						errmsg("Could not parse network segment")));
+		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+			errmsg("Could not parse network segment")));
 
 	int64 rid;
 	double pos1;
 	double pos2;
 	if (sscanf(*str, "( %ld , %lf , %lf )", &rid, &pos1, &pos2) != 3)
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-						errmsg("Could not parse network segment")));
+		ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+			errmsg("Could not parse network segment")));
 	if (pos1 < 0 || pos1 > 1 || pos2 < 0 || pos2 > 1)
-		ereport(ERROR,
-				(errcode(ERRCODE_INTERNAL_ERROR),
-						errmsg("the relative position must be a real number between 0 and 1")));
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("the relative position must be a real number between 0 and 1")));
 
 	*str += delim + 1;
 

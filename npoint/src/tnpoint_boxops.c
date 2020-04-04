@@ -51,7 +51,6 @@ tnpointinst_make_stbox(STBOX *box, const TemporalInst *inst)
 	npoint_to_stbox_internal(box, DatumGetNpoint(temporalinst_value(inst)));
 	box->tmin = box->tmax = inst->t;
 	MOBDB_FLAGS_SET_T(box->flags, true);
-	return;
 }
 
 void
@@ -65,7 +64,6 @@ tnpointinstarr_step_to_stbox(STBOX *box, TemporalInst **instants, int count)
 		tnpointinst_make_stbox(&box1, instants[i]);
 		stbox_expand(box, &box1);
 	}
-	return;
 }
 
 void
@@ -96,7 +94,6 @@ tnpointinstarr_linear_to_stbox(STBOX *box, TemporalInst **instants, int count)
 	pfree(DatumGetPointer(line));
 	if (posmin != 0 || posmax != 1)
 		pfree(DatumGetPointer(geom));
-	return;
 }
 
 void
@@ -108,7 +105,6 @@ tnpointseqarr_to_stbox(STBOX *box, TemporalSeq **sequences, int count)
 		STBOX *box1 = temporalseq_bbox_ptr(sequences[i]);
 		stbox_expand(box, box1);
 	}
-	return;
 }
 
 /*****************************************************************************/

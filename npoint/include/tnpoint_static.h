@@ -22,7 +22,7 @@
  * StaticObjects.c
  *****************************************************************************/
 
-extern ArrayType *int64arr_to_array(int64 *int64arr, int count);
+extern ArrayType *int64arr_to_array(const int64 *int64arr, int count);
 extern ArrayType *npointarr_to_array(npoint **npointarr, int count);
 extern ArrayType *nsegmentarr_to_array(nsegment **nsegmentarr, int count);
 extern nsegment **nsegmentarr_normalize(nsegment **segments, int *count);

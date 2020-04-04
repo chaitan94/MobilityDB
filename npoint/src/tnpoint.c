@@ -80,11 +80,12 @@ tnpointseq_as_tgeompointseq(const TemporalSeq *seq)
 	{
 		TemporalInst *inst = temporalseq_inst_n(seq, i);
 		np = DatumGetNpoint(temporalinst_value(inst));
-		Datum geom = call_function2(LWGEOM_line_interpolate_point, line, Float8GetDatum(np->pos));
+		Datum geom = call_function2(LWGEOM_line_interpolate_point, line,
+			Float8GetDatum(np->pos));
 		instants[i] = temporalinst_make(geom, inst->t, type_oid(T_GEOMETRY));
 	}
-	TemporalSeq *result = temporalseq_make(instants,
-		seq->count, seq->period.lower_inc, seq->period.upper_inc, 
+	TemporalSeq *result = temporalseq_make(instants, seq->count,
+		seq->period.lower_inc, seq->period.upper_inc,
 		MOBDB_FLAGS_GET_LINEAR(seq->flags), false);
 	pfree(DatumGetPointer(line));
 	for (int i = 0; i < seq->count; i++)
@@ -194,9 +195,9 @@ tgeompointseq_as_tnpointseq(const TemporalSeq *seq)
 		}
 		instants[i] = inst1;
 	}
-	TemporalSeq *result = temporalseq_make(instants,
-		seq->count, seq->period.lower_inc, seq->period.upper_inc, 
-		MOBDB_FLAGS_GET_LINEAR(seq->flags), false);
+	TemporalSeq *result = temporalseq_make(instants, seq->count,
+		seq->period.lower_inc, seq->period.upper_inc,
+		MOBDB_FLAGS_GET_LINEAR(seq->flags), true);
 	for (int i = 0; i < seq->count; i++)
 		pfree(instants[i]);
 	pfree(instants);
@@ -220,7 +221,7 @@ tgeompoints_as_tnpoints(const TemporalS *ts)
 		}
 		sequences[i] = seq1;
 	}
-	TemporalS *result = temporals_make(sequences, ts->count, false);
+	TemporalS *result = temporals_make(sequences, ts->count, true);
 	for (int i = 0; i < ts->count; i++)
 		pfree(sequences[i]);
 	pfree(sequences);
