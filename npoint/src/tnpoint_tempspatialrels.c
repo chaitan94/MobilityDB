@@ -843,7 +843,7 @@ tdwithin_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	Datum dist = PG_GETARG_DATUM(2);
 	Temporal *geomsync1 = tnpoint_as_tgeompoint_internal(temp1);
 	Temporal *geomsync2 = tnpoint_as_tgeompoint_internal(temp2);
-	Temporal *result = tdwithin_tpoint_tpoint_internal(temp1, temp2, dist);
+	Temporal *result = tdwithin_tpoint_tpoint_internal(geomsync1, geomsync2, dist);
 	pfree(geomsync1); pfree(geomsync2);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);

@@ -34,7 +34,7 @@ extern Datum tpoint_tcentroid_transfn(PG_FUNCTION_ARGS);
 extern Datum tpoint_tcentroid_combinefn(PG_FUNCTION_ARGS);
 extern Datum tpoint_tcentroid_finalfn(PG_FUNCTION_ARGS);
 
-extern void geoaggstate_check_t(SkipList *state, Temporal *t);
+extern void geoaggstate_check_t(const SkipList *state, const Temporal *t);
 extern Temporal **tpoint_transform_tcentroid(const Temporal *temp, int *count);
 
 /*****************************************************************************/
