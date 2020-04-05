@@ -5,7 +5,7 @@
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li,
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -62,7 +62,7 @@ nsegment_sort_cmp(nsegment **l, nsegment **r)
 void
 nsegmentarr_sort(nsegment **segments, int count)
 {
-	qsort(segments, count, sizeof(nsegment *),
+	qsort(segments, (size_t) count, sizeof(nsegment *),
 		  (qsort_comparator) &nsegment_sort_cmp);
 }
 
@@ -154,7 +154,7 @@ npoint_send(PG_FUNCTION_ARGS)
 	StringInfoData buf;
 
 	pq_begintypsend(&buf);
-	pq_sendint64(&buf, np->rid);
+	pq_sendint64(&buf, (uint64) np->rid);
 	pq_sendfloat8(&buf, np->pos);
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
@@ -220,7 +220,7 @@ nsegment_send(PG_FUNCTION_ARGS)
 	StringInfoData buf;
 
 	pq_begintypsend(&buf);
-	pq_sendint64(&buf, ns->rid);
+	pq_sendint64(&buf, (uint64) ns->rid);
 	pq_sendfloat8(&buf, ns->pos1);
 	pq_sendfloat8(&buf, ns->pos2);
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
@@ -245,7 +245,6 @@ npoint_set(npoint *np, int64 rid, double pos)
 
 	np->rid = rid;
 	np->pos = pos;
-	return;
 }
 
 /*
@@ -294,7 +293,6 @@ nsegment_set(nsegment *ns, int64 rid, double pos1, double pos2)
 	ns->rid = rid;
 	ns->pos1 = Min(pos1, pos2);
 	ns->pos2 = Max(pos1, pos2);
-	return;
 }
 
 /*
@@ -472,13 +470,6 @@ npoint_lt(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(cmp < 0);
 }
 
-bool
-npoint_le_internal(const npoint *np1, const npoint *np2)
-{
-	int	cmp = npoint_cmp_internal(np1, np2);
-	return (cmp <= 0);
-}
-
 PG_FUNCTION_INFO_V1(npoint_le);
 
 PGDLLEXPORT Datum
@@ -490,13 +481,6 @@ npoint_le(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(cmp <= 0);
 }
 
-bool
-npoint_ge_internal(const npoint *np1, const npoint *np2)
-{
-	int	cmp = npoint_cmp_internal(np1, np2);
-	return (cmp >= 0);
-}
-
 PG_FUNCTION_INFO_V1(npoint_ge);
 
 PGDLLEXPORT Datum
@@ -506,13 +490,6 @@ npoint_ge(PG_FUNCTION_ARGS)
 	npoint *np2 = PG_GETARG_NPOINT(1);
 	int	cmp = npoint_cmp_internal(np1, np2);
 	PG_RETURN_BOOL(cmp >= 0);
-}
-
-bool
-npoint_gt_internal(const npoint *np1, const npoint *np2)
-{
-	int	cmp = npoint_cmp_internal(np1, np2);
-	return (cmp > 0);
 }
 
 PG_FUNCTION_INFO_V1(npoint_gt);
@@ -595,12 +572,6 @@ nsegment_cmp(PG_FUNCTION_ARGS)
 }
 
 /* inequality operators using the nsegment_cmp function */
-bool
-nsegment_lt_internal(const nsegment *ns1, const nsegment *ns2)
-{
-	int	cmp = nsegment_cmp_internal(ns1, ns2);
-	return (cmp < 0);
-}
 
 PG_FUNCTION_INFO_V1(nsegment_lt);
 
@@ -611,13 +582,6 @@ nsegment_lt(PG_FUNCTION_ARGS)
 	nsegment *ns2 = PG_GETARG_NSEGMENT(1);
 	int	cmp = nsegment_cmp_internal(ns1, ns2);
 	PG_RETURN_BOOL(cmp < 0);
-}
-
-bool
-nsegment_le_internal(const nsegment *ns1, const nsegment *ns2)
-{
-	int	cmp = nsegment_cmp_internal(ns1, ns2);
-	return (cmp <= 0);
 }
 
 PG_FUNCTION_INFO_V1(nsegment_le);
@@ -631,13 +595,6 @@ nsegment_le(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(cmp <= 0);
 }
 
-bool
-nsegment_ge_internal(const nsegment *ns1, const nsegment *ns2)
-{
-	int	cmp = nsegment_cmp_internal(ns1, ns2);
-	return (cmp >= 0);
-}
-
 PG_FUNCTION_INFO_V1(nsegment_ge);
 
 PGDLLEXPORT Datum
@@ -647,13 +604,6 @@ nsegment_ge(PG_FUNCTION_ARGS)
 	nsegment *ns2 = PG_GETARG_NSEGMENT(1);
 	int	cmp = nsegment_cmp_internal(ns1, ns2);
 	PG_RETURN_BOOL(cmp >= 0);
-}
-
-bool
-nsegment_gt_internal(const nsegment *ns1, const nsegment *ns2)
-{
-	int	cmp = nsegment_cmp_internal(ns1, ns2);
-	return (cmp > 0);
 }
 
 PG_FUNCTION_INFO_V1(nsegment_gt);

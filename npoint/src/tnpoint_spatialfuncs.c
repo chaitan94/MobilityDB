@@ -5,7 +5,7 @@
  *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li
  *		Universite Libre de Bruxelles
- * Portions Copyright (c) 1996-2019, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *****************************************************************************/
@@ -383,7 +383,6 @@ tnpointseq_cumulative_length(const TemporalSeq *seq, double prevlength)
 			length += fabs(np2->pos - np1->pos) * rlength;
 			instants[i] = temporalinst_make(Float8GetDatum(length), inst2->t,
 				FLOAT8OID);
-			inst1 = inst2;
 			np1 = np2;
 		}
 	}
@@ -593,7 +592,7 @@ tnpointseq_azimuth1(const TemporalInst *inst1, const TemporalInst *inst2,
 		result[i] = temporalinst_make(azimuth, time, FLOAT8OID);
 		pfree(DatumGetPointer(vertex1));
 		vertex1 = vertex2;
-		time = 	inst1->t + (inst2->t - inst1->t) * fraction;
+		time = 	inst1->t + (long) ((double) (inst2->t - inst1->t) * fraction);
 	}
 	pfree(DatumGetPointer(traj));
 	pfree(DatumGetPointer(vertex1));
@@ -1076,7 +1075,7 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 static TemporalInst *
 tnpointinst_minus_geometry(const TemporalInst *inst, Datum geom)
 {
-    Datum value = npoint_as_geom_internal(DatumGetNpoint(temporalinst_value(inst)));
+	Datum value = npoint_as_geom_internal(DatumGetNpoint(temporalinst_value(inst)));
 	if (DatumGetBool(call_function2(intersects, value, geom)))
 		return NULL;
 	return temporalinst_copy(inst);
@@ -1263,7 +1262,7 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 static TemporalInst *
 NAI_tnpointi_geometry(const TemporalI *ti, Datum geom)
 {
-	TemporalInst *inst = temporali_inst_n(ti, 0);
+	TemporalInst *inst;
 	double mindist = DBL_MAX;
 	int number = 0; /* keep compiler quiet */ 
 	for (int i = 0; i < ti->count; i++)
@@ -1307,7 +1306,7 @@ NAI_tnpointseq_geometry(const TemporalSeq *seq, Datum geom)
 			{
 				double fraction = DatumGetFloat8(call_function2(
 					LWGEOM_line_locate_point, traj, point));
-				t = inst1->t + (inst2->t - inst1->t) * fraction;
+				t = inst1->t + (long) ((double) (inst2->t - inst1->t) * fraction);
 			}
 		}
 		inst1 = inst2;
@@ -1407,7 +1406,7 @@ NAI_npoint_tnpoint(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALS) 
 		result = (Temporal *)NAI_tnpoints_geometry((TemporalS *)temp,
 			PointerGetDatum(gs));
-    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
@@ -1468,9 +1467,9 @@ NAI_tnpoint_npoint(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALS) 
 		result = (Temporal *)NAI_tnpoints_geometry((TemporalS *)temp,
 			PointerGetDatum(gs));
-    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	pfree(DatumGetPointer(geom));
-    PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
 
@@ -1535,7 +1534,7 @@ NAD_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Datum traj = tnpoint_geom(temp);
 	Datum result = call_function2(distance, traj, PointerGetDatum(gs));
 	pfree(DatumGetPointer(traj));	
-    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
@@ -1575,9 +1574,9 @@ NAD_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Datum traj = tnpoint_geom(temp);
 	Datum result = call_function2(distance, traj, PointerGetDatum(gs));
 	pfree(DatumGetPointer(traj));	
-    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	pfree(DatumGetPointer(geom));
-    PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
 
@@ -1641,7 +1640,7 @@ shortestline_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Datum traj = tnpoint_geom(temp);
 	Datum result = call_function2(LWGEOM_shortestline2d, traj, PointerGetDatum(gs));
 	pfree(DatumGetPointer(traj));	
-    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_POINTER(result);
@@ -1681,9 +1680,9 @@ shortestline_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Datum traj = tnpoint_geom(temp);
 	Datum result = call_function2(LWGEOM_shortestline2d, traj, PointerGetDatum(gs));
 	pfree(DatumGetPointer(traj));	
-    POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
+	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
 	pfree(DatumGetPointer(geom));
-    PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
 }
 
