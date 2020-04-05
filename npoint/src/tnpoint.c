@@ -111,7 +111,7 @@ tnpoints_as_tgeompoints(const TemporalS *ts)
 Temporal *
 tnpoint_as_tgeompoint_internal(const Temporal *temp)
 {
-	Temporal *result = NULL;
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tnpointinst_as_tgeompointinst((TemporalInst *)temp);
@@ -119,7 +119,7 @@ tnpoint_as_tgeompoint_internal(const Temporal *temp)
 		result = (Temporal *)tnpointi_as_tgeompointi((TemporalI *)temp);
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)tnpointseq_as_tgeompointseq((TemporalSeq *)temp);
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)tnpoints_as_tgeompoints((TemporalS *)temp);
 	return result;
 }
@@ -232,7 +232,7 @@ PGDLLEXPORT Datum
 tgeompoint_as_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Temporal *result = NULL;
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tgeompointinst_as_tnpointinst((TemporalInst *)temp);
@@ -240,7 +240,7 @@ tgeompoint_as_tnpoint(PG_FUNCTION_ARGS)
 		result = (Temporal *)tgeompointi_as_tnpointi((TemporalI *)temp);
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)tgeompointseq_as_tnpointseq((TemporalSeq *)temp);
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)tgeompoints_as_tnpoints((TemporalS *)temp);
 	PG_FREE_IF_COPY(temp, 0);
 	if (result == NULL)
@@ -376,7 +376,7 @@ tnpoints_positions(const TemporalS *ts, int *count)
 nsegment **
 tnpoint_positions_internal(const Temporal *temp, int *count)
 {
-	nsegment **result = NULL; /* make the compiler quiet */
+	nsegment **result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 	{
@@ -387,7 +387,7 @@ tnpoint_positions_internal(const Temporal *temp, int *count)
 		result = tnpointi_positions((TemporalI *)temp, count);
 	else if (temp->duration == TEMPORALSEQ) 
 		result = tnpointseq_positions((TemporalSeq *)temp, count);
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = tnpoints_positions((TemporalS *)temp, count);
 	return result;
 }
@@ -489,7 +489,7 @@ PGDLLEXPORT Datum
 tnpoint_routes(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	ArrayType *result = NULL; /* make the compiler quiet */
+	ArrayType *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = tnpointinst_routes((TemporalInst *)temp);
@@ -497,7 +497,7 @@ tnpoint_routes(PG_FUNCTION_ARGS)
 		result = tnpointi_routes((TemporalI *)temp);
 	else if (temp->duration == TEMPORALSEQ) 
 		result = tnpointseq_routes((TemporalSeq *)temp);
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = tnpoints_routes((TemporalS *)temp);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);

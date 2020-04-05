@@ -12,6 +12,7 @@
 
 #include "tnpoint_spatialfuncs.h"
 
+#include <assert.h>
 #include <float.h>
 
 #include "periodset.h"
@@ -86,7 +87,7 @@ tnpointinst_srid(const TemporalInst *inst)
 int
 tnpoint_srid_internal(const Temporal *temp)
 {
-	int result = 0;
+	int result;
 	ensure_valid_duration(temp->duration);
 	ensure_point_base_type(temp->valuetypid) ;
 	if (temp->duration == TEMPORALINST)
@@ -95,7 +96,7 @@ tnpoint_srid_internal(const Temporal *temp)
 		result = tpointi_srid((TemporalI *)temp);
 	else if (temp->duration == TEMPORALSEQ)
 		result = tpointseq_srid((TemporalSeq *)temp);
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 		result = tpoints_srid((TemporalS *)temp);
 	return result;
 }
@@ -120,9 +121,8 @@ tnpointseq_trajectory1(const TemporalInst *inst1, const TemporalInst *inst2)
 {
 	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
 	npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
+	assert(np1->rid == np2->rid);
 
-	if (np1->rid != np2->rid)
-		return PointerGetDatum(NULL);
 	if (np1->pos == np2->pos)
 		return npoint_as_geom_internal(np1);
 
@@ -209,12 +209,16 @@ tnpoints_geom(const TemporalS *ts)
 Datum
 tnpoint_geom(const Temporal *temp)
 {
-	int count;
-	nsegment **segments = tnpoint_positions_internal(temp, &count);
-	Datum result = nsegmentarr_to_geom_internal(segments, count);
-	for (int i = 0; i < count; i++)
-		pfree(segments[i]);
-	pfree(segments);
+	Datum result;
+	ensure_valid_duration(temp->duration);
+	if (temp->duration == TEMPORALINST)
+		result = tnpointinst_geom((TemporalInst *)temp);
+	else if (temp->duration == TEMPORALI)
+		result = tnpointi_geom((TemporalI *)temp);
+	else if (temp->duration == TEMPORALSEQ)
+		result = tnpointseq_geom((TemporalSeq *)temp);
+	else /* temp->duration == TEMPORALS */
+		result = tnpoints_geom((TemporalS *)temp);
 	return result;
 }
 
@@ -303,7 +307,7 @@ PGDLLEXPORT Datum
 tnpoint_length(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	double result = 0.0; 
+	double result = 0.0;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST || temp->duration == TEMPORALI ||
 		(temp->duration == TEMPORALSEQ && ! MOBDB_FLAGS_GET_LINEAR(temp->flags)) ||
@@ -311,7 +315,7 @@ tnpoint_length(PG_FUNCTION_ARGS)
 		;
 	else if (temp->duration == TEMPORALSEQ)
 		result = tnpointseq_length((TemporalSeq *)temp);	
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 		result = tnpoints_length((TemporalS *)temp);	
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_FLOAT8(result);
@@ -422,7 +426,7 @@ PGDLLEXPORT Datum
 tnpoint_cumulative_length(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Temporal *result = NULL; 
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tnpointinst_set_zero((TemporalInst *)temp);
@@ -430,7 +434,7 @@ tnpoint_cumulative_length(PG_FUNCTION_ARGS)
 		result = (Temporal *)tnpointi_set_zero((TemporalI *)temp);
 	else if (temp->duration == TEMPORALSEQ)
 		result = (Temporal *)tnpointseq_cumulative_length((TemporalSeq *)temp, 0);	
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)tnpoints_cumulative_length((TemporalS *)temp);	
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_POINTER(result);
@@ -522,7 +526,7 @@ PGDLLEXPORT Datum
 tnpoint_speed(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Temporal *result = NULL; 
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tnpointinst_set_zero((TemporalInst *)temp);	
@@ -530,7 +534,7 @@ tnpoint_speed(PG_FUNCTION_ARGS)
 		result = (Temporal *)tnpointi_set_zero((TemporalI *)temp);	
 	else if (temp->duration == TEMPORALSEQ)
 		result = (Temporal *)tnpointseq_speed((TemporalSeq *)temp);	
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)tnpoints_speed((TemporalS *)temp);	
 	PG_FREE_IF_COPY(temp, 0);
 	if (result == NULL)
@@ -734,7 +738,7 @@ PGDLLEXPORT Datum
 tnpoint_azimuth(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Temporal *result = NULL; 
+	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST || temp->duration == TEMPORALI ||
 		(temp->duration == TEMPORALSEQ && ! MOBDB_FLAGS_GET_LINEAR(temp->flags)) ||
@@ -742,7 +746,7 @@ tnpoint_azimuth(PG_FUNCTION_ARGS)
 		;
 	else if (temp->duration == TEMPORALSEQ)
 		result = (Temporal *)tnpointseq_azimuth((TemporalSeq *)temp);
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)tnpoints_azimuth((TemporalS *)temp);
 	PG_FREE_IF_COPY(temp, 0);
 	if (result == NULL)
@@ -1050,7 +1054,7 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	}
 
-	Temporal *result = NULL; 
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST)
 		result = (Temporal *)tnpointinst_at_geometry((TemporalInst *)temp,
@@ -1061,7 +1065,7 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALSEQ)
 		result = (Temporal *)tnpointseq_at_geometry((TemporalSeq *)temp,
 			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)tnpoints_at_geometry((TemporalS *)temp,
 			PointerGetDatum(gs));
 	PG_FREE_IF_COPY(temp, 0);
@@ -1234,7 +1238,7 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 		PG_RETURN_POINTER(copy);
 	}
 
-	Temporal *result = NULL;
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)tnpointinst_minus_geometry((TemporalInst *)temp, 
@@ -1245,7 +1249,7 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)tnpointseq_minus_geometry((TemporalSeq *)temp, 
 			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)tnpoints_minus_geometry((TemporalS *)temp,
 			PointerGetDatum(gs), &box2);
 	PG_FREE_IF_COPY(temp, 0);
@@ -1365,7 +1369,7 @@ NAI_geometry_tnpoint(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	}
 
-	Temporal *result = NULL;
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_copy((TemporalInst *)temp);
@@ -1375,7 +1379,7 @@ NAI_geometry_tnpoint(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)NAI_tnpointseq_geometry((TemporalSeq *)temp, 
 			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)NAI_tnpoints_geometry((TemporalS *)temp,
 			PointerGetDatum(gs));
 	PG_FREE_IF_COPY(gs, 0);
@@ -1393,7 +1397,7 @@ NAI_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Datum geom = npoint_as_geom_internal(np);
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 
-	Temporal *result = NULL;
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_copy((TemporalInst *)temp);
@@ -1403,7 +1407,7 @@ NAI_npoint_tnpoint(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)NAI_tnpointseq_geometry((TemporalSeq *)temp, 
 			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)NAI_tnpoints_geometry((TemporalS *)temp,
 			PointerGetDatum(gs));
 	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
@@ -1426,7 +1430,7 @@ NAI_tnpoint_geometry(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	}
 
-	Temporal *result = NULL;
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_copy((TemporalInst *)temp);
@@ -1436,7 +1440,7 @@ NAI_tnpoint_geometry(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)NAI_tnpointseq_geometry((TemporalSeq *)temp, 
 			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)NAI_tnpoints_geometry((TemporalS *)temp,
 			PointerGetDatum(gs));
 	PG_FREE_IF_COPY(temp, 0);
@@ -1454,7 +1458,7 @@ NAI_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Datum geom = npoint_as_geom_internal(np);
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 
-	Temporal *result = NULL;
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_copy((TemporalInst *)temp);
@@ -1464,7 +1468,7 @@ NAI_tnpoint_npoint(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)NAI_tnpointseq_geometry((TemporalSeq *)temp, 
 			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)NAI_tnpoints_geometry((TemporalS *)temp,
 			PointerGetDatum(gs));
 	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
