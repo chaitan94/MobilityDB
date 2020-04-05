@@ -55,7 +55,7 @@ spatialrel_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2,
  * Generic ternary functions for tnpoint <rel> geo/tnpoint
  *****************************************************************************/
 
-static bool
+static Datum
 spatialrel3_tnpoint_geom(const Temporal *temp, Datum geom, Datum param,
 	Datum (*operator)(Datum, Datum, Datum), bool invert)
 {
@@ -66,7 +66,7 @@ spatialrel3_tnpoint_geom(const Temporal *temp, Datum geom, Datum param,
 	return result;
 }
 
-static bool
+static Datum
 spatialrel3_tnpoint_tnpoint(const Temporal *temp1,const  Temporal *temp2,
 	Datum param, Datum (*operator)(Datum, Datum, Datum))
 {

@@ -23,6 +23,7 @@
 #include "oidcache.h"
 #include "temporal_util.h"
 #include "tpoint_out.h"
+#include "tpoint_spatialfuncs.h"
 #include "tnpoint.h"
 #include "tnpoint_parser.h"
 
@@ -746,6 +747,8 @@ route_geom(int64 rid)
 	if (isNull)
 		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
 			errmsg("cannot get the geometry for route %ld", rid)));
+
+	ensure_non_empty(result);
 
 	return PointerGetDatum(result);
 }
