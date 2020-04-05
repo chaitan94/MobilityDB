@@ -747,3 +747,36 @@ SELECT tnpoint '[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.
 SELECT tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}' #&> tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoint(1,0.7)@2000-01-03],[Npoint(3,0.5)@2000-01-04, NPoint(3,0.5)@2000-01-05]}';
 
 -------------------------------------------------------------------------------
+-- NULL
+
+SELECT stbox 'STBOX T((,2000-01-01), (,2000-01-02))' << tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT stbox 'STBOX T((,2000-01-01), (,2000-01-02))' &< tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT stbox 'STBOX T((,2000-01-01), (,2000-01-02))' >> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT stbox 'STBOX T((,2000-01-01), (,2000-01-02))' &> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT stbox 'STBOX T((,2000-01-01), (,2000-01-02))' <<| tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT stbox 'STBOX T((,2000-01-01), (,2000-01-02))' &<| tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT stbox 'STBOX T((,2000-01-01), (,2000-01-02))' |>> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT stbox 'STBOX T((,2000-01-01), (,2000-01-02))' |&> tnpoint 'NPoint(1,0.5)@2000-01-01';
+
+SELECT stbox 'STBOX((1.0, 1.0), (2.0, 2.0))' <<# tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT stbox 'STBOX((1.0, 1.0), (2.0, 2.0))' &<# tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT stbox 'STBOX((1.0, 1.0), (2.0, 2.0))' #>> tnpoint 'NPoint(1,0.5)@2000-01-01';
+SELECT stbox 'STBOX((1.0, 1.0), (2.0, 2.0))' #&> tnpoint 'NPoint(1,0.5)@2000-01-01';
+
+
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' << stbox 'STBOX T((,2000-01-01), (,2000-01-02))';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' &< stbox 'STBOX T((,2000-01-01), (,2000-01-02))';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' >>  stbox 'STBOX T((,2000-01-01), (,2000-01-02))' ;
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' &>  stbox 'STBOX T((,2000-01-01), (,2000-01-02))';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <<| stbox 'STBOX T((,2000-01-01), (,2000-01-02))';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' &<| stbox 'STBOX T((,2000-01-01), (,2000-01-02))';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01'|>>  stbox 'STBOX T((,2000-01-01), (,2000-01-02))' ;
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' |&>  stbox 'STBOX T((,2000-01-01), (,2000-01-02))';
+
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' <<# stbox 'STBOX((1.0, 1.0), (2.0, 2.0))';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' &<# stbox 'STBOX((1.0, 1.0), (2.0, 2.0))';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' #>> stbox 'STBOX((1.0, 1.0), (2.0, 2.0))';
+SELECT tnpoint 'NPoint(1,0.5)@2000-01-01' #&> stbox 'STBOX((1.0, 1.0), (2.0, 2.0))';
+
+-------------------------------------------------------------------------------
+
