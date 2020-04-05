@@ -183,7 +183,7 @@ CREATE FUNCTION positions(tnpoint)
 
 CREATE FUNCTION route(tnpoint)
 	RETURNS bigint
-	AS 'MODULE_PATHNAME', 'tnpointinst_route'
+	AS 'MODULE_PATHNAME', 'tnpoint_route'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION routes(tnpoint)

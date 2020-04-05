@@ -282,6 +282,12 @@ SELECT (tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(
  {[NPoint(1,0.2)@2000-01-01 00:00:00+00, NPoint(1,0.4)@2000-01-02 00:00:00+00, NPoint(1,0.5)@2000-01-03 00:00:00+00], [NPoint(2,0.6)@2000-01-04 00:00:00+00, NPoint(2,0.6)@2000-01-05 00:00:00+00]}
 (1 row)
 
+SELECT tgeompoint 'Point(-1 -1)@2000-01-01'::tnpoint;
+ tnpoint 
+---------
+ 
+(1 row)
+
 SELECT duration(tnpoint 'Npoint(1, 0.5)@2000-01-01');
  duration 
 ----------
@@ -390,6 +396,15 @@ SELECT route(tnpoint 'Npoint(1, 0.5)@2000-01-01');
      1
 (1 row)
 
+SELECT route(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+ route 
+-------
+     1
+(1 row)
+
+/* Errors */
+SELECT route(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
+ERROR:  Input must be a temporal instant or a temporal sequence
 SELECT routes(tnpoint 'Npoint(1, 0.5)@2000-01-01');
  routes 
 --------

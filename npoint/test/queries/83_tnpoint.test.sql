@@ -84,6 +84,8 @@ SELECT (tnpoint 'Npoint(1, 0.5)@2000-01-01'::tgeompoint)::tnpoint;
 SELECT (tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}'::tgeompoint)::tnpoint;
 SELECT (tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]'::tgeompoint)::tnpoint;
 SELECT (tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05] }'::tgeompoint)::tnpoint;
+-- NULL
+SELECT tgeompoint 'Point(-1 -1)@2000-01-01'::tnpoint;
 
 -------------------------------------------------------------------------------
 -- Accessor Functions
@@ -112,6 +114,9 @@ SELECT positions(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02,
 SELECT positions(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}');
 
 SELECT route(tnpoint 'Npoint(1, 0.5)@2000-01-01');
+SELECT route(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]');
+/* Errors */
+SELECT route(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');
 
 SELECT routes(tnpoint 'Npoint(1, 0.5)@2000-01-01');
 SELECT routes(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}');

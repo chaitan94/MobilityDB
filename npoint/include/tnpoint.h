@@ -75,7 +75,7 @@ extern TemporalSeq *tgeompointseq_as_tnpointseq(const TemporalSeq *seq);
 extern TemporalS *tgeompoints_as_tnpoints(const TemporalS *ts);
 
 extern Datum tnpoint_positions(PG_FUNCTION_ARGS);
-extern Datum tnpointinst_route(PG_FUNCTION_ARGS);
+extern Datum tnpoint_route(PG_FUNCTION_ARGS);
 extern Datum tnpoint_routes(PG_FUNCTION_ARGS);
 
 extern nsegment **tnpointinst_positions(const TemporalInst *inst);

@@ -33,8 +33,6 @@ tnpoint_in(PG_FUNCTION_ARGS)
 	Oid valuetypid;
 	temporal_typinfo(temptypid, &valuetypid);
 	Temporal *result = temporal_parse(&input, valuetypid);
-	if (result == 0)
-		PG_RETURN_NULL();
 	PG_RETURN_POINTER(result);
 }
 
@@ -414,17 +412,19 @@ tnpoint_positions(PG_FUNCTION_ARGS)
 
 /* Route of a temporal instant */
 
-PG_FUNCTION_INFO_V1(tnpointinst_route);
+PG_FUNCTION_INFO_V1(tnpoint_route);
 
 PGDLLEXPORT Datum
-tnpointinst_route(PG_FUNCTION_ARGS)
+tnpoint_route(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	if (temp->duration != TEMPORALINST)
+	if (temp->duration != TEMPORALINST && temp->duration != TEMPORALSEQ)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("Input must be a temporal instant")));
+			errmsg("Input must be a temporal instant or a temporal sequence")));
 
-	npoint *np = DatumGetNpoint(temporalinst_value((TemporalInst *)temp));
+	TemporalInst *inst = (temp->duration == TEMPORALINST) ?
+		(TemporalInst *)temp : temporalseq_inst_n((TemporalSeq *)temp, 0);
+	npoint *np = DatumGetNpoint(temporalinst_value(inst));
 	int64 result = np->rid;
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_INT64(result);
