@@ -1,5 +1,20 @@
 ﻿-------------------------------------------------------------------------------
 
+SELECT asText(tcentroid(temp)) FROM ( VALUES
+	(NULL::tnpoint),
+	('Npoint(1, 0.5)@2000-01-01'),
+	('{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}')) t(temp);
+SELECT asText(tcentroid(temp)) FROM ( VALUES
+	(tnpoint 'Npoint(1, 0.5)@2000-01-01'),
+	('{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}'),
+	(NULL)) t(temp);
+/* Errors */
+SELECT asText(tcentroid(temp)) FROM ( VALUES
+	(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}'),
+	('[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]')) t(temp);
+
+-------------------------------------------------------------------------------
+
 SELECT numInstants(tcount(inst)) FROM tbl_tnpointinst;
 SELECT numInstants(wcount(inst, '1 hour')) FROM tbl_tnpointinst;
 SELECT numInstants(tcentroid(inst)) FROM tbl_tnpointinst;

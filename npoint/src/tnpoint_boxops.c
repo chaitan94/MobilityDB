@@ -274,11 +274,8 @@ overlaps_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!npoint_to_stbox_internal(&box1, np))
-	{
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = overlaps_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 1);
@@ -342,11 +339,8 @@ overlaps_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
 	temporal_bbox(&box1, temp);
-	if (!npoint_to_stbox_internal(&box2, np))
-	{
-		PG_FREE_IF_COPY(temp, 0);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	bool result = overlaps_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
@@ -429,11 +423,8 @@ contains_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!npoint_to_stbox_internal(&box1, np))
-	{
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = contains_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 1);
@@ -496,11 +487,8 @@ contains_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!npoint_to_stbox_internal(&box2, np))
-	{
-		PG_FREE_IF_COPY(temp, 0);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = contains_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 0);
@@ -584,11 +572,8 @@ contained_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!npoint_to_stbox_internal(&box1, np))
-	{
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = contained_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 1);
@@ -651,11 +636,8 @@ contained_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!npoint_to_stbox_internal(&box2, np))
-	{
-		PG_FREE_IF_COPY(temp, 0);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = contained_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 0);
@@ -739,11 +721,8 @@ same_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!npoint_to_stbox_internal(&box1, np))
-	{
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = same_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 1);
@@ -806,11 +785,8 @@ same_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!npoint_to_stbox_internal(&box2, np))
-	{
-		PG_FREE_IF_COPY(temp, 0);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = same_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 0);
@@ -894,11 +870,8 @@ adjacent_bbox_npoint_tnpoint(PG_FUNCTION_ARGS)
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!npoint_to_stbox_internal(&box1, np))
-	{
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = adjacent_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 1);
@@ -961,11 +934,8 @@ adjacent_bbox_tnpoint_npoint(PG_FUNCTION_ARGS)
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!npoint_to_stbox_internal(&box2, np))
-	{
-		PG_FREE_IF_COPY(temp, 0);
-		PG_RETURN_NULL();
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = adjacent_stbox_stbox_internal(&box1, &box2);
 	PG_FREE_IF_COPY(temp, 0);
