@@ -4,9 +4,19 @@
 
 SELECT npoint 'npoint(1,0.5)';
 SELECT npoint ' npoint   (   1   ,	0.5   )   ';
+/* Errors */
+SELECT npoint 'point(1,0.5)';
+SELECT npoint 'npoint(1,0.5';
+SELECT npoint 'npoint(1 0.5)';
+SELECT npoint 'npoint(1,1.5)';
 
 SELECT nsegment 'nsegment(1,0.5,0.7)';
 SELECT nsegment '  nsegment  (  1  ,  0.5  ,  0.7 ) ';
+/* Errors */
+SELECT nsegment 'segment(1,0.5,0.7)';
+SELECT nsegment 'nsegment(1,0.5,0.7';
+SELECT nsegment 'nsegment(1 0.5 0.7)';
+SELECT nsegment 'nsegment(1,1.5,0.7)';
 
 -------------------------------------------------------------------------------
 -- Constructors
