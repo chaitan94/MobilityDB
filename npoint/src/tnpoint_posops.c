@@ -29,9 +29,10 @@
 #include "postgis.h"
 #include "tpoint_boxops.h"
 #include "tpoint_posops.h"
+#include "tpoint_spatialfuncs.h"
 #include "tnpoint.h"
 #include "tnpoint_static.h"
-#include "tpoint_spatialfuncs.h"
+#include "tnpoint_boxops.h"
 #include "tnpoint_spatialfuncs.h"
 
 /*****************************************************************************/
@@ -936,21 +937,14 @@ left_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box1, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = left_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -962,21 +956,14 @@ overleft_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box1, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = overleft_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -988,21 +975,14 @@ right_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box1, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = right_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -1014,21 +994,14 @@ overright_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box1, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = overright_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -1040,21 +1013,14 @@ below_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box1, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = below_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -1066,21 +1032,14 @@ overbelow_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box1, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = overbelow_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -1092,21 +1051,14 @@ above_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box1, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = above_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -1118,21 +1070,14 @@ overabove_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
 	npoint *np = PG_GETARG_NPOINT(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box1, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box1, np);
 	temporal_bbox(&box2, temp);
 	bool result = overabove_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_BOOL(result);
 }
@@ -1147,21 +1092,14 @@ left_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box2, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = left_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1173,21 +1111,14 @@ overleft_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box2, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = overleft_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1199,21 +1130,14 @@ right_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box2, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = right_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1225,21 +1149,14 @@ overright_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box2, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = overright_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1251,21 +1168,14 @@ below_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box2, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = below_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1277,21 +1187,14 @@ overbelow_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box2, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = overbelow_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1303,21 +1206,14 @@ above_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box2, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = above_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }
@@ -1329,21 +1225,14 @@ overabove_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	npoint *np = PG_GETARG_NPOINT(1);
-	Datum geom = npoint_as_geom_internal(np);
-	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
+	ensure_same_srid_tnpoint_npoint(temp, np);
 	STBOX box1, box2;
 	memset(&box1, 0, sizeof(STBOX));
 	memset(&box2, 0, sizeof(STBOX));
-	if (!geo_to_stbox_internal(&box2, gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		PG_RETURN_NULL();		
-	}
+	/* Returns an error if the geometry is not found, is null, or is empty */
+	npoint_to_stbox_internal(&box2, np);
 	temporal_bbox(&box1, temp);
 	bool result = overabove_stbox_stbox_internal(&box1, &box2);
-	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
-	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_BOOL(result);
 }

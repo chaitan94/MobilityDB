@@ -23,6 +23,10 @@ SELECT npoint 'npoint(1 0.5)';
 ERROR:  Could not parse network point
 LINE 1: SELECT npoint 'npoint(1 0.5)';
                       ^
+SELECT npoint 'npoint(1000,0.5)';
+ERROR:  there is no route with gid value 1000 in table ways
+LINE 1: SELECT npoint 'npoint(1000,0.5)';
+                      ^
 SELECT npoint 'npoint(1,1.5)';
 ERROR:  The relative position must be a real number between 0 and 1
 LINE 1: SELECT npoint 'npoint(1,1.5)';
@@ -52,6 +56,10 @@ SELECT nsegment 'nsegment(1 0.5 0.7)';
 ERROR:  Could not parse network segment
 LINE 1: SELECT nsegment 'nsegment(1 0.5 0.7)';
                         ^
+SELECT nsegment 'nsegment(1000,0.5,0.7)';
+ERROR:  there is no route with gid value 1000 in table ways
+LINE 1: SELECT nsegment 'nsegment(1000,0.5,0.7)';
+                        ^
 SELECT nsegment 'nsegment(1,1.5,0.7)';
 ERROR:  the relative position must be a real number between 0 and 1
 LINE 1: SELECT nsegment 'nsegment(1,1.5,0.7)';
@@ -62,6 +70,11 @@ SELECT npoint(1, 0.5);
  NPoint(1,0.5)
 (1 row)
 
+/* Errors */
+SELECT npoint(1000,0.5);
+ERROR:  there is no route with gid value 1000 in table ways
+SELECT npoint(1,1.5);
+ERROR:  the relative position must be a real number between 0 and 1
 SELECT nsegment(1, 0.2, 0.6);
       nsegment       
 ---------------------
@@ -86,6 +99,11 @@ SELECT nsegment(npoint(1, 0.5));
  NSegment(1,0.5,0.5)
 (1 row)
 
+/* Errors */
+SELECT nsegment(1000,0.5,0.7);
+ERROR:  there is no route with gid value 1000 in table ways
+SELECT nsegment(1,1.5,0.7);
+ERROR:  The relative position of a network segment must be a real number between 0 and 1
 SELECT route(npoint 'npoint(1,0.5)');
  route 
 -------

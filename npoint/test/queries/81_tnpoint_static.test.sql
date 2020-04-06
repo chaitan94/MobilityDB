@@ -8,6 +8,7 @@ SELECT npoint ' npoint   (   1   ,	0.5   )   ';
 SELECT npoint 'point(1,0.5)';
 SELECT npoint 'npoint(1,0.5';
 SELECT npoint 'npoint(1 0.5)';
+SELECT npoint 'npoint(1000,0.5)';
 SELECT npoint 'npoint(1,1.5)';
 
 SELECT nsegment 'nsegment(1,0.5,0.7)';
@@ -16,6 +17,7 @@ SELECT nsegment '  nsegment  (  1  ,  0.5  ,  0.7 ) ';
 SELECT nsegment 'segment(1,0.5,0.7)';
 SELECT nsegment 'nsegment(1,0.5,0.7';
 SELECT nsegment 'nsegment(1 0.5 0.7)';
+SELECT nsegment 'nsegment(1000,0.5,0.7)';
 SELECT nsegment 'nsegment(1,1.5,0.7)';
 
 -------------------------------------------------------------------------------
@@ -23,11 +25,17 @@ SELECT nsegment 'nsegment(1,1.5,0.7)';
 -------------------------------------------------------------------------------
 
 SELECT npoint(1, 0.5);
+/* Errors */
+SELECT npoint(1000,0.5);
+SELECT npoint(1,1.5);
 
 SELECT nsegment(1, 0.2, 0.6);
 SELECT nsegment(1);
 SELECT nsegment(1, 0.2);
 SELECT nsegment(npoint(1, 0.5));
+/* Errors */
+SELECT nsegment(1000,0.5,0.7);
+SELECT nsegment(1,1.5,0.7);
 
 -------------------------------------------------------------------------------
 -- Accessing values
