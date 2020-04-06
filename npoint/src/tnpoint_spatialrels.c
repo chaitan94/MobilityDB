@@ -102,7 +102,7 @@ contains_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_contains, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -128,7 +128,7 @@ contains_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_contains, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -180,7 +180,7 @@ containsproperly_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_containsproperly, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -206,7 +206,7 @@ containsproperly_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_containsproperly, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -258,7 +258,7 @@ covers_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_covers, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -284,7 +284,7 @@ covers_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_covers, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -336,7 +336,7 @@ coveredby_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_coveredby, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -362,7 +362,7 @@ coveredby_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_coveredby, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -414,7 +414,7 @@ crosses_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_crosses, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -440,7 +440,7 @@ crosses_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_crosses, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -492,7 +492,7 @@ disjoint_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_disjoint, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -518,7 +518,7 @@ disjoint_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_disjoint, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -570,7 +570,7 @@ equals_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_equals, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -596,7 +596,7 @@ equals_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_equals, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -648,7 +648,7 @@ intersects_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_intersects2d, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -674,7 +674,7 @@ intersects_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_intersects2d, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -726,7 +726,7 @@ overlaps_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_overlaps, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -752,7 +752,7 @@ overlaps_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_overlaps, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -804,7 +804,7 @@ touches_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_touches, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -830,7 +830,7 @@ touches_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_touches, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -882,7 +882,7 @@ within_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_within, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -908,7 +908,7 @@ within_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_within, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -962,7 +962,7 @@ dwithin_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Datum dist = PG_GETARG_DATUM(2);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel3_tnpoint_geom(temp, geom, dist, &geom_dwithin2d, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -990,7 +990,7 @@ dwithin_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Datum dist = PG_GETARG_DATUM(2);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel3_tnpoint_geom(temp, geom, dist, &geom_dwithin2d, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -1043,7 +1043,7 @@ relate_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_relate, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -1069,7 +1069,7 @@ relate_tnpoint_npoint(PG_FUNCTION_ARGS)
 	npoint *np  = PG_GETARG_NPOINT(1);
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel_tnpoint_geom(temp, geom, &geom_relate, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
@@ -1125,7 +1125,7 @@ relate_pattern_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel3_tnpoint_geom(temp, geom, pattern,
 		&geom_relate_pattern, true);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 1);
 	PG_RETURN_DATUM(result);
 }
@@ -1155,7 +1155,7 @@ relate_pattern_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Datum geom = npoint_as_geom_internal(np);
 	Datum result = spatialrel3_tnpoint_geom(temp, geom, pattern,
 		&geom_relate_pattern, false);
-    pfree(DatumGetPointer(geom));
+	pfree(DatumGetPointer(geom));
 	PG_FREE_IF_COPY(temp, 0);
 	PG_RETURN_DATUM(result);
 }
