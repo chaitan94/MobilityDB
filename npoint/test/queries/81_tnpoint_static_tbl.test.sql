@@ -1,10 +1,18 @@
 ﻿-------------------------------------------------------------------------------
--- Input
+-- Send/receive functions
 -------------------------------------------------------------------------------
 
--------------------------------------------------------------------------------
--- Constructors
--------------------------------------------------------------------------------
+COPY tbl_npoint TO '/tmp/tbl_npoint' (FORMAT BINARY);
+DROP TABLE IF EXISTS tbl_npoint_tmp;
+CREATE TABLE tbl_npoint_tmp AS TABLE tbl_npoint WITH NO DATA;
+COPY tbl_npoint_tmp FROM '/tmp/tbl_npoint' (FORMAT BINARY);
+DROP TABLE tbl_npoint_tmp;
+
+COPY tbl_nsegment TO '/tmp/tbl_nsegment' (FORMAT BINARY);
+DROP TABLE IF EXISTS tbl_nsegment_tmp;
+CREATE TABLE tbl_nsegment_tmp AS TABLE tbl_nsegment WITH NO DATA;
+COPY tbl_nsegment_tmp FROM '/tmp/tbl_nsegment' (FORMAT BINARY);
+DROP TABLE tbl_nsegment_tmp;
 
 -------------------------------------------------------------------------------
 -- Accessing values
