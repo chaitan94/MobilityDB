@@ -374,21 +374,6 @@ tgeoinst_constructor(PG_FUNCTION_ARGS)
  * Accessor functions
  *****************************************************************************/
 
-/* Get the precomputed bounding box of a Temporal (if any) 
-   Notice that TemporalInst do not have a precomputed bounding box */
-
-PG_FUNCTION_INFO_V1(tgeo_stbox);
-
-PGDLLEXPORT Datum
-tgeo_stbox(PG_FUNCTION_ARGS)
-{
-    Temporal *temp = PG_GETARG_TEMPORAL(0);
-    STBOX *result = palloc0(sizeof(STBOX));
-    temporal_bbox(result, temp);
-    PG_FREE_IF_COPY(temp, 0);
-    PG_RETURN_POINTER(result);
-}
-
 Datum
 tgeo_values_internal(Temporal *temp)
 {

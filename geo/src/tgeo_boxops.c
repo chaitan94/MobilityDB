@@ -18,6 +18,23 @@
 
 /*****************************************************************************/
 
+/* Get the precomputed bounding box of a Temporal (if any) 
+   Notice that TemporalInst do not have a precomputed bounding box */
+
+PG_FUNCTION_INFO_V1(tgeo_stbox);
+
+PGDLLEXPORT Datum
+tgeo_stbox(PG_FUNCTION_ARGS)
+{
+    Temporal *temp = PG_GETARG_TEMPORAL(0);
+    STBOX *result = palloc0(sizeof(STBOX));
+    temporal_bbox(result, temp);
+    PG_FREE_IF_COPY(temp, 0);
+    PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************/
+
 /* Transform a geometry/geography to a stbox
  * Assumes that we take the rotation invariant stbox,
  * meaning we can rotate the region without going out of the stbox
@@ -45,6 +62,7 @@ rotating_geo_to_stbox_internal(STBOX *box, GSERIALIZED *gs)
     box->ymin = centroid.y - d;
     box->ymax = centroid.y + d;
     MOBDB_FLAGS_SET_X(box->flags, true);
+    MOBDB_FLAGS_SET_Z(box->flags, false);
     MOBDB_FLAGS_SET_T(box->flags, false);
     MOBDB_FLAGS_SET_GEODETIC(box->flags, FLAGS_GET_GEODETIC(gs->flags));
     return true;
@@ -81,12 +99,18 @@ tregioninstarr_to_stbox(STBOX *box, TemporalInst **instants, int count, bool rot
         if (instants[i]->valuetypid == type_oid(T_GEOGRAPHY) || 
             instants[i]->valuetypid == type_oid(T_GEOMETRY))
         {
+            // Compute bbox of next instant
             referenceInst = instants[i];
             value = temporalinst_value(instants[i]);
             tregioninst_make_stbox(&box1, value, instants[i]->t, rotating);
         } 
         else if (instants[i]->valuetypid == type_oid(T_RTRANSFORM))
         {
+            // First transform next instant into geometry, then compute its bbox
+            // 
+            // When rotating = true, this could be optimized by copying 
+            // the bbox of the initial instant and simply translating it based on
+            // the current rtransform, since the bbox is symmetric around the centroid
             TemporalInst *inst = tgeoinst_rtransfrom_to_region(instants[i], referenceInst);
             value = temporalinst_value(inst);
             tregioninst_make_stbox(&box1, value, inst->t, rotating);

@@ -55,9 +55,7 @@ extern Datum tgeo_in(PG_FUNCTION_ARGS);
 
 extern Datum tgeoinst_constructor(PG_FUNCTION_ARGS);
 
-/* Accessor functions */
-
-extern Datum tgeo_stbox(PG_FUNCTION_ARGS);
+/* Ever/always comparison operators */
 
 extern Datum tgeo_ever_eq(PG_FUNCTION_ARGS);
 extern Datum tgeo_ever_ne(PG_FUNCTION_ARGS);
