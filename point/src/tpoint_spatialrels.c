@@ -157,7 +157,7 @@ geog_intersects(Datum geog1, Datum geog2)
 {
 	double dist = DatumGetFloat8(call_function4(geography_distance, 
 		geog1, geog2, Float8GetDatum(0.0), BoolGetDatum(false)));
-	return BoolGetDatum(dist < 0.00001);
+	return BoolGetDatum(dist < DIST_EPSILON);
 }
 
 Datum
@@ -174,9 +174,9 @@ geog_dwithin(Datum geog1, Datum geog2, Datum dist)
  *****************************************************************************/
 
 static bool
-dwithin_tpointseq_tpointseq1(TemporalInst *start1, TemporalInst *end1, bool linear1,
-	TemporalInst *start2, TemporalInst *end2, bool linear2, Datum param,
-	Datum (*func)(Datum, Datum, Datum))
+dwithin_tpointseq_tpointseq1(const TemporalInst *start1, const TemporalInst *end1,
+	bool linear1, const TemporalInst *start2, const TemporalInst *end2,
+	bool linear2, Datum param, Datum (*func)(Datum, Datum, Datum))
 {
 	Datum sv1 = temporalinst_value(start1);
 	Datum ev1 = temporalinst_value(end1);
