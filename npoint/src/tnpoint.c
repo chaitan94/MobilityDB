@@ -330,22 +330,6 @@ tnpointseq_positions(const TemporalSeq *seq, int *count)
 }
 
 nsegment **
-tnpoints_step_positions(const TemporalS *ts, int *count)
-{
-	int count1;
-	/* The following function removes duplicate values */
-	Datum *values = temporals_values1(ts, &count1);
-	nsegment **result = palloc(sizeof(nsegment *) * count1);
-	for (int i = 0; i < count1; i++)
-	{
-		npoint *np = DatumGetNpoint(values[i]);
-		result[i] = nsegment_make(np->rid, np->pos, np->pos);
-	}
-	*count = count1;
-	return result;
-}
-
-nsegment **
 tnpoints_linear_positions(const TemporalS *ts, int *count)
 {
 	nsegment **segments = palloc(sizeof(nsegment *) * ts->count);
@@ -358,6 +342,22 @@ tnpoints_linear_positions(const TemporalS *ts, int *count)
 	int count1 = ts->count;
 	if (count1 > 1)
 		result = nsegmentarr_normalize(segments, &count1);
+	*count = count1;
+	return result;
+}
+
+nsegment **
+tnpoints_step_positions(const TemporalS *ts, int *count)
+{
+	int count1;
+	/* The following function removes duplicate values */
+	Datum *values = temporals_values1(ts, &count1);
+	nsegment **result = palloc(sizeof(nsegment *) * count1);
+	for (int i = 0; i < count1; i++)
+	{
+		npoint *np = DatumGetNpoint(values[i]);
+		result[i] = nsegment_make(np->rid, np->pos, np->pos);
+	}
 	*count = count1;
 	return result;
 }

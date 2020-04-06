@@ -238,12 +238,9 @@ tnpointseq_geom(const TemporalSeq *seq)
 	if (seq->count == 1)
 		return tnpointinst_geom(temporalseq_inst_n(seq, 0));
 
-	int count;
-	nsegment **segments = tnpointseq_positions(seq, &count);
-	Datum result = nsegmentarr_to_geom_internal(segments, count);
-	for (int i = 0; i < count; i++)
-		pfree(segments[i]);
-	pfree(segments);
+	nsegment *segment = tnpointseq_linear_positions(seq);
+	Datum result = nsegment_as_geom_internal(segment);
+	pfree(segment);
 	return result;
 }
 
@@ -1104,6 +1101,8 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+	ensure_same_srid_tpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
 	if (gserialized_is_empty(gs))
 	{
 		PG_FREE_IF_COPY(temp, 0);
@@ -1111,21 +1110,11 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	}
 
-	Temporal *result;
-	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST)
-		result = (Temporal *)tnpointinst_at_geometry((TemporalInst *)temp,
-			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALI)
-		result = (Temporal *)tnpointi_at_geometry((TemporalI *)temp,
-			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALSEQ)
-		result = (Temporal *)tnpointseq_at_geometry((TemporalSeq *)temp,
-			PointerGetDatum(gs));
-	else /* temp->duration == TEMPORALS */
-		result = (Temporal *)tnpoints_at_geometry((TemporalS *)temp,
-			PointerGetDatum(gs));
+	Temporal *geomtemp = tnpoint_as_tgeompoint_internal(temp);
+	Temporal *result = tpoint_at_geometry_internal(geomtemp, gs);
+	pfree(geomtemp);
 	PG_FREE_IF_COPY(temp, 0);
+	PG_FREE_IF_COPY(gs, 1);
 	if (result == NULL)
 		PG_RETURN_NULL();
 	PG_RETURN_POINTER(result);
@@ -1276,39 +1265,19 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-
-	/* Bounding box test */
-	STBOX box1, box2;
-	if (!geo_to_stbox_internal(&box2, gs))
+	ensure_same_srid_tpoint_gs(temp, gs);
+	ensure_has_not_Z_gs(gs);
+	if (gserialized_is_empty(gs))
 	{
-		Temporal* copy = temporal_copy(temp) ;
-		PG_FREE_IF_COPY(temp, 0);
-		PG_FREE_IF_COPY(gs, 1);
-		PG_RETURN_POINTER(copy);
-	}
-	temporal_bbox(&box1, temp);
-	if (!overlaps_stbox_stbox_internal(&box1, &box2))
-	{
-		Temporal* copy = temporal_copy(temp) ;
+		Temporal* copy = temporal_copy(temp);
 		PG_FREE_IF_COPY(temp, 0);
 		PG_FREE_IF_COPY(gs, 1);
 		PG_RETURN_POINTER(copy);
 	}
 
-	Temporal *result;
-	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST) 
-		result = (Temporal *)tnpointinst_minus_geometry((TemporalInst *)temp, 
-			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALI) 
-		result = (Temporal *)tnpointi_minus_geometry((TemporalI *)temp, 
-			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALSEQ) 
-		result = (Temporal *)tnpointseq_minus_geometry((TemporalSeq *)temp, 
-			PointerGetDatum(gs));
-	else /* temp->duration == TEMPORALS */
-		result = (Temporal *)tnpoints_minus_geometry((TemporalS *)temp,
-			PointerGetDatum(gs), &box2);
+	Temporal *geomtemp = tnpoint_as_tgeompoint_internal(temp);
+	Temporal *result = tpoint_minus_geometry_internal(geomtemp, gs);
+	pfree(geomtemp);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
 	if (result == NULL)
