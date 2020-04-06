@@ -46,7 +46,7 @@ ensure_same_srid_tnpoint_stbox(const Temporal *temp, const STBOX *box)
 	if (MOBDB_FLAGS_GET_X(box->flags) &&
 		tnpoint_srid_internal(temp) != box->srid)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("The temporal netwokd point and the box must be in the same SRID")));
+			errmsg("The temporal network point and the box must be in the same SRID")));
 }
 
 void
@@ -62,7 +62,7 @@ ensure_same_srid_tnpoint_npoint(const Temporal *temp, const npoint *np)
 {
 	if (tnpoint_srid_internal(temp) != npoint_srid_internal(np))
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("The temporal network point and the geometry must be in the same SRID")));
+			errmsg("The temporal network point and the network point must be in the same SRID")));
 }
 
 /*****************************************************************************

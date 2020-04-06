@@ -188,6 +188,9 @@ SELECT geometry 'LINESTRING(416.346567736997 528.335344322874,610.455019399524 5
  
 (1 row)
 
+/* Errors */
+SELECT geometry 'Polygon((0 0,0 1,1 1,1 0,0 0))'::nsegment;
+ERROR:  Only point or line geometries accepted
 SELECT npoint 'npoint(1,0.5)' = npoint 'npoint(1,0.5)';
  ?column? 
 ----------
@@ -294,6 +297,12 @@ SELECT npoint 'npoint(1,0.5)' >= npoint 'npoint(2,0.5)';
  ?column? 
 ----------
  f
+(1 row)
+
+SELECT nsegment_cmp(nsegment 'nsegment(1,0.3,0.5)', nsegment 'nsegment(1,0.3,0.4)');
+ nsegment_cmp 
+--------------
+            1
 (1 row)
 
 SELECT nsegment 'nsegment(1,0.3,0.5)' = nsegment 'nsegment(1,0.3,0.5)';
