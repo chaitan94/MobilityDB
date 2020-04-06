@@ -68,6 +68,7 @@ extern TemporalI *tnpointi_as_tgeompointi(const TemporalI *ti);
 extern TemporalSeq *tnpointseq_as_tgeompointseq(const TemporalSeq *seq);
 extern TemporalS *tnpoints_as_tgeompoints(const TemporalS *ts);
 extern Temporal *tnpoint_as_tgeompoint_internal(const Temporal *temp);
+extern Temporal *tgeompoint_as_tnpoint_internal(Temporal *temp);
 
 extern TemporalInst *tgeompointinst_as_tnpointinst(const TemporalInst *inst);
 extern TemporalI *tgeompointi_as_tnpointi(const TemporalI *ti);

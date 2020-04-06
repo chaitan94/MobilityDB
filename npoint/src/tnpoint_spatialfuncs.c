@@ -152,13 +152,13 @@ tnpointseq_trajectory1(const TemporalInst *inst1, const TemporalInst *inst2)
  *****************************************************************************/
 
 /*
- * Points functions
+ * NPoints functions
  * Return the network points covered by the moving object
  * Only the particular cases returning points are covered
  */
 
 npoint **
-tnpointinst_points(const TemporalInst *inst)
+tnpointinst_npoints(const TemporalInst *inst)
 {
 	npoint **result = palloc(sizeof(npoint *));
 	npoint *np = DatumGetNpoint(temporalinst_value(inst));
@@ -167,45 +167,82 @@ tnpointinst_points(const TemporalInst *inst)
 }
 
 npoint **
-tnpointi_points(const TemporalI *ti, int *count)
+tnpointi_npoints(const TemporalI *ti, int *count)
 {
 	npoint **result = palloc(sizeof(npoint *) * ti->count);
-	for (int i = 0; i < ti->count; i++)
-		result[i] = DatumGetNpoint(temporalinst_value(temporali_inst_n(ti, i)));
-	npointarr_sort(result, ti->count);
-	*count = npoint_remove_duplicates(result, ti->count);
+	result[0] =  DatumGetNpoint(temporalinst_value(temporali_inst_n(ti, 0)));
+	int k = 1;
+	for (int i = 1; i < ti->count; i++)
+	{
+		npoint *np = DatumGetNpoint(temporalinst_value(temporali_inst_n(ti, i)));
+		bool found = false;
+		for (int j = 0; j < k; j++)
+		{
+			if (npoint_eq_internal(np, result[j]))
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			result[k++] = np;
+	}
+	*count = k;
 	return result;
 }
 
 npoint **
-tnpointseq_step_points(const TemporalSeq *seq, int *count)
+tnpointseq_step_npoints(const TemporalSeq *seq, int *count)
 {
-	int count1;
-	/* The following function removes duplicate values */
-	Datum *values = temporalseq_values1(seq, &count1);
-	npoint **result = palloc(sizeof(npoint *) * count1);
-	for (int i = 0; i < count1; i++)
+	npoint **result = palloc(sizeof(npoint *) * seq->count);
+	result[0] =  DatumGetNpoint(temporalinst_value(temporalseq_inst_n(seq, 0)));
+	int k = 1;
+	for (int i = 1; i < seq->count; i++)
 	{
-		npoint *np = DatumGetNpoint(values[i]);
-		result[i] = npoint_make(np->rid, np->pos);
+		npoint *np = DatumGetNpoint(temporalinst_value(temporalseq_inst_n(seq, i)));
+		bool found = false;
+		for (int j = 0; j < k; j++)
+		{
+			if (npoint_eq_internal(np, result[j]))
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			result[k++] = np;
 	}
-	*count = count1;
+	*count = k;
 	return result;
 }
 
 npoint **
-tnpoints_step_points(const TemporalS *ts, int *count)
+tnpoints_step_npoints(const TemporalS *ts, int *count)
 {
-	int count1;
-	/* The following function removes duplicate values */
-	Datum *values = temporals_values1(ts, &count1);
-	npoint **result = palloc(sizeof(npoint *) * count1);
-	for (int i = 0; i < count1; i++)
+	npoint **result = palloc(sizeof(npoint *) * ts->totalcount);
+	TemporalSeq *seq = temporals_seq_n(ts, 0);
+	result[0] =  DatumGetNpoint(temporalinst_value(temporalseq_inst_n(seq, 0)));
+	int l = 1;
+	for (int i = 1; i < ts->count; i++)
 	{
-		npoint *np = DatumGetNpoint(values[i]);
-		result[i] = npoint_make(np->rid, np->pos);
+		seq = temporals_seq_n(ts, i);
+		for (int j = 1; j < seq->count; j++)
+		{
+			npoint *np = DatumGetNpoint(temporalinst_value(temporalseq_inst_n(seq, j)));
+			bool found = false;
+			for (int k = 0; k < l; k++)
+			{
+				if (npoint_eq_internal(np, result[k]))
+				{
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				result[l++] = np;
+		}
 	}
-	*count = count1;
+	*count = l;
 	return result;
 }
 
@@ -225,7 +262,7 @@ tnpointi_geom(const TemporalI *ti)
 
 	int count;
 	/* The following function removes duplicate values */
-	npoint **points = tnpointi_points(ti, &count);
+	npoint **points = tnpointi_npoints(ti, &count);
 	Datum result = npointarr_to_geom_internal(points, count);
 	pfree(points);
 	return result;
@@ -238,9 +275,21 @@ tnpointseq_geom(const TemporalSeq *seq)
 	if (seq->count == 1)
 		return tnpointinst_geom(temporalseq_inst_n(seq, 0));
 
-	nsegment *segment = tnpointseq_linear_positions(seq);
-	Datum result = nsegment_as_geom_internal(segment);
-	pfree(segment);
+	Datum result;
+	if (MOBDB_FLAGS_GET_LINEAR(seq->flags))
+	{
+		nsegment *segment = tnpointseq_linear_positions(seq);
+		result = nsegment_as_geom_internal(segment);
+		pfree(segment);
+	}
+	else
+	{
+		int count;
+		/* The following function removes duplicate values */
+		npoint **points = tnpointseq_step_npoints(seq, &count);
+		result = npointarr_to_geom_internal(points, count);
+		pfree(points);
+	}
 	return result;
 }
 
@@ -814,286 +863,6 @@ tnpoint_azimuth(PG_FUNCTION_ARGS)
 
 /* Restrict a temporal npoint to a geometry */
 
-static TemporalInst *
-tnpointinst_at_geometry(const TemporalInst *inst, Datum geom)
-{
-	Datum point = tnpointinst_geom(inst);
-	bool inter = DatumGetBool(call_function2(intersects, point, geom));
-	pfree(DatumGetPointer(point));
-	if (!inter)
-		return NULL;
-	return temporalinst_make(temporalinst_value(inst), inst->t, 
-		inst->valuetypid);
-}
-
-static TemporalI *
-tnpointi_at_geometry(const TemporalI *ti, Datum geom)
-{
-	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
-	int k = 0;
-	for (int i = 0; i < ti->count; i++)
-	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
-		Datum point = tnpointinst_geom(inst);
-		if (DatumGetBool(call_function2(intersects, point, geom)))
-			instants[k++] = temporalinst_make(temporalinst_value(inst), 
-				inst->t, ti->valuetypid);
-		pfree(DatumGetPointer(point));
-	}
-	TemporalI *result = NULL;
-	if (k != 0)
-	{
-		result = temporali_make(instants, k);
-		for (int i = 0; i < k; i++)
-			pfree(instants[i]);
-	}
-	pfree(instants);
-	return result;
-}
-
-/* This function assumes that inst1 and inst2 have same rid */
-static TemporalSeq **
-tnpointseq_at_geometry1(const TemporalInst *inst1, const TemporalInst *inst2,
-	bool linear, bool lower_inc, bool upper_inc, Datum geom, int *count)
-{
-	npoint *np1 = DatumGetNpoint(temporalinst_value(inst1));
-	npoint *np2 = DatumGetNpoint(temporalinst_value(inst2));
-
-	/* Constant sequence */
-	if (np1->pos == np2->pos || linear)
-	{
-		Datum point = npoint_as_geom_internal(np1);
-		bool inter = DatumGetBool(call_function2(intersects, point, geom));
-		pfree(DatumGetPointer(point));
-		if (!inter)
-		{
-			*count = 0;
-			return NULL;
-		}
-
-		const TemporalInst *instants[]= {inst1, inst2};
-		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
-		result[0] = temporalseq_make((TemporalInst **) instants, 2,
-			lower_inc, upper_inc, linear, false);
-		*count = 1;
-		return result;
-	}
-
-	/* Look for intersections */
-	Datum line = tnpointseq_trajectory1(inst1, inst2);
-	Datum intersections = call_function2(intersection, line, geom);
-	if (DatumGetBool(call_function1(LWGEOM_isempty, intersections)))
-	{
-		pfree(DatumGetPointer(line));
-		pfree(DatumGetPointer(intersections));
-		*count = 0;
-		return NULL;
-	}
-
-	int countinter = DatumGetInt32(call_function1(
-		LWGEOM_numgeometries_collection, intersections));
-	TemporalInst *instants[2];
-	TemporalSeq **result = palloc(sizeof(TemporalSeq *) * countinter);
-	int k = 0;
-	TimestampTz lower = inst1->t;
-	TimestampTz upper = inst2->t;
-
-	for (int i = 1; i <= countinter; i++)
-	{
-		/* Find the i-th intersection */
-		Datum inter = call_function2(LWGEOM_geometryn_collection, 
-			intersections, Int32GetDatum(i));
-		GSERIALIZED *gsinter = (GSERIALIZED *) PG_DETOAST_DATUM(inter);
-
-		/* Each intersection is either a point or a linestring with two points */
-		if (gserialized_get_type(gsinter) == POINTTYPE)
-		{
-			double fraction = DatumGetFloat8(call_function2(
-				LWGEOM_line_locate_point, line, inter));
-			TimestampTz time = (TimestampTz)(lower + (upper - lower) * fraction);
-
-			/* If the intersection is not at the exclusive bound */
-			if ((lower_inc || time > lower) && (upper_inc || time < upper))
-			{
-				double pos = np1->pos + (np2->pos * fraction - np1->pos * fraction);
-				npoint *intnp = npoint_make(np1->rid, pos);
-				instants[0] = temporalinst_make(PointerGetDatum(intnp), time,
-					type_oid(T_NPOINT));
-				result[k++] = temporalseq_make(instants, 1,
-					true, true, linear, false);
-				pfree(instants[0]);
-				pfree(intnp);
-			}
-		}
-		else
-		{
-			Datum inter1 = call_function2(LWGEOM_pointn_linestring, inter, 1);
-			double fraction1 = DatumGetFloat8(call_function2(
-				LWGEOM_line_locate_point, line, inter1));
-			TimestampTz time1 = (TimestampTz)(lower + (upper - lower) * fraction1);
-			double pos1 = np1->pos + (np2->pos * fraction1 - np1->pos * fraction1);
-			npoint *intnp1 = npoint_make(np1->rid, pos1);
-
-			Datum inter2 = call_function2(LWGEOM_pointn_linestring, inter, 2);
-			double fraction2 = DatumGetFloat8(call_function2(
-				LWGEOM_line_locate_point, line, inter2));
-			TimestampTz time2 = (TimestampTz)(lower + (upper - lower) * fraction2);
-			double pos2 = np1->pos + (np2->pos * fraction2 - np1->pos * fraction2);
-			npoint *intnp2 = npoint_make(np1->rid, pos2);
-
-			TimestampTz lower1 = Min(time1, time2);
-			TimestampTz upper1 = Max(time1, time2);
-			bool lower_inc1 = lower1 == lower? lower_inc : true;
-			bool upper_inc1 = upper1 == upper? upper_inc : true;
-			instants[0] = temporalinst_make(PointerGetDatum(intnp1), lower1,
-				type_oid(T_NPOINT));
-			instants[1] = temporalinst_make(PointerGetDatum(intnp2), upper1,
-				type_oid(T_NPOINT));
-			result[k++] = temporalseq_make(instants, 2,
-				lower_inc1, upper_inc1, linear, false);
-
-			pfree(instants[0]); pfree(instants[1]);
-			pfree(DatumGetPointer(inter1)); pfree(DatumGetPointer(inter2));
-			pfree(intnp1); pfree(intnp2);
-		}
-		POSTGIS_FREE_IF_COPY_P(gsinter, DatumGetPointer(inter));
-	}
-
-	pfree(DatumGetPointer(line));
-	pfree(DatumGetPointer(intersections));
-
-	if (k == 0)
-	{
-		pfree(result);
-		*count = 0;
-		return NULL;
-	}
-
-	temporalseqarr_sort(result, k);
-	*count = k;
-	return result;
-}
-
-static TemporalSeq **
-tnpointseq_at_geometry2(const TemporalSeq *seq, Datum geom, int *count)
-{
-	/* Instantaneous sequence */
-	if (seq->count == 1)
-	{
-		TemporalInst *inst = temporalseq_inst_n(seq, 0);
-		Datum point = tnpointinst_geom(inst);
-		bool inter = DatumGetBool(call_function2(intersects, point, geom));
-		pfree(DatumGetPointer(point));
-		if (!inter)
-		{
-			*count = 0;
-			return NULL;
-		}
-		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
-		result[0] = temporalseq_make(&inst, 1,
-			true, true, true, false);
-		*count = 1;
-		return result;
-	}
-
-	/* Temporal sequence has at least 2 instants */
-	bool linear = MOBDB_FLAGS_GET_LINEAR(seq->flags);
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * (seq->count - 1));
-	int *countseqs = palloc0(sizeof(int) * (seq->count - 1));
-	int totalseqs = 0;
-	TemporalInst *inst1 = temporalseq_inst_n(seq, 0);
-	bool lower_inc = seq->period.lower_inc;
-	for (int i = 0; i < seq->count - 1; i++)
-	{
-		TemporalInst *inst2 = temporalseq_inst_n(seq, i + 1);
-		bool upper_inc = (i == seq->count - 2)? seq->period.upper_inc: false;
-		sequences[i] = tnpointseq_at_geometry1(inst1, inst2, linear,
-			lower_inc, upper_inc, geom, &countseqs[i]);
-		totalseqs += countseqs[i];
-		inst1 = inst2;
-		lower_inc = true;
-	}
-
-	if (totalseqs == 0)
-	{
-		pfree(countseqs);
-		pfree(sequences);
-		*count = 0;
-		return NULL;
-	}
-
-	TemporalSeq **result = palloc(sizeof(TemporalSeq *) * totalseqs);
-	int k = 0;
-	for (int i = 0; i < seq->count - 1; i++)
-	{
-		for (int j = 0; j < countseqs[i]; j++)
-			result[k++] = sequences[i][j];
-		if (sequences[i] != NULL)
-			pfree(sequences[i]);
-	}
-
-	pfree(countseqs);
-	pfree(sequences);
-	*count = totalseqs;
-	return result;
-}
-
-static TemporalS *
-tnpointseq_at_geometry(const TemporalSeq *seq, Datum geom)
-{
-	int count;
-	TemporalSeq **sequences = tnpointseq_at_geometry2(seq, geom, &count);
-	if (sequences == NULL)
-		return NULL;
-
-	TemporalS *result = temporals_make(sequences, count, true);
-
-	for (int i = 0; i < count; i++)
-		pfree(sequences[i]);
-	pfree(sequences);
-
-	return result;
-}
-
-static TemporalS *
-tnpoints_at_geometry(const TemporalS *ts, Datum geom)
-{
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
-	int *countseqs = palloc0(sizeof(int) * ts->count);
-	int totalseqs = 0;
-	for (int i = 0; i < ts->count; i++)
-	{
-		TemporalSeq *seq = temporals_seq_n(ts, i);
-		sequences[i] = tnpointseq_at_geometry2(seq, geom, &countseqs[i]);
-		totalseqs += countseqs[i];
-	}
-
-	if (totalseqs == 0)
-	{
-		pfree(sequences);
-		pfree(countseqs);
-		return NULL;
-	}
-
-	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
-	int k = 0;
-	for (int i = 0; i < ts->count; i++)
-	{
-		for (int j = 0; j < countseqs[i]; j++)
-			allsequences[k++] = sequences[i][j];
-		if (sequences[i] != NULL)
-			pfree(sequences[i]);
-	}
-	TemporalS *result = temporals_make(allsequences, totalseqs, true);
-
-	for (int i = 0; i < totalseqs; i++)
-		pfree(allsequences[i]);
-	pfree(allsequences);
-	pfree(sequences);
-	pfree(countseqs);
-	return result;
-}
-
 PG_FUNCTION_INFO_V1(tnpoint_at_geometry);
 
 PGDLLEXPORT Datum
@@ -1101,17 +870,23 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-	ensure_same_srid_tpoint_gs(temp, gs);
-	ensure_has_not_Z_gs(gs);
+	ensure_same_srid_tnpoint_gs(temp, gs);
 	if (gserialized_is_empty(gs))
 	{
 		PG_FREE_IF_COPY(temp, 0);
 		PG_FREE_IF_COPY(gs, 1);
 		PG_RETURN_NULL();
 	}
+	ensure_has_not_Z_gs(gs);
 
 	Temporal *geomtemp = tnpoint_as_tgeompoint_internal(temp);
-	Temporal *result = tpoint_at_geometry_internal(geomtemp, gs);
+	Temporal *geomresult = tpoint_at_geometry_internal(geomtemp, gs);
+	Temporal *result = NULL;
+	if (geomresult != NULL)
+	{
+		result = tgeompoint_as_tnpoint_internal(geomresult);
+		pfree(geomresult);
+	}
 	pfree(geomtemp);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);
@@ -1122,142 +897,6 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 
 /* Restrict a temporal point to the complement of a geometry */
 
-static TemporalInst *
-tnpointinst_minus_geometry(const TemporalInst *inst, Datum geom)
-{
-	Datum value = npoint_as_geom_internal(DatumGetNpoint(temporalinst_value(inst)));
-	if (DatumGetBool(call_function2(intersects, value, geom)))
-		return NULL;
-	return temporalinst_copy(inst);
-}
-
-static TemporalI *
-tnpointi_minus_geometry(const TemporalI *ti, Datum geom)
-{
-	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
-	int k = 0;
-	for (int i = 0; i < ti->count; i++)
-	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
-		Datum value = npoint_as_geom_internal(DatumGetNpoint(temporalinst_value(inst)));
-		if (!DatumGetBool(call_function2(intersects, value, geom)))
-			instants[k++] = inst;
-	}
-	TemporalI *result = NULL;
-	if (k != 0)
-		result = temporali_make(instants, k);
-	pfree(instants);
-	return result;
-}
-
-/* 
- * It is not possible to use a similar approach as for tnpointseq_at_geometry1
- * where instead of computing the intersections we compute the difference since
- * in PostGIS the following query
- *  	select st_astext(st_difference(geometry 'Linestring(0 0,3 3)',
- *  		geometry 'MultiPoint((1 1),(2 2),(3 3))'))
- * returns "LINESTRING(0 0,3 3)". Therefore we compute tnpointseq_at_geometry1
- * and then compute the complement of the value obtained.
- */
-static TemporalSeq **
-tnpointseq_minus_geometry1(const TemporalSeq *seq, Datum geom, int *count)
-{
-	int countinter;
-	TemporalSeq **sequences = tnpointseq_at_geometry2(seq, geom, &countinter);
-	if (countinter == 0)
-	{
-		TemporalSeq **result = palloc(sizeof(TemporalSeq *));
-		result[0] = temporalseq_copy(seq);
-		*count = 1;
-		return result;
-	}
-		
-	Period **periods = palloc(sizeof(Period) * countinter);
-	for (int i = 0; i < countinter; i++)
-		periods[i] = &sequences[i]->period;
-	PeriodSet *ps1 = periodset_make_internal(periods, countinter, false);
-	PeriodSet *ps2 = minus_period_periodset_internal(&seq->period, ps1);
-	pfree(ps1); pfree(periods);
-	if (ps2 == NULL)
-	{
-		*count = 0;
-		return NULL;
-	}
-	TemporalSeq **result = temporalseq_at_periodset2(seq, ps2, count);
-	pfree(ps2);
-	return result;
-}
-
-static TemporalS *
-tnpointseq_minus_geometry(const TemporalSeq *seq, Datum geom)
-{
-	int count;
-	TemporalSeq **sequences = tnpointseq_minus_geometry1(seq, geom, &count);
-	if (sequences == NULL)
-		return NULL;
-
-	TemporalS *result = temporals_make(sequences, count, true);
-
-	for (int i = 0; i < count; i++)
-		pfree(sequences[i]);
-	pfree(sequences);
-
-	return result;
-}
-
-static TemporalS *
-tnpoints_minus_geometry(const TemporalS *ts,  Datum geom, const STBOX *box2)
-{
-	/* Singleton sequence set */
-	if (ts->count == 1)
-		return tnpointseq_minus_geometry(temporals_seq_n(ts, 0), geom);
-
-	TemporalSeq ***sequences = palloc(sizeof(TemporalSeq *) * ts->count);
-	int *countseqs = palloc0(sizeof(int) * ts->count);
-	int totalseqs = 0;
-	for (int i = 0; i < ts->count; i++)
-	{
-		TemporalSeq *seq = temporals_seq_n(ts, i);
-		/* Bounding box test */
-		STBOX *box1 = temporalseq_bbox_ptr(seq);
-		if (!overlaps_stbox_stbox_internal(box1, box2))
-		{
-			sequences[i] = palloc(sizeof(TemporalSeq *));
-			sequences[i][0] = temporalseq_copy(seq);
-			countseqs[i] = 1;
-			totalseqs ++;
-		}
-		else
-		{
-			sequences[i] = tnpointseq_minus_geometry1(seq, geom,
-				&countseqs[i]);
-			totalseqs += countseqs[i];
-		}
-	}
-	if (totalseqs == 0)
-	{
-		pfree(sequences); pfree(countseqs);
-		return NULL;
-	}
-
-	TemporalSeq **allsequences = palloc(sizeof(TemporalSeq *) * totalseqs);
-	int k = 0;
-	for (int i = 0; i < ts->count; i++)
-	{
-		for (int j = 0; j < countseqs[i]; j++)
-			allsequences[k++] = sequences[i][j];
-		if (countseqs[i] != 0)
-			pfree(sequences[i]);
-	}
-	TemporalS *result = temporals_make(allsequences, totalseqs, true);
-
-	for (int i = 0; i < totalseqs; i++)
-		pfree(allsequences[i]);
-	pfree(allsequences); pfree(sequences); pfree(countseqs);
-
-	return result;
-}
-
 PG_FUNCTION_INFO_V1(tnpoint_minus_geometry);
 
 PGDLLEXPORT Datum
@@ -1265,8 +904,7 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-	ensure_same_srid_tpoint_gs(temp, gs);
-	ensure_has_not_Z_gs(gs);
+	ensure_same_srid_tnpoint_gs(temp, gs);
 	if (gserialized_is_empty(gs))
 	{
 		Temporal* copy = temporal_copy(temp);
@@ -1274,9 +912,16 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 		PG_FREE_IF_COPY(gs, 1);
 		PG_RETURN_POINTER(copy);
 	}
+	ensure_has_not_Z_gs(gs);
 
 	Temporal *geomtemp = tnpoint_as_tgeompoint_internal(temp);
-	Temporal *result = tpoint_minus_geometry_internal(geomtemp, gs);
+	Temporal *geomresult = tpoint_minus_geometry_internal(geomtemp, gs);
+	Temporal *result = NULL;
+	if (geomresult != NULL)
+	{
+		result = tgeompoint_as_tnpoint_internal(geomresult);
+		pfree(geomresult);
+	}
 	pfree(geomtemp);
 	PG_FREE_IF_COPY(temp, 0);
 	PG_FREE_IF_COPY(gs, 1);

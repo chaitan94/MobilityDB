@@ -226,22 +226,29 @@ tgeompoints_as_tnpoints(const TemporalS *ts)
 	return result;
 }
 
+Temporal *
+tgeompoint_as_tnpoint_internal(Temporal *temp)
+{
+	Temporal *result;
+	ensure_valid_duration(temp->duration);
+	if (temp->duration == TEMPORALINST)
+		result = (Temporal *)tgeompointinst_as_tnpointinst((TemporalInst *)temp);
+	else if (temp->duration == TEMPORALI)
+		result = (Temporal *)tgeompointi_as_tnpointi((TemporalI *)temp);
+	else if (temp->duration == TEMPORALSEQ)
+		result = (Temporal *)tgeompointseq_as_tnpointseq((TemporalSeq *)temp);
+	else /* temp->duration == TEMPORALS */
+		result = (Temporal *)tgeompoints_as_tnpoints((TemporalS *)temp);
+	return result;
+}
+
 PG_FUNCTION_INFO_V1(tgeompoint_as_tnpoint);
 
 PGDLLEXPORT Datum
 tgeompoint_as_tnpoint(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
-	Temporal *result;
-	ensure_valid_duration(temp->duration);
-	if (temp->duration == TEMPORALINST) 
-		result = (Temporal *)tgeompointinst_as_tnpointinst((TemporalInst *)temp);
-	else if (temp->duration == TEMPORALI) 
-		result = (Temporal *)tgeompointi_as_tnpointi((TemporalI *)temp);
-	else if (temp->duration == TEMPORALSEQ) 
-		result = (Temporal *)tgeompointseq_as_tnpointseq((TemporalSeq *)temp);
-	else /* temp->duration == TEMPORALS */
-		result = (Temporal *)tgeompoints_as_tnpoints((TemporalS *)temp);
+	Temporal *result = tgeompoint_as_tnpoint_internal(temp);
 	PG_FREE_IF_COPY(temp, 0);
 	if (result == NULL)
 		PG_RETURN_NULL();
