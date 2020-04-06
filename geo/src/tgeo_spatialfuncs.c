@@ -18,6 +18,7 @@
 #include <utils/timestamp.h>
 
 #include "temporaltypes.h"
+#include "tpoint_spatialfuncs.h"
 
 /*****************************************************************************
  * Parameter tests

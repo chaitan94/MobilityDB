@@ -1189,7 +1189,7 @@ temporali_at_value(TemporalI *ti, Datum value)
 	int count = 0;
 	for (int i = 0; i < ti->count; i++)
 	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, i);
 		if (datum_eq(value, temporalinst_value(inst), valuetypid)) 
 			instants[count++] = inst;
 	}
@@ -1231,7 +1231,7 @@ temporali_minus_value(TemporalI *ti, Datum value)
 	int count = 0;
 	for (int i = 0; i < ti->count; i++)
 	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, i);
 		if (datum_ne(value, temporalinst_value(inst), valuetypid))
 			instants[count++] = inst;
 	}
@@ -1265,7 +1265,7 @@ temporali_at_values(TemporalI *ti, Datum *values, int count)
 	int newcount = 0;	
 	for (int i = 0; i < ti->count; i++)
 	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, i);
 		for (int j = 0; j < count; j++)
 		{
 			if (datum_eq(temporalinst_value(inst), values[j], ti->valuetypid))
@@ -1306,7 +1306,7 @@ temporali_minus_values(TemporalI *ti, Datum *values, int count)
 	for (int i = 0; i < ti->count; i++)
 	{
 		bool found = false;
-		TemporalInst *inst = temporali_inst_n(ti, i);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, i);
 		for (int j = 0; j < count; j++)
 		{
 			if (datum_eq(temporalinst_value(inst), values[j], ti->valuetypid))
@@ -1556,7 +1556,7 @@ temporali_at_timestamp(TemporalI *ti, TimestampTz t)
 	int n;
 	if (! temporali_find_timestamp(ti, t, &n))
 		return NULL;
-	TemporalInst *inst = temporali_inst_n(ti, n);
+	TemporalInst *inst = temporali_standalone_inst_n(ti, n);
 	return temporalinst_copy(inst);
 }
 
@@ -1574,7 +1574,7 @@ temporali_value_at_timestamp(TemporalI *ti, TimestampTz t, Datum *result)
 	if (! temporali_find_timestamp(ti, t, &n))
 		return false;
 
-	TemporalInst *inst = temporali_inst_n(ti, n);
+	TemporalInst *inst = temporali_standalone_inst_n(ti, n);
 	*result = temporalinst_value_copy(inst);
 	return true;
 }
@@ -1599,7 +1599,7 @@ temporali_minus_timestamp(TemporalI *ti, TimestampTz t)
 	int count = 0;
 	for (int i = 0; i < ti->count; i++)
 	{
-		TemporalInst *inst= temporali_inst_n(ti, i);
+		TemporalInst *inst= temporali_standalone_inst_n(ti, i);
 		if (inst->t != t)
 			instants[count++] = inst;
 	}
@@ -1641,7 +1641,7 @@ temporali_at_timestampset(TemporalI *ti, TimestampSet *ts)
 	int i = 0, j = 0;
 	while (i < ts->count && j < ti->count) 
 	{
-		TemporalInst *inst = temporali_inst_n(ti, j);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, j);
 		TimestampTz t = timestampset_time_n(ts, i);
 		int cmp = timestamp_cmp_internal(t, inst->t);
 		if (cmp == 0)
@@ -1692,7 +1692,7 @@ temporali_minus_timestampset(TemporalI *ti, TimestampSet *ts)
 	int i = 0, j = 0;
 	while (i < ts->count && j < ti->count)
 	{
-		TemporalInst *inst = temporali_inst_n(ti, j);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, j);
 		TimestampTz t = timestampset_time_n(ts, i);
 		if (t <= inst->t)
 			i++;
@@ -1727,7 +1727,7 @@ temporali_at_period(TemporalI *ti, Period *period)
 	int count = 0;
 	for (int i = 0; i < ti->count; i++)
 	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, i);
 		if (contains_period_timestamp_internal(period, inst->t))
 			instants[count++] = inst;
 	}
@@ -1757,7 +1757,7 @@ temporali_minus_period(TemporalI *ti, Period *period)
 	int count = 0;
 	for (int i = 0; i < ti->count; i++)
 	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, i);
 		if (!contains_period_timestamp_internal(period, inst->t))
 			instants[count++] = inst;
 	}
@@ -1800,7 +1800,7 @@ temporali_at_periodset(TemporalI *ti, PeriodSet *ps)
 	int count = 0;
 	for (int i = 0; i < ti->count; i++)
 	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, i);
 		if (contains_periodset_timestamp_internal(ps, inst->t))
 			instants[count++] = inst;
 	}
@@ -1843,7 +1843,7 @@ temporali_minus_periodset(TemporalI *ti, PeriodSet *ps)
 	int count = 0;
 	for (int i = 0; i < ti->count; i++)
 	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, i);
 		if (!contains_periodset_timestamp_internal(ps, inst->t))
 			instants[count++] = inst;
 	}
@@ -1967,8 +1967,8 @@ temporali_cmp(TemporalI *ti1, TemporalI *ti2)
 	int count = Min(ti1->count, ti2->count);
 	for (int i = 0; i < count; i++)
 	{
-		TemporalInst *inst1 = temporali_inst_n(ti1, i);
-		TemporalInst *inst2 = temporali_inst_n(ti2, i);
+		TemporalInst *inst1 = temporali_standalone_inst_n(ti1, i);
+		TemporalInst *inst2 = temporali_standalone_inst_n(ti2, i);
 		result = temporalinst_cmp(inst1, inst2);
 		if (result) 
 			return result;

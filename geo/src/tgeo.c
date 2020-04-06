@@ -548,4 +548,231 @@ tgeo_always_ne(PG_FUNCTION_ARGS)
     PG_RETURN_BOOL(! tgeo_ever_eq(fcinfo));
 }
 
+/*****************************************************************************
+ * Restriction functions
+ *****************************************************************************/
+
+ /* Restriction to the value */
+
+PG_FUNCTION_INFO_V1(tgeo_at_value);
+
+PGDLLEXPORT Datum
+tgeo_at_value(PG_FUNCTION_ARGS)
+{
+    Temporal *temp = PG_GETARG_TEMPORAL(0);
+    GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+    ensure_polygon_type(gs);
+    ensure_same_srid_tpoint_gs(temp, gs);
+    ensure_same_dimensionality_tpoint_gs(temp, gs);
+    /* Bounding box test */
+    STBOX box1, box2;
+    memset(&box1, 0, sizeof(STBOX));
+    memset(&box2, 0, sizeof(STBOX));
+    if (!geo_to_stbox_internal(&box2, gs))
+    {
+        PG_FREE_IF_COPY(temp, 0);
+        PG_FREE_IF_COPY(gs, 1);
+        PG_RETURN_NULL();
+    }
+    temporal_bbox(&box1, temp);
+    if (!contains_stbox_stbox_internal(&box1, &box2))
+    {
+        PG_FREE_IF_COPY(temp, 0);
+        PG_FREE_IF_COPY(gs, 1);
+        PG_RETURN_NULL();
+    }
+
+    Temporal *result;
+    ensure_valid_duration(temp->duration);
+    if (temp->duration == TEMPORALINST) 
+        result = (Temporal *)temporalinst_at_value((TemporalInst *)temp,
+            PointerGetDatum(gs));
+    else if (temp->duration == TEMPORALI) 
+        result = (Temporal *)temporali_at_value((TemporalI *)temp,
+            PointerGetDatum(gs));
+    else if (temp->duration == TEMPORALSEQ) 
+        result = (Temporal *)temporalseq_at_value((TemporalSeq *)temp,
+            PointerGetDatum(gs));
+    else /* temp->duration == TEMPORALS */
+        result = (Temporal *)temporals_at_value((TemporalS *)temp,
+            PointerGetDatum(gs));
+
+    PG_FREE_IF_COPY(temp, 0);
+    PG_FREE_IF_COPY(gs, 1);
+    if (result == NULL)
+        PG_RETURN_NULL();
+    PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************/
+
+/* Restriction to the complement of a value */
+
+PG_FUNCTION_INFO_V1(tgeo_minus_value);
+
+PGDLLEXPORT Datum
+tgeo_minus_value(PG_FUNCTION_ARGS)
+{
+    Temporal *temp = PG_GETARG_TEMPORAL(0);
+    GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+    ensure_polygon_type(gs);
+    ensure_same_srid_tpoint_gs(temp, gs);
+    ensure_same_dimensionality_tpoint_gs(temp, gs);
+    /* Bounding box test */
+    STBOX box1, box2;
+    memset(&box1, 0, sizeof(STBOX));
+    memset(&box2, 0, sizeof(STBOX));
+    if (!geo_to_stbox_internal(&box2, gs))
+    {
+        Temporal *result;
+        if (temp->duration == TEMPORALSEQ)
+            result = (Temporal *)temporals_make((TemporalSeq **)&temp, 1, false);
+        else
+            result = temporal_copy(temp);
+        PG_FREE_IF_COPY(temp, 0);
+        PG_FREE_IF_COPY(gs, 1);
+        PG_RETURN_POINTER(result);
+    }
+    temporal_bbox(&box1, temp);
+    if (!contains_stbox_stbox_internal(&box1, &box2))
+    {
+        Temporal *result;
+        if (temp->duration == TEMPORALSEQ)
+            result = (Temporal *)temporals_make((TemporalSeq **)&temp, 1, false);
+        else
+            result = temporal_copy(temp);
+        PG_FREE_IF_COPY(temp, 0);
+        PG_FREE_IF_COPY(gs, 1);
+        PG_RETURN_POINTER(result);
+    }
+
+    Temporal *result;
+    ensure_valid_duration(temp->duration);
+    if (temp->duration == TEMPORALINST) 
+        result = (Temporal *)temporalinst_minus_value((TemporalInst *)temp,
+            PointerGetDatum(gs));
+    else if (temp->duration == TEMPORALI) 
+        result = (Temporal *)temporali_minus_value((TemporalI *)temp,
+            PointerGetDatum(gs));
+    else if (temp->duration == TEMPORALSEQ) 
+        result = (Temporal *)temporalseq_minus_value((TemporalSeq *)temp,
+            PointerGetDatum(gs));
+    else /* temp->duration == TEMPORALS */
+        result = (Temporal *)temporals_minus_value((TemporalS *)temp,
+            PointerGetDatum(gs));
+
+    PG_FREE_IF_COPY(temp, 0);
+    PG_FREE_IF_COPY(gs, 1);
+    if (result == NULL)
+        PG_RETURN_NULL();
+    PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************/
+
+/* Restriction to the values */
+
+PG_FUNCTION_INFO_V1(tgeo_at_values);
+
+PGDLLEXPORT Datum
+tgeo_at_values(PG_FUNCTION_ARGS)
+{
+    Temporal *temp = PG_GETARG_TEMPORAL(0);
+    ArrayType *array = PG_GETARG_ARRAYTYPE_P(1);
+    int count;
+    Datum *values = datumarr_extract(array, &count);
+    if (count == 0)
+    {
+        PG_FREE_IF_COPY(temp, 0);
+        PG_FREE_IF_COPY(array, 1);
+        PG_RETURN_NULL();
+    }
+    for (int i = 0; i < count; i++)
+    {
+        GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(values[i]);
+        ensure_polygon_type(gs);
+        ensure_same_srid_tpoint_gs(temp, gs);
+        ensure_same_dimensionality_tpoint_gs(temp, gs);
+    }
+    
+    Oid valuetypid = temp->valuetypid;
+    datum_sort(values, count, valuetypid);
+    int count1 = datum_remove_duplicates(values, count, valuetypid);
+    Temporal *result;
+    ensure_valid_duration(temp->duration);
+    if (temp->duration == TEMPORALINST) 
+        result = (Temporal *)temporalinst_at_values((TemporalInst *)temp, 
+            values, count1);
+    else if (temp->duration == TEMPORALI) 
+        result = (Temporal *)temporali_at_values((TemporalI *)temp,
+            values, count1);
+    else if (temp->duration == TEMPORALSEQ) 
+        result = (Temporal *)temporalseq_at_values((TemporalSeq *)temp,
+            values, count1);
+    else /* temp->duration == TEMPORALS */
+        result = (Temporal *)temporals_at_values((TemporalS *)temp,
+            values, count1);
+
+    pfree(values);
+    PG_FREE_IF_COPY(temp, 0);
+    PG_FREE_IF_COPY(array, 1);
+    if (result == NULL)
+        PG_RETURN_NULL();
+    PG_RETURN_POINTER(result);
+}
+
+/************************************************************************/
+
+/* Restriction to the complement of values */
+
+PG_FUNCTION_INFO_V1(tgeo_minus_values);
+
+PGDLLEXPORT Datum
+tgeo_minus_values(PG_FUNCTION_ARGS)
+{
+    Temporal *temp = PG_GETARG_TEMPORAL(0);
+    ArrayType *array = PG_GETARG_ARRAYTYPE_P(1);
+    int count;
+    Datum *values = datumarr_extract(array, &count);
+    if (count == 0)
+    {
+        Temporal *result = temporal_copy(temp);
+        PG_FREE_IF_COPY(temp, 0);
+        PG_FREE_IF_COPY(array, 1);
+        PG_RETURN_POINTER(result);
+    }
+    for (int i = 0; i < count; i++)
+    {
+        GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(values[i]);
+        ensure_polygon_type(gs);
+        ensure_same_srid_tpoint_gs(temp, gs);
+        ensure_same_dimensionality_tpoint_gs(temp, gs);
+    }
+    
+    Oid valuetypid = temp->valuetypid;
+    datum_sort(values, count, valuetypid);
+    int count1 = datum_remove_duplicates(values, count, valuetypid);
+    Temporal *result;
+    ensure_valid_duration(temp->duration);
+    if (temp->duration == TEMPORALINST) 
+        result = (Temporal *)temporalinst_minus_values((TemporalInst *)temp,
+            values, count1);
+    else if (temp->duration == TEMPORALI) 
+        result = (Temporal *)temporali_minus_values((TemporalI *)temp,
+            values, count1);
+    else if (temp->duration == TEMPORALSEQ) 
+        result = (Temporal *)temporalseq_minus_values((TemporalSeq *)temp,
+            values, count1);
+    else /* temp->duration == TEMPORALS */
+        result = (Temporal *)temporals_minus_values((TemporalS *)temp,
+            values, count1);
+
+    pfree(values);
+    PG_FREE_IF_COPY(temp, 0);
+    PG_FREE_IF_COPY(array, 1);
+    if (result == NULL)
+        PG_RETURN_NULL();
+    PG_RETURN_POINTER(result);
+}
+
 /*****************************************************************************/

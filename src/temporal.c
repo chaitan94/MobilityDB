@@ -3428,7 +3428,7 @@ temporal_eq_internal(Temporal *t1, Temporal *t2)
 			TemporalSeq *seq = temporals_seq_n(ts, i);
 			if (seq->count != 1) 
 				return false;
-			TemporalInst *inst1 = temporali_inst_n(ti, i);
+			TemporalInst *inst1 = temporali_standalone_inst_n(ti, i);
 			TemporalInst *inst2 = temporalseq_inst_n(seq, 0);
 			if (!temporalinst_eq(inst1, inst2))
 				return false;	

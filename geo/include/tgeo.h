@@ -60,10 +60,17 @@ extern Datum tgeoinst_constructor(PG_FUNCTION_ARGS);
 extern Datum tgeo_stbox(PG_FUNCTION_ARGS);
 
 extern Datum tgeo_ever_eq(PG_FUNCTION_ARGS);
-extern Datum tgeo_ever_ne(PG_FUNCTION_ARGS); // TODO
+extern Datum tgeo_ever_ne(PG_FUNCTION_ARGS);
 
-extern Datum tgeo_always_eq(PG_FUNCTION_ARGS); // TODO
+extern Datum tgeo_always_eq(PG_FUNCTION_ARGS);
 extern Datum tgeo_always_ne(PG_FUNCTION_ARGS);
+
+/* Restriction functions */
+
+extern Datum tgeo_at_value(PG_FUNCTION_ARGS);
+extern Datum tgeo_minus_value(PG_FUNCTION_ARGS);
+extern Datum tgeo_at_values(PG_FUNCTION_ARGS);
+extern Datum tgeo_minus_values(PG_FUNCTION_ARGS);
 
 /*****************************************************************************/
 

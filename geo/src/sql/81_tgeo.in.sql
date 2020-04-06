@@ -561,11 +561,11 @@ CREATE OPERATOR %<> (
 
 /* TODO */
 
-/*CREATE FUNCTION atValue(tgeometry, geometry(Point))
+CREATE FUNCTION atValue(tgeometry, geometry(Polygon))
     RETURNS tgeometry
     AS 'MODULE_PATHNAME', 'tgeo_at_value'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION atValue(tgeography, geography(Point))
+CREATE FUNCTION atValue(tgeography, geography(Polygon))
     RETURNS tgeography
     AS 'MODULE_PATHNAME', 'tgeo_at_value'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -595,9 +595,9 @@ CREATE FUNCTION minusValues(tgeometry, geometry(Point)[])
 CREATE FUNCTION minusValues(tgeography, geography(Point)[])
     RETURNS tgeography
     AS 'MODULE_PATHNAME', 'tgeo_minus_values'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;*/
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-/*CREATE FUNCTION atTimestamp(tgeometry, timestamptz)
+CREATE FUNCTION atTimestamp(tgeometry, timestamptz)
     RETURNS tgeometry
     AS 'MODULE_PATHNAME', 'temporal_at_timestamp'
     LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -676,7 +676,7 @@ CREATE FUNCTION minusPeriodSet(tgeometry, periodset)
 CREATE FUNCTION minusPeriodSet(tgeography, periodset)
     RETURNS tgeography
     AS 'MODULE_PATHNAME', 'temporal_minus_periodset'
-    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;*/
+    LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION intersectsTimestamp(tgeometry, timestamptz)
     RETURNS boolean
