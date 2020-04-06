@@ -53,13 +53,91 @@ nsegmentarr_to_array(nsegment **nsegmentarr, int count)
 
 /*****************************************************************************/
 
+/* npoint array to geometry */
+
+Datum
+npointarr_to_geom_internal(npoint **points, int count)
+{
+	Datum *geoms = palloc(sizeof(Datum) * count);
+	for (int i = 0; i < count; i++)
+	{
+		Datum line = route_geom(points[i]->rid);
+		geoms[i] = call_function2(LWGEOM_line_interpolate_point, line,
+				Float8GetDatum(points[i]->pos));
+		pfree(DatumGetPointer(line));
+	}
+	Datum result;
+	if (count == 1)
+		result = geoms[0];
+	else
+	{
+		ArrayType *array = datumarr_to_array(geoms, count, type_oid(T_GEOMETRY));
+		result = call_function1(pgis_union_geometry_array, PointerGetDatum(array));
+		pfree(array);
+		for (int i = 0; i < count; i++)
+			pfree(DatumGetPointer(geoms[i]));
+		pfree(geoms);
+	}
+	PG_RETURN_DATUM(result);
+}
+
+/* nsegment array to geometry */
+
+Datum
+nsegmentarr_to_geom_internal(nsegment **segments, int count)
+{
+	Datum *geoms = palloc(sizeof(Datum) * count);
+	for (int i = 0; i < count; i++)
+	{
+		Datum line = route_geom(segments[i]->rid);
+		if (segments[i]->pos1 == 0 && segments[i]->pos2 == 1)
+			geoms[i] = PointerGetDatum(gserialized_copy((GSERIALIZED *)PG_DETOAST_DATUM(line)));
+		else if (segments[i]->pos1 == segments[i]->pos2)
+			geoms[i] = call_function2(LWGEOM_line_interpolate_point, line, Float8GetDatum(segments[i]->pos1));
+		else
+			geoms[i] = call_function3(LWGEOM_line_substring, line,
+				Float8GetDatum(segments[i]->pos1), Float8GetDatum(segments[i]->pos2));
+		pfree(DatumGetPointer(line));
+	}
+	Datum result;
+	if (count == 1)
+		result = geoms[0];
+	else
+	{
+		ArrayType *array = datumarr_to_array(geoms, count, type_oid(T_GEOMETRY));
+		result = call_function1(pgis_union_geometry_array, PointerGetDatum(array));
+		pfree(array);
+		for (int i = 0; i < count; i++)
+			pfree(DatumGetPointer(geoms[i]));
+		pfree(geoms);
+	}
+	PG_RETURN_DATUM(result);
+}
+
+/*****************************************************************************/
+
+/* Comparator functions */
+
+static int
+npoint_sort_cmp(npoint **l, npoint **r)
+{
+	return npoint_cmp_internal(*l, *r);
+}
+
+void
+npointarr_sort(npoint **points, int count)
+{
+	qsort(points, (size_t) count, sizeof(npoint *),
+		  (qsort_comparator) &npoint_sort_cmp);
+}
+
 static int
 nsegment_sort_cmp(nsegment **l, nsegment **r)
 {
 	return nsegment_cmp_internal(*l, *r);
 }
 
-void
+static void
 nsegmentarr_sort(nsegment **segments, int count)
 {
 	qsort(segments, (size_t) count, sizeof(nsegment *),
@@ -92,6 +170,19 @@ nsegmentarr_normalize(nsegment **segments, int *count)
 	result[newcount++] = current;
 	*count = newcount;
 	return result;
+}
+
+/* Remove duplicates from an array of npoints */
+
+int
+npoint_remove_duplicates(npoint **values, int count)
+{
+	assert (count > 0);
+	int newcount = 0;
+	for (int i = 1; i < count; i++)
+		if (npoint_ne_internal(values[newcount], values[i]))
+			values[++ newcount] = values[i];
+	return newcount + 1;
 }
 
 /*****************************************************************************
@@ -945,39 +1036,6 @@ geom_as_nsegment(PG_FUNCTION_ARGS)
 	if (result == NULL)
 		PG_RETURN_NULL();
 	PG_RETURN_POINTER(result);
-}
-
-/* nsegment array to geometry */
-
-Datum
-nsegmentarr_to_geom_internal(nsegment **segments, int count)
-{
-	Datum *geoms = palloc(sizeof(Datum) * count);
-	for (int i = 0; i < count; i++)
-	{
-		Datum line = route_geom(segments[i]->rid);
-		if (segments[i]->pos1 == 0 && segments[i]->pos2 == 1)
-			geoms[i] = PointerGetDatum(gserialized_copy((GSERIALIZED *)PG_DETOAST_DATUM(line)));
-		else if (segments[i]->pos1 == segments[i]->pos2)
-			geoms[i] = call_function2(LWGEOM_line_interpolate_point, line, Float8GetDatum(segments[i]->pos1));
-		else
-			geoms[i] = call_function3(LWGEOM_line_substring, line,
-				Float8GetDatum(segments[i]->pos1), Float8GetDatum(segments[i]->pos2));
-		pfree(DatumGetPointer(line));
-	}
-	Datum result;
-	if (count == 1)
-		result = geoms[0];
-	else
-	{
-		ArrayType *array = datumarr_to_array(geoms, count, type_oid(T_GEOMETRY));
-		result = call_function1(pgis_union_geometry_array, PointerGetDatum(array));
-		pfree(array);
-		for (int i = 0; i < count; i++)
-			pfree(DatumGetPointer(geoms[i])); 
-		pfree(geoms); 
-	}
-	PG_RETURN_DATUM(result);
 }
 
 /*****************************************************************************/

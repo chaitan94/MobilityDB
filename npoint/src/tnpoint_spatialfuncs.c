@@ -151,6 +151,64 @@ tnpointseq_trajectory1(const TemporalInst *inst1, const TemporalInst *inst2)
  * Return the geometric positions covered by the temporal npoint
  *****************************************************************************/
 
+/*
+ * Points functions
+ * Return the network points covered by the moving object
+ * Only the particular cases returning points are covered
+ */
+
+npoint **
+tnpointinst_points(const TemporalInst *inst)
+{
+	npoint **result = palloc(sizeof(npoint *));
+	npoint *np = DatumGetNpoint(temporalinst_value(inst));
+	result[0] = npoint_make(np->rid, np->pos);
+	return result;
+}
+
+npoint **
+tnpointi_points(const TemporalI *ti, int *count)
+{
+	npoint **result = palloc(sizeof(npoint *) * ti->count);
+	for (int i = 0; i < ti->count; i++)
+		result[i] = DatumGetNpoint(temporalinst_value(temporali_inst_n(ti, i)));
+	npointarr_sort(result, ti->count);
+	*count = npoint_remove_duplicates(result, ti->count);
+	return result;
+}
+
+npoint **
+tnpointseq_step_points(const TemporalSeq *seq, int *count)
+{
+	int count1;
+	/* The following function removes duplicate values */
+	Datum *values = temporalseq_values1(seq, &count1);
+	npoint **result = palloc(sizeof(npoint *) * count1);
+	for (int i = 0; i < count1; i++)
+	{
+		npoint *np = DatumGetNpoint(values[i]);
+		result[i] = npoint_make(np->rid, np->pos);
+	}
+	*count = count1;
+	return result;
+}
+
+npoint **
+tnpoints_step_points(const TemporalS *ts, int *count)
+{
+	int count1;
+	/* The following function removes duplicate values */
+	Datum *values = temporals_values1(ts, &count1);
+	npoint **result = palloc(sizeof(npoint *) * count1);
+	for (int i = 0; i < count1; i++)
+	{
+		npoint *np = DatumGetNpoint(values[i]);
+		result[i] = npoint_make(np->rid, np->pos);
+	}
+	*count = count1;
+	return result;
+}
+
 Datum
 tnpointinst_geom(const TemporalInst *inst)
 {
@@ -166,11 +224,10 @@ tnpointi_geom(const TemporalI *ti)
 		return tnpointinst_geom(temporali_inst_n(ti, 0));
 
 	int count;
-	nsegment **segments = tnpointi_positions(ti, &count);
-	Datum result = nsegmentarr_to_geom_internal(segments, count);
-	for (int i = 0; i < count; i++)
-		pfree(segments[i]);
-	pfree(segments);
+	/* The following function removes duplicate values */
+	npoint **points = tnpointi_points(ti, &count);
+	Datum result = npointarr_to_geom_internal(points, count);
+	pfree(points);
 	return result;
 }
 

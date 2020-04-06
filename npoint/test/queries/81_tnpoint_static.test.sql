@@ -66,6 +66,8 @@ SELECT (nsegment 'nsegment(1,0.5,0.5)'::geometry)::nsegment;
 SELECT geometry 'Point(610.455019399524 528.508247341961)'::npoint;
 
 SELECT geometry 'LINESTRING(416.346567736997 528.335344322874,610.455019399524 528.508247341961,476.989195102204 642.550969672973)'::nsegment;
+/* Errors */
+SELECT geometry 'Polygon((0 0,0 1,1 1,1 0,0 0))'::nsegment;
 
 -------------------------------------------------------------------------------
 -- Comparisons
@@ -94,6 +96,9 @@ SELECT npoint 'npoint(1,0.5)' > npoint 'npoint(2,0.5)';
 SELECT npoint 'npoint(1,0.5)' >= npoint 'npoint(1,0.5)';
 SELECT npoint 'npoint(1,0.5)' >= npoint 'npoint(1,0.7)';
 SELECT npoint 'npoint(1,0.5)' >= npoint 'npoint(2,0.5)';
+
+SELECT nsegment_cmp(nsegment 'nsegment(1,0.3,0.5)', nsegment 'nsegment(1,0.3,0.4)');
+
 
 SELECT nsegment 'nsegment(1,0.3,0.5)' = nsegment 'nsegment(1,0.3,0.5)';
 SELECT nsegment 'nsegment(1,0.3,0.5)' = nsegment 'nsegment(1,0.3,0.7)';

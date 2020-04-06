@@ -24,8 +24,10 @@
 
 extern ArrayType *int64arr_to_array(const int64 *int64arr, int count);
 extern ArrayType *npointarr_to_array(npoint **npointarr, int count);
+extern void npointarr_sort(npoint **points, int count);
 extern ArrayType *nsegmentarr_to_array(nsegment **nsegmentarr, int count);
 extern nsegment **nsegmentarr_normalize(nsegment **segments, int *count);
+extern int npoint_remove_duplicates(npoint **values, int count);
 
 extern Datum npoint_in(PG_FUNCTION_ARGS);
 extern Datum npoint_out(PG_FUNCTION_ARGS);
@@ -59,6 +61,7 @@ extern Datum npoint_le(PG_FUNCTION_ARGS);
 extern Datum npoint_gt(PG_FUNCTION_ARGS);
 extern Datum npoint_ge(PG_FUNCTION_ARGS);
 
+extern int npoint_cmp_internal(const npoint *np1, const npoint *np2);
 extern bool npoint_same_internal(const npoint *np1, const npoint *np2);
 extern bool npoint_eq_internal(const npoint *np1, const npoint *np2);
 extern bool npoint_ne_internal(const npoint *np1, const npoint *np2);
@@ -98,6 +101,7 @@ extern Datum nsegment_as_geom_internal(const nsegment *ns);
 extern npoint *geom_as_npoint_internal(Datum geom);
 extern nsegment *geom_as_nsegment_internal(Datum line);
 
+extern Datum npointarr_to_geom_internal(npoint **points, int count);
 extern Datum nsegmentarr_to_geom_internal(nsegment **segments, int count);
 
 /*****************************************************************************/
