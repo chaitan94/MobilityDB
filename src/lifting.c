@@ -448,7 +448,7 @@ tfunc4_temporali_base(const TemporalI *ti, Datum value, Oid valuetypid,
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * ti->count);
 	for (int i = 0; i < ti->count; i++)
 	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, i);
 		instants[i] = tfunc4_temporalinst_base(inst, value, valuetypid, func,
 			restypid, invert);
 	}
@@ -1948,8 +1948,8 @@ sync_tfunc4_temporali_temporali(const TemporalI *ti1, const TemporalI *ti2,
 	int i = 0, j = 0, k = 0;
 	while (i < ti1->count && j < ti2->count)
 	{
-		TemporalInst *inst1 = temporali_inst_n(ti1, i);
-		TemporalInst *inst2 = temporali_inst_n(ti2, j);
+		TemporalInst *inst1 = temporali_standalone_inst_n(ti1, i);
+		TemporalInst *inst2 = temporali_standalone_inst_n(ti2, j);
 		int cmp = timestamp_cmp_internal(inst1->t, inst2->t);
 		if (cmp == 0)
 		{
