@@ -46,6 +46,11 @@ SELECT stbox(tnpoint '{[NPoint(1,0.4)@2000-01-01, NPoint(1,0.5)@2000-01-02, NPoi
  SRID=5676;STBOX T((34.650691986084,25.1036682128906,2000-01-01 00:00:00+00),(71.2585144042969,78.9538192749023,2000-01-05 00:00:00+00))
 (1 row)
 
+/* Errors */
+SELECT geometry 'Point(1 1)' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+ERROR:  The temporal network point and the geometry must be in the same SRID
+SELECT stbox 'STBOX((1.0, 2.0), (1.0, 2.0))' && tnpoint 'NPoint(1,0.5)@2000-01-01';
+ERROR:  The temporal network point and the box must be in the same SRID
 SELECT geometry 'SRID=5676;Point(1 1)' && tnpoint 'NPoint(1,0.5)@2000-01-01';
  ?column? 
 ----------
