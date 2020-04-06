@@ -43,10 +43,12 @@ SELECT nsegment(1,1.5,0.7);
 
 SELECT route(npoint 'npoint(1,0.5)');
 SELECT getPosition(npoint 'npoint(1,0.5)');
+SELECT srid(npoint 'npoint(1,0.5)');
 
 SELECT route(nsegment 'nsegment(1,0.5,0.7)');
 SELECT startPosition(nsegment 'nsegment(1,0.5,0.7)');
 SELECT endPosition(nsegment 'nsegment(1,0.5,0.7)');
+SELECT srid(nsegment 'nsegment(1,0.5,0.7)');
 
 -------------------------------------------------------------------------------
 -- Cast functions between network and space
@@ -59,6 +61,7 @@ SELECT st_astext(nsegment 'nsegment(1,0.5,0.7)'::geometry);
 SELECT (npoint 'npoint(1,0.2)'::geometry)::npoint;
 
 SELECT (nsegment 'nsegment(1,0.5,0.7)'::geometry)::nsegment;
+SELECT (nsegment 'nsegment(1,0.5,0.5)'::geometry)::nsegment;
 
 SELECT geometry 'Point(610.455019399524 528.508247341961)'::npoint;
 

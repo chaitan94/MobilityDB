@@ -815,13 +815,8 @@ PGDLLEXPORT Datum
 geom_as_npoint(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-	if (gserialized_get_type(gs) != POINTTYPE ||
-		gserialized_is_empty(gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), 
-			errmsg("Only non-empty point geometries accepted")));
-	}
+	ensure_non_empty(gs);
+	ensure_point_type(gs);
 	npoint *result = geom_as_npoint_internal(PointerGetDatum(gs));
 	if (result == NULL)
 		PG_RETURN_NULL();
@@ -830,7 +825,29 @@ geom_as_npoint(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
-/* nsegment to geometry */
+/* srid of the nsegment */
+
+int
+nsegment_srid_internal(const nsegment *ns)
+{
+	Datum line = route_geom(ns->rid);
+	GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(line);
+	int result = gserialized_get_srid(gs);
+	pfree(DatumGetPointer(line));
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(nsegment_srid);
+
+PGDLLEXPORT Datum
+nsegment_srid(PG_FUNCTION_ARGS)
+{
+	nsegment *ns = PG_GETARG_NSEGMENT(0);
+	int result = nsegment_srid_internal(ns);
+	PG_RETURN_INT32(result);
+}
+
+/* nsegment as geometry */
 
 Datum
 nsegment_as_geom_internal(const nsegment *ns)
@@ -858,26 +875,41 @@ nsegment_as_geom(PG_FUNCTION_ARGS)
 }
 
 nsegment *
-geom_as_nsegment_internal(Datum line)
+geom_as_nsegment_internal(Datum geom)
 {
-	int numpoints = DatumGetInt32(call_function1(LWGEOM_numpoints_linestring, line));
-	npoint **points = palloc0(sizeof(npoint *) * numpoints);
+	GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(geom);
+	int geomtype = gserialized_get_type(gs);
+	assert(geomtype == POINTTYPE || geomtype == LINETYPE);
+	npoint **points;
+	npoint *np;
 	int k = 0;
-	for (int i = 0; i < numpoints; i++)
+	if (geomtype == POINTTYPE)
 	{
-		/* The composing points are from 1 to numcount */
-		Datum point = call_function2(LWGEOM_pointn_linestring, line, Int32GetDatum(i + 1));
-		npoint *np = geom_as_npoint_internal(point);
+		points = palloc0(sizeof(npoint *));
+		np = geom_as_npoint_internal(geom);
 		if (np != NULL)
 			points[k++] = np;
-		/* Cannot pfree(DatumGetPointer(point)); */
 	}
+	else /* geomtype == LINETYPE */
+	{
+		int numpoints = DatumGetInt32(call_function1(LWGEOM_numpoints_linestring, geom));
+		points = palloc0(sizeof(npoint *) * numpoints);
+		for (int i = 0; i < numpoints; i++)
+		{
+			/* The composing points are from 1 to numcount */
+			Datum point = call_function2(LWGEOM_pointn_linestring, geom, Int32GetDatum(i + 1));
+			np = geom_as_npoint_internal(point);
+			if (np != NULL)
+				points[k++] = np;
+			/* Cannot pfree(DatumGetPointer(point)); */
+		}
+	}
+
 	if (k == 0)
 	{
 		pfree(points);
 		return NULL;
 	}
-
 	int64 rid = points[0]->rid;
 	double minPos = points[0]->pos, maxPos = points[0]->pos;
 	for (int i = 1; i < k; i++)
@@ -905,13 +937,10 @@ PGDLLEXPORT Datum
 geom_as_nsegment(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-	if (gserialized_get_type(gs) != LINETYPE ||
-		gserialized_is_empty(gs))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), 
-			errmsg("Only non-empty line geometries accepted")));
-	}
+	ensure_non_empty(gs);
+	if (gserialized_get_type(gs) != POINTTYPE && gserialized_get_type(gs) != LINETYPE)
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("Only point or line geometries accepted")));
 	nsegment *result = geom_as_nsegment_internal(PointerGetDatum(gs));
 	if (result == NULL)
 		PG_RETURN_NULL();

@@ -111,6 +111,11 @@ CREATE FUNCTION getPosition(npoint)
 	AS 'MODULE_PATHNAME', 'npoint_position'
 	LANGUAGE C IMMUTABLE STRICT;
 
+CREATE FUNCTION srid(npoint)
+	RETURNS int
+	AS 'MODULE_PATHNAME', 'npoint_srid'
+	LANGUAGE C IMMUTABLE STRICT;
+
 CREATE FUNCTION route(nsegment)
 	RETURNS bigint
 	AS 'MODULE_PATHNAME', 'nsegment_route'
@@ -126,6 +131,11 @@ CREATE FUNCTION endPosition(nsegment)
 	AS 'MODULE_PATHNAME', 'nsegment_end_position'
 	LANGUAGE C IMMUTABLE STRICT;
 	
+CREATE FUNCTION srid(nsegment)
+	RETURNS int
+	AS 'MODULE_PATHNAME', 'nsegment_srid'
+	LANGUAGE C IMMUTABLE STRICT;
+
 /*****************************************************************************
  * Conversions between network and space
  *****************************************************************************/
