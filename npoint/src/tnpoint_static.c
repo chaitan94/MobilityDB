@@ -3,6 +3,9 @@
  * tnpoint_static.c
  *	  Network-based static point and segment types
  *
+ * Several functions are commented out since they are not currently used.
+ * They are kept if needed in the future.
+ *
  * Portions Copyright (c) 2019, Esteban Zimanyi, Arthur Lesuisse, Xinyang Li,
  *		Universite Libre de Bruxelles
  * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
@@ -37,12 +40,14 @@ int64arr_to_array(const int64 *int64arr, int count)
 	return construct_array((Datum *)int64arr, count, INT8OID, 8, true, 'd');
 }
 
+/*
 ArrayType *
 npointarr_to_array(npoint **npointarr, int count)
 {
 	return construct_array((Datum *)npointarr, count, type_oid(T_NPOINT), 
 		sizeof(npoint), false, 'd');
 }
+*/
 
 ArrayType *
 nsegmentarr_to_array(nsegment **nsegmentarr, int count)
@@ -117,7 +122,7 @@ nsegmentarr_to_geom_internal(nsegment **segments, int count)
 /*****************************************************************************/
 
 /* Comparator functions */
-
+/*
 static int
 npoint_sort_cmp(npoint **l, npoint **r)
 {
@@ -130,6 +135,7 @@ npointarr_sort(npoint **points, int count)
 	qsort(points, (size_t) count, sizeof(npoint *),
 		  (qsort_comparator) &npoint_sort_cmp);
 }
+*/
 
 static int
 nsegment_sort_cmp(nsegment **l, nsegment **r)
@@ -172,7 +178,7 @@ nsegmentarr_normalize(nsegment **segments, int *count)
 	return result;
 }
 
-/* Remove duplicates from an array of npoints */
+/* Remove duplicates from an array of npoints
 
 int
 npoint_remove_duplicates(npoint **values, int count)
@@ -184,6 +190,7 @@ npoint_remove_duplicates(npoint **values, int count)
 			values[++ newcount] = values[i];
 	return newcount + 1;
 }
+*/
 
 /*****************************************************************************
  * Input/Output functions for npoint
@@ -317,9 +324,8 @@ nsegment_send(PG_FUNCTION_ARGS)
  * Constructors
  *****************************************************************************/
 
+/* Set an npoint value from arguments */
 /*
- * Set an npoint value from arguments
- */
 void
 npoint_set(npoint *np, int64 rid, double pos)
 {
@@ -333,6 +339,7 @@ npoint_set(npoint *np, int64 rid, double pos)
 	np->rid = rid;
 	np->pos = pos;
 }
+*/
 
 /*
  * Construct an npoint value from arguments
@@ -364,9 +371,8 @@ npoint_constructor(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
+/* Set an nsegment value from arguments */
 /*
- * Set an nsegment value from arguments
- */
 void
 nsegment_set(nsegment *ns, int64 rid, double pos1, double pos2)
 {
@@ -381,6 +387,7 @@ nsegment_set(nsegment *ns, int64 rid, double pos1, double pos2)
 	ns->pos1 = Min(pos1, pos2);
 	ns->pos2 = Max(pos1, pos2);
 }
+*/
 
 /*
  * Construct an nsegment value from arguments
@@ -791,7 +798,7 @@ route_geom(int64 rid)
 }
 
 /* Access edge table to get the rid from corresponding geometry */
-
+/*
 int64
 rid_from_geom(Datum geom)
 {
@@ -801,7 +808,7 @@ rid_from_geom(Datum geom)
 		"ORDER BY ST_Distance(the_geom, '%s') LIMIT 1", geomstr, DIST_EPSILON, geomstr);
 	pfree(geomstr);
 	bool isNull = true;
-	int64 result = 0; /* make compiler quiet */
+	int64 result = 0; / * make compiler quiet * /
 	SPI_connect();
 	int ret = SPI_execute(sql, true, 1);
 	uint64 proc = SPI_processed;
@@ -817,7 +824,7 @@ rid_from_geom(Datum geom)
 
 	return result;
 }
-
+*/
 /*****************************************************************************/
 
 /* srid of the npoint */

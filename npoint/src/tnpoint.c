@@ -12,6 +12,8 @@
 
 #include "tnpoint.h"
 
+#include <assert.h>
+
 #include "temporaltypes.h"
 #include "temporal_parser.h"
 #include "oidcache.h"
@@ -85,10 +87,8 @@ tnpointseq_as_tgeompointseq(const TemporalSeq *seq)
 		np = DatumGetNpoint(temporalinst_value(inst));
 		POINTARRAY* opa = lwline_interpolate_points(lwline, np->pos, 0);
 		LWGEOM *lwpoint;
-		if (opa->npoints <= 1)
-			lwpoint = lwpoint_as_lwgeom(lwpoint_construct(srid, NULL, opa));
-		else
-			lwpoint = lwmpoint_as_lwgeom(lwmpoint_construct(srid, opa));
+		assert(opa->npoints <= 1);
+		lwpoint = lwpoint_as_lwgeom(lwpoint_construct(srid, NULL, opa));
 		Datum point = PointerGetDatum(geometry_serialize(lwpoint));
 		instants[i] = temporalinst_make(point, inst->t, type_oid(T_GEOMETRY));
 		pfree(DatumGetPointer(point));
