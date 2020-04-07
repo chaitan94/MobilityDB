@@ -158,15 +158,6 @@ tnpointseq_trajectory1(const TemporalInst *inst1, const TemporalInst *inst2)
  */
 
 npoint **
-tnpointinst_npoints(const TemporalInst *inst)
-{
-	npoint **result = palloc(sizeof(npoint *));
-	npoint *np = DatumGetNpoint(temporalinst_value(inst));
-	result[0] = npoint_make(np->rid, np->pos);
-	return result;
-}
-
-npoint **
 tnpointi_npoints(const TemporalI *ti, int *count)
 {
 	npoint **result = palloc(sizeof(npoint *) * ti->count);
@@ -301,11 +292,21 @@ tnpoints_geom(const TemporalS *ts)
 		return tnpointseq_geom(temporals_seq_n(ts, 0));
 
 	int count;
-	nsegment **segments = tnpoints_positions(ts, &count);
-	Datum result = nsegmentarr_to_geom_internal(segments, count);
-	for (int i = 0; i < count; i++)
-		pfree(segments[i]);
-	pfree(segments);
+	Datum result;
+	if (MOBDB_FLAGS_GET_LINEAR(ts->flags))
+	{
+		nsegment **segments = tnpoints_positions(ts, &count);
+		result = nsegmentarr_to_geom_internal(segments, count);
+		for (int i = 0; i < count; i++)
+			pfree(segments[i]);
+		pfree(segments);
+	}
+	else
+	{
+		npoint **points = tnpoints_step_npoints(ts, &count);
+		result = npointarr_to_geom_internal(points, count);
+		pfree(points);
+	}
 	return result;
 }
 
