@@ -65,35 +65,34 @@ CREATE CAST (tnpoint AS tnpoint) WITH FUNCTION tnpoint(tnpoint, integer) AS IMPL
  * Constructors
  ******************************************************************************/
 
-/* Temporal instant */
-
 CREATE FUNCTION tnpointinst(val npoint, t timestamptz)
 	RETURNS tnpoint
 	AS 'MODULE_PATHNAME', 'temporalinst_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-/* Temporal instant set */
-
 CREATE FUNCTION tnpointi(tnpoint[])
 	RETURNS tnpoint
 	AS 'MODULE_PATHNAME', 'temporali_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-/* Temporal sequence */
-
-CREATE FUNCTION tnpointseq(tnpoint[], lower_inc boolean DEFAULT true, 
+CREATE FUNCTION tnpointseq(tnpoint[], lower_inc boolean DEFAULT true,
 		upper_inc boolean DEFAULT true, linear boolean DEFAULT true)
 	RETURNS tnpoint
 	AS 'MODULE_PATHNAME', 'temporalseq_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-/* Temporal sequence set */
-
 CREATE FUNCTION tnpoints(tnpoint[])
 	RETURNS tnpoint
 	AS 'MODULE_PATHNAME', 'temporals_constructor'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-	
+
+CREATE FUNCTION tnpointi(npoint, timestampset)
+	RETURNS tnpoint AS 'MODULE_PATHNAME', 'temporali_from_base'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tnpointseq(npoint, period, boolean DEFAULT true)
+	RETURNS tnpoint AS 'MODULE_PATHNAME', 'temporalseq_from_base'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tnpoints(npoint, periodset, boolean DEFAULT true)
+	RETURNS tnpoint AS 'MODULE_PATHNAME', 'temporals_from_base'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /******************************************************************************
  * Cast functions
  ******************************************************************************/
@@ -142,12 +141,20 @@ CREATE FUNCTION toLinear(tnpoint)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
- * Append function
+ * Append functions
  ******************************************************************************/
 
 CREATE FUNCTION appendInstant(tnpoint, tnpoint)
 	RETURNS tnpoint
 	AS 'MODULE_PATHNAME', 'temporal_append_instant'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION append(tnpoint, tnpoint)
+	RETURNS tnpoint
+	AS 'MODULE_PATHNAME', 'temporal_append'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION append(tnpoint[])
+	RETURNS tnpoint
+	AS 'MODULE_PATHNAME', 'temporal_append_array'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

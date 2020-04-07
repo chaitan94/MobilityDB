@@ -74,6 +74,8 @@ extern int p4d_same(const POINT4D *p1, const POINT4D *p2);
 extern int p3d_same(const POINT3D *p1, const POINT3D *p2);
 extern int p2d_same(const POINT2D *p1, const POINT2D *p2);
 extern void closest_point_on_segment(const POINT4D *R, const POINT4D *A, const POINT4D *B, POINT4D *ret);
+extern int lwline_is_empty(const LWLINE *line);
+extern int lwpoint_is_empty(const LWPOINT *point);
 
 /* PostGIS functions called by MobilityDB  */
 

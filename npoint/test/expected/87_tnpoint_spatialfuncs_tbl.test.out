@@ -7,13 +7,13 @@ SELECT max(st_npoints(trajectory(temp))) FROM tbl_tnpoint;
 SELECT count(*) FROM tbl_tnpoint t1, tbl_geometry t2 WHERE atGeometry(t1.temp, ST_SetSRID(t2.g, 5676)) IS NOT NULL;
  count 
 -------
-  1704
+  1503
 (1 row)
 
 SELECT count(*) FROM tbl_tnpoint t1, tbl_geometry t2 WHERE minusGeometry(t1.temp, ST_SetSRID(t2.g, 5676)) IS NOT NULL;
  count 
 -------
-  9684
+  8033
 (1 row)
 
 SELECT MAX(length(temp)) FROM tbl_tnpoint;

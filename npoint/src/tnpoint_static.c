@@ -797,8 +797,8 @@ rid_from_geom(Datum geom)
 {
 	char *geomstr = ewkt_out(ANYOID, geom);
 	char sql[128];
-	sprintf(sql, "SELECT gid FROM ways WHERE ST_DWithin(the_geom, '%s', %lf) \
-		ORDER BY ST_Distance(the_geom, '%s') LIMIT 1", geomstr, DIST_EPSILON, geomstr);
+	sprintf(sql, "SELECT gid FROM public.ways WHERE ST_DWithin(the_geom, '%s', %lf) "
+		"ORDER BY ST_Distance(the_geom, '%s') LIMIT 1", geomstr, DIST_EPSILON, geomstr);
 	pfree(geomstr);
 	bool isNull = true;
 	int64 result = 0; /* make compiler quiet */
@@ -1012,7 +1012,7 @@ geom_as_nsegment_internal(Datum geom)
 			pfree(points);
 			return NULL;
 		}
-        minPos = Min(minPos, points[i]->pos);
+		minPos = Min(minPos, points[i]->pos);
 		maxPos = Max(maxPos, points[i]->pos);
 	}
 	nsegment *result = nsegment_make(rid, minPos, maxPos);

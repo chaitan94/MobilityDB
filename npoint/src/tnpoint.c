@@ -16,6 +16,7 @@
 #include "temporal_parser.h"
 #include "oidcache.h"
 #include "temporal_util.h"
+#include "tpoint_spatialfuncs.h"
 #include "tnpoint_static.h"
 #include "tnpoint_parser.h"
 
@@ -74,13 +75,23 @@ tnpointseq_as_tgeompointseq(const TemporalSeq *seq)
 	TemporalInst **instants = palloc(sizeof(TemporalInst *) * seq->count);
 	npoint *np = DatumGetNpoint(temporalinst_value(temporalseq_inst_n(seq, 0)));
 	Datum line = route_geom(np->rid);
+	/* We are sure line is not empty */
+	GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(line);
+	int srid = gserialized_get_srid(gs);
+	LWLINE *lwline = (LWLINE *)lwgeom_from_gserialized(gs);
 	for (int i = 0; i < seq->count; i++)
 	{
 		TemporalInst *inst = temporalseq_inst_n(seq, i);
 		np = DatumGetNpoint(temporalinst_value(inst));
-		Datum geom = call_function2(LWGEOM_line_interpolate_point, line,
-			Float8GetDatum(np->pos));
-		instants[i] = temporalinst_make(geom, inst->t, type_oid(T_GEOMETRY));
+		POINTARRAY* opa = lwline_interpolate_points(lwline, np->pos, 0);
+		LWGEOM *lwpoint;
+		if (opa->npoints <= 1)
+			lwpoint = lwpoint_as_lwgeom(lwpoint_construct(srid, NULL, opa));
+		else
+			lwpoint = lwmpoint_as_lwgeom(lwmpoint_construct(srid, opa));
+		Datum point = PointerGetDatum(geometry_serialize(lwpoint));
+		instants[i] = temporalinst_make(point, inst->t, type_oid(T_GEOMETRY));
+		pfree(DatumGetPointer(point));
 	}
 	TemporalSeq *result = temporalseq_make(instants, seq->count,
 		seq->period.lower_inc, seq->period.upper_inc,

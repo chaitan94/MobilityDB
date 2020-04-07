@@ -14,6 +14,9 @@ SELECT st_astext(trajectory(tnpoint '{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)
 SELECT st_astext(trajectory(tnpoint 'Interp=Stepwise;[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]'));
 SELECT st_astext(trajectory(tnpoint 'Interp=Stepwise;{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.6)@2000-01-04, Npoint(2, 0.6)@2000-01-05]}'));
 
+SELECT st_astext(trajectory(tnpoint '{Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.2)@2000-01-02}'));
+SELECT st_astext(trajectory(tnpoint '{[Npoint(1, 0.0)@2000-01-01, Npoint(1, 1.0)@2000-01-02], [Npoint(2, 0.1)@2000-01-03, Npoint(2, 0.5)@2000-01-04]}'));
+
 SELECT atGeometry(tnpoint 'Npoint(1, 0.5)@2000-01-01', geometry 'SRID=5676;Polygon((50 50,50 100,100 100,100 50,50 50))');
 SELECT atGeometry(tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}', geometry 'SRID=5676;Polygon((50 50,50 100,100 100,100 50,50 50))');
 SELECT atGeometry(tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]', geometry 'SRID=5676;Polygon((50 50,50 100,100 100,100 50,50 50))');
