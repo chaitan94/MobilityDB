@@ -63,7 +63,7 @@ SELECT (npoint 'npoint(1,0.2)'::geometry)::npoint;
 SELECT (nsegment 'nsegment(1,0.5,0.7)'::geometry)::nsegment;
 SELECT (nsegment 'nsegment(1,0.5,0.5)'::geometry)::nsegment;
 
-SELECT geometry 'SRID=5676Point(610.455019399524 528.508247341961)'::npoint;
+SELECT geometry 'SRID=5676;Point(610.455019399524 528.508247341961)'::npoint;
 
 SELECT geometry 'SRID=5676;LINESTRING(83.2832009065896 86.0903322231025,69.0807154867798 81.2081503681839,13.625699095428 97.5346013903618)'::nsegment;
 -- NULL
