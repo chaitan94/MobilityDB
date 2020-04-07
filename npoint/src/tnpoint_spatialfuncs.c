@@ -1018,6 +1018,7 @@ NAI_tnpoints_geometry(const TemporalS *ts, Datum geom)
 			if (result != NULL)
 				pfree(result);
 			result = inst;
+			mindist = dist;
 		}
 		else
 			pfree(inst);
