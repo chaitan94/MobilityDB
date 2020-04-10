@@ -1,0 +1,438 @@
+SELECT astext(tgeometry 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2012-01-01 08:00:00');
+                        astext                         
+-------------------------------------------------------
+ POLYGON((0 0,1 0,1 1,0 1,0 0))@2012-01-01 08:00:00+00
+(1 row)
+
+SELECT astext(tgeometry '  Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2012-01-01 08:00:00  ');
+                        astext                         
+-------------------------------------------------------
+ POLYGON((0 0,2 0,2 2,0 2,0 0))@2012-01-01 08:00:00+00
+(1 row)
+
+SELECT astext(tgeography 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2012-01-01 08:00:00');
+                        astext                         
+-------------------------------------------------------
+ POLYGON((0 0,1 0,1 1,0 1,0 0))@2012-01-01 08:00:00+00
+(1 row)
+
+SELECT astext(tgeography '  Polygon((0 0, 2 0, 2 2, 0 2, 0 0)) @ 2012-01-01 08:00:00  ');
+                        astext                         
+-------------------------------------------------------
+ POLYGON((0 0,2 0,2 2,0 2,0 0))@2012-01-01 08:00:00+00
+(1 row)
+
+/* Errors */
+SELECT tgeometry 'TRUE@2012-01-01 08:00:00';
+ERROR:  parse error - invalid geometry
+LINE 2: SELECT tgeometry 'TRUE@2012-01-01 08:00:00';
+                         ^
+HINT:  "TR" <-- parse error at position 2 within geometry
+SELECT tgeography 'ABC@2012-01-01 08:00:00';
+ERROR:  parse error - invalid geometry
+LINE 1: SELECT tgeography 'ABC@2012-01-01 08:00:00';
+                          ^
+HINT:  "AB" <-- parse error at position 2 within geometry
+SELECT tgeometry 'Polygon empty@2000-01-01 00:00:00+01';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry 'Polygon empty@2000-01-01 00:00:00+01';
+                         ^
+SELECT tgeography 'Polygon empty@2000-01-01 00:00:00+01';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeography 'Polygon empty@2000-01-01 00:00:00+01';
+                          ^
+SELECT tgeometry 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01 00:00:00+01 ,';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeometry 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01...
+                         ^
+SELECT tgeography 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01 00:00:00+01 ,';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeography 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-0...
+                          ^
+SELECT astext(tgeometry ' { Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00 , Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00 , Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00 } ');
+                                                                                astext                                                                                 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00}
+(1 row)
+
+SELECT astext(tgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00}');
+                                                                                astext                                                                                 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00}
+(1 row)
+
+SELECT astext(tgeography ' { Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00 , Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00 , Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00 } ');
+                                                                                astext                                                                                 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00}
+(1 row)
+
+SELECT astext(tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00}');
+                                                                                astext                                                                                 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00}
+(1 row)
+
+/* Errors */
+SELECT astext(tgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00}');
+ERROR:  All regions must be congruent
+LINE 2: SELECT astext(tgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))...
+                                ^
+SELECT astext(tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00}');
+ERROR:  All regions must be congruent
+LINE 1: SELECT astext(tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0)...
+                                 ^
+SELECT tgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon empty@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00}';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-0...
+                         ^
+SELECT tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon empty@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00}';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                          ^
+SELECT tgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0 0, 2 0 0, 2 2 0, 0 2 0, 0 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00}';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-0...
+                         ^
+SELECT tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0 0, 2 0 0, 2 2 0, 0 2 0, 0 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00}';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                          ^
+SELECT tgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00]';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-0...
+                         ^
+SELECT tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00]';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                          ^
+SELECT tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00} xxx';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                          ^
+SELECT tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00} xxx';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                          ^
+SELECT astext(tgeometry ' [ Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00 , Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00 , Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00 ] ');
+                                                                                astext                                                                                 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ [POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00]
+(1 row)
+
+SELECT astext(tgeometry '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00]');
+                                                                                astext                                                                                 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ [POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00]
+(1 row)
+
+SELECT astext(tgeography ' [ Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00 , Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00 , Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00 ] ');
+                                                                                astext                                                                                 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ [POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00]
+(1 row)
+
+SELECT astext(tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00]');
+                                                                                astext                                                                                 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ [POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00]
+(1 row)
+
+/* Errors */
+SELECT astext(tgeometry '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00]');
+ERROR:  All regions must be congruent
+LINE 2: SELECT astext(tgeometry '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))...
+                                ^
+SELECT astext(tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00]');
+ERROR:  All regions must be congruent
+LINE 1: SELECT astext(tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0)...
+                                 ^
+SELECT astext(tgeometry '[Polygon((0 0 0, 1 0 0, 1 1 0, 0 1 0, 0 0 0))@2001-01-01, Polygon((0 0 0, 2 0 0, 2 2 0, 0 2 0, 0 0 0))@2001-01-02, Polygon((0 0 0, 3 0 0, 3 3 0, 0 3 0, 0 0 0))@2001-01-03]');
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT astext(tgeometry '[Polygon((0 0 0, 1 0 0, 1 1 0, 0 1 ...
+                                ^
+SELECT tgeometry '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon empty@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00]';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-0...
+                         ^
+SELECT tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon empty@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00]';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                          ^
+SELECT tgeometry '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0 0, 2 0 0, 2 2 0, 0 2 0, 0 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00]';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-0...
+                         ^
+SELECT tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0 0, 2 0 0, 2 2 0, 0 2 0, 0 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00]';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                          ^
+SELECT tgeometry '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00}';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeometry '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-0...
+                         ^
+SELECT tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00}';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                          ^
+SELECT tgeometry '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00] xxx';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeometry '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-0...
+                         ^
+SELECT tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00] xxx';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                          ^
+SELECT astext(tgeometry '  { [ Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00 , Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00 , Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00 ],
+ [ Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:00:00 , Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 09:05:00 , Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:06:00 ] } ');
+                                                                                                                                                                     astext                                                                                                                                                                     
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00], [POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 09:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 09:05:00+00, POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 09:06:00+00]}
+(1 row)
+
+SELECT astext(tgeometry '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00],
+ [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:00:00,Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 09:05:00,Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:06:00]}');
+                                                                                                                                                                     astext                                                                                                                                                                     
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00], [POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 09:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 09:05:00+00, POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 09:06:00+00]}
+(1 row)
+
+SELECT astext(tgeography '  { [ Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00 , Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00 , Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00 ],
+ [ Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:00:00 , Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 09:05:00 , Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:06:00 ] } ');
+                                                                                                                                                                     astext                                                                                                                                                                     
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00], [POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 09:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 09:05:00+00, POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 09:06:00+00]}
+(1 row)
+
+SELECT astext(tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00],
+ [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:00:00,Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 09:05:00,Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:06:00]}');
+                                                                                                                                                                     astext                                                                                                                                                                     
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 08:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 08:05:00+00, POLYGON((1 1,0 1,0 0,1 0,1 1))@2001-01-01 08:06:00+00], [POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 09:00:00+00, POLYGON((1 0,1 1,0 1,0 0,1 0))@2001-01-01 09:05:00+00, POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01 09:06:00+00]}
+(1 row)
+
+/* Errors */
+SELECT astext(tgeometry '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00],
+ [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 09:05:00,Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:06:00]}');
+ERROR:  All regions must be congruent
+LINE 2: SELECT astext(tgeometry '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0)...
+                                ^
+SELECT astext(tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 08:05:00,Polygon((0 0, 3 0, 3 3, 0 3, 0 0))@2001-01-01 08:06:00],
+ [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:00:00,Polygon((0 0, 2 0, 2 2, 0 2, 0 0))@2001-01-01 09:05:00,Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:06:00]}');
+ERROR:  All regions must be congruent
+LINE 1: SELECT astext(tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0...
+                                 ^
+SELECT tgeometry '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00, Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00, Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00],
+ [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:00:00, Polygon empty@2001-01-01 09:05:00, Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:06:00]}';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                         ^
+SELECT tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00, Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00, Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00],
+ [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:00:00, Polygon empty@2001-01-01 09:05:00, Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 09:06:00]}';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001...
+                          ^
+SELECT tgeometry '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00],[Polygon((0 0 0, 1 0 0, 1 1 0, 0 1 0, 0 0 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00]}';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                         ^
+SELECT tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00],[Polygon((0 0 0, 1 0 0, 1 1 0, 0 1 0, 0 0 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00]}';
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001...
+                          ^
+SELECT tgeometry '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00],[Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00]';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeometry '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                         ^
+SELECT tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00],[Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00]';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001...
+                          ^
+SELECT tgeometry '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00],[Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00]} xxx';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeometry '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-...
+                         ^
+SELECT tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001-01-01 08:00:00],[Polygon((1 0, 1 1, 0 1, 0 0, 1 0))@2001-01-01 08:05:00,Polygon((1 1, 0 1, 0 0, 1 0, 1 1))@2001-01-01 08:06:00]} xxx';
+ERROR:  Could not parse temporal value
+LINE 1: SELECT tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2001...
+                          ^
+SELECT asewkt(tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'));
+                      asewkt                       
+---------------------------------------------------
+ POLYGON((0 0,1 0,0 1,0 0))@2012-01-01 08:00:00+00
+(1 row)
+
+SELECT asewkt(tgeometryinst(NULL, '2012-01-01 08:00:00'));
+ asewkt 
+--------
+ 
+(1 row)
+
+SELECT asewkt(tgeographyinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'));
+                                asewkt                                 
+-----------------------------------------------------------------------
+ SRID=4326;SRID=4326;POLYGON((0 0,1 0,0 1,0 0))@2012-01-01 08:00:00+00
+(1 row)
+
+SELECT asewkt(tgeographyinst(NULL, '2012-01-01 08:00:00'));
+ asewkt 
+--------
+ 
+(1 row)
+
+/* Errors */
+SELECT asewkt(tgeometryinst(geometry 'polygon empty', timestamptz '2000-01-01'));
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+SELECT asewkt(tgeographyinst(geography 'polygon empty', timestamptz '2000-01-01'));
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+SELECT asewkt(tgeometryi(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(1 0, 2 0, 1 1, 1 0)'::geometry), '2012-01-01 08:10:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]));
+                                                                   asewkt                                                                    
+---------------------------------------------------------------------------------------------------------------------------------------------
+ {POLYGON((0 0,1 0,0 1,0 0))@2012-01-01 08:00:00+00, RTransform(0, 1, 0)@2012-01-01 08:10:00+00, RTransform(0, 0, 0)@2012-01-01 08:20:00+00}
+(1 row)
+
+SELECT asewkt(tgeographyi(ARRAY[
+tgeographyinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeographyinst(ST_MakePolygon('LineString(1 0, 2 0, 1 1, 1 0)'::geometry), '2012-01-01 08:10:00'),
+tgeographyinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]));
+                                                                             asewkt                                                                              
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ SRID=4326;{SRID=4326;POLYGON((0 0,1 0,0 1,0 0))@2012-01-01 08:00:00+00, RTransform(0, 1, 0)@2012-01-01 08:10:00+00, RTransform(0, 0, 0)@2012-01-01 08:20:00+00}
+(1 row)
+
+/* Errors */
+SELECT asewkt(tgeometryi(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 1 1, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]));
+ERROR:  Corresponding rings in each region must contain the same number of points
+SELECT asewkt(tgeometryi(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0 0, 1 0 0, 0 1 0, 0 0 0)'::geometry), '2012-01-01 08:20:00')
+]));
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+SELECT asewkt(tgeometryi(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 2 0, 0 2, 0 0)'::geometry), '2012-01-01 08:10:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]));
+ERROR:  All regions must be congruent
+SELECT asewkt(tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(1 0, 2 0, 1 1, 1 0)'::geometry), '2012-01-01 08:10:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]));
+                                                                   asewkt                                                                    
+---------------------------------------------------------------------------------------------------------------------------------------------
+ [POLYGON((0 0,1 0,0 1,0 0))@2012-01-01 08:00:00+00, RTransform(0, 1, 0)@2012-01-01 08:10:00+00, RTransform(0, 0, 0)@2012-01-01 08:20:00+00]
+(1 row)
+
+SELECT asewkt(tgeographyseq(ARRAY[
+tgeographyinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeographyinst(ST_MakePolygon('LineString(1 0, 2 0, 1 1, 1 0)'::geometry), '2012-01-01 08:10:00'),
+tgeographyinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]));
+                                                                        asewkt                                                                         
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+ [SRID=4326;POLYGON((0 0,1 0,0 1,0 0))@2012-01-01 08:00:00+00, RTransform(0, 1, 0)@2012-01-01 08:10:00+00, RTransform(0, 0, 0)@2012-01-01 08:20:00+00]
+(1 row)
+
+/* Errors */
+SELECT asewkt(tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 1 1, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]));
+ERROR:  Corresponding rings in each region must contain the same number of points
+SELECT asewkt(tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0 0, 1 0 0, 0 1 0, 0 0 0)'::geometry), '2012-01-01 08:20:00')
+]));
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+SELECT asewkt(tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 2 0, 0 2, 0 0)'::geometry), '2012-01-01 08:10:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]));
+ERROR:  All regions must be congruent
+SELECT asewkt(tgeometrys(ARRAY[
+tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(1 0, 2 0, 1 1, 1 0)'::geometry), '2012-01-01 08:10:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]),
+tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 09:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(1 0, 2 0, 1 1, 1 0)'::geometry), '2012-01-01 09:10:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 09:20:00')
+])]));
+                                                                                                                                       asewkt                                                                                                                                        
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POLYGON((0 0,1 0,0 1,0 0))@2012-01-01 08:00:00+00, RTransform(0, 1, 0)@2012-01-01 08:10:00+00, RTransform(0, 0, 0)@2012-01-01 08:20:00+00], [RTransform(0, 0, 0)@2012-01-01 09:00:00+00, RTransform(0, 1, 0)@2012-01-01 09:10:00+00, RTransform(0, 0, 0)@2012-01-01 09:20:00+00]}
+(1 row)
+
+SELECT asewkt(tgeometrys(ARRAY[
+tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(1 0, 2 0, 1 1, 1 0)'::geometry), '2012-01-01 08:10:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]),
+tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00'),
+tgeometryinst(ST_MakePolygon('LineString(1 0, 2 0, 1 1, 1 0)'::geometry), '2012-01-01 08:30:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:40:00')
+], FALSE, TRUE)]));
+ERROR:  Unknown geometry type: 0 - Unknown
+SELECT asewkt(tgeographys(ARRAY[
+tgeographyseq(ARRAY[
+tgeographyinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeographyinst(ST_MakePolygon('LineString(1 0, 2 0, 1 1, 1 0)'::geometry), '2012-01-01 08:10:00'),
+tgeographyinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]),
+tgeographyseq(ARRAY[
+tgeographyinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 09:00:00'),
+tgeographyinst(ST_MakePolygon('LineString(1 0, 2 0, 1 1, 1 0)'::geometry), '2012-01-01 09:10:00'),
+tgeographyinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 09:20:00')
+])]));
+                                                                                                                                            asewkt                                                                                                                                             
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[SRID=4326;POLYGON((0 0,1 0,0 1,0 0))@2012-01-01 08:00:00+00, RTransform(0, 1, 0)@2012-01-01 08:10:00+00, RTransform(0, 0, 0)@2012-01-01 08:20:00+00], [RTransform(0, 0, 0)@2012-01-01 09:00:00+00, RTransform(0, 1, 0)@2012-01-01 09:10:00+00, RTransform(0, 0, 0)@2012-01-01 09:20:00+00]}
+(1 row)
+
+/* Errors */
+SELECT asewkt(tgeometrys(ARRAY[
+tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 1 1, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]),
+tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 09:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 1 1, 0 1, 0 0)'::geometry), '2012-01-01 09:20:00')
+])]));
+ERROR:  Corresponding rings in each region must contain the same number of points
+SELECT asewkt(tgeometrys(ARRAY[
+tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0 0, 1 0 0, 0 1 0, 0 0 0)'::geometry), '2012-01-01 08:20:00')
+]),
+tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 09:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0 0, 1 0 0, 0 1 0, 0 0 0)'::geometry), '2012-01-01 09:20:00')
+])]));
+ERROR:  Only non-empty polygon geometries without Z or M dimension accepted
+SELECT asewkt(tgeometrys(ARRAY[
+tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(1 0, 2 0, 1 1, 1 0)'::geometry), '2012-01-01 08:10:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:20:00')
+]),
+tgeometryseq(ARRAY[
+tgeometryinst(ST_MakePolygon('LineString(0 0, 2 0, 0 2, 0 0)'::geometry), '2012-01-01 09:00:00'),
+tgeometryinst(ST_MakePolygon('LineString(1 0, 3 0, 1 2, 1 0)'::geometry), '2012-01-01 09:10:00'),
+tgeometryinst(ST_MakePolygon('LineString(0 0, 2 0, 0 2, 0 0)'::geometry), '2012-01-01 09:20:00')
+])]));
+ERROR:  All regions must be congruent

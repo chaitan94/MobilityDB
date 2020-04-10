@@ -10,3 +10,5 @@ file(GLOB SQLGEOM "geo/src/sql/*.in.sql")
 list(SORT SQLGEOM)
 set(SQL "${SQL};${SQLGEOM}")
 set(CONTROLIN "${CONTROLIN};point/control.in;geo/control.in")
+
+include("geo/test/scripts/test.cmake")
