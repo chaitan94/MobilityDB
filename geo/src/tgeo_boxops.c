@@ -61,6 +61,7 @@ rotating_geo_to_stbox_internal(STBOX *box, GSERIALIZED *gs)
     box->xmax = centroid.x + d;
     box->ymin = centroid.y - d;
     box->ymax = centroid.y + d;
+    box->srid = gserialized_get_srid(gs);
     MOBDB_FLAGS_SET_X(box->flags, true);
     MOBDB_FLAGS_SET_Z(box->flags, false);
     MOBDB_FLAGS_SET_T(box->flags, false);
