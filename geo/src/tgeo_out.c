@@ -284,11 +284,11 @@ tgeo_as_ewkt_internal(Temporal *temp)
     if (temp->duration == TEMPORALINST) 
         str2 = temporalinst_to_string((TemporalInst *)temp, &region_ewkt_out);
     else if (temp->duration == TEMPORALI) 
-        str2 = temporali_to_string((TemporalI *)temp, &region_ewkt_out);
+        str2 = tgeoi_to_string((TemporalI *)temp, &region_ewkt_out);
     else if (temp->duration == TEMPORALSEQ) 
-        str2 = temporalseq_to_string((TemporalSeq *)temp, false, &region_ewkt_out);
+        str2 = tgeoseq_to_string((TemporalSeq *)temp, false, &region_ewkt_out, NULL);
     else if (temp->duration == TEMPORALS) 
-        str2 = temporals_to_string((TemporalS *)temp, &region_ewkt_out);
+        str2 = tgeos_to_string((TemporalS *)temp, &region_ewkt_out);
     char *str = (char *) palloc(strlen(str1) + strlen(str2) + 1);
     strcpy(str, str1);
     strcat(str, str2);
