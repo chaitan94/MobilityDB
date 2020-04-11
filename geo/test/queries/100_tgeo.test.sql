@@ -399,3 +399,12 @@ SELECT asewkt(tgeographyi(tgeography '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-0
 SELECT asewkt(tgeographyi(tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02, Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03],[Polygon((4 3, 4 4, 3 4, 3 3, 4 3))@2000-01-04, Polygon((4 3, 4 4, 3 4, 3 3, 4 3))@2000-01-05]}'));
 SELECT asewkt(tgeographyseq(tgeography '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02, Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03}'));
 SELECT asewkt(tgeographyseq(tgeography '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02, Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03],[Polygon((4 3, 4 4, 3 4, 3 3, 4 3))@2000-01-04, Polygon((4 3, 4 4, 3 4, 3 3, 4 3))@2000-01-05]}'));
+
+-------------------------------------------------------------------------------
+
+SELECT asText(toLinear(tgeometry 'Interp=Stepwise;[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01]'));
+SELECT asText(toLinear(tgeometry 'Interp=Stepwise;[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02, Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]'));
+-- TODO: fix tgeometryseq representation to fix this function --
+-- SELECT asText(toLinear(tgeometry 'Interp=Stepwise;{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02, Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04], [Polygon((4 3, 4 4, 3 4, 3 3, 4 3))@2000-01-05, Polygon((4 3, 4 4, 3 4, 3 3, 4 3))@2000-01-06]}')); --
+
+-------------------------------------------------------------------------------
