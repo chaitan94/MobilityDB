@@ -21,6 +21,7 @@
 /*****************************************************************************/
 
 extern TemporalInst *temporalseq_inst_n(const TemporalSeq *seq, int index);
+extern TemporalInst *temporalseq_standalone_inst_n(const TemporalSeq *seq, int index);
 extern TemporalSeq *temporalseq_make(TemporalInst **instants, 
 	int count, bool lower_inc, bool upper_inc, bool linear, bool normalize);
 extern TemporalSeq *temporalseq_copy(const TemporalSeq *seq);

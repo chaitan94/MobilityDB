@@ -71,6 +71,20 @@ temporalseq_inst_n(const TemporalSeq *seq, int index)
 			seq->offsets[index]);					/* offset */
 }
 
+/* N-th TemporalInst of a TemporalSeq as standalone instant*/
+/* TODO: find a better name */
+
+TemporalInst *
+temporalseq_standalone_inst_n(const TemporalSeq *seq, int index)
+{
+	TemporalInst *inst = temporalseq_inst_n(seq, index);
+	if (inst->valuetypid != type_oid(T_RTRANSFORM))
+		return inst;
+	else
+		/* TODO: This creates a new instant! */
+		return tgeoinst_rtransfrom_to_region(inst, temporalseq_inst_n(seq, 0));
+}
+
 /* Pointer to the bounding box of a TemporalSeq */
 
 void * 
@@ -2043,7 +2057,7 @@ tstepseq_to_linear1(TemporalSeq **result, const TemporalSeq *seq)
 	int k = 0;
 	for (int i = 1; i < seq->count; i++)
 	{
-		inst2 = temporalseq_inst_n(seq, i);
+		inst2 = temporalseq_standalone_inst_n(seq, i);
 		value2 = temporalinst_value(inst2);
 		TemporalInst *instants[2];
 		instants[0] = inst1;
@@ -2059,7 +2073,7 @@ tstepseq_to_linear1(TemporalSeq **result, const TemporalSeq *seq)
 	}
 	if (seq->period.upper_inc)
 	{
-		value1 = temporalinst_value(temporalseq_inst_n(seq, seq->count - 2));
+		value1 = temporalinst_value(temporalseq_standalone_inst_n(seq, seq->count - 2));
 		value2 = temporalinst_value(inst2);
 		if (datum_ne(value1, value2, seq->valuetypid))
 			result[k++] = temporalseq_make(&inst2, 1, true, true,
