@@ -1026,7 +1026,7 @@ temporali_to_temporals(const TemporalI *ti, bool linear)
 	TemporalSeq **sequences = palloc(sizeof(TemporalSeq *) * ti->count);
 	for (int i = 0; i < ti->count; i++)
 	{
-		TemporalInst *inst = temporali_inst_n(ti, i);
+		TemporalInst *inst = temporali_standalone_inst_n(ti, i);
 		sequences[i] = temporalseq_make(&inst, 1, 
 			true, true, linear, false);
 	}
