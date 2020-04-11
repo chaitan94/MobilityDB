@@ -292,6 +292,288 @@ SELECT asewkt(tgeography '[SRID=4326;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-
  SRID=4326;[POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00]
 (1 row)
 
+SELECT format_type(oid, -1) FROM (SELECT oid FROM pg_type WHERE typname = 'tgeometry') t;
+ format_type 
+-------------
+ tgeometry
+(1 row)
+
+SELECT format_type(oid, tgeometry_typmod_in(ARRAY[cstring 'Instant','Polygon','5676']))
+FROM (SELECT oid FROM pg_type WHERE typname = 'tgeometry') t;
+           format_type           
+---------------------------------
+ tgeometry(Instant,Polygon,5676)
+(1 row)
+
+/* Errors */
+SELECT tgeometry_typmod_in(ARRAY[cstring 'Instant', NULL,'5676']);
+ERROR:  typmod array must not contain nulls
+SELECT tgeometry_typmod_in(ARRAY[[cstring 'Instant'],[cstring 'Polygon'],[cstring '5676']]);
+ERROR:  typmod array must be one-dimensional
+SELECT asewkt(tgeometry(Instant) 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+                        asewkt                         
+-------------------------------------------------------
+ POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00
+(1 row)
+
+SELECT asewkt(tgeometry(Instant, Polygon) 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+                        asewkt                         
+-------------------------------------------------------
+ POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00
+(1 row)
+
+SELECT asewkt(tgeometry(Polygon) 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+                        asewkt                         
+-------------------------------------------------------
+ POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00
+(1 row)
+
+SELECT asewkt(tgeometry(Polygon, 4326) 'SRID=4326;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+                             asewkt                              
+-----------------------------------------------------------------
+ SRID=4326;POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00
+(1 row)
+
+SELECT asewkt(tgeometry(Instant, Polygon, 4326) 'SRID=4326;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+                             asewkt                              
+-----------------------------------------------------------------
+ SRID=4326;POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00
+(1 row)
+
+SELECT asewkt(tgeography(Polygon,4326) 'SRID=4326;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+                             asewkt                              
+-----------------------------------------------------------------
+ SRID=4326;POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00
+(1 row)
+
+SELECT asewkt(tgeography(Instant,Polygon,4326) 'SRID=4326;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+                             asewkt                              
+-----------------------------------------------------------------
+ SRID=4326;POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00
+(1 row)
+
+SELECT asewkt(tgeometry(InstantSet) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+                                                     asewkt                                                     
+----------------------------------------------------------------------------------------------------------------
+ {POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00}
+(1 row)
+
+SELECT asewkt(tgeometry(InstantSet, Polygon) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+                                                     asewkt                                                     
+----------------------------------------------------------------------------------------------------------------
+ {POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00}
+(1 row)
+
+SELECT asewkt(tgeometry(Polygon, 4326) 'SRID=4326;{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+                                                          asewkt                                                          
+--------------------------------------------------------------------------------------------------------------------------
+ SRID=4326;{POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00}
+(1 row)
+
+SELECT asewkt(tgeometry(InstantSet, Polygon, 4326) 'SRID=4326;{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+                                                          asewkt                                                          
+--------------------------------------------------------------------------------------------------------------------------
+ SRID=4326;{POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00}
+(1 row)
+
+SELECT asewkt(tgeometry(Sequence) '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+                                                     asewkt                                                     
+----------------------------------------------------------------------------------------------------------------
+ [POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00]
+(1 row)
+
+SELECT asewkt(tgeometry(Sequence, Polygon) '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+                                                     asewkt                                                     
+----------------------------------------------------------------------------------------------------------------
+ [POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00]
+(1 row)
+
+SELECT asewkt(tgeometry(Polygon, 4326) 'SRID=4326;[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+                                                          asewkt                                                          
+--------------------------------------------------------------------------------------------------------------------------
+ SRID=4326;[POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00]
+(1 row)
+
+SELECT asewkt(tgeometry(Sequence, Polygon, 4326) 'SRID=4326;[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+                                                          asewkt                                                          
+--------------------------------------------------------------------------------------------------------------------------
+ SRID=4326;[POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00]
+(1 row)
+
+SELECT asewkt(tgeometry(SequenceSet) '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02], [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+                                                                                                              asewkt                                                                                                              
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00], [POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-03 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-04 00:00:00+00]}
+(1 row)
+
+SELECT asewkt(tgeometry(SequenceSet, Polygon) '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02], [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+                                                                                                              asewkt                                                                                                              
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00], [POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-03 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-04 00:00:00+00]}
+(1 row)
+
+SELECT asewkt(tgeometry(Polygon, 4326) 'SRID=4326;{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02], [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+                                                                                                                   asewkt                                                                                                                   
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ SRID=4326;{[POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00], [POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-03 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-04 00:00:00+00]}
+(1 row)
+
+SELECT asewkt(tgeometry(SequenceSet, Polygon, 4326) 'SRID=4326;{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02], [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+                                                                                                                   asewkt                                                                                                                   
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ SRID=4326;{[POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00], [POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-03 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-04 00:00:00+00]}
+(1 row)
+
+/* Errors */
+SELECT tgeometry(Instant,Polygon,5676,1234) 'SRID=5676;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01';
+ERROR:  Invalid temporal linestring or polygon type modifier:
+LINE 2: SELECT tgeometry(Instant,Polygon,5676,1234) 'SRID=5676;Polyg...
+               ^
+SELECT tgeometry(Instan,Polygon,5676) 'SRID=5676;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01';
+ERROR:  Invalid duration type modifier: instan
+LINE 1: SELECT tgeometry(Instan,Polygon,5676) 'SRID=5676;Polygon((0 ...
+               ^
+SELECT tgeometry(Instant,PolygonZZ,5676) 'SRID=5676;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01';
+ERROR:  Invalid geometry type modifier: polygonzz
+LINE 1: SELECT tgeometry(Instant,PolygonZZ,5676) 'SRID=5676;Polygon(...
+               ^
+SELECT tgeometry(Instant,Point,5676) 'SRID=5676;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01';
+ERROR:  Only polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry(Instant,Point,5676) 'SRID=5676;Polygon((0 0...
+               ^
+SELECT tgeometry(PolygonZ,5676) 'SRID=5676;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01';
+ERROR:  Only polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry(PolygonZ,5676) 'SRID=5676;Polygon((0 0, 1 0...
+               ^
+SELECT tgeometry(Point,5676) 'SRID=5676;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01';
+ERROR:  Only polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry(Point,5676) 'SRID=5676;Polygon((0 0, 1 0, 1...
+               ^
+SELECT tgeometry(Instant,PolygonZ) 'SRID=5676;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01';
+ERROR:  Only polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry(Instant,PolygonZ) 'SRID=5676;Polygon((0 0, ...
+               ^
+SELECT tgeometry(Instant,Point) 'SRID=5676;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01';
+ERROR:  Only polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry(Instant,Point) 'SRID=5676;Polygon((0 0, 1 0...
+               ^
+SELECT tgeometry(PolygonZ) 'SRID=5676;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01';
+ERROR:  Only polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry(PolygonZ) 'SRID=5676;Polygon((0 0, 1 0, 1 1...
+               ^
+SELECT tgeometry(Point) 'SRID=5676;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01';
+ERROR:  Only polygon geometries without Z or M dimension accepted
+LINE 1: SELECT tgeometry(Point) 'SRID=5676;Polygon((0 0, 1 0, 1 1, 0...
+               ^
+SELECT tgeometry(1, 2) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-02}';
+ERROR:  Invalid temporal polygon type modifier: 1
+LINE 1: SELECT tgeometry(1, 2) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@...
+               ^
+/* Errors */
+SELECT asewkt(tgeometry(Instant, Polygon, 4326) 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+ERROR:  Temporal geo SRID (0) does not match column SRID (4326)
+SELECT asewkt(tgeometry(Instant, Polygon, 4326) 'SRID=5434;Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+ERROR:  Temporal geo SRID (5434) does not match column SRID (4326)
+SELECT asewkt(tgeometry(InstantSet, Polygon) 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+ERROR:  Temporal type (Instant) does not match column type (InstantSet)
+SELECT asewkt(tgeometry(Sequence, Polygon) 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+ERROR:  Temporal type (Instant) does not match column type (Sequence)
+SELECT asewkt(tgeometry(SequenceSet, Polygon) 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+ERROR:  Temporal type (Instant) does not match column type (SequenceSet)
+/* Errors */
+SELECT asewkt(tgeometry(Instant, Polygon) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+ERROR:  Temporal type (InstantSet) does not match column type (Instant)
+SELECT asewkt(tgeometry(InstantSet, Polygon, 4326) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+ERROR:  Temporal geo SRID (0) does not match column SRID (4326)
+SELECT asewkt(tgeometry(InstantSet, Polygon, 4326) 'SRID=5434;{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+ERROR:  Temporal geo SRID (5434) does not match column SRID (4326)
+SELECT asewkt(tgeometry(Sequence, Polygon) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+ERROR:  Temporal type (InstantSet) does not match column type (Sequence)
+SELECT asewkt(tgeometry(SequenceSet, Polygon) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+ERROR:  Temporal type (InstantSet) does not match column type (SequenceSet)
+/* Errors */
+SELECT asewkt(tgeometry(Instant, Polygon) '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+ERROR:  Temporal type (Sequence) does not match column type (Instant)
+SELECT asewkt(tgeometry(InstantSet, Polygon) '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+ERROR:  Temporal type (Sequence) does not match column type (InstantSet)
+SELECT asewkt(tgeometry(Sequence, Polygon, 4326) '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+ERROR:  Temporal geo SRID (0) does not match column SRID (4326)
+SELECT asewkt(tgeometry(Sequence, Polygon, 4326) 'SRID=5434;[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+ERROR:  Temporal geo SRID (5434) does not match column SRID (4326)
+SELECT asewkt(tgeometry(SequenceSet, Polygon) '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+ERROR:  Temporal type (Sequence) does not match column type (SequenceSet)
+/* Errors */
+SELECT asewkt(tgeometry(Instant, Polygon) '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02],
+    [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+ERROR:  Temporal type (SequenceSet) does not match column type (Instant)
+SELECT asewkt(tgeometry(InstantSet, Polygon) '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02],
+    [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+ERROR:  Temporal type (SequenceSet) does not match column type (InstantSet)
+SELECT asewkt(tgeometry(Sequence, Polygon) '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02],
+    [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+ERROR:  Temporal type (SequenceSet) does not match column type (Sequence)
+SELECT asewkt(tgeometry(SequenceSet, Polygon, 4326) '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02],
+    [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+ERROR:  Temporal geo SRID (0) does not match column SRID (4326)
+SELECT asewkt(tgeometry(SequenceSet, Polygon, 4326) 'SRID=5434;{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02],
+    [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+ERROR:  Temporal geo SRID (5434) does not match column SRID (4326)
+SELECT asewkt(tgeography(Instant, Polygon) 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+                             asewkt                              
+-----------------------------------------------------------------
+ SRID=4326;POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00
+(1 row)
+
+SELECT asewkt(tgeography(InstantSet, Polygon) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+                                                          asewkt                                                          
+--------------------------------------------------------------------------------------------------------------------------
+ SRID=4326;{POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00}
+(1 row)
+
+SELECT asewkt(tgeography(Sequence, Polygon) '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+                                                          asewkt                                                          
+--------------------------------------------------------------------------------------------------------------------------
+ SRID=4326;[POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00]
+(1 row)
+
+SELECT asewkt(tgeography(SequenceSet, Polygon) '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02],
+    [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+                                                                                                                   asewkt                                                                                                                   
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ SRID=4326;{[POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-01 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-02 00:00:00+00], [POLYGON((0 0,1 0,1 1,0 1,0 0))@2000-01-03 00:00:00+00, POLYGON((5 5,6 5,6 6,5 6,5 5))@2000-01-04 00:00:00+00]}
+(1 row)
+
+/* Errors */
+SELECT asewkt(tgeography(InstantSet, Polygon) 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+ERROR:  Temporal type (Instant) does not match column type (InstantSet)
+SELECT asewkt(tgeography(Sequence, Polygon) 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+ERROR:  Temporal type (Instant) does not match column type (Sequence)
+SELECT asewkt(tgeography(SequenceSet, Polygon) 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01');
+ERROR:  Temporal type (Instant) does not match column type (SequenceSet)
+/* Errors */
+SELECT asewkt(tgeography(Instant, Polygon) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+ERROR:  Temporal type (InstantSet) does not match column type (Instant)
+SELECT asewkt(tgeography(Sequence, Polygon) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+ERROR:  Temporal type (InstantSet) does not match column type (Sequence)
+SELECT asewkt(tgeography(SequenceSet, Polygon) '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02}');
+ERROR:  Temporal type (InstantSet) does not match column type (SequenceSet)
+/* Errors */
+SELECT asewkt(tgeography(Instant, Polygon) '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+ERROR:  Temporal type (Sequence) does not match column type (Instant)
+SELECT asewkt(tgeography(InstantSet, Polygon) '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+ERROR:  Temporal type (Sequence) does not match column type (InstantSet)
+SELECT asewkt(tgeography(SequenceSet, Polygon) '[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02]');
+ERROR:  Temporal type (Sequence) does not match column type (SequenceSet)
+/* Errors */
+SELECT asewkt(tgeography(Instant, Polygon) '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02],
+    [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+ERROR:  Temporal type (SequenceSet) does not match column type (Instant)
+SELECT asewkt(tgeography(InstantSet, Polygon) '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02],
+    [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+ERROR:  Temporal type (SequenceSet) does not match column type (InstantSet)
+SELECT asewkt(tgeography(Sequence, Polygon) '{[Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-01, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-02],
+    [Polygon((0 0, 1 0, 1 1, 0 1, 0 0))@2000-01-03, Polygon((5 5, 6 5, 6 6, 5 6, 5 5))@2000-01-04]}');
+ERROR:  Temporal type (SequenceSet) does not match column type (Sequence)
 SELECT asewkt(tgeometryinst(ST_MakePolygon('LineString(0 0, 1 0, 0 1, 0 0)'::geometry), '2012-01-01 08:00:00'));
                       asewkt                       
 ---------------------------------------------------
