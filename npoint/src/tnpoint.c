@@ -271,6 +271,25 @@ tgeompoint_as_tnpoint(PG_FUNCTION_ARGS)
  *****************************************************************************/
 
 /*
+ * Route functions for temporal instants and sequences
+ */
+
+int64
+tnpointinst_route(const TemporalInst *inst)
+{
+	npoint *np = DatumGetNpoint(temporalinst_value(inst));
+	return np->rid;
+}
+
+int64
+tnpointiseq_route(const TemporalSeq *seq)
+{
+	TemporalInst *inst = temporalseq_inst_n(seq, 0);
+	npoint *np = DatumGetNpoint(temporalinst_value(inst));
+	return np->rid;
+}
+
+/*
  * Positions functions
  * Return the network segments covered by the moving object
  */

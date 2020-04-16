@@ -65,6 +65,14 @@ ensure_same_srid_tnpoint_npoint(const Temporal *temp, const npoint *np)
 			errmsg("The temporal network point and the network point must be in the same SRID")));
 }
 
+void
+ensure_same_rid_tnpointinst(const TemporalInst *inst1, const TemporalInst *inst2)
+{
+	if (tnpointinst_route(inst1) != tnpointinst_route(inst2))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("All network points composing a temporal sequence must have same route identifier")));
+}
+
 /*****************************************************************************
  * Functions for spatial reference systems
  *****************************************************************************/
@@ -881,7 +889,8 @@ tnpoint_at_geometry(PG_FUNCTION_ARGS)
 	ensure_has_not_Z_gs(gs);
 
 	Temporal *geomtemp = tnpoint_as_tgeompoint_internal(temp);
-	Temporal *geomresult = tpoint_at_geometry_internal(geomtemp, gs);
+	Temporal *geomresult = tpoint_at_geometry_internal(geomtemp,
+		PointerGetDatum(gs));
 	Temporal *result = NULL;
 	if (geomresult != NULL)
 	{
@@ -916,7 +925,8 @@ tnpoint_minus_geometry(PG_FUNCTION_ARGS)
 	ensure_has_not_Z_gs(gs);
 
 	Temporal *geomtemp = tnpoint_as_tgeompoint_internal(temp);
-	Temporal *geomresult = tpoint_minus_geometry_internal(geomtemp, gs);
+	Temporal *geomresult = tpoint_minus_geometry_internal(geomtemp,
+		PointerGetDatum(gs));
 	Temporal *result = NULL;
 	if (geomresult != NULL)
 	{

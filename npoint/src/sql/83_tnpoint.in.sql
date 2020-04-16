@@ -148,13 +148,13 @@ CREATE FUNCTION appendInstant(tnpoint, tnpoint)
 	RETURNS tnpoint
 	AS 'MODULE_PATHNAME', 'temporal_append_instant'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION append(tnpoint, tnpoint)
+CREATE FUNCTION merge(tnpoint, tnpoint)
 	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'temporal_append'
+	AS 'MODULE_PATHNAME', 'temporal_merge'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION append(tnpoint[])
+CREATE FUNCTION merge(tnpoint[])
 	RETURNS tnpoint
-	AS 'MODULE_PATHNAME', 'temporal_append_array'
+	AS 'MODULE_PATHNAME', 'temporal_merge_array'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

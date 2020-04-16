@@ -10,6 +10,21 @@
  *
  *****************************************************************************/
 
+
+-- Availability: 3.1.0
+CREATE OR REPLACE FUNCTION ST_LineInterpolatePoint(geography, float8, use_spheroid boolean DEFAULT true)
+	RETURNS geography
+	AS 'MODULE_PATHNAME', 'geography_line_interpolate_point'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+-- Availability: 3.1.0
+CREATE OR REPLACE FUNCTION ST_LineInterpolatePoints(geography, float8, use_spheroid boolean DEFAULT true, repeat boolean DEFAULT true)
+	RETURNS geography
+	AS 'MODULE_PATHNAME', 'geography_line_interpolate_point'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************/
+
 CREATE FUNCTION SRID(tgeompoint)
 	RETURNS integer
 	AS 'MODULE_PATHNAME', 'tpoint_srid'
@@ -129,6 +144,24 @@ CREATE FUNCTION atGeometry(tgeompoint, geometry)
 CREATE FUNCTION minusGeometry(tgeompoint, geometry)
 	RETURNS tgeompoint
 	AS 'MODULE_PATHNAME', 'tpoint_minus_geometry'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION atStbox(tgeompoint, stbox)
+	RETURNS tgeompoint
+	AS 'MODULE_PATHNAME', 'tpoint_at_stbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION atStbox(tgeogpoint, stbox)
+	RETURNS tgeogpoint
+	AS 'MODULE_PATHNAME', 'tpoint_at_stbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION minusStbox(tgeompoint, stbox)
+	RETURNS tgeompoint
+	AS 'MODULE_PATHNAME', 'tpoint_minus_stbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION minusStbox(tgeogpoint, stbox)
+	RETURNS tgeogpoint
+	AS 'MODULE_PATHNAME', 'tpoint_minus_stbox'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/

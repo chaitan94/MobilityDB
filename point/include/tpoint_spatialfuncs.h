@@ -22,6 +22,12 @@
 
 /*****************************************************************************/
 
+/* Functions derived from PostGIS to increase floating-point precision */
+
+extern double distance3d_sqr_pt_pt(const POINT3D *p1, const POINT3D *p2);
+extern double closest_point_on_segment_ratio(const POINT4D *p, const POINT4D *A,
+	const POINT4D *B);
+
 /* Parameter tests */
 
 extern void ensure_not_geodetic_stbox(const STBOX *box);
@@ -61,8 +67,14 @@ extern Datum datum2_point_eq(Datum geopoint1, Datum geopoint2);
 extern Datum datum2_point_ne(Datum geopoint1, Datum geopoint2);
 extern GSERIALIZED* geometry_serialize(LWGEOM *geom);
 
-extern Datum seg_interpolate_point(Datum value1, Datum value2, double ratio);
-extern double seg_locate_point(Datum start, Datum end, Datum point, Datum *closest, double *dist);
+extern Datum geomseg_interpolate_point(Datum value1, Datum value2, double ratio);
+extern double geomseg_locate_point(Datum start, Datum end, Datum point, double *dist);
+
+extern Datum geogseg_interpolate_point(Datum value1, Datum value2, double ratio);
+
+extern void spheroid_init(SPHEROID *s, double a, double b);
+extern void geography_interpolate_point4d(const POINT3D *p1, const POINT3D *p2,
+	const POINT4D *v1, const POINT4D *v2, double f, POINT4D *p);
 
 /* Functions for spatial reference systems */
 
@@ -120,12 +132,15 @@ extern Datum tgeompoints_twcentroid(TemporalS *ts);
 /* Restriction functions */
 
 extern Datum tpoint_at_geometry(PG_FUNCTION_ARGS);
+extern Datum tpoint_at_stbox(PG_FUNCTION_ARGS);
+
 extern Datum tpoint_minus_geometry(PG_FUNCTION_ARGS);
+extern Datum tpoint_minus_stbox(PG_FUNCTION_ARGS);
 
 extern TemporalSeq **tpointseq_at_geometry2(const TemporalSeq *seq, Datum geo, int *count);
 
-extern Temporal *tpoint_at_geometry_internal(Temporal *temp, GSERIALIZED *gs);
-extern Temporal *tpoint_minus_geometry_internal(Temporal *temp, GSERIALIZED *gs);
+extern Temporal *tpoint_at_geometry_internal(Temporal *temp, Datum geo);
+extern Temporal *tpoint_minus_geometry_internal(Temporal *temp, Datum geo);
 
 /* Nearest approach functions */
 

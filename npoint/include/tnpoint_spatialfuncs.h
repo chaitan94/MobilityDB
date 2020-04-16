@@ -27,6 +27,7 @@ extern void ensure_same_srid_tnpoint(const Temporal *temp1, const Temporal *temp
 extern void ensure_same_srid_tnpoint_stbox(const Temporal *temp, const STBOX *box);
 extern void ensure_same_srid_tnpoint_gs(const Temporal *temp, const GSERIALIZED *gs);
 extern void ensure_same_srid_tnpoint_npoint(const Temporal *temp, const npoint *np);
+extern void ensure_same_rid_tnpointinst(const TemporalInst *inst1, const TemporalInst *inst2);
 
 /* Functions for spatial reference systems */
 

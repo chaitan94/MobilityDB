@@ -18,6 +18,35 @@
 
 #include <liblwgeom.h>
 
+/*****************************************************************************/
+// Definitions needed for developing geography_line_interpolate_point
+
+/**
+* Conversion functions
+*/
+#define deg2rad(d) (M_PI * (d) / 180.0)
+#define rad2deg(r) (180.0 * (r) / M_PI)
+
+/**
+* Point in spherical coordinates on the world. Units of radians.
+*/
+typedef struct
+{
+	double lon;
+	double lat;
+} GEOGRAPHIC_POINT;
+
+extern int spheroid_init_from_srid(FunctionCallInfo fcinfo, int srid, SPHEROID *s);
+extern double ptarray_length_spheroid(const POINTARRAY *pa, const SPHEROID *s);
+extern int lwline_is_empty(const LWLINE *line);
+extern void geographic_point_init(double lon, double lat, GEOGRAPHIC_POINT *g);
+extern double sphere_distance(const GEOGRAPHIC_POINT *s, const GEOGRAPHIC_POINT *e);
+extern void geog2cart(const GEOGRAPHIC_POINT *g, POINT3D *p);
+extern void cart2geog(const POINT3D *p, GEOGRAPHIC_POINT *g);
+void normalize(POINT3D *p);
+
+/*****************************************************************************/
+
 /* Definitions copied from gserialized_gist.h */
 
 /*
@@ -68,7 +97,31 @@ typedef struct
 /*  Finds the two closest points and distance between two linesegments */
 extern int lw_dist3d_seg_seg(POINT3DZ *s1p1, POINT3DZ *s1p2, POINT3DZ *s2p1, POINT3DZ *s2p2, DISTPTS3D *dl);
 
-/* Definitions copied from #include liblwgeom_internal.h */
+/* Definitions copied from lwgeodetic.h */
+
+double spheroid_distance(const GEOGRAPHIC_POINT *a, const GEOGRAPHIC_POINT *b, const SPHEROID *spheroid);
+
+/* Definitions copied from liblwgeom_internal.h */
+
+/**
+* Floating point comparators.
+*/
+#define FP_TOLERANCE 1e-12
+#define FP_IS_ZERO(A) (fabs(A) <= FP_TOLERANCE)
+#define FP_MAX(A, B) (((A) > (B)) ? (A) : (B))
+#define FP_MIN(A, B) (((A) < (B)) ? (A) : (B))
+#define FP_ABS(a)   ((a) <	(0) ? -(a) : (a))
+#define FP_EQUALS(A, B) (fabs((A)-(B)) <= FP_TOLERANCE)
+#define FP_NEQUALS(A, B) (fabs((A)-(B)) > FP_TOLERANCE)
+#define FP_LT(A, B) (((A) + FP_TOLERANCE) < (B))
+#define FP_LTEQ(A, B) (((A) - FP_TOLERANCE) <= (B))
+#define FP_GT(A, B) (((A) - FP_TOLERANCE) > (B))
+#define FP_GTEQ(A, B) (((A) + FP_TOLERANCE) >= (B))
+#define FP_CONTAINS_TOP(A, X, B) (FP_LT(A, X) && FP_LTEQ(X, B))
+#define FP_CONTAINS_BOTTOM(A, X, B) (FP_LTEQ(A, X) && FP_LT(X, B))
+#define FP_CONTAINS_INCL(A, X, B) (FP_LTEQ(A, X) && FP_LTEQ(X, B))
+#define FP_CONTAINS_EXCL(A, X, B) (FP_LT(A, X) && FP_LT(X, B))
+#define FP_CONTAINS(A, X, B) FP_CONTAINS_EXCL(A, X, B)
 
 extern int p4d_same(const POINT4D *p1, const POINT4D *p2);
 extern int p3d_same(const POINT3D *p1, const POINT3D *p2);
@@ -113,6 +166,9 @@ extern Datum relate_pattern(PG_FUNCTION_ARGS);
 extern Datum intersection(PG_FUNCTION_ARGS);
 extern Datum distance(PG_FUNCTION_ARGS); /* For 2D */
 extern Datum distance3d(PG_FUNCTION_ARGS); /* For 3D */
+
+extern Datum BOX2D_to_LWGEOM(PG_FUNCTION_ARGS);
+extern Datum BOX3D_to_LWGEOM(PG_FUNCTION_ARGS);
 
 extern Datum LWGEOM_addpoint(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_azimuth(PG_FUNCTION_ARGS);
