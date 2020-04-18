@@ -36,6 +36,17 @@ typedef struct
 	double lat;
 } GEOGRAPHIC_POINT;
 
+
+/**
+* Two-point great circle segment from a to b.
+*/
+typedef struct
+{
+	GEOGRAPHIC_POINT start;
+	GEOGRAPHIC_POINT end;
+} GEOGRAPHIC_EDGE;
+
+
 extern int spheroid_init_from_srid(FunctionCallInfo fcinfo, int srid, SPHEROID *s);
 extern double ptarray_length_spheroid(const POINTARRAY *pa, const SPHEROID *s);
 extern int lwline_is_empty(const LWLINE *line);
@@ -43,7 +54,8 @@ extern void geographic_point_init(double lon, double lat, GEOGRAPHIC_POINT *g);
 extern double sphere_distance(const GEOGRAPHIC_POINT *s, const GEOGRAPHIC_POINT *e);
 extern void geog2cart(const GEOGRAPHIC_POINT *g, POINT3D *p);
 extern void cart2geog(const POINT3D *p, GEOGRAPHIC_POINT *g);
-void normalize(POINT3D *p);
+extern void normalize(POINT3D *p);
+extern double edge_distance_to_point(const GEOGRAPHIC_EDGE *e, const GEOGRAPHIC_POINT *gp, GEOGRAPHIC_POINT *closest);
 
 /*****************************************************************************/
 
@@ -93,6 +105,8 @@ typedef struct
 	int twisted; /*To preserve the order of incoming points to match the first and second point in 3dshortest and 3dlongest line*/
 	double tolerance; /*the tolerance for 3ddwithin and 3ddfullywithin*/
 } DISTPTS3D;
+
+extern int lw_dist3d_recursive(const LWGEOM *lwg1,const LWGEOM *lwg2, DISTPTS3D *dl);
 
 /*  Finds the two closest points and distance between two linesegments */
 extern int lw_dist3d_seg_seg(POINT3DZ *s1p1, POINT3DZ *s1p2, POINT3DZ *s2p1, POINT3DZ *s2p2, DISTPTS3D *dl);
@@ -178,6 +192,7 @@ extern Datum LWGEOM_dwithin(PG_FUNCTION_ARGS); /* For 2D */
 extern Datum LWGEOM_dwithin3d(PG_FUNCTION_ARGS); /* For 3D */
 extern Datum LWGEOM_geometryn_collection(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_get_srid(PG_FUNCTION_ARGS);	/* also for geography */
+extern Datum LWGEOM_set_srid(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_isempty(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_length_linestring(PG_FUNCTION_ARGS);
 extern Datum LWGEOM_line_locate_point(PG_FUNCTION_ARGS);

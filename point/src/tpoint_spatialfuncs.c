@@ -35,7 +35,7 @@
 
 /***********************************************************************
  * Interpolate a point along a geographic line.
- * This function is an extension to PostGIS
+ * These functions are an extension to PostGIS
  ***********************************************************************/
 
 /**
@@ -68,15 +68,15 @@ geography_interpolate_point4d(
 }
 
 POINTARRAY* geography_interpolate_points(const LWLINE *line, double length_fraction,
-	const SPHEROID *s, char repeat)
+	const SPHEROID *s, bool repeat)
 {
 	POINT4D pt;
 	uint32_t i;
 	uint32_t points_to_interpolate;
 	uint32_t points_found = 0;
-	double length;
-	double length_fraction_increment = length_fraction;
-	double length_fraction_consumed = 0;
+	double line_length, curr_length;
+	double length_increment = length_fraction;
+	double length_consumed = 0;
 	char has_z = (char) lwgeom_has_z(lwline_as_lwgeom(line));
 	char has_m = (char) lwgeom_has_m(lwline_as_lwgeom(line));
 	const POINTARRAY* ipa = line->points;
@@ -108,7 +108,9 @@ POINTARRAY* geography_interpolate_points(const LWLINE *line, double length_fract
 	}
 
 	/* Interpolate points along the line */
-	length = ptarray_length_spheroid(ipa, s);
+	line_length = ptarray_length_spheroid(ipa, s);
+	curr_length = line_length * length_increment;
+
 	points_to_interpolate = repeat ? (uint32_t) floor(1 / length_fraction) : 1;
 	opa = ptarray_construct(has_z, has_m, points_to_interpolate);
 
@@ -118,23 +120,24 @@ POINTARRAY* geography_interpolate_points(const LWLINE *line, double length_fract
 	{
 		getPoint4d_p(ipa, i+1, &p2);
 		geographic_point_init(p2.x, p2.y, &g2);
-		double segment_length_frac = spheroid_distance(&g1, &g2, s) / length;
+		double segment_length = spheroid_distance(&g1, &g2, s);
 
 		/* If our target distance is before the total length we've seen
 		 * so far. create a new point some distance down the current
 		 * segment.
 		 */
-		while ( length_fraction < length_fraction_consumed + segment_length_frac && points_found < points_to_interpolate )
+		while ( curr_length < length_consumed + segment_length && points_found < points_to_interpolate )
 		{
 			geog2cart(&g1, &q1);
 			geog2cart(&g2, &q2);
-			double segment_fraction = (length_fraction - length_fraction_consumed) / segment_length_frac;
+			double segment_fraction = (curr_length - length_consumed) / segment_length;
 			geography_interpolate_point4d(&q1, &q2, &p1, &p2, segment_fraction, &pt);
 			ptarray_set_point4d(opa, points_found++, &pt);
-			length_fraction += length_fraction_increment;
+			length_increment += length_fraction;
+			curr_length = line_length * length_increment;
 		}
 
-		length_fraction_consumed += segment_length_frac;
+		length_consumed += segment_length;
 
 		p1 = p2;
 		g1 = g2;
@@ -163,15 +166,19 @@ PG_FUNCTION_INFO_V1(geography_line_interpolate_point);
 Datum geography_line_interpolate_point(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gser = PG_GETARG_GSERIALIZED_P(0);
-	GSERIALIZED *result;
 	double distance_fraction = PG_GETARG_FLOAT8(1);
-	bool use_spheroid = PG_GETARG_BOOL(2);
-	int repeat = PG_NARGS() > 3 && PG_GETARG_BOOL(3);
+	/* Read calculation type */
+	bool use_spheroid = true;
+	if ( PG_NARGS() > 2 && ! PG_ARGISNULL(2) )
+		use_spheroid = PG_GETARG_BOOL(2);
+	/* Read repeat mode */
+	bool repeat = PG_NARGS() > 3 && PG_GETARG_BOOL(3);
 	int srid = gserialized_get_srid(gser);
 	LWLINE* lwline;
 	LWGEOM* lwresult;
 	POINTARRAY* opa;
 	SPHEROID s;
+	GSERIALIZED *result;
 
 	if ( distance_fraction < 0 || distance_fraction > 1 )
 	{
@@ -187,15 +194,15 @@ Datum geography_line_interpolate_point(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	}
 
-	/* User requests spherical calculation, turn our spheroid into a sphere */
+	/* Initialize spheroid */
+	/* We currently cannot use the following statement since PROJ4 API is not
+	 * available directly to MobilityDB. */
+	// spheroid_init_from_srid(fcinfo, srid, &s);
+	spheroid_init(&s, WGS84_MAJOR_AXIS, WGS84_MINOR_AXIS);
+
+	/* Set to sphere if requested */
 	if ( ! use_spheroid )
 		s.a = s.b = s.radius;
-	else
-		/* Initialize spheroid */
-		/* We cannot use the following statement since PROJ4 API is not
-		 * available directly to MobilityDB. */
-		// spheroid_init_from_srid(fcinfo, srid, &s);
-		spheroid_init(&s, WGS84_MAJOR_AXIS, WGS84_MINOR_AXIS);
 
 	lwline = lwgeom_as_lwline(lwgeom_from_gserialized(gser));
 	opa = geography_interpolate_points(lwline, distance_fraction, &s, repeat);
@@ -214,6 +221,253 @@ Datum geography_line_interpolate_point(PG_FUNCTION_ARGS)
 	lwgeom_free(lwresult);
 
 	PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************/
+
+double
+ptarray_locate_point_spheroid(const POINTARRAY *pa, const POINT4D *p4d,
+	const SPHEROID *s, double tolerance, double *mindistout, POINT4D *proj4d)
+{
+	GEOGRAPHIC_EDGE e;
+	GEOGRAPHIC_POINT a, b, nearest;
+	POINT4D p1, p2;
+	const POINT2D *p;
+	POINT2D proj;
+	uint32_t i, seg = 0;
+	int use_sphere = (s->a == s->b ? 1 : 0);
+	int hasz;
+	double za = 0.0, zb = 0.0;
+	double distance,
+		length, 	/* Used for computing lengths */
+		seglength, /* length of the segment where the closest point is located */
+		partlength, /* length from the beginning of the point array to the closest point */
+		totlength;  /* length of the point array */
+
+	/* Initialize our point */
+	geographic_point_init(p4d->x, p4d->y, &a);
+
+	/* Handle point/point case here */
+	if ( pa->npoints <= 1)
+	{
+		if ( pa->npoints == 1 )
+		{
+			p = getPoint2d_cp(pa, 0);
+			geographic_point_init(p->x, p->y, &b);
+			/* Sphere special case, axes equal */
+			*mindistout = s->radius * sphere_distance(&a, &b);
+			/* If close or greater than tolerance, get the real answer to be sure */
+			if ( ! use_sphere || *mindistout > 0.95 * tolerance )
+				*mindistout = spheroid_distance(&a, &b, s);
+		}
+		return 0.0;
+	}
+
+	/* Make result really big, so that everything will be smaller than it */
+	distance = FLT_MAX;
+
+	/* Initialize start of line */
+	p = getPoint2d_cp(pa, 0);
+	geographic_point_init(p->x, p->y, &(e.start));
+
+	/* Iterate through the edges in our line */
+	for ( i = 1; i < pa->npoints; i++ )
+	{
+		double d;
+		p = getPoint2d_cp(pa, i);
+		geographic_point_init(p->x, p->y, &(e.end));
+		/* Get the spherical distance between point and edge */
+		d = s->radius * edge_distance_to_point(&e, &a, &b);
+		/* New shortest distance! Record this distance / location / segment */
+		if ( d < distance )
+		{
+			distance = d;
+			nearest = b;
+			seg = i - 1;
+		}
+		/* We've gotten closer than the tolerance... */
+		if ( d < tolerance )
+		{
+			/* Working on a sphere? The answer is correct, return */
+			if ( use_sphere )
+			{
+				break;
+			}
+			/* Far enough past the tolerance that the spheroid calculation won't change things */
+			else if ( d < tolerance * 0.95 )
+			{
+				break;
+			}
+			/* On a spheroid and near the tolerance? Confirm that we are *actually* closer than tolerance */
+			else
+			{
+				d = spheroid_distance(&a, &nearest, s);
+				/* Yes, closer than tolerance, return! */
+				if ( d < tolerance )
+					break;
+			}
+		}
+		e.start = e.end;
+	}
+
+	if ( mindistout ) *mindistout = distance;
+
+	/* See if we have a third dimension */
+	hasz = FLAGS_GET_Z(pa->flags);
+
+	/* Initialize first point of array */
+	getPoint4d_p(pa, 0, &p1);
+	geographic_point_init(p1.x, p1.y, &a);
+	if ( hasz )
+		za = p1.z;
+
+	partlength = 0.0;
+	totlength = 0.0;
+
+	/* Loop and sum the length for each segment */
+	for ( i = 1; i < pa->npoints; i++ )
+	{
+		getPoint4d_p(pa, i, &p1);
+		geographic_point_init(p1.x, p1.y, &b);
+		if ( hasz )
+			zb = p1.z;
+
+		/* Special sphere case */
+		if ( s->a == s->b )
+			length = s->radius * sphere_distance(&a, &b);
+		/* Spheroid case */
+		else
+			length = spheroid_distance(&a, &b, s);
+
+		/* Add in the vertical displacement if we're in 3D */
+		if ( hasz )
+			length = sqrt( (zb-za)*(zb-za) + length*length );
+
+		/* Add this segment length to the total length */
+		totlength += length;
+
+		/* Add this segment length to the partial length */
+		if (i < seg)
+			partlength += length;
+		else if (i == seg)
+			/* Save segment length */
+			seglength = length;
+
+		/* B gets incremented in the next loop, so we save the value here */
+		a = b;
+		za = zb;
+	}
+
+	/* Copy nearest into 2D/4D holder */
+	proj4d->x = proj.x = rad2deg(nearest.lon);
+	proj4d->y = proj.y = rad2deg(nearest.lat);
+
+	/* Compute distance from beginning of the segment to closest point */
+
+	/* Start of the segment */
+	getPoint4d_p(pa, seg, &p1);
+	geographic_point_init(p1.x, p1.y, &a);
+
+	/* Closest point */
+	geographic_point_init(proj4d->x, proj4d->y, &b);
+
+	/* Special sphere case */
+	if ( s->a == s->b )
+		length = s->radius * sphere_distance(&a, &b);
+	/* Spheroid case */
+	else
+		length = spheroid_distance(&a, &b, s);
+
+	if ( hasz )
+	{
+		/* Compute Z and M values for closest point */
+		double f = length / seglength;
+		getPoint4d_p(pa, seg + 1, &p2);
+		proj4d->z = p1.z + ((p2.z - p1.z) * f);
+		proj4d->m = p1.m + ((p2.m - p1.m) * f);
+		/* Add in the vertical displacement if we're in 3D */
+		za = p1.z;
+		zb = proj4d->z;
+		length = sqrt( (zb-za)*(zb-za) + length*length );
+	}
+
+	/* Add this segment length to the total */
+	partlength += length;
+
+	/* Location of any point on a zero-length line is 0 */
+	/* See http://trac.osgeo.org/postgis/ticket/1772#comment:2 */
+	if ( totlength == 0 )
+		return 0;
+
+	/* For robustness, force 1 when closest point == endpoint */
+	p = getPoint2d_cp(pa, pa->npoints - 1);
+	if ( (seg >= (pa->npoints-2)) && p2d_same(&proj, p) )
+		return 1.0;
+
+	return partlength / totlength;
+}
+
+Datum geography_line_locate_point(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(geography_line_locate_point);
+Datum geography_line_locate_point(PG_FUNCTION_ARGS)
+{
+	GSERIALIZED *gser1 = PG_GETARG_GSERIALIZED_P(0);
+	GSERIALIZED *gser2 = PG_GETARG_GSERIALIZED_P(1);
+	bool use_spheroid = true;
+	/* Read our calculation type */
+	if ( PG_NARGS() > 3 && ! PG_ARGISNULL(3) )
+		use_spheroid = PG_GETARG_BOOL(3);
+	double tolerance = FP_TOLERANCE;
+	SPHEROID s;
+	LWLINE *lwline;
+	LWPOINT *lwpoint;
+	POINTARRAY *pa;
+	POINT4D p, p_proj;
+	double ret;
+
+	/* Initialize spheroid */
+	/* We currently cannot use the following statement since PROJ4 API is not
+	 * available directly to MobilityDB. */
+	// spheroid_init_from_srid(fcinfo, gserialized_get_srid(gser1), &s);
+	spheroid_init(&s, WGS84_MAJOR_AXIS, WGS84_MINOR_AXIS);
+
+	/* Set to sphere if requested */
+	if ( ! use_spheroid )
+		s.a = s.b = s.radius;
+
+
+	if ( gserialized_get_type(gser1) != LINETYPE )
+	{
+		elog(ERROR,"line_locate_point: 1st arg isn't a line");
+		PG_RETURN_NULL();
+	}
+	if ( gserialized_get_type(gser2) != POINTTYPE )
+	{
+		elog(ERROR,"line_locate_point: 2st arg isn't a point");
+		PG_RETURN_NULL();
+	}
+
+	/* User requests spherical calculation, turn our spheroid into a sphere */
+	if ( ! use_spheroid )
+		s.a = s.b = s.radius;
+	else
+		/* Initialize spheroid */
+		/* We cannot use the following statement since PROJ4 API is not
+		 * available directly to MobilityDB. */
+		// spheroid_init_from_srid(fcinfo, srid, &s);
+		spheroid_init(&s, WGS84_MAJOR_AXIS, WGS84_MINOR_AXIS);
+
+	error_if_srid_mismatch(gserialized_get_srid(gser1), gserialized_get_srid(gser2));
+
+	lwline = lwgeom_as_lwline(lwgeom_from_gserialized(gser1));
+	lwpoint = lwgeom_as_lwpoint(lwgeom_from_gserialized(gser2));
+
+	pa = lwline->points;
+	lwpoint_getPoint4d_p(lwpoint, &p);
+
+	ret = ptarray_locate_point_spheroid(pa, &p, &s, tolerance, NULL, &p_proj);
+
+	PG_RETURN_FLOAT8(ret);
 }
 
 /*****************************************************************************
@@ -296,6 +550,107 @@ geogseg_interpolate_point(Datum start, Datum end, double ratio)
 	Datum result = PointerGetDatum(geometry_serialize((LWGEOM *) lwpoint));
 	lwpoint_free(lwpoint);
 	POSTGIS_FREE_IF_COPY_P(gs1, DatumGetPointer(start));
+	return result;
+}
+
+/*
+ * Write into the *proj4d argument the coordinates of the closest point on
+ * the given segment AB to the reference input point p.
+ */
+double
+closest_point_on_segment_spheroid(const POINT4D *p, const POINT4D *A, const POINT4D *B,
+	const SPHEROID *s, POINT4D *proj4d)
+{
+	GEOGRAPHIC_EDGE e;
+	GEOGRAPHIC_POINT a, closest;
+	double length, /* length from A to the closest point */
+		seglength; /* length of the segment AB */
+
+	/* Initialize point */
+	geographic_point_init(p->x, p->y, &a);
+
+	/* Initialize edge */
+	geographic_point_init(A->x, A->y, &(e.start));
+	geographic_point_init(B->x, B->y, &(e.end));
+
+	/* Get the spherical distance between point and edge */
+	edge_distance_to_point(&e, &a, &closest);
+
+	/* Copy nearest into returning argument */
+	proj4d->x = rad2deg(closest.lon);
+	proj4d->y = rad2deg(closest.lat);
+
+	/* Compute distance from beginning of the segment to closest point */
+
+	/* Special sphere case */
+	if ( s->a == s->b )
+	{
+		seglength = s->radius * sphere_distance(&(e.start), &(e.end));
+		length = s->radius * sphere_distance(&(e.start), &closest);
+	}
+	/* Spheroid case */
+	else
+	{
+		seglength = spheroid_distance(&(e.start), &(e.end), s);
+		length = spheroid_distance(&(e.start), &closest, s);
+	}
+
+	/* Compute Z and M values for closest point */
+	double ratio = length / seglength;
+	proj4d->z = A->z + ((B->z - A->z) * ratio);
+	proj4d->m = A->m + ((B->m - A->m) * ratio);
+	return ratio;
+}
+
+/* In the current version of MobilityDB all geographic computations are
+ * done in using a sphere and not a spheroid */
+double
+geogseg_locate_point(Datum start, Datum end, Datum point, double *dist)
+{
+	GSERIALIZED *gs1 = (GSERIALIZED *) DatumGetPointer(start);
+	POINT4D p1 = datum_get_point4d(start);
+	POINT4D p2 = datum_get_point4d(end);
+	POINT4D p = datum_get_point4d(point);
+	POINT4D proj;
+	GEOGRAPHIC_POINT a, b;
+	SPHEROID s;
+	double d;
+	bool use_spheroid = true;
+
+	/* Initialize spheroid */
+	spheroid_init(&s, WGS84_MAJOR_AXIS, WGS84_MINOR_AXIS);
+
+	/* Set to sphere if requested */
+	if ( ! use_spheroid )
+		s.a = s.b = s.radius;
+
+	/* Get the closest point */
+	double ratio = closest_point_on_segment_spheroid(&p, &p1, &p2, &s, &proj);
+
+	/* Compute the distance between the segment and the point */
+	geographic_point_init(p1.x, p1.y, &a);
+	geographic_point_init(proj.x, proj.y, &b);
+	/* Special sphere case */
+	if ( s.a == s.b )
+		d = s.radius * sphere_distance(&a, &b);
+	/* Spheroid case */
+	else
+		d = spheroid_distance(&a, &b, &s);
+	/* Add in the vertical displacement if we're in 3D */
+	if (FLAGS_GET_Z(gs1->flags))
+		d = sqrt( (proj.z - p.z) * (proj.z - p.z) + d*d );
+	/* Return the distance between the segment and the point if requested */
+	if (dist != NULL)
+		*dist = d;
+
+	/* Compute the result */
+	double result;
+	if (p4d_same(&p1, &proj))
+		result = 0.0;
+	else if (p4d_same(&p2, &proj))
+		result = 1.0;
+	else
+		result = ratio;
 	return result;
 }
 
@@ -2698,8 +3053,11 @@ tpoint_at_stbox_internal(const Temporal *temp, const STBOX *box)
 		Datum geom = MOBDB_FLAGS_GET_Z(box->flags) ?
 			call_function1(BOX3D_to_LWGEOM, gbox) :
 			call_function1(BOX2D_to_LWGEOM, gbox);
-		result = tpoint_at_geometry_internal(temp1, geom);
+		Datum geom1 = call_function2(LWGEOM_set_srid, geom,
+			Int32GetDatum(box->srid));
+		result = tpoint_at_geometry_internal(temp1, geom1);
 		pfree(DatumGetPointer(gbox)); pfree(DatumGetPointer(geom));
+		pfree(DatumGetPointer(geom1));
 		if (MOBDB_FLAGS_GET_T(box->flags))
 			pfree(temp1);
 	}
@@ -3005,8 +3363,9 @@ NAI_tpointseq_stw_geo(const TemporalSeq *seq, Datum geo,
 /* NAI between temporal sequence point with linear interpolation and a
  * geometry/geography */
 
-/* Function inspired from PostGIS function lw_dist2d_distancepoint from measures.c
- * by returning also the distance between the closest/longest point */
+/* Functions inspired from PostGIS functions lw_dist2d_distancepoint from
+ * measures.c and lw_dist3d_distancepoint from measures3d.c that also return
+ * the distance between the closest/longest point */
 static LWPOINT *
 lw_dist2d_point_dist(const LWGEOM *lw1, const LWGEOM *lw2, int srid, int mode, double *dist)
 {
@@ -3014,8 +3373,22 @@ lw_dist2d_point_dist(const LWGEOM *lw1, const LWGEOM *lw2, int srid, int mode, d
 	thedl.mode = mode;
 	thedl.distance= FLT_MAX;
 	thedl.tolerance = 0;
-	lw_dist2d_comp(lw1,lw2,&thedl);
+	lw_dist2d_comp(lw1, lw2, &thedl);
 	LWPOINT *result = lwpoint_make2d(srid, thedl.p1.x, thedl.p1.y);
+	*dist = thedl.distance;
+	return result;
+}
+
+static LWPOINT *
+lw_dist3d_point_dist(const LWGEOM *lw1, const LWGEOM *lw2, int srid, int mode, double *dist)
+{
+	assert(FLAGS_GET_Z(lw1->flags) && FLAGS_GET_Z(lw2->flags));
+	DISTPTS3D thedl;
+	thedl.mode = mode;
+	thedl.distance= FLT_MAX;
+	thedl.tolerance = 0;
+	lw_dist3d_recursive(lw1, lw2, &thedl);
+	LWPOINT *result = lwpoint_make3dz(srid, thedl.p1.x, thedl.p1.y, thedl.p1.z);
 	*dist = thedl.distance;
 	return result;
 }
@@ -3036,8 +3409,9 @@ NAI_tpointseq_geom1(const TemporalInst *inst1, const TemporalInst *inst2,
 
 	/* The trajectory is a line */
 	LWLINE *lwline = geompoint_trajectory_lwline(value1, value2);
-	LWPOINT *lwpoint = lw_dist2d_point_dist((LWGEOM *) lwline, lwgeom,
-		lwline->srid, DIST_MIN, dist);
+	LWPOINT *lwpoint = MOBDB_FLAGS_GET_Z(inst1->flags) ?
+		lw_dist3d_point_dist((LWGEOM *) lwline, lwgeom, lwline->srid, DIST_MIN, dist) :
+		lw_dist2d_point_dist((LWGEOM *) lwline, lwgeom, lwline->srid, DIST_MIN, dist);
 	POINT4D p, proj;
 	lwpoint_getPoint4d_p(lwpoint, &p);
 	POINT4D start = datum_get_point4d(value1);
@@ -3244,13 +3618,7 @@ NAI_geo_tpoint(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	Temporal *temp = PG_GETARG_TEMPORAL(1);
 	ensure_same_srid_tpoint_gs(temp, gs);
-	if (MOBDB_FLAGS_GET_Z(temp->flags) || FLAGS_GET_Z(gs->flags))
-	{
-		PG_FREE_IF_COPY(gs, 0);
-		PG_FREE_IF_COPY(temp, 1);
-		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-			errmsg("3D geometries are not allowed")));
-	}
+	ensure_same_dimensionality_tpoint_gs(temp, gs);
 	if (gserialized_is_empty(gs))
 	{
 		PG_FREE_IF_COPY(gs, 0);
@@ -3272,6 +3640,7 @@ NAI_tpoint_geo(PG_FUNCTION_ARGS)
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
 	ensure_same_srid_tpoint_gs(temp, gs);
+	// Allow 3D geometries ?
 	if (MOBDB_FLAGS_GET_Z(temp->flags) || FLAGS_GET_Z(gs->flags))
 	{
 		PG_FREE_IF_COPY(temp, 0);
