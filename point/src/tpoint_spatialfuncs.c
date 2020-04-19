@@ -3454,6 +3454,7 @@ NAI_tpointseq_geog1(const TemporalInst *inst1, const TemporalInst *inst2,
 		*tofree = false;
 		return value1;
 	}
+	// xxx
 
 	/* The trajectory is a line */
 	Datum traj = geogpoint_trajectory(value1, value2);

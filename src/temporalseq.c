@@ -126,7 +126,10 @@ tnpointseq_intersection_value(const TemporalInst *inst1, const TemporalInst *ins
 	double min = Min(np1->pos, np2->pos);
 	double max = Max(np1->pos, np2->pos);
 	/* if value is to the left or to the right of the range */
-	if (np->rid != np1->rid || np->pos < min || np->pos > max)
+	if ((np->rid != np1->rid) ||
+		(np->pos < np1->pos && np->pos < np2->pos) ||
+		(np->pos > np1->pos && np->pos > np2->pos))
+	// if (np->rid != np1->rid || (np->pos < min && np->pos > max))
 		return false;
 
 	double range = (max - min);
@@ -162,7 +165,7 @@ tlinearseq_intersection_value(const TemporalInst *inst1, const TemporalInst *ins
 		inst1->valuetypid == type_oid(T_GEOGRAPHY))
 		result = tpointseq_intersection_value(inst1, inst2, value, t);
 	else if (inst1->valuetypid == type_oid(T_NPOINT))
-		return tnpointseq_intersection_value(inst1, inst2, value, t);
+		result = tnpointseq_intersection_value(inst1, inst2, value, t);
 
 	if (result && inter != NULL)
 		/* We are sure it is linear interpolation */
@@ -402,9 +405,9 @@ temporalseq_intersection(const TemporalInst *start1, const TemporalInst *end1, b
 		else if (start1->valuetypid == type_oid(T_NPOINT))
 			result = tnpointseq_intersection(start1, end1, start2, end2, t);
 		/* We are sure it is linear interpolation */
-		if (inter1 != NULL)
+		if (result && inter1 != NULL)
 			*inter1 = temporalseq_value_at_timestamp1(start1, end1, true, *t);
-		if (inter1 != NULL)
+		if (result && inter1 != NULL)
 			*inter2 = temporalseq_value_at_timestamp1(start2, end2, true, *t);
 	}
 	return result;
