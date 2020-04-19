@@ -1040,10 +1040,18 @@ NAI_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 	Temporal *dist = distance_tnpoint_tnpoint_internal(temp1, temp2);
 	if (dist != NULL)
 	{
-		Temporal *mindist = temporal_at_min_internal(dist);
-		TimestampTz t = temporal_start_timestamp_internal(mindist);
-		result = temporal_at_timestamp_internal(temp1, t);
-		pfree(dist); pfree(mindist);
+		TemporalInst *min = temporal_min_instant(dist);
+		result = temporal_at_timestamp_internal(temp1, min->t);
+		pfree(dist);
+		if (result == NULL)
+		{
+			if (temp1->duration == TEMPORALSEQ)
+				result = temporalseq_find_timestamp_excl((TemporalSeq *)temp1,
+					min->t);
+			else /* temp->duration == TEMPORALS */
+				result = temporals_find_timestamp_excl((TemporalS *)temp1,
+					min->t);
+		}
 	}
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
