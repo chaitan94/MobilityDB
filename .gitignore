@@ -1,2 +1,5 @@
 build/
 .vscode
+doc/mobilitydb-manual.pdf
+doc/mobilitydb-workshop.pdf
+doc/*.html
