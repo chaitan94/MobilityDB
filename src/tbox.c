@@ -14,15 +14,97 @@
 
 #include <assert.h>
 #include <utils/timestamp.h>
+#include <utils/builtins.h>
 
 #include "period.h"
 #include "rangetypes_ext.h"
 #include "temporal.h"
 #include "temporal_parser.h"
 #include "temporal_util.h"
+#include "tnumber_mathfuncs.h"
 
 /* Buffer size for input and output of TBOX */
 #define MAXTBOXLEN		128
+
+/*****************************************************************************
+ * Miscellaneous functions
+ *****************************************************************************/
+
+static TBOX *
+tbox_new(bool hasx, bool hast)
+{
+	TBOX *result = palloc0(sizeof(TBOX));
+	MOBDB_FLAGS_SET_X(result->flags, hasx);
+	MOBDB_FLAGS_SET_T(result->flags, hast);
+	return result;
+}
+
+static TBOX *
+tbox_copy(const TBOX *box)
+{
+	TBOX *result = palloc0(sizeof(TBOX));
+	memcpy(result, box, sizeof(TBOX));
+	return result;
+}
+
+/* Expand the first box with the second one */
+
+void
+tbox_expand(TBOX *box1, const TBOX *box2)
+{
+	box1->xmin = Min(box1->xmin, box2->xmin);
+	box1->xmax = Max(box1->xmax, box2->xmax);
+	box1->tmin = Min(box1->tmin, box2->tmin);
+	box1->tmax = Max(box1->tmax, box2->tmax);
+}
+
+/* Shift the bounding box with an interval */
+
+void
+tbox_shift(TBOX *box, const Interval *interval)
+{
+	box->tmin = DatumGetTimestampTz(
+		DirectFunctionCall2(timestamptz_pl_interval,
+		TimestampTzGetDatum(box->tmin), PointerGetDatum(interval)));
+	box->tmax = DatumGetTimestampTz(
+		DirectFunctionCall2(timestamptz_pl_interval,
+		TimestampTzGetDatum(box->tmax), PointerGetDatum(interval)));
+	return;
+}
+
+void
+ensure_has_X_tbox(const TBOX *box)
+{
+	if (! MOBDB_FLAGS_GET_X(box->flags))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("The box must have value dimension")));
+}
+
+void
+ensure_has_T_tbox(const TBOX *box)
+{
+	if (! MOBDB_FLAGS_GET_T(box->flags))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("The box must have time dimension")));
+}
+
+void
+ensure_same_dimensionality_tbox(const TBOX *box1, const TBOX *box2)
+{
+	if (MOBDB_FLAGS_GET_X(box1->flags) != MOBDB_FLAGS_GET_X(box2->flags) ||
+		MOBDB_FLAGS_GET_T(box1->flags) != MOBDB_FLAGS_GET_T(box2->flags))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("The boxes must be of the same dimensionality")));
+}
+
+void
+ensure_common_dimension_tbox(const TBOX *box1, const TBOX *box2)
+{
+	if (MOBDB_FLAGS_GET_X(box1->flags) != MOBDB_FLAGS_GET_X(box2->flags) &&
+		MOBDB_FLAGS_GET_T(box1->flags) != MOBDB_FLAGS_GET_T(box2->flags))
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+			errmsg("The boxes must have at least one common dimension")));
+}
 
 /*****************************************************************************
  * Input/output functions
@@ -46,35 +128,43 @@ tbox_in(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
-char *
+static char *
 tbox_to_string(const TBOX *box)
 {
 	static size_t size = MAXTBOXLEN + 1;
-	char *str = NULL, *strtmin = NULL, *strtmax = NULL;
-	str = (char *) palloc(size);
-	assert(MOBDB_FLAGS_GET_X(box->flags) || MOBDB_FLAGS_GET_T(box->flags));
-	if (MOBDB_FLAGS_GET_T(box->flags))
+	char *str = (char *) palloc(size);
+	char *xmin = NULL, *xmax = NULL, *tmin = NULL, *tmax = NULL;
+	bool hasx = MOBDB_FLAGS_GET_X(box->flags);
+	bool hast = MOBDB_FLAGS_GET_T(box->flags);
+	assert(hasx || hast);
+	if (hasx)
 	{
-		strtmin = call_output(TIMESTAMPTZOID, TimestampTzGetDatum(box->tmin));
-		strtmax = call_output(TIMESTAMPTZOID, TimestampTzGetDatum(box->tmax));
+		xmin = call_output(FLOAT8OID, Float8GetDatum(box->xmin));
+		xmax = call_output(FLOAT8OID, Float8GetDatum(box->xmax));
 	}
-	if (MOBDB_FLAGS_GET_X(box->flags))
+	if (hast)
 	{
-		if (MOBDB_FLAGS_GET_T(box->flags))
-			snprintf(str, size, "TBOX((%.8g,%s),(%.8g,%s))", 
-				box->xmin, strtmin, box->xmax, strtmax);
+		tmin = call_output(TIMESTAMPTZOID, TimestampTzGetDatum(box->tmin));
+		tmax = call_output(TIMESTAMPTZOID, TimestampTzGetDatum(box->tmax));
+	}
+	if (hasx)
+	{
+		if (hast)
+			snprintf(str, size, "TBOX((%s,%s),(%s,%s))", xmin, tmin,
+				xmax, tmax);
 		else 
-			snprintf(str, size, "TBOX((%.8g,),(%.8g,))", 
-				box->xmin,box->xmax);
+			snprintf(str, size, "TBOX((%s,),(%s,))", xmin, xmax);
 	}
 	else
 		/* Missing X dimension */
-		snprintf(str, size, "TBOX((,%s),(,%s))", 
-			strtmin, strtmax);
-	if (MOBDB_FLAGS_GET_T(box->flags))
+		snprintf(str, size, "TBOX((,%s),(,%s))", tmin, tmax);
+	if (hasx)
 	{
-		pfree(strtmin);
-		pfree(strtmax);
+		pfree(xmin); pfree(xmax);
+	}
+	if (hast)
+	{
+		pfree(tmin); pfree(tmax);
 	}
 	return str;
 }
@@ -120,10 +210,8 @@ tbox_constructor(PG_FUNCTION_ARGS)
 		hast = true;
 	}
 
-	TBOX *result = palloc0(sizeof(TBOX));
-	MOBDB_FLAGS_SET_X(result->flags, true);
-	MOBDB_FLAGS_SET_T(result->flags, hast);
-	
+	TBOX *result = tbox_new(true, hast);
+
 	/* Process X min/max */
 	if (xmin > xmax)
 	{
@@ -158,10 +246,8 @@ tboxt_constructor(PG_FUNCTION_ARGS)
 	tmin = PG_GETARG_TIMESTAMPTZ(0);
 	tmax = PG_GETARG_TIMESTAMPTZ(1);
 
-	TBOX *result = palloc0(sizeof(TBOX));
-	MOBDB_FLAGS_SET_X(result->flags, false);
-	MOBDB_FLAGS_SET_T(result->flags, true);
-	
+	TBOX *result = tbox_new(false, true);
+
 	/* Process T min/max */
 	if (tmin > tmax)
 	{
@@ -171,6 +257,39 @@ tboxt_constructor(PG_FUNCTION_ARGS)
 	}
 	result->tmin = tmin;
 	result->tmax = tmax;
+	PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************
+ * Casting
+ *****************************************************************************/
+
+/* Cast a TBOX value as a floatrange value */
+
+PG_FUNCTION_INFO_V1(tbox_to_floatrange);
+
+PGDLLEXPORT Datum
+tbox_to_floatrange(PG_FUNCTION_ARGS)
+{
+	TBOX *box = PG_GETARG_TBOX_P(0);
+	if (!MOBDB_FLAGS_GET_X(box->flags))
+		PG_RETURN_NULL();
+	RangeType *result = range_make(Float8GetDatum(box->xmin),
+		Float8GetDatum(box->xmax), true, true, FLOAT8OID);
+	PG_RETURN_POINTER(result);
+}
+
+/* Cast a TBOX value as a Period value */
+
+PG_FUNCTION_INFO_V1(tbox_to_period);
+
+PGDLLEXPORT Datum
+tbox_to_period(PG_FUNCTION_ARGS)
+{
+	TBOX *box = PG_GETARG_TBOX_P(0);
+	if (!MOBDB_FLAGS_GET_T(box->flags))
+		PG_RETURN_NULL();
+	Period *result = period_make(box->tmin, box->tmax, true, true);
 	PG_RETURN_POINTER(result);
 }
 
@@ -231,35 +350,457 @@ tbox_tmax(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Casting
+ * Functions for expanding the bounding box
  *****************************************************************************/
 
- /* Cast a TBOX value as a floatrange value */
+/*
+ * Expand the box on the value dimension
+ */
+static TBOX *
+tbox_expand_value_internal(const TBOX *box, const double d)
+{
+	ensure_has_X_tbox(box);
+	TBOX *result = tbox_copy(box);
+	result->xmin = box->xmin - d;
+	result->xmax = box->xmax + d;
+	return result;
+}
 
-PG_FUNCTION_INFO_V1(tbox_to_floatrange);
+PG_FUNCTION_INFO_V1(tbox_expand_value);
 
 PGDLLEXPORT Datum
-tbox_to_floatrange(PG_FUNCTION_ARGS)
+tbox_expand_value(PG_FUNCTION_ARGS)
 {
 	TBOX *box = PG_GETARG_TBOX_P(0);
-	if (!MOBDB_FLAGS_GET_X(box->flags))
-		PG_RETURN_NULL();
-	RangeType *result = range_make(Float8GetDatum(box->xmin), Float8GetDatum(box->xmax), 
-		true, true, FLOAT8OID);
+	double d = PG_GETARG_FLOAT8(1);
+	PG_RETURN_POINTER(tbox_expand_value_internal(box, d));
+}
+
+/*
+ * Expand the box on the time dimension
+ */
+static TBOX *
+tbox_expand_temporal_internal(const TBOX *box, const Datum interval)
+{
+	ensure_has_T_tbox(box);
+	TBOX *result = tbox_copy(box);
+	result->tmin = DatumGetTimestampTz(call_function2(timestamp_mi_interval,
+		TimestampTzGetDatum(box->tmin), interval));
+	result->tmax = DatumGetTimestampTz(call_function2(timestamp_pl_interval,
+		TimestampTzGetDatum(box->tmax), interval));
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(tbox_expand_temporal);
+
+PGDLLEXPORT Datum
+tbox_expand_temporal(PG_FUNCTION_ARGS)
+{
+	TBOX *box = PG_GETARG_TBOX_P(0);
+	Datum interval = PG_GETARG_DATUM(1);
+	PG_RETURN_POINTER(tbox_expand_temporal_internal(box, interval));
+}
+
+/*****************************************************************************/
+
+/* Set precision of the value */
+
+PG_FUNCTION_INFO_V1(tbox_set_precision);
+
+PGDLLEXPORT Datum
+tbox_set_precision(PG_FUNCTION_ARGS)
+{
+	TBOX *box = PG_GETARG_TBOX_P(0);
+	Datum size = PG_GETARG_DATUM(1);
+	ensure_has_X_tbox(box);
+	TBOX *result = tbox_copy(box);
+	result->xmin = DatumGetFloat8(datum_round(Float8GetDatum(box->xmin), size));
+	result->xmax = DatumGetFloat8(datum_round(Float8GetDatum(box->xmax), size));
 	PG_RETURN_POINTER(result);
 }
 
-/* Cast a TBOX value as a Period value */
+/*****************************************************************************
+ * Topological operators
+ *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(tbox_to_period);
+/* contains? */
+
+bool
+contains_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_common_dimension_tbox(box1, box2);
+	bool hasx = MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags);
+	bool hast = MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags);
+	if (hasx && (box2->xmin < box1->xmin || box2->xmax > box1->xmax))
+		return false;
+	if (hast && (box2->tmin < box1->tmin || box2->tmax > box1->tmax))
+		return false;
+	return true;
+}
+
+PG_FUNCTION_INFO_V1(contains_tbox_tbox);
 
 PGDLLEXPORT Datum
-tbox_to_period(PG_FUNCTION_ARGS)
+contains_tbox_tbox(PG_FUNCTION_ARGS)
 {
-	TBOX *box = PG_GETARG_TBOX_P(0);
-	if (!MOBDB_FLAGS_GET_T(box->flags))
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(contains_tbox_tbox_internal(box1, box2));
+}
+
+/* contained? */
+
+bool
+contained_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	return contains_tbox_tbox_internal(box2, box1);
+}
+
+PG_FUNCTION_INFO_V1(contained_tbox_tbox);
+
+PGDLLEXPORT Datum
+contained_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(contained_tbox_tbox_internal(box1, box2));
+}
+
+/* overlaps? */
+
+bool
+overlaps_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_common_dimension_tbox(box1, box2);
+	bool hasx = MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags);
+	bool hast = MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags);
+	if (hasx && (box1->xmax < box2->xmin || box1->xmin > box2->xmax))
+		return false;
+	if (hast && (box1->tmax < box2->tmin || box1->tmin > box2->tmax))
+		return false;
+	return true;
+}
+
+PG_FUNCTION_INFO_V1(overlaps_tbox_tbox);
+
+PGDLLEXPORT Datum
+overlaps_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(overlaps_tbox_tbox_internal(box1, box2));
+}
+
+/* same? */
+
+bool
+same_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_common_dimension_tbox(box1, box2);
+	bool hasx = MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags);
+	bool hast = MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags);
+	if (hasx && (box1->xmin != box2->xmin || box1->xmax != box2->xmax))
+		return false;
+	if (hast && (box1->tmin != box2->tmin || box1->tmax != box2->tmax))
+		return false;
+	return true;
+}
+
+PG_FUNCTION_INFO_V1(same_tbox_tbox);
+
+PGDLLEXPORT Datum
+same_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(same_tbox_tbox_internal(box1, box2));
+}
+
+/* adjacent? */
+
+bool
+adjacent_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_common_dimension_tbox(box1, box2);
+	bool hasx = MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags);
+	bool hast = MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags);
+	TBOX *inter = tbox_intersection_internal(box1, box2);
+	if (inter == NULL)
+		return false;
+	/* Boxes are adjacent if they share n dimensions and their intersection is
+	 * at most of n-1 dimensions */
+	bool result;
+	if (!hasx && hast)
+		result = inter->tmin == inter->tmax;
+	else if (hasx && !hast)
+		result = inter->xmin == inter->xmax;
+	else
+		result = inter->xmin == inter->xmax || inter->tmin == inter->tmax;
+	pfree(inter);
+	return result;
+}
+
+PG_FUNCTION_INFO_V1(adjacent_tbox_tbox);
+
+PGDLLEXPORT Datum
+adjacent_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(adjacent_tbox_tbox_internal(box1, box2));
+}
+
+/*****************************************************************************
+ * Topological operators
+ *****************************************************************************/
+
+/*
+ * Is the first box strictly to the left of the second box?
+ */
+bool
+left_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_has_X_tbox(box1);
+	ensure_has_X_tbox(box2);
+	return (box1->xmax < box2->xmin);
+}
+
+PG_FUNCTION_INFO_V1(left_tbox_tbox);
+
+PGDLLEXPORT Datum
+left_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(left_tbox_tbox_internal(box1, box2));
+}
+
+/*
+ * Is the first box to the left of or over the second box?
+ */
+bool
+overleft_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_has_X_tbox(box1);
+	ensure_has_X_tbox(box2);
+	return (box1->xmax <= box2->xmax);
+}
+
+PG_FUNCTION_INFO_V1(overleft_tbox_tbox);
+
+PGDLLEXPORT Datum
+overleft_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(overleft_tbox_tbox_internal(box1, box2));
+}
+
+/*
+ * Is the first box strictly to the right of the second box?
+ */
+bool
+right_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_has_X_tbox(box1);
+	ensure_has_X_tbox(box2);
+	return (box1->xmin > box2->xmax);
+}
+
+PG_FUNCTION_INFO_V1(right_tbox_tbox);
+
+PGDLLEXPORT Datum
+right_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(right_tbox_tbox_internal(box1, box2));
+}
+
+/*
+ * Is the first box to the right of or over the second box?
+ */
+bool
+overright_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_has_X_tbox(box1);
+	ensure_has_X_tbox(box2);
+	return (box1->xmin >= box2->xmin);
+}
+
+PG_FUNCTION_INFO_V1(overright_tbox_tbox);
+
+PGDLLEXPORT Datum
+overright_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(overright_tbox_tbox_internal(box1, box2));
+}
+
+/*
+ * Is the first box strictly before the second box?
+ */
+bool
+before_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_has_T_tbox(box1);
+	ensure_has_T_tbox(box2);
+	return (box1->tmax < box2->tmin);
+}
+
+PG_FUNCTION_INFO_V1(before_tbox_tbox);
+
+PGDLLEXPORT Datum
+before_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(before_tbox_tbox_internal(box1, box2));
+}
+
+/*
+ * Is the first box before or over the second box?
+ */
+bool
+overbefore_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_has_T_tbox(box1);
+	ensure_has_T_tbox(box2);
+	return (box1->tmax <= box2->tmax);
+}
+
+PG_FUNCTION_INFO_V1(overbefore_tbox_tbox);
+
+PGDLLEXPORT Datum
+overbefore_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(overbefore_tbox_tbox_internal(box1, box2));
+}
+
+/*
+ * Is the first box strictly after the second box?
+ */
+bool
+after_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_has_T_tbox(box1);
+	ensure_has_T_tbox(box2);
+	return (box1->tmin > box2->tmax);
+}
+
+PG_FUNCTION_INFO_V1(after_tbox_tbox);
+
+PGDLLEXPORT Datum
+after_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(after_tbox_tbox_internal(box1, box2));
+}
+
+/*
+ * Is the first box after or over the second box?
+ */
+bool
+overafter_tbox_tbox_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_has_T_tbox(box1);
+	ensure_has_T_tbox(box2);
+	return (box1->tmin >= box2->tmin);
+}
+
+PG_FUNCTION_INFO_V1(overafter_tbox_tbox);
+
+PGDLLEXPORT Datum
+overafter_tbox_tbox(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	PG_RETURN_BOOL(overafter_tbox_tbox_internal(box1, box2));
+}
+
+/*****************************************************************************
+ * Set operators
+ *****************************************************************************/
+
+/* Union of two boxes */
+
+TBOX *
+tbox_union_internal(const TBOX *box1, const TBOX *box2)
+{
+	ensure_same_dimensionality_tbox(box1, box2);
+	/* The union of boxes that do not intersect cannot be represented by a box */
+	if (! overlaps_tbox_tbox_internal(box1, box2))
+		elog(ERROR, "Result of box union would not be contiguous");
+
+	bool hasx = MOBDB_FLAGS_GET_X(box1->flags);
+	bool hast = MOBDB_FLAGS_GET_T(box1->flags);
+	TBOX *result = tbox_new(hasx, hast);
+	if (hasx)
+	{
+		result->xmin = Min(box1->xmin, box2->xmin);
+		result->xmax = Max(box1->xmax, box2->xmax);
+	}
+	if (hast)
+	{
+		result->tmin = Min(box1->tmin, box2->tmin);
+		result->tmax = Max(box1->tmax, box2->tmax);
+	}
+	return(result);
+}
+
+PG_FUNCTION_INFO_V1(tbox_union);
+
+PGDLLEXPORT Datum
+tbox_union(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	TBOX *result = tbox_union_internal(box1, box2);
+	PG_RETURN_POINTER(result);
+}
+
+/* Intersection of two boxes */
+
+TBOX *
+tbox_intersection_internal(const TBOX *box1, const TBOX *box2)
+{
+	bool hasx = MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags);
+	bool hast = MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags);
+	/* If there is no common dimension */
+	if ((! hasx && ! hast) ||
+	/* If they do no intersect in one common dimension */
+	(hasx && (box1->xmin > box2->xmax || box2->xmin > box1->xmax)) ||
+	(hast && (box1->tmin > box2->tmax || box2->tmin > box1->tmax)))
+		return(NULL);
+
+	TBOX *result = tbox_new(hasx, hast);
+	if (hasx)
+	{
+		result->xmin = Max(box1->xmin, box2->xmin);
+		result->xmax = Min(box1->xmax, box2->xmax);
+	}
+	if (hast)
+	{
+		result->tmin = Max(box1->tmin, box2->tmin);
+		result->tmax = Min(box1->tmax, box2->tmax);
+	}
+	return(result);
+}
+
+PG_FUNCTION_INFO_V1(tbox_intersection);
+
+PGDLLEXPORT Datum
+tbox_intersection(PG_FUNCTION_ARGS)
+{
+	TBOX *box1 = PG_GETARG_TBOX_P(0);
+	TBOX *box2 = PG_GETARG_TBOX_P(1);
+	TBOX *result = tbox_intersection_internal(box1, box2);
+	if (result == NULL)
 		PG_RETURN_NULL();
-	Period *result = period_make(box->tmin, box->tmax, true, true);
 	PG_RETURN_POINTER(result);
 }
 
@@ -274,13 +815,6 @@ int
 tbox_cmp_internal(const TBOX *box1, const TBOX *box2)
 {
 	/* Compare the box minima */
-	if (MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags))
-	{
-		if (box1->xmin < box2->xmin)
-			return -1;
-		if (box1->xmin > box2->xmin)
-			return 1;
-	}
 	if (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags))
 	{
 		if (box1->tmin < box2->tmin)
@@ -288,14 +822,14 @@ tbox_cmp_internal(const TBOX *box1, const TBOX *box2)
 		if (box1->tmin > box2->tmin)
 			return 1;
 	}
-	/* Compare the box maxima */
 	if (MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags))
 	{
-		if (box1->xmax < box2->xmax)
+		if (box1->xmin < box2->xmin)
 			return -1;
-		if (box1->xmax > box2->xmax)
+		if (box1->xmin > box2->xmin)
 			return 1;
 	}
+	/* Compare the box maxima */
 	if (MOBDB_FLAGS_GET_T(box1->flags) && MOBDB_FLAGS_GET_T(box2->flags))
 	{
 		if (box1->tmax < box2->tmax)
@@ -303,6 +837,18 @@ tbox_cmp_internal(const TBOX *box1, const TBOX *box2)
 		if (box1->tmax > box2->tmax)
 			return 1;
 	}
+	if (MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags))
+	{
+		if (box1->xmax < box2->xmax)
+			return -1;
+		if (box1->xmax > box2->xmax)
+			return 1;
+	}
+	/* Finally compare the flags */
+	if (box1->flags < box2->flags)
+		return -1;
+	if (box1->flags > box2->flags)
+		return 1;
 	/* The two boxes are equal */
 	return 0;
 }

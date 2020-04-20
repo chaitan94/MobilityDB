@@ -35,7 +35,7 @@ typedef struct
 /* Internal representation of either bound of a period (not what's on disk) */
 typedef struct
 {
-	TimestampTz val;			/* the bound value */
+	TimestampTz t;			/* the bound value */
 	bool inclusive;				/* bound is inclusive (vs exclusive) */
 	bool lower;					/* this is the lower (vs upper) bound */
 } PeriodBound;
@@ -50,7 +50,7 @@ typedef struct
 typedef struct 
 {
 	int32 vl_len_;				/* varlena header (do not touch directly!) */
-	int32 count;				/* number of Period elements */
+	int32 count;				/* number of TimestampTz elements */
  	/* variable-length data follows */
 } TimestampSet;
 

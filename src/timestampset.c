@@ -43,7 +43,7 @@
 /* Pointer to array of offsets of the TimestampSet */
 
 static size_t *
-timestampset_offsets_ptr(TimestampSet *ts)
+timestampset_offsets_ptr(const TimestampSet *ts)
 {
 	return (size_t *) (((char *)ts) + sizeof(TimestampSet));
 }
@@ -51,7 +51,7 @@ timestampset_offsets_ptr(TimestampSet *ts)
 /* Pointer to the first timestamp */
 
 static char * 
-timestampset_data_ptr(TimestampSet *ts)
+timestampset_data_ptr(const TimestampSet *ts)
 {
 	return (char *)ts + double_pad(sizeof(TimestampSet) + 
 		sizeof(size_t) * (ts->count + 1));
@@ -60,7 +60,7 @@ timestampset_data_ptr(TimestampSet *ts)
 /* N-th TimestampTz of a TimestampSet */
 
 TimestampTz
-timestampset_time_n(TimestampSet *ts, int index)
+timestampset_time_n(const TimestampSet *ts, int index)
 {
 	size_t *offsets = timestampset_offsets_ptr(ts);
 	TimestampTz *result = (TimestampTz *) (timestampset_data_ptr(ts) + offsets[index]);
@@ -70,7 +70,7 @@ timestampset_time_n(TimestampSet *ts, int index)
 /* Bounding box of a TimestampSet */
 
 Period *
-timestampset_bbox(TimestampSet *ts) 
+timestampset_bbox(const TimestampSet *ts)
 {
 	size_t *offsets = timestampset_offsets_ptr(ts);
 	return (Period *)(timestampset_data_ptr(ts) + offsets[ts->count]);
@@ -79,13 +79,13 @@ timestampset_bbox(TimestampSet *ts)
 /* Construct a TimestampSet from an array of TimestampTz */
 
 TimestampSet *
-timestampset_from_timestamparr_internal(TimestampTz *times, int count)
+timestampset_make_internal(const TimestampTz *times, int count)
 {
 	Period bbox;
 	/* Test the validity of the timestamps */
 	for (int i = 0; i < count - 1; i++)
 	{
-		if (timestamp_cmp_internal(times[i], times[i + 1]) >= 0)
+		if (times[i] >= times[i + 1])
 			ereport(ERROR, (errcode(ERRCODE_RESTRICT_VIOLATION),
 				errmsg("Invalid value for timestamp set")));
 	}
@@ -115,7 +115,7 @@ timestampset_from_timestamparr_internal(TimestampTz *times, int count)
 }
 
 TimestampSet *
-timestampset_copy(TimestampSet *ts)
+timestampset_copy(const TimestampSet *ts)
 {
 	TimestampSet *result = palloc(VARSIZE(ts));
 	memcpy(result, ts, VARSIZE(ts));
@@ -137,7 +137,7 @@ timestampset_copy(TimestampSet *ts)
  */
 
 bool 
-timestampset_find_timestamp(TimestampSet *ts, TimestampTz t, int *pos) 
+timestampset_find_timestamp(const TimestampSet *ts, TimestampTz t, int *pos)
 {
 	int first = 0;
 	int last = ts->count - 1;
@@ -182,7 +182,7 @@ timestampset_in(PG_FUNCTION_ARGS)
 /* Convert to string */
  
 char *
-timestampset_to_string(TimestampSet *ts)
+timestampset_to_string(const TimestampSet *ts)
 {
 	char **strings = palloc(sizeof(char *) * ts->count);
 	size_t outlen = 0;
@@ -258,7 +258,7 @@ timestampset_recv(PG_FUNCTION_ARGS)
 	TimestampTz *times = palloc(sizeof(TimestampTz) * count);
 	for (int i = 0; i < count; i++)
 		times[i] = call_recv(TIMESTAMPTZOID, buf);
-	TimestampSet *result = timestampset_from_timestamparr_internal(times, count);
+	TimestampSet *result = timestampset_make_internal(times, count);
 	pfree(times);
 	PG_RETURN_POINTER(result);
 }
@@ -269,10 +269,10 @@ timestampset_recv(PG_FUNCTION_ARGS)
 
 /* Construct a TimestampSet from an array of TimestampTz */
 
-PG_FUNCTION_INFO_V1(timestampset_from_timestamparr);
+PG_FUNCTION_INFO_V1(timestampset_make);
 
 PGDLLEXPORT Datum
-timestampset_from_timestamparr(PG_FUNCTION_ARGS)
+timestampset_make(PG_FUNCTION_ARGS)
 {
 	ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
 	int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
@@ -284,7 +284,7 @@ timestampset_from_timestamparr(PG_FUNCTION_ARGS)
 	}
 	
 	TimestampTz *times = timestamparr_extract(array, &count);
-	TimestampSet *result = timestampset_from_timestamparr_internal(times, count);
+	TimestampSet *result = timestampset_make_internal(times, count);
 	
 	pfree(times);
 	PG_FREE_IF_COPY(array, 0);
@@ -304,14 +304,14 @@ PGDLLEXPORT Datum
 timestamp_to_timestampset(PG_FUNCTION_ARGS)
 {
 	TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
-	TimestampSet *result = timestampset_from_timestamparr_internal(&t, 1);
+	TimestampSet *result = timestampset_make_internal(&t, 1);
 	PG_RETURN_POINTER(result);
 }
 
 /* Bounding period on which the temporal value is defined */
 
 void
-timestampset_to_period_internal(Period *p, TimestampSet *ts)
+timestampset_to_period_internal(Period *p, const TimestampSet *ts)
 {
 	TimestampTz start = timestampset_time_n(ts, 0);
 	TimestampTz end = timestampset_time_n(ts, ts->count - 1);
@@ -403,7 +403,7 @@ timestampset_timestamp_n(PG_FUNCTION_ARGS)
 /* Timestamps */
 
 TimestampTz *
-timestampset_timestamps_internal(TimestampSet *ts)
+timestampset_timestamps_internal(const TimestampSet *ts)
 {
 	TimestampTz *times = palloc(sizeof(TimestampTz) * ts->count);
 	for (int i = 0; i < ts->count; i++) 
@@ -427,7 +427,7 @@ timestampset_timestamps(PG_FUNCTION_ARGS)
 /* Shift the period set by an interval */
 
 TimestampSet *
-timestampset_shift_internal(TimestampSet *ts, Interval *interval)
+timestampset_shift_internal(const TimestampSet *ts, const Interval *interval)
 {
 	TimestampTz *times = palloc(sizeof(TimestampTz) * ts->count);
 	for (int i = 0; i < ts->count; i++)
@@ -437,7 +437,7 @@ timestampset_shift_internal(TimestampSet *ts, Interval *interval)
 			DirectFunctionCall2(timestamptz_pl_interval,
 			TimestampTzGetDatum(t), PointerGetDatum(interval)));
 	}
-	TimestampSet *result = timestampset_from_timestamparr_internal(times, ts->count);
+	TimestampSet *result = timestampset_make_internal(times, ts->count);
 	pfree(times);
 	return result;
 }
@@ -461,7 +461,7 @@ timestampset_shift(PG_FUNCTION_ARGS)
 /* B-tree comparator */
 
 int
-timestampset_cmp_internal(TimestampSet *ts1, TimestampSet *ts2)
+timestampset_cmp_internal(const TimestampSet *ts1, const TimestampSet *ts2)
 {
 	int count = Min(ts1->count, ts2->count);
 	int result = 0;
@@ -504,7 +504,7 @@ timestampset_cmp(PG_FUNCTION_ARGS)
  * The internal B-tree comparator is not used to increase efficiency 
  */
 bool
-timestampset_eq_internal(TimestampSet *ts1, TimestampSet *ts2)
+timestampset_eq_internal(const TimestampSet *ts1, const TimestampSet *ts2)
 {
 	if (ts1->count != ts2->count)
 		return false;
@@ -513,7 +513,7 @@ timestampset_eq_internal(TimestampSet *ts1, TimestampSet *ts2)
 	{
 		TimestampTz t1 = timestampset_time_n(ts1, i);
 		TimestampTz t2 = timestampset_time_n(ts2, i);
-		if (timestamp_cmp_internal(t1, t2) != 0)
+		if (t1 != t2)
 			return false;
 	}
 	/* All timestamps of the two TimestampSet are equal */
@@ -538,7 +538,7 @@ timestampset_eq(PG_FUNCTION_ARGS)
  * The internal B-tree comparator is not used to increase efficiency 
  */
 bool
-timestampset_ne_internal(TimestampSet *ts1, TimestampSet *ts2)
+timestampset_ne_internal(const TimestampSet *ts1, const TimestampSet *ts2)
 {
 	return !timestampset_eq_internal(ts1, ts2);
 }

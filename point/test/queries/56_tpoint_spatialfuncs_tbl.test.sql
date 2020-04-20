@@ -80,11 +80,12 @@ SELECT round(azimuth(temp), 12) FROM tbl_tgeogpoint3D WHERE azimuth(temp) IS NOT
 
 -------------------------------------------------------------------------------
 
-SELECT atGeometry(temp, g) FROM tbl_tgeompoint, tbl_geometry
-WHERE atGeometry(temp, g) IS NOT NULL AND atGeometry(temp, g) != temp LIMIT 10;
+SELECT COUNT(*) FROM tbl_tgeompoint t1, tbl_geometry t2 WHERE
+-- Modulo used to reduce time needed for the tests
+t1.k % 2 = 0 AND temp != merge(atGeometry(temp, g), minusGeometry(temp, g));
 
-SELECT minusGeometry(temp, g) FROM tbl_tgeompoint, tbl_geometry
-WHERE minusGeometry(temp, g) IS NOT NULL AND minusGeometry(temp, g) != temp LIMIT 10;
+SELECT COUNT(*)  FROM tbl_tgeompoint t1, tbl_stbox t2 WHERE temp != merge(atStbox(temp, b), minusStbox(temp, b));
+SELECT COUNT(*)  FROM tbl_tgeogpoint t1, tbl_geodstbox t2 WHERE temp != merge(atStbox(temp, b), minusStbox(temp, b));
 
 -------------------------------------------------------------------------------
 
@@ -217,6 +218,14 @@ SELECT asText((temp::geography)::tgeogpoint) FROM tbl_tgeogpoint3D LIMIT 10;
 
 SELECT (temp::geography)::tgeogpoint FROM tbl_tgeogpoint LIMIT 10;
 SELECT (temp::geography)::tgeogpoint FROM tbl_tgeogpoint3D LIMIT 10;
+
+-------------------------------------------------------------------------------
+
+SELECT st_astext(geoMeasure(t1.temp, t2.temp)) FROM tbl_tgeompoint t1, tbl_tfloat t2 WHERE getTime(t1.temp) && getTime(t2.temp);
+SELECT st_astext(geoMeasure(t1.temp, t2.temp)) FROM tbl_tgeompoint3D t1, tbl_tfloat t2 WHERE getTime(t1.temp) && getTime(t2.temp);
+
+SELECT st_astext(geoMeasure(temp, round(speed(temp),2))) FROM tbl_tgeompoint WHERE speed(temp) IS NOT NULL;
+SELECT st_astext(geoMeasure(temp, round(speed(temp),2))) FROM tbl_tgeompoint3D WHERE speed(temp) IS NOT NULL;
 
 -------------------------------------------------------------------------------
 

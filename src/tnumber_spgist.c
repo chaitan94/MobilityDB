@@ -117,7 +117,7 @@ compareDoubles(const void *a, const void *b)
  * a corner of the box. This makes 16 quadrants in total.
  */
 static uint8
-getQuadrant4D(TBOX *centroid, TBOX *inBox)
+getQuadrant4D(const TBOX *centroid, const TBOX *inBox)
 {
 	uint8 quadrant = 0;
 
@@ -165,7 +165,7 @@ initRectBox(void)
  * using centroid and quadrant.
  */
 static RectBox *
-nextRectBox(RectBox *rect_box, TBOX *centroid, uint8 quadrant)
+nextRectBox(const RectBox *rect_box, const TBOX *centroid, uint8 quadrant)
 {
 	RectBox *next_rect_box = (RectBox *) palloc(sizeof(RectBox));
 
@@ -196,7 +196,7 @@ nextRectBox(RectBox *rect_box, TBOX *centroid, uint8 quadrant)
 
 /* Can any rectangle from rect_box overlap with this argument? */
 static bool
-overlap4D(RectBox *rect_box, TBOX *query)
+overlap4D(const RectBox *rect_box, const TBOX *query)
 {
 	bool result = true;
 	/* If the dimension is not missing */
@@ -212,7 +212,7 @@ overlap4D(RectBox *rect_box, TBOX *query)
 
 /* Can any rectangle from rect_box contain this argument? */
 static bool
-contain4D(RectBox *rect_box, TBOX *query)
+contain4D(const RectBox *rect_box, const TBOX *query)
 {
 	bool result = true;
 	/* If the dimension is not missing */
@@ -228,56 +228,56 @@ contain4D(RectBox *rect_box, TBOX *query)
 
 /* Can any rectangle from rect_box be left of this argument? */
 static bool
-left4D(RectBox *rect_box, TBOX *query)
+left4D(const RectBox *rect_box, const TBOX *query)
 {
 	return (rect_box->right.xmax < query->xmin);
 }
 
 /* Can any rectangle from rect_box does not extend the right of this argument? */
 static bool
-overLeft4D(RectBox *rect_box, TBOX *query)
+overLeft4D(const RectBox *rect_box, const TBOX *query)
 {
 	return (rect_box->right.xmax <= query->xmax);
 }
 
 /* Can any rectangle from rect_box be right of this argument? */
 static bool
-right4D(RectBox *rect_box, TBOX *query)
+right4D(const RectBox *rect_box, const TBOX *query)
 {
 	return (rect_box->left.xmin > query->xmax);
 }
 
 /* Can any rectangle from rect_box does not extend the left of this argument? */
 static bool
-overRight4D(RectBox *rect_box, TBOX *query)
+overRight4D(const RectBox *rect_box, const TBOX *query)
 {
 	return (rect_box->left.xmin >= query->xmin);
 }
 
 /* Can any rectangle from rect_box be before this argument? */
 static bool
-before4D(RectBox *rect_box, TBOX *query)
+before4D(const RectBox *rect_box, const TBOX *query)
 {
 	return (rect_box->right.tmax < query->tmin);
 }
 
 /* Can any rectangle from rect_box does not extend after this argument? */
 static bool
-overBefore4D(RectBox *rect_box, TBOX *query)
+overBefore4D(const RectBox *rect_box, const TBOX *query)
 {
 	return (rect_box->right.tmax <= query->tmax);
 }
 
 /* Can any rectangle from rect_box be after this argument? */
 static bool
-after4D(RectBox *rect_box, TBOX *query)
+after4D(const RectBox *rect_box, const TBOX *query)
 {
 	return (rect_box->left.tmin > query->tmax);
 }
 
 /* Can any rectangle from rect_box does not extend before this argument? */
 static bool
-overAfter4D(RectBox *rect_box, TBOX *query)
+overAfter4D(const RectBox *rect_box, const TBOX *query)
 {
 	return (rect_box->left.tmin >= query->tmin);
 }
@@ -286,10 +286,10 @@ overAfter4D(RectBox *rect_box, TBOX *query)
  * SP-GiST config function
  *****************************************************************************/
  
-PG_FUNCTION_INFO_V1(spgist_tnumber_config);
+PG_FUNCTION_INFO_V1(spgist_tbox_config);
 
 PGDLLEXPORT Datum
-spgist_tnumber_config(PG_FUNCTION_ARGS)
+spgist_tbox_config(PG_FUNCTION_ARGS)
 {
 	spgConfigOut *cfg = (spgConfigOut *) PG_GETARG_POINTER(1);
 	cfg->prefixType = type_oid(T_TBOX);	/* A type represented by its bounding box */
@@ -304,10 +304,10 @@ spgist_tnumber_config(PG_FUNCTION_ARGS)
  * SP-GiST choose function
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(spgist_tnumber_choose);
+PG_FUNCTION_INFO_V1(spgist_tbox_choose);
 
 PGDLLEXPORT Datum
-spgist_tnumber_choose(PG_FUNCTION_ARGS)
+spgist_tbox_choose(PG_FUNCTION_ARGS)
 {
 	spgChooseIn *in = (spgChooseIn *) PG_GETARG_POINTER(0);
 	spgChooseOut *out = (spgChooseOut *) PG_GETARG_POINTER(1);
@@ -331,10 +331,10 @@ spgist_tnumber_choose(PG_FUNCTION_ARGS)
  * point as the median of the coordinates of the boxes.
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(spgist_tnumber_picksplit);
+PG_FUNCTION_INFO_V1(spgist_tbox_picksplit);
 
 PGDLLEXPORT Datum
-spgist_tnumber_picksplit(PG_FUNCTION_ARGS)
+spgist_tbox_picksplit(PG_FUNCTION_ARGS)
 {
 	spgPickSplitIn *in = (spgPickSplitIn *) PG_GETARG_POINTER(0);
 	spgPickSplitOut *out = (spgPickSplitOut *) PG_GETARG_POINTER(1);
@@ -403,10 +403,10 @@ spgist_tnumber_picksplit(PG_FUNCTION_ARGS)
  * SP-GiST inner consistent function for temporal numbers
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(spgist_tnumber_inner_consistent);
+PG_FUNCTION_INFO_V1(spgist_tbox_inner_consistent);
 
 PGDLLEXPORT Datum
-spgist_tnumber_inner_consistent(PG_FUNCTION_ARGS)
+spgist_tbox_inner_consistent(PG_FUNCTION_ARGS)
 {
 	spgInnerConsistentIn *in = (spgInnerConsistentIn *) PG_GETARG_POINTER(0);
 	spgInnerConsistentOut *out = (spgInnerConsistentOut *) PG_GETARG_POINTER(1);
@@ -453,7 +453,7 @@ spgist_tnumber_inner_consistent(PG_FUNCTION_ARGS)
 				DatumGetRangeTypeP(in->scankeys[i].sk_argument));
 		else if (subtype == type_oid(T_TBOX))
 			memcpy(&queries[i], DatumGetTboxP(in->scankeys[i].sk_argument), sizeof(TBOX));
-		else if (temporal_type_oid(subtype))
+		else if (tnumber_type_oid(subtype))
 			temporal_bbox(&queries[i],
 				DatumGetTemporal(in->scankeys[i].sk_argument));
 		else
@@ -483,6 +483,7 @@ spgist_tnumber_inner_consistent(PG_FUNCTION_ARGS)
 			{
 				case RTOverlapStrategyNumber:
 				case RTContainedByStrategyNumber:
+				case RTAdjacentStrategyNumber:
 					flag = overlap4D(next_rect_box, &queries[i]);
 					break;
 				case RTContainsStrategyNumber:
@@ -548,10 +549,10 @@ spgist_tnumber_inner_consistent(PG_FUNCTION_ARGS)
  * SP-GiST leaf-level consistency function
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(spgist_tnumber_leaf_consistent);
+PG_FUNCTION_INFO_V1(spgist_tbox_leaf_consistent);
 
 PGDLLEXPORT Datum
-spgist_tnumber_leaf_consistent(PG_FUNCTION_ARGS)
+spgist_tbox_leaf_consistent(PG_FUNCTION_ARGS)
 {
 	spgLeafConsistentIn *in = (spgLeafConsistentIn *) PG_GETARG_POINTER(0);
 	spgLeafConsistentOut *out = (spgLeafConsistentOut *) PG_GETARG_POINTER(1);
@@ -591,7 +592,7 @@ spgist_tnumber_leaf_consistent(PG_FUNCTION_ARGS)
 			TBOX *box = DatumGetTboxP(in->scankeys[i].sk_argument);
 			res = index_leaf_consistent_tbox(key, box, strategy);
 		}
-		else if (temporal_type_oid(subtype))
+		else if (tnumber_type_oid(subtype))
 		{
 			temporal_bbox(&query,
 				DatumGetTemporal(in->scankeys[i].sk_argument));

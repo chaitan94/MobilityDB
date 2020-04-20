@@ -14,20 +14,6 @@
  * Casting for tbox
  *****************************************************************************/
 
-CREATE FUNCTION floatrange(tbox)
-	RETURNS floatrange
-	AS 'MODULE_PATHNAME', 'tbox_to_floatrange'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
-CREATE FUNCTION period(tbox)
-	RETURNS period
-	AS 'MODULE_PATHNAME', 'tbox_to_period'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE; 
-
-CREATE CAST (tbox AS floatrange) WITH FUNCTION floatrange(tbox);
-CREATE CAST (tbox AS period) WITH FUNCTION period(tbox);
-
-/*****************************************************************************/
-
 CREATE FUNCTION tbox(integer)
 	RETURNS tbox
 	AS 'MODULE_PATHNAME', 'int_to_tbox'
@@ -80,8 +66,8 @@ CREATE CAST (timestamptz AS tbox) WITH FUNCTION tbox(timestamptz) AS IMPLICIT;
 CREATE CAST (timestampset AS tbox) WITH FUNCTION tbox(timestampset) AS IMPLICIT;
 CREATE CAST (period AS tbox) WITH FUNCTION tbox(period) AS IMPLICIT;
 CREATE CAST (periodset AS tbox) WITH FUNCTION tbox(periodset) AS IMPLICIT;
-CREATE CAST (tint AS tbox) WITH FUNCTION tbox(tint);
-CREATE CAST (tfloat AS tbox) WITH FUNCTION tbox(tfloat);
+CREATE CAST (tint AS tbox) WITH FUNCTION tbox(tint) AS IMPLICIT;
+CREATE CAST (tfloat AS tbox) WITH FUNCTION tbox(tfloat) AS IMPLICIT;
 -- We cannot make the castings from range to tbox implicit since this produces
 -- an ambiguity with the implicit castings to anyrange
 CREATE CAST (intrange AS tbox) WITH FUNCTION tbox(intrange);
@@ -121,6 +107,28 @@ CREATE FUNCTION tbox(floatrange, period)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
+ * Restriction at/minus tbox
+ *****************************************************************************/
+
+CREATE FUNCTION atTbox(tint, tbox)
+	RETURNS tint
+	AS 'MODULE_PATHNAME', 'tnumber_at_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION atTbox(tfloat, tbox)
+	RETURNS tfloat
+	AS 'MODULE_PATHNAME', 'tnumber_at_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION minusTbox(tint, tbox)
+	RETURNS tint
+	AS 'MODULE_PATHNAME', 'tnumber_minus_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION minusTbox(tfloat, tbox)
+	RETURNS tfloat
+	AS 'MODULE_PATHNAME', 'tnumber_minus_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
  * Selectively functions for operators
  *****************************************************************************/
 
@@ -133,64 +141,6 @@ CREATE FUNCTION temporal_joinsel(internal, oid, internal, smallint, internal)
 	RETURNS float
 	AS 'MODULE_PATHNAME', 'temporal_joinsel'
 	LANGUAGE C IMMUTABLE STRICT;
-
-/*****************************************************************************/
-
-CREATE FUNCTION tnumber_sel(internal, oid, internal, integer)
-	RETURNS float
-	AS 'MODULE_PATHNAME', 'tnumber_sel'
-	LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION tnumber_joinsel(internal, oid, internal, smallint, internal)
-	RETURNS float
-	AS 'MODULE_PATHNAME', 'tnumber_joinsel'
-	LANGUAGE C IMMUTABLE STRICT;
-
-/*****************************************************************************
- * tbox operators
- *****************************************************************************/
-
-CREATE FUNCTION tbox_contains(tbox, tbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'contains_tbox_tbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tbox_contained(tbox, tbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'contained_tbox_tbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tbox_overlaps(tbox, tbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'overlaps_tbox_tbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tbox_same(tbox, tbox)
-	RETURNS boolean
-	AS 'MODULE_PATHNAME', 'same_tbox_tbox'
-	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE OPERATOR @> (
-	PROCEDURE = tbox_contains,
-	LEFTARG = tbox, RIGHTARG = tbox,
-	COMMUTATOR = <@,
-	RESTRICT = temporal_sel, JOIN = temporal_joinsel
-);
-CREATE OPERATOR <@ (
-	PROCEDURE = tbox_contained,
-	LEFTARG = tbox, RIGHTARG = tbox,
-	COMMUTATOR = @>,
-	RESTRICT = temporal_sel, JOIN = temporal_joinsel
-);
-CREATE OPERATOR && (
-	PROCEDURE = tbox_overlaps,
-	LEFTARG = tbox, RIGHTARG = tbox,
-	COMMUTATOR = &&,
-	RESTRICT = temporal_sel, JOIN = temporal_joinsel
-);
-CREATE OPERATOR ~= (
-	PROCEDURE = tbox_same,
-	LEFTARG = tbox, RIGHTARG = tbox,
-	COMMUTATOR = ~=,
-	RESTRICT = temporal_sel, JOIN = temporal_joinsel
-);
 
 /*****************************************************************************
  * Temporal boolean
@@ -327,6 +277,40 @@ CREATE OPERATOR ~= (
 	PROCEDURE = same_bbox,
 	LEFTARG = tbool, RIGHTARG = tbool,
 	COMMUTATOR = ~=,
+	RESTRICT = temporal_sel, JOIN = temporal_joinsel
+);
+
+/*****************************************************************************/
+
+CREATE FUNCTION adjacent_bbox(period, tbool)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_period_temporal'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tbool, period)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_temporal_period'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tbool, tbool)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_temporal_temporal'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = period, RIGHTARG = tbool,
+	COMMUTATOR = -|-,
+	RESTRICT = temporal_sel, JOIN = temporal_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tbool, RIGHTARG = period,
+	COMMUTATOR = -|-,
+	RESTRICT = temporal_sel, JOIN = temporal_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tbool, RIGHTARG = tbool,
+	COMMUTATOR = -|-,
 	RESTRICT = temporal_sel, JOIN = temporal_joinsel
 );
 
@@ -590,6 +574,70 @@ CREATE OPERATOR ~= (
 	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 
+/*****************************************************************************/
+
+CREATE FUNCTION adjacent_bbox(intrange, tint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_range_tnumber'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tint, intrange)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tnumber_range'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tbox, tint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tbox_tnumber'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tint, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tnumber_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tint, tint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tnumber_tnumber'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tint, tfloat)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tnumber_tnumber'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = intrange, RIGHTARG = tint,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tint, RIGHTARG = intrange,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tbox, RIGHTARG = tint,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tint, RIGHTARG = tbox,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tint, RIGHTARG = tint,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tint, RIGHTARG = tfloat,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+
 /*****************************************************************************
  * Temporal float
  *****************************************************************************/
@@ -850,6 +898,70 @@ CREATE OPERATOR ~= (
 	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 
+/*****************************************************************************/
+
+CREATE FUNCTION adjacent_bbox(floatrange, tfloat)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_range_tnumber'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tfloat, floatrange)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tnumber_range'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tbox, tfloat)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tbox_tnumber'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tfloat, tbox)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tnumber_tbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tfloat, tint)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tnumber_tnumber'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(tfloat, tfloat)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_tnumber_tnumber'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = floatrange, RIGHTARG = tfloat,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tfloat, RIGHTARG = floatrange,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tbox, RIGHTARG = tfloat,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tfloat, RIGHTARG = tbox,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tfloat, RIGHTARG = tint,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = tfloat, RIGHTARG = tfloat,
+	COMMUTATOR = -|-,
+	RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
+);
+
 /*****************************************************************************
  * Temporal text
  *****************************************************************************/
@@ -985,6 +1097,40 @@ CREATE OPERATOR ~= (
 	PROCEDURE = same_bbox,
 	LEFTARG = ttext, RIGHTARG = ttext,
 	COMMUTATOR = ~=,
+	RESTRICT = temporal_sel, JOIN = temporal_joinsel
+);
+
+/*****************************************************************************/
+
+CREATE FUNCTION adjacent_bbox(period, ttext)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_period_temporal'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(ttext, period)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_temporal_period'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION adjacent_bbox(ttext, ttext)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME', 'adjacent_bbox_temporal_temporal'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = period, RIGHTARG = ttext,
+	COMMUTATOR = -|-,
+	RESTRICT = temporal_sel, JOIN = temporal_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = ttext, RIGHTARG = period,
+	COMMUTATOR = -|-,
+	RESTRICT = temporal_sel, JOIN = temporal_joinsel
+);
+CREATE OPERATOR -|- (
+	PROCEDURE = adjacent_bbox,
+	LEFTARG = ttext, RIGHTARG = ttext,
+	COMMUTATOR = -|-,
 	RESTRICT = temporal_sel, JOIN = temporal_joinsel
 );
 

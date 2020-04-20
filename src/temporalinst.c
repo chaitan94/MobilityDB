@@ -28,9 +28,8 @@
 #include "temporal_boxops.h"
 #include "rangetypes_ext.h"
 
-#ifdef WITH_POSTGIS
 #include "tpoint.h"
-#endif
+#include "tpoint_spatialfuncs.h"
 
 /*****************************************************************************
  * General functions
@@ -48,8 +47,8 @@
  
 /* Pointer to the value */
 
-static char * 
-temporalinst_data_ptr(TemporalInst *inst) 
+static char *
+temporalinst_data_ptr(const TemporalInst *inst)
 {
 	return (char *)inst + double_pad(sizeof(TemporalInst));
 }
@@ -57,45 +56,36 @@ temporalinst_data_ptr(TemporalInst *inst)
 /* Get pointer to value */
 
 Datum *
-temporalinst_value_ptr(TemporalInst *inst)
+temporalinst_value_ptr(const TemporalInst *inst)
 {
 	return (Datum *)temporalinst_data_ptr(inst);
 }
 
 /* Get value depending on whether it is passed by value or by reference */
 Datum
-temporalinst_value(TemporalInst *inst)
+temporalinst_value(const TemporalInst *inst)
 {
-	char *value = temporalinst_data_ptr(inst);
+	Datum *value = temporalinst_value_ptr(inst);
 	/* For base types passed by value */
 	if (MOBDB_FLAGS_GET_BYVAL(inst->flags))
-		return *(Datum *)value;
+		return *value;
 	/* For base types passed by reference */
 	return PointerGetDatum(value);
 }
 
 Datum
-temporalinst_value_copy(TemporalInst *inst)
+temporalinst_value_copy(const TemporalInst *inst)
 {
-	char *value = temporalinst_data_ptr(inst);
+	Datum *value = temporalinst_value_ptr(inst);
 	/* For base types passed by value */
 	if (MOBDB_FLAGS_GET_BYVAL(inst->flags))
-		return *(Datum *)value;
+		return *value;
 	/* For base types passed by reference */
 	int typlen = get_typlen_fast(inst->valuetypid);
 	size_t value_size = typlen != -1 ? (unsigned int) typlen : VARSIZE(value);
 	void *result = palloc0(value_size);
 	memcpy(result, value, value_size);
 	return PointerGetDatum(result);
-}
-
-/* Get the bounding box of a TemporalInst */
-
-void
-temporalinst_bbox(void *box, TemporalInst *inst) 
-{
-	Datum value = temporalinst_value(inst);
-	temporalinst_make_bbox(box, value, inst->t, inst->valuetypid);
 }
 
 /* Construct a temporal instant value */
@@ -138,8 +128,9 @@ temporalinst_make(Datum value, TimestampTz t, Oid valuetypid)
 	SET_VARSIZE(result, size);
 	MOBDB_FLAGS_SET_BYVAL(result->flags, byval);
 	MOBDB_FLAGS_SET_LINEAR(result->flags, linear_interpolation(valuetypid));
-#ifdef WITH_POSTGIS
-	if (valuetypid == type_oid(T_GEOMETRY) || 
+	MOBDB_FLAGS_SET_X(result->flags, true);
+	MOBDB_FLAGS_SET_T(result->flags, true);
+	if (valuetypid == type_oid(T_GEOMETRY) ||
 		valuetypid == type_oid(T_GEOGRAPHY))
 	{
 		GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(value);
@@ -147,28 +138,90 @@ temporalinst_make(Datum value, TimestampTz t, Oid valuetypid)
 		MOBDB_FLAGS_SET_GEODETIC(result->flags, FLAGS_GET_GEODETIC(gs->flags));
 		POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(value));
 	}
-#endif
 	return result;
 }
 
- /* Append an instant to another instant resulting in a TemporalI */
+/* Append an instant to another instant resulting in a TemporalI */
 
 TemporalI *
-temporalinst_append_instant(TemporalInst *inst1, TemporalInst *inst2)
+temporalinst_append_instant(const TemporalInst *inst1, const TemporalInst *inst2)
 {
+	ensure_increasing_timestamps(inst1, inst2);
+	const TemporalInst *instants[] = {inst1, inst2};
+	return temporali_make((TemporalInst **)instants, 2);
+}
+
+/* Merge two temporal instants */
+
+Temporal *
+temporalinst_merge(const TemporalInst *inst1, const TemporalInst *inst2)
+{
+	/* Test the validity of the temporal values */
+	assert(inst1->valuetypid == inst2->valuetypid);
+	assert(MOBDB_FLAGS_GET_LINEAR(inst1->flags) == MOBDB_FLAGS_GET_LINEAR(inst2->flags));
+	bool isgeo = (inst1->valuetypid == type_oid(T_GEOMETRY) ||
+		inst1->valuetypid == type_oid(T_GEOGRAPHY));
+	if (isgeo)
+	{
+		assert(MOBDB_FLAGS_GET_GEODETIC(inst1->flags) == MOBDB_FLAGS_GET_GEODETIC(inst2->flags));
+		ensure_same_srid_tpoint((Temporal *) inst1, (Temporal *) inst2);
+		ensure_same_dimensionality_tpoint((Temporal *) inst1, (Temporal *) inst2);
+	}
+	if (inst1->t == inst2->t && ! datum_eq(temporalinst_value(inst1),
+		temporalinst_value(inst2), inst1->valuetypid))
+	{
+		char *t1 = call_output(TIMESTAMPTZOID, TimestampTzGetDatum(inst1->t));
+		ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("The temporal values have different value at their overlapping instant %s", t1)));
+	}
+
+	/* Result is a TemporalInst */
+	if (temporalinst_eq(inst1, inst2))
+		return (Temporal *) temporalinst_copy(inst1);
+
+	/* Result is a TemporalI */
 	TemporalInst *instants[2];
-	instants[0] = inst1;
-	instants[1] = inst2;
-	return temporali_from_temporalinstarr(instants, 2);
+	if (inst1->t < inst2->t)
+	{
+		instants[0] = (TemporalInst *) inst1;
+		instants[1] = (TemporalInst *) inst2;
+	}
+	else
+	{
+		instants[0] = (TemporalInst *) inst2;
+		instants[1] = (TemporalInst *) inst1;
+	}
+	return (Temporal *) temporali_make(instants, 2);
+}
+
+/* Merge an array of temporal values */
+
+TemporalI *
+temporalinst_merge_array(TemporalInst **instants, int count)
+{
+	temporalinstarr_sort(instants, count);
+	int newcount = temporalinstarr_remove_duplicates(instants, count);
+	return temporali_make(instants, newcount);
 }
 
 /* Copy a temporal value */
 TemporalInst *
-temporalinst_copy(TemporalInst *inst)
+temporalinst_copy(const TemporalInst *inst)
 {
 	TemporalInst *result = palloc0(VARSIZE(inst));
 	memcpy(result, inst, VARSIZE(inst));
 	return result;
+}
+
+/* Set the value and the timestamp of an existing temporal instant.
+ * This function only works for for base types passed by value.
+ * This should be ensured by the calling function! */
+void
+temporalinst_set(TemporalInst *inst, Datum value, TimestampTz t)
+{
+	inst->t = t;
+	Datum *value_ptr = temporalinst_value_ptr(inst);
+	*value_ptr = value;
 }
 
 /*****************************************************************************
@@ -179,7 +232,7 @@ temporalinst_copy(TemporalInst *inst)
  * Output a temporal value as a string. 
  */
 char *
-temporalinst_to_string(TemporalInst *inst, char *(*value_out)(Oid, Datum))
+temporalinst_to_string(const TemporalInst *inst, char *(*value_out)(Oid, Datum))
 {
 	char *t = call_output(TIMESTAMPTZOID, TimestampTzGetDatum(inst->t));
 	char *value = value_out(inst->valuetypid, temporalinst_value(inst));
@@ -203,7 +256,7 @@ temporalinst_to_string(TemporalInst *inst, char *(*value_out)(Oid, Datum))
  * Send function. 
  */
 void
-temporalinst_write(TemporalInst *inst, StringInfo buf)
+temporalinst_write(const TemporalInst *inst, StringInfo buf)
 {
 	bytea *bt = call_send(TIMESTAMPTZOID, TimestampTzGetDatum(inst->t));
 	bytea *bv = call_send(inst->valuetypid, temporalinst_value(inst));
@@ -237,11 +290,11 @@ temporalinst_read(StringInfo buf, Oid valuetypid)
  *****************************************************************************/
 
 bool
-intersection_temporalinst_temporalinst(TemporalInst *inst1, TemporalInst *inst2, 
+intersection_temporalinst_temporalinst(const TemporalInst *inst1, const TemporalInst *inst2,
 	TemporalInst **inter1, TemporalInst **inter2)
 {
 	/* Test whether the two temporal values overlap on time */
-	if (timestamp_cmp_internal(inst1->t, inst2->t) != 0)
+	if (inst1->t != inst2->t)
 		return false;
 	*inter1 = temporalinst_copy(inst1);
 	*inter2 = temporalinst_copy(inst2);
@@ -255,7 +308,7 @@ intersection_temporalinst_temporalinst(TemporalInst *inst1, TemporalInst *inst2,
 /* Cast temporal integer as temporal float */
 
 TemporalInst *
-tintinst_to_tfloatinst(TemporalInst *inst)
+tintinst_to_tfloatinst(const TemporalInst *inst)
 {
 	TemporalInst *result = temporalinst_copy(inst);
 	result->valuetypid = FLOAT8OID;
@@ -268,7 +321,7 @@ tintinst_to_tfloatinst(TemporalInst *inst)
 /* Cast temporal float as temporal integer */
 
 TemporalInst *
-tfloatinst_to_tintinst(TemporalInst *inst)
+tfloatinst_to_tintinst(const TemporalInst *inst)
 {
 	TemporalInst *result = temporalinst_copy(inst);
 	result->valuetypid = INT4OID;
@@ -282,8 +335,16 @@ tfloatinst_to_tintinst(TemporalInst *inst)
  * Transformation functions
  *****************************************************************************/
 
+/* Construct a TemporalI from a TemporalInst */
+
+TemporalI *
+temporalinst_to_temporali(const TemporalInst *inst)
+{
+	return temporali_make((TemporalInst **)&inst, 1);
+}
+
 TemporalInst *
-temporali_to_temporalinst(TemporalI *ti)
+temporali_to_temporalinst(const TemporalI *ti)
 {
 	if (ti->count != 1)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -293,7 +354,7 @@ temporali_to_temporalinst(TemporalI *ti)
 }
 
 TemporalInst *
-temporalseq_to_temporalinst(TemporalSeq *seq)
+temporalseq_to_temporalinst(const TemporalSeq *seq)
 {
 	if (seq->count != 1)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -303,7 +364,7 @@ temporalseq_to_temporalinst(TemporalSeq *seq)
 }
 
 TemporalInst *
-temporals_to_temporalinst(TemporalS *ts)
+temporals_to_temporalinst(const TemporalS *ts)
 {
 	TemporalSeq *seq = temporals_seq_n(ts, 0);
 	if (ts->count != 1 || seq->count != 1)
@@ -320,7 +381,7 @@ temporals_to_temporalinst(TemporalS *ts)
 /* Get values */
 
 ArrayType *
-temporalinst_values(TemporalInst *inst)
+temporalinst_values(const TemporalInst *inst)
 {
 	Datum value = temporalinst_value(inst);
 	return datumarr_to_array(&value, 1, inst->valuetypid);
@@ -329,7 +390,7 @@ temporalinst_values(TemporalInst *inst)
 /* Get values */
 
 ArrayType *
-tfloatinst_ranges(TemporalInst *inst)
+tfloatinst_ranges(const TemporalInst *inst)
 {
 	Datum value = temporalinst_value(inst);
 	RangeType *range = range_make(value, value, true, true, inst->valuetypid);
@@ -341,18 +402,16 @@ tfloatinst_ranges(TemporalInst *inst)
 /* Get time */
 
 PeriodSet *
-temporalinst_get_time(TemporalInst *inst)
+temporalinst_get_time(const TemporalInst *inst)
 {
-	Period *p = period_make(inst->t, inst->t, true, true);
-	PeriodSet *result = periodset_from_periodarr_internal(&p, 1, false);
-	pfree(p);
+	PeriodSet *result = timestamp_to_periodset_internal(inst->t);
 	return result;
 }
 
 /* Bounding period on which the temporal value is defined */
 
 void
-temporalinst_period(Period *p, TemporalInst *inst)
+temporalinst_period(Period *p, const TemporalInst *inst)
 {
 	return period_set(p, inst->t, inst->t, true, true);
 }
@@ -360,7 +419,7 @@ temporalinst_period(Period *p, TemporalInst *inst)
 /* Timestamps */
 
 ArrayType *
-temporalinst_timestamps(TemporalInst *inst)
+temporalinst_timestamps(const TemporalInst *inst)
 {
 	TimestampTz t = inst->t;
 	return timestamparr_to_array(&t, 1);
@@ -369,7 +428,7 @@ temporalinst_timestamps(TemporalInst *inst)
 /* Instants */
 
 ArrayType *
-temporalinst_instants_array(TemporalInst *inst)
+temporalinst_instants_array(const TemporalInst *inst)
 {
 	return temporalarr_to_array((Temporal **)(&inst), 1);
 }
@@ -377,7 +436,7 @@ temporalinst_instants_array(TemporalInst *inst)
 /* Shift the time span of a temporal value by an interval */
 
 TemporalInst *
-temporalinst_shift(TemporalInst *inst, Interval *interval)
+temporalinst_shift(const TemporalInst *inst, const Interval *interval)
 {
 	TemporalInst *result = temporalinst_copy(inst);
 	result->t = DatumGetTimestampTz(
@@ -393,7 +452,7 @@ temporalinst_shift(TemporalInst *inst, Interval *interval)
 /* Is the temporal value ever equal to the value? */
 
 bool
-temporalinst_ever_eq(TemporalInst *inst, Datum value)
+temporalinst_ever_eq(const TemporalInst *inst, Datum value)
 {
 	return datum_eq(temporalinst_value(inst), value, inst->valuetypid);
 }
@@ -401,7 +460,7 @@ temporalinst_ever_eq(TemporalInst *inst, Datum value)
 /* Is the temporal value always equal to the value? */
 
 bool
-temporalinst_always_eq(TemporalInst *inst, Datum value)
+temporalinst_always_eq(const TemporalInst *inst, Datum value)
 {
 	return datum_eq(temporalinst_value(inst), value, inst->valuetypid);
 }
@@ -411,7 +470,7 @@ temporalinst_always_eq(TemporalInst *inst, Datum value)
 /* Is the temporal value ever less than the value? */
 
 bool
-temporalinst_ever_lt(TemporalInst *inst, Datum value)
+temporalinst_ever_lt(const TemporalInst *inst, Datum value)
 {
 	return datum_lt(temporalinst_value(inst), value, inst->valuetypid);
 }
@@ -419,7 +478,7 @@ temporalinst_ever_lt(TemporalInst *inst, Datum value)
 /* Is the temporal value ever less than or equal to the value? */
 
 bool
-temporalinst_ever_le(TemporalInst *inst, Datum value)
+temporalinst_ever_le(const TemporalInst *inst, Datum value)
 {
 	return datum_le(temporalinst_value(inst), value, inst->valuetypid);
 }
@@ -427,7 +486,7 @@ temporalinst_ever_le(TemporalInst *inst, Datum value)
 /* Is the temporal value always less than the value? */
 
 bool
-temporalinst_always_lt(TemporalInst *inst, Datum value)
+temporalinst_always_lt(const TemporalInst *inst, Datum value)
 {
 	return datum_lt(temporalinst_value(inst), value, inst->valuetypid);
 }
@@ -435,7 +494,7 @@ temporalinst_always_lt(TemporalInst *inst, Datum value)
 /* Is the temporal value always less than or equal to the value? */
 
 bool
-temporalinst_always_le(TemporalInst *inst, Datum value)
+temporalinst_always_le(const TemporalInst *inst, Datum value)
 {
 	return datum_le(temporalinst_value(inst), value, inst->valuetypid);
 }
@@ -447,7 +506,7 @@ temporalinst_always_le(TemporalInst *inst, Datum value)
 /* Restriction to a value */
 
 TemporalInst *
-temporalinst_at_value(TemporalInst *inst, Datum value)
+temporalinst_at_value(const TemporalInst *inst, Datum value)
 {
 	if (datum_ne(value, temporalinst_value(inst), inst->valuetypid))
 		return NULL;
@@ -457,7 +516,7 @@ temporalinst_at_value(TemporalInst *inst, Datum value)
 /* Restriction to the complement of a value */
 
 TemporalInst *
-temporalinst_minus_value(TemporalInst *inst, Datum value)
+temporalinst_minus_value(const TemporalInst *inst, Datum value)
 {
 	if (datum_eq(value, temporalinst_value(inst), inst->valuetypid))
 		return NULL;
@@ -470,7 +529,7 @@ temporalinst_minus_value(TemporalInst *inst, Datum value)
  */
  
 TemporalInst *
-temporalinst_at_values(TemporalInst *inst, Datum *values, int count)
+temporalinst_at_values(const TemporalInst *inst, const Datum *values, int count)
 {
 	Datum value = temporalinst_value(inst);
 	for (int i = 0; i < count; i++)
@@ -483,7 +542,7 @@ temporalinst_at_values(TemporalInst *inst, Datum *values, int count)
  * The function assumes that there are no duplicates values. */
 
 TemporalInst *
-temporalinst_minus_values(TemporalInst *inst, Datum *values, int count)
+temporalinst_minus_values(const TemporalInst *inst, const Datum *values, int count)
 {
 	Datum value = temporalinst_value(inst);
 	for (int i = 0; i < count; i++)
@@ -495,7 +554,7 @@ temporalinst_minus_values(TemporalInst *inst, Datum *values, int count)
 /* Restriction to the range */
 
 TemporalInst *
-tnumberinst_at_range(TemporalInst *inst, RangeType *range)
+tnumberinst_at_range(const TemporalInst *inst, RangeType *range)
 {
 	Datum d = temporalinst_value(inst);
 	TypeCacheEntry* typcache = lookup_type_cache(range->rangetypid, TYPECACHE_RANGE_INFO);
@@ -508,7 +567,7 @@ tnumberinst_at_range(TemporalInst *inst, RangeType *range)
 /* Restriction to the complement of a range */
 
 TemporalInst *
-tnumberinst_minus_range(TemporalInst *inst, RangeType *range)
+tnumberinst_minus_range(const TemporalInst *inst, RangeType *range)
 {
 	Datum d = temporalinst_value(inst);
 	TypeCacheEntry* typcache = lookup_type_cache(range->rangetypid, TYPECACHE_RANGE_INFO);
@@ -522,7 +581,7 @@ tnumberinst_minus_range(TemporalInst *inst, RangeType *range)
  * The function assumes that the ranges are normalized. */
 
 TemporalInst *
-tnumberinst_at_ranges(TemporalInst *inst, RangeType **normranges, int count)
+tnumberinst_at_ranges(const TemporalInst *inst, RangeType **normranges, int count)
 {
 	Datum d = temporalinst_value(inst);
 	TypeCacheEntry *typcache = lookup_type_cache(normranges[0]->rangetypid,
@@ -539,7 +598,7 @@ tnumberinst_at_ranges(TemporalInst *inst, RangeType **normranges, int count)
  * The function assumes that the ranges are normalized. */
 
 TemporalInst *
-tnumberinst_minus_ranges(TemporalInst *inst, RangeType **normranges, int count)
+tnumberinst_minus_ranges(const TemporalInst *inst, RangeType **normranges, int count)
 {
 	Datum d = temporalinst_value(inst);
 	TypeCacheEntry *typcache = lookup_type_cache(normranges[0]->rangetypid,
@@ -559,9 +618,9 @@ tnumberinst_minus_ranges(TemporalInst *inst, RangeType **normranges, int count)
  */
 
 TemporalInst *
-temporalinst_at_timestamp(TemporalInst *inst, TimestampTz t)
+temporalinst_at_timestamp(const TemporalInst *inst, TimestampTz t)
 {
-	if (timestamp_cmp_internal(t, inst->t) == 0)
+	if (t == inst->t)
 		return temporalinst_copy(inst);
 	return NULL;
 }
@@ -573,9 +632,9 @@ temporalinst_at_timestamp(TemporalInst *inst, TimestampTz t)
  */
 
 bool
-temporalinst_value_at_timestamp(TemporalInst *inst, TimestampTz t, Datum *result)
+temporalinst_value_at_timestamp(const TemporalInst *inst, TimestampTz t, Datum *result)
 {
-	if (timestamp_cmp_internal(t, inst->t) != 0)
+	if (t != inst->t)
 		return false;
 	*result = temporalinst_value_copy(inst);
 	return true;
@@ -584,9 +643,9 @@ temporalinst_value_at_timestamp(TemporalInst *inst, TimestampTz t, Datum *result
 /* Restriction to the complement of a timestamptz */
 
 TemporalInst *
-temporalinst_minus_timestamp(TemporalInst *inst, TimestampTz t)
+temporalinst_minus_timestamp(const TemporalInst *inst, TimestampTz t)
 {
-	if (timestamp_cmp_internal(t, inst->t) == 0)
+	if (t == inst->t)
 		return NULL;
 	return temporalinst_copy(inst);
 }
@@ -594,10 +653,10 @@ temporalinst_minus_timestamp(TemporalInst *inst, TimestampTz t)
 /* Restriction to the timestamp set */
 
 TemporalInst *
-temporalinst_at_timestampset(TemporalInst *inst, TimestampSet *ts)
+temporalinst_at_timestampset(const TemporalInst *inst, const TimestampSet *ts)
 {
 	for (int i = 0; i < ts->count; i++)
-		if (timestamp_cmp_internal(inst->t, timestampset_time_n(ts, i)) == 0)
+		if (inst->t == timestampset_time_n(ts, i))
 			return temporalinst_copy(inst);
 	return NULL;
 }
@@ -605,10 +664,10 @@ temporalinst_at_timestampset(TemporalInst *inst, TimestampSet *ts)
 /* Restriction to the complement of a timestamp set */
 
 TemporalInst *
-temporalinst_minus_timestampset(TemporalInst *inst, TimestampSet *ts)
+temporalinst_minus_timestampset(const TemporalInst *inst, const TimestampSet *ts)
 {
 	for (int i = 0; i < ts->count; i++)
-		if (timestamp_cmp_internal(inst->t, timestampset_time_n(ts, i)) == 0)
+		if (inst->t == timestampset_time_n(ts, i))
 			return NULL;
 	return temporalinst_copy(inst);
 }
@@ -616,7 +675,7 @@ temporalinst_minus_timestampset(TemporalInst *inst, TimestampSet *ts)
 /* Restriction to the period */
 
 TemporalInst *
-temporalinst_at_period(TemporalInst *inst, Period *period)
+temporalinst_at_period(const TemporalInst *inst, const Period *period)
 {
 	if (!contains_period_timestamp_internal(period, inst->t))
 		return NULL;
@@ -626,7 +685,7 @@ temporalinst_at_period(TemporalInst *inst, Period *period)
 /* Restriction to the complement of a period */
 
 TemporalInst *
-temporalinst_minus_period(TemporalInst *inst, Period *period)
+temporalinst_minus_period(const TemporalInst *inst, const Period *period)
 {
 	if (contains_period_timestamp_internal(period, inst->t))
 		return NULL;
@@ -636,7 +695,7 @@ temporalinst_minus_period(TemporalInst *inst, Period *period)
 /* Restriction to a period set */
 
 TemporalInst *
-temporalinst_at_periodset(TemporalInst *inst, PeriodSet *ps)
+temporalinst_at_periodset(const TemporalInst *inst,const  PeriodSet *ps)
 {
 	for (int i = 0; i < ps->count; i++)
 		if (contains_period_timestamp_internal(periodset_per_n(ps, i), inst->t))
@@ -647,7 +706,7 @@ temporalinst_at_periodset(TemporalInst *inst, PeriodSet *ps)
 /* Restriction to the complement of a periodset */
 
 TemporalInst *
-temporalinst_minus_periodset(TemporalInst *inst, PeriodSet *ps)
+temporalinst_minus_periodset(const TemporalInst *inst, const PeriodSet *ps)
 {
 	for (int i = 0; i < ps->count; i++)
 		if (contains_period_timestamp_internal(periodset_per_n(ps, i), inst->t))
@@ -662,18 +721,18 @@ temporalinst_minus_periodset(TemporalInst *inst, PeriodSet *ps)
 /* Does the temporal value intersects the timestamp? */
 
 bool
-temporalinst_intersects_timestamp(TemporalInst *inst, TimestampTz t)
+temporalinst_intersects_timestamp(const TemporalInst *inst, TimestampTz t)
 {
-	return timestamp_cmp_internal(inst->t, t) == 0;
+	return (inst->t == t);
 }
 
 /* Does the temporal value intersects the timestamp set? */
 
 bool
-temporalinst_intersects_timestampset(TemporalInst *inst, TimestampSet *ts)
+temporalinst_intersects_timestampset(const TemporalInst *inst, const TimestampSet *ts)
 {
 	for (int i = 0; i < ts->count; i++)
-		if (timestamp_cmp_internal(inst->t, timestampset_time_n(ts, i)) == 0)
+		if (inst->t == timestampset_time_n(ts, i))
 			return true;
 	return false;
 }
@@ -681,7 +740,7 @@ temporalinst_intersects_timestampset(TemporalInst *inst, TimestampSet *ts)
 /* Does the temporal value intersects the period? */
 
 bool
-temporalinst_intersects_period(TemporalInst *inst, Period *p)
+temporalinst_intersects_period(const TemporalInst *inst, const Period *p)
 {
 	return contains_period_timestamp_internal(p, inst->t);
 }
@@ -689,7 +748,7 @@ temporalinst_intersects_period(TemporalInst *inst, Period *p)
 /* Does the temporal value intersects the period set? */
 
 bool
-temporalinst_intersects_periodset(TemporalInst *inst, PeriodSet *ps)
+temporalinst_intersects_periodset(const TemporalInst *inst, const PeriodSet *ps)
 {
 	for (int i = 0; i < ps->count; i++)
 		if (contains_period_timestamp_internal(periodset_per_n(ps, i), inst->t))
@@ -705,43 +764,42 @@ temporalinst_intersects_periodset(TemporalInst *inst, PeriodSet *ps)
 /* 
  * Equality operator
  * The internal B-tree comparator is not used to increase efficiency
+ * This function supposes for optimization purposes that the flags of two
+ * TemporalInst values of the same base type are equal.
+ * This hypothesis may change in the future and the function must be
+ * adapted accordingly.
  */
 bool
-temporalinst_eq(TemporalInst *inst1, TemporalInst *inst2)
+temporalinst_eq(const TemporalInst *inst1, const TemporalInst *inst2)
 {
-	/* If flags are not equal */
-	if (inst1->flags != inst2->flags) 
-		return false;
-
 	/* Compare values and timestamps */
 	Datum value1 = temporalinst_value(inst1);
 	Datum value2 = temporalinst_value(inst2);
-	return datum_eq(value1, value2, inst1->valuetypid) && 
-		timestamp_cmp_internal(inst1->t, inst2->t) == 0;
+	return inst1->t == inst2->t && datum_eq(value1, value2, inst1->valuetypid);
 }
 
 /* 
  * B-tree comparator
+ * This function supposes for optimization purposes that the flags of two
+ * TemporalInst values of the same base type are equal.
+ * This hypothesis may change in the future and the function must be
+ * adapted accordingly.
  */
 int
-temporalinst_cmp(TemporalInst *inst1, TemporalInst *inst2)
+temporalinst_cmp(const TemporalInst *inst1, const TemporalInst *inst2)
 {
-	/* Compare values */
-	if (datum_lt(temporalinst_value(inst1), temporalinst_value(inst2), 
-		inst1->valuetypid))
-		return -1;
-	if (datum_gt(temporalinst_value(inst1), temporalinst_value(inst2), 
-		inst1->valuetypid))
-		return 1;
 	/* Compare timestamps */
-	if (timestamp_cmp_internal(inst1->t, inst2->t) < 0)
+	int cmp = timestamp_cmp_internal(inst1->t, inst2->t);
+	if (cmp < 0)
 		return -1;
-	if (timestamp_cmp_internal(inst1->t, inst2->t) > 0)
+	if (cmp > 0)
 		return 1;
-	/* Compare flags */
-	if (inst1->flags < inst2->flags)
+	/* Compare values */
+	if (datum_lt(temporalinst_value(inst1), temporalinst_value(inst2),
+		inst1->valuetypid))
 		return -1;
-	if (inst1->flags > inst2->flags)
+	if (datum_gt(temporalinst_value(inst1), temporalinst_value(inst2),
+		inst1->valuetypid))
 		return 1;
 	/* The two values are equal */
 	return 0;
@@ -754,7 +812,7 @@ temporalinst_cmp(TemporalInst *inst1, TemporalInst *inst2)
  *****************************************************************************/
 
 uint32
-temporalinst_hash(TemporalInst *inst)
+temporalinst_hash(const TemporalInst *inst)
 {
 	uint32		result;
 	uint32		time_hash;
@@ -771,11 +829,9 @@ temporalinst_hash(TemporalInst *inst)
 		value_hash = DatumGetUInt32(call_function1(hashfloat8, value));
 	else if (inst->valuetypid == TEXTOID)
 		value_hash = DatumGetUInt32(call_function1(hashtext, value));
-#ifdef WITH_POSTGIS
-	else if (inst->valuetypid == type_oid(T_GEOMETRY) || 
+	else if (inst->valuetypid == type_oid(T_GEOMETRY) ||
 		inst->valuetypid == type_oid(T_GEOGRAPHY))
 		value_hash = DatumGetUInt32(call_function1(lwgeom_hash, value));
-#endif
 	/* Apply the hash function according to the timestamp */
 	time_hash = DatumGetUInt32(call_function1(hashint8, TimestampTzGetDatum(inst->t)));
 

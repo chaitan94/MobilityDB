@@ -53,6 +53,11 @@ CREATE OPERATOR CLASS gist_timestampset_ops
 	OPERATOR	8		<@ (timestampset, timestampset),
 	OPERATOR	8		<@ (timestampset, period),
 	OPERATOR	8		<@ (timestampset, periodset),
+	-- adjacent
+	OPERATOR	17		-|- (timestampset, period),
+	OPERATOR	17		-|- (timestampset, periodset),
+	-- equals
+	OPERATOR	18		= (timestampset, timestampset),
 	-- overlaps or before
 	OPERATOR	28		&<# (timestampset, timestamptz),
 	OPERATOR	28		&<# (timestampset, timestampset),
@@ -107,6 +112,11 @@ CREATE OPERATOR CLASS gist_period_ops
 	-- contained by
 	OPERATOR	8		<@ (period, period),
 	OPERATOR	8		<@ (period, periodset),
+	-- adjacent
+	OPERATOR	17		-|- (period, period),
+	OPERATOR	17		-|- (period, periodset),
+	-- equals
+	OPERATOR	18		= (period, period),
 	-- overlaps or before
 	OPERATOR	28		&<# (period, timestamptz),
 	OPERATOR	28		&<# (period, timestampset),
@@ -162,6 +172,11 @@ CREATE OPERATOR CLASS gist_periodset_ops
 	-- contained by
 	OPERATOR	8		<@ (periodset, period),
 	OPERATOR	8		<@ (periodset, periodset),
+	-- adjacent
+	OPERATOR	17		-|- (periodset, period),
+	OPERATOR	17		-|- (periodset, periodset),
+	-- equals
+	OPERATOR	18		= (periodset, periodset),
 	-- overlaps or before
 	OPERATOR	28		&<# (periodset, timestamptz),
 	OPERATOR	28		&<# (periodset, timestampset),

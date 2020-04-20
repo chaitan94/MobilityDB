@@ -10,6 +10,28 @@
  *
  *****************************************************************************/
 
+-- New functions that should be added to PostGIS
+
+-- Availability: 3.1.0
+CREATE OR REPLACE FUNCTION ST_LineInterpolatePoint(geography, float8, use_spheroid boolean DEFAULT true)
+	RETURNS geography
+	AS 'MODULE_PATHNAME', 'geography_line_interpolate_point'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+-- Availability: 3.1.0
+CREATE OR REPLACE FUNCTION ST_LineInterpolatePoints(geography, float8, use_spheroid boolean DEFAULT true, repeat boolean DEFAULT true)
+	RETURNS geography
+	AS 'MODULE_PATHNAME', 'geography_line_interpolate_point'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+-- Availability: 3.1.0
+CREATE OR REPLACE FUNCTION ST_LineLocatePoint(geography, geography, use_spheroid boolean DEFAULT true)
+	RETURNS float
+	AS 'MODULE_PATHNAME', 'geography_line_locate_point'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************/
+
 CREATE FUNCTION SRID(tgeompoint)
 	RETURNS integer
 	AS 'MODULE_PATHNAME', 'tpoint_srid'
@@ -59,11 +81,11 @@ CREATE CAST (tgeogpoint AS tgeompoint) WITH FUNCTION tgeompoint(tgeogpoint);
 
 CREATE FUNCTION setprecision(tgeompoint, int)
 	RETURNS tgeompoint
-	AS 'MODULE_PATHNAME', 'tpoint_setprecision'
+	AS 'MODULE_PATHNAME', 'tpoint_set_precision'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION setprecision(tgeogpoint, int)
 	RETURNS tgeogpoint
-	AS 'MODULE_PATHNAME', 'tpoint_setprecision'
+	AS 'MODULE_PATHNAME', 'tpoint_set_precision'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION trajectory(tgeompoint)
@@ -129,6 +151,24 @@ CREATE FUNCTION atGeometry(tgeompoint, geometry)
 CREATE FUNCTION minusGeometry(tgeompoint, geometry)
 	RETURNS tgeompoint
 	AS 'MODULE_PATHNAME', 'tpoint_minus_geometry'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION atStbox(tgeompoint, stbox)
+	RETURNS tgeompoint
+	AS 'MODULE_PATHNAME', 'tpoint_at_stbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION atStbox(tgeogpoint, stbox)
+	RETURNS tgeogpoint
+	AS 'MODULE_PATHNAME', 'tpoint_at_stbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION minusStbox(tgeompoint, stbox)
+	RETURNS tgeompoint
+	AS 'MODULE_PATHNAME', 'tpoint_minus_stbox'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION minusStbox(tgeogpoint, stbox)
+	RETURNS tgeogpoint
+	AS 'MODULE_PATHNAME', 'tpoint_minus_stbox'
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
@@ -272,5 +312,24 @@ CREATE FUNCTION tgeogpoint(geography)
 	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (geography AS tgeogpoint) WITH FUNCTION tgeogpoint(geography);
+
+/*****************************************************************************/
+
+CREATE FUNCTION geoMeasure(tgeompoint, tfloat, boolean DEFAULT FALSE)
+RETURNS geometry
+AS 'MODULE_PATHNAME', 'tpoint_to_geo_measure'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION geoMeasure(tgeogpoint, tfloat, boolean DEFAULT FALSE)
+RETURNS geography
+AS 'MODULE_PATHNAME', 'tpoint_to_geo_measure'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************/
+
+CREATE OR REPLACE FUNCTION simplify(tgeompoint, float8, float8 DEFAULT -1.0)
+	RETURNS tgeompoint
+	AS 'MODULE_PATHNAME', 'tpoint_simplify'
+	LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/

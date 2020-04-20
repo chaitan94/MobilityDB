@@ -68,7 +68,7 @@ void temporalgeom_init()
  * Check the consistency of the metadata we want to enforce in the typmod:
  * srid, type and dimensionality. If things are inconsistent, shut down the query.
  */
-Temporal*
+static Temporal *
 tpoint_valid_typmod(Temporal *temp, int32_t typmod)
 {
 	int32 tpoint_srid = tpoint_srid_internal(temp);
@@ -392,7 +392,9 @@ tpoint_typmod_out(PG_FUNCTION_ARGS)
  * type, dims and srid.
  */
 PG_FUNCTION_INFO_V1(tpoint_enforce_typmod);
-PGDLLEXPORT Datum tpoint_enforce_typmod(PG_FUNCTION_ARGS)
+
+PGDLLEXPORT Datum
+tpoint_enforce_typmod(PG_FUNCTION_ARGS)
 {
 	Temporal *temp = PG_GETARG_TEMPORAL(0);
 	int32 typmod = PG_GETARG_INT32(1);
@@ -415,7 +417,7 @@ tpointinst_constructor(PG_FUNCTION_ARGS)
 	GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
 	ensure_point_type(gs);
 	ensure_non_empty(gs);
-	ensure_has_not_M(gs);
+	ensure_has_not_M_gs(gs);
 	TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
 	Oid	valuetypid = get_fn_expr_argtype(fcinfo->flinfo, 0);
 	Temporal *result = (Temporal *)temporalinst_make(PointerGetDatum(gs),
@@ -477,7 +479,7 @@ tpoint_ever_eq(PG_FUNCTION_ARGS)
 		PG_RETURN_BOOL(false);
 	}
 
-	bool result = false;
+	bool result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = temporalinst_ever_eq((TemporalInst *)temp, 
@@ -488,7 +490,7 @@ tpoint_ever_eq(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALSEQ) 
 		result = temporalseq_ever_eq((TemporalSeq *)temp, 
 			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = temporals_ever_eq((TemporalS *)temp, 
 			PointerGetDatum(gs));
 
@@ -551,7 +553,7 @@ tpoint_always_ne(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Temporal eq
+ * Temporal comparisons
  *****************************************************************************/
 
 PG_FUNCTION_INFO_V1(teq_geo_tpoint);
@@ -599,11 +601,8 @@ teq_tpoint_tpoint(PG_FUNCTION_ARGS)
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
 	ensure_same_srid_tpoint(temp1, temp2);
 	ensure_same_dimensionality_tpoint(temp1, temp2);
-	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) ||
-				  MOBDB_FLAGS_GET_LINEAR(temp2->flags);
-	Temporal *result = linear ?
-		sync_tfunc4_temporal_temporal_cross(temp1, temp2, &datum2_eq2, BOOLOID) :
-		sync_tfunc4_temporal_temporal(temp1, temp2, &datum2_eq2, BOOLOID, linear, NULL);
+	Temporal *result = sync_tfunc4_temporal_temporal_cross(temp1, temp2,
+		&datum2_eq2, BOOLOID);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
 	if (result == NULL)
@@ -611,9 +610,7 @@ teq_tpoint_tpoint(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
-/*****************************************************************************
- * Temporal ne
- *****************************************************************************/
+/*****************************************************************************/
 
 PG_FUNCTION_INFO_V1(tne_geo_tpoint);
 
@@ -660,11 +657,8 @@ tne_tpoint_tpoint(PG_FUNCTION_ARGS)
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
 	ensure_same_srid_tpoint(temp1, temp2);
 	ensure_same_dimensionality_tpoint(temp1, temp2);
-	bool linear = MOBDB_FLAGS_GET_LINEAR(temp1->flags) ||
-		MOBDB_FLAGS_GET_LINEAR(temp2->flags);
-	Temporal *result = linear ?
-		sync_tfunc4_temporal_temporal_cross(temp1, temp2, &datum2_ne2, BOOLOID) :
-		sync_tfunc4_temporal_temporal(temp1, temp2, &datum2_ne2, BOOLOID, linear, NULL);
+	Temporal *result = sync_tfunc4_temporal_temporal_cross(temp1, temp2,
+		&datum2_ne2, BOOLOID);
 	PG_FREE_IF_COPY(temp1, 0);
 	PG_FREE_IF_COPY(temp2, 1);
 	if (result == NULL)
@@ -673,110 +667,22 @@ tne_tpoint_tpoint(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Assemble the set of points of a temporal instant point as a single 
- * geometry/geography. Duplicate points are removed.
+ * Assemble the Trajectory/values of a temporal point as a single
+ * geometry/geography.
  *****************************************************************************/
-
-Datum
-tgeompointi_values(TemporalI *ti)
-{
-	if (ti->count == 1)
-		return temporalinst_value_copy(temporali_inst_n(ti, 0));
-
-	Datum *values = palloc(sizeof(Datum *) * ti->count);
-	int k = 0;
-	for (int i = 0; i < ti->count; i++)
-	{
-		Datum value = temporalinst_value(temporali_inst_n(ti, i));
-		bool found = false;
-		for (int j = 0; j < k; j++)
-		{
-			if (datum_point_eq(value, values[j]))
-			{
-				found = true;
-				break;
-			}
-		}
-		if (!found)
-			values[k++] = value;
-	}
-	if (k == 1)
-	{
-		pfree(values);
-		return temporalinst_value_copy(temporali_inst_n(ti, 0));
-	}
-
-	ArrayType *array = datumarr_to_array(values, k, type_oid(T_GEOMETRY));
-	Datum result = call_function1(LWGEOM_collect_garray, PointerGetDatum(array));
-	pfree(values); pfree(array);
-	return result;
-}
-
-Datum
-tgeogpointi_values(TemporalI *ti)
-{
-	if (ti->count == 1)
-		return temporalinst_value_copy(temporali_inst_n(ti, 0));
-
-	Datum *values = palloc(sizeof(Datum *) * ti->count);
-	int k = 0;
-	for (int i = 0; i < ti->count; i++)
-	{
-		Datum value = temporalinst_value(temporali_inst_n(ti, i));
-		Datum geomvalue = call_function1(geometry_from_geography, value);
-		bool found = false;
-		for (int j = 0; j < k; j++)
-		{
-			if (datum_point_eq(geomvalue, values[j]))
-			{
-				found = true;
-				break;
-			}
-		}
-		if (!found)
-			values[k++] = geomvalue;
-		else
-			pfree(DatumGetPointer(geomvalue));	
-	}
-	if (k == 1)
-	{
-		pfree(DatumGetPointer(values[0])); pfree(values);
-		return temporalinst_value_copy(temporali_inst_n(ti, 0));
-	}
-
-	ArrayType *array = datumarr_to_array(values, k, type_oid(T_GEOMETRY));
-	Datum geomresult = call_function1(LWGEOM_collect_garray, PointerGetDatum(array));
-	Datum result = call_function1(geography_from_geometry, geomresult);
-	for (int i = 0; i < k; i++)
-		pfree(DatumGetPointer(values[i]));
-	pfree(values); pfree(array); pfree(DatumGetPointer(geomresult));
-	return result;
-}
-
-Datum
-tpointi_values(TemporalI *ti)
-{
-	Datum result = 0;
-	ensure_point_base_type(ti->valuetypid);
-	if (ti->valuetypid == type_oid(T_GEOMETRY))
-		result = tgeompointi_values(ti);
-	else if (ti->valuetypid == type_oid(T_GEOGRAPHY))
-		result = tgeogpointi_values(ti);
-	return result;
-}
 
 Datum
 tpoint_values_internal(Temporal *temp)
 {
-	Datum result = 0;
+	Datum result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = temporalinst_value_copy((TemporalInst *)temp);
 	else if (temp->duration == TEMPORALI) 
-		result = tpointi_values((TemporalI *)temp);
+		result = tpointi_trajectory((TemporalI *)temp);
 	else if (temp->duration == TEMPORALSEQ)
 		result = tpointseq_trajectory_copy((TemporalSeq *)temp);
-	else if (temp->duration == TEMPORALS)
+	else /* temp->duration == TEMPORALS */
 		result = tpoints_trajectory((TemporalS *)temp);
 	return result;
 }
@@ -826,7 +732,7 @@ tpoint_at_value(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	}
 
-	Temporal *result = NULL;
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_at_value((TemporalInst *)temp,
@@ -837,7 +743,7 @@ tpoint_at_value(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)temporalseq_at_value((TemporalSeq *)temp,
 			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)temporals_at_value((TemporalS *)temp,
 			PointerGetDatum(gs));
 
@@ -870,8 +776,7 @@ tpoint_minus_value(PG_FUNCTION_ARGS)
 	{
 		Temporal *result;
 		if (temp->duration == TEMPORALSEQ)
-			result = (Temporal *)temporals_from_temporalseqarr(
-				(TemporalSeq **)&temp, 1, MOBDB_FLAGS_GET_LINEAR(temp->flags), false);
+			result = (Temporal *)temporals_make((TemporalSeq **)&temp, 1, false);
 		else
 			result = temporal_copy(temp);
 		PG_FREE_IF_COPY(temp, 0);
@@ -883,8 +788,7 @@ tpoint_minus_value(PG_FUNCTION_ARGS)
 	{
 		Temporal *result;
 		if (temp->duration == TEMPORALSEQ)
-			result = (Temporal *)temporals_from_temporalseqarr(
-				(TemporalSeq **)&temp, 1, MOBDB_FLAGS_GET_LINEAR(temp->flags), false);
+			result = (Temporal *)temporals_make((TemporalSeq **)&temp, 1, false);
 		else
 			result = temporal_copy(temp);
 		PG_FREE_IF_COPY(temp, 0);
@@ -892,7 +796,7 @@ tpoint_minus_value(PG_FUNCTION_ARGS)
 		PG_RETURN_POINTER(result);
 	}
 
-	Temporal *result = NULL;
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_minus_value((TemporalInst *)temp,
@@ -903,7 +807,7 @@ tpoint_minus_value(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)temporalseq_minus_value((TemporalSeq *)temp,
 			PointerGetDatum(gs));
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)temporals_minus_value((TemporalS *)temp,
 			PointerGetDatum(gs));
 
@@ -942,9 +846,9 @@ tpoint_at_values(PG_FUNCTION_ARGS)
 	}
 	
 	Oid valuetypid = temp->valuetypid;
-	datum_sort(values, count, valuetypid);
-	int count1 = datum_remove_duplicates(values, count, valuetypid);
-	Temporal *result = NULL;
+	datumarr_sort(values, count, valuetypid);
+	int count1 = datumarr_remove_duplicates(values, count, valuetypid);
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_at_values((TemporalInst *)temp, 
@@ -955,7 +859,7 @@ tpoint_at_values(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)temporalseq_at_values((TemporalSeq *)temp,
 			values, count1);
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)temporals_at_values((TemporalS *)temp,
 			values, count1);
 
@@ -996,9 +900,9 @@ tpoint_minus_values(PG_FUNCTION_ARGS)
 	}
 	
 	Oid valuetypid = temp->valuetypid;
-	datum_sort(values, count, valuetypid);
-	int count1 = datum_remove_duplicates(values, count, valuetypid);
-	Temporal *result = NULL;
+	datumarr_sort(values, count, valuetypid);
+	int count1 = datumarr_remove_duplicates(values, count, valuetypid);
+	Temporal *result;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
 		result = (Temporal *)temporalinst_minus_values((TemporalInst *)temp,
@@ -1009,7 +913,7 @@ tpoint_minus_values(PG_FUNCTION_ARGS)
 	else if (temp->duration == TEMPORALSEQ) 
 		result = (Temporal *)temporalseq_minus_values((TemporalSeq *)temp,
 			values, count1);
-	else if (temp->duration == TEMPORALS) 
+	else /* temp->duration == TEMPORALS */
 		result = (Temporal *)temporals_minus_values((TemporalS *)temp,
 			values, count1);
 
