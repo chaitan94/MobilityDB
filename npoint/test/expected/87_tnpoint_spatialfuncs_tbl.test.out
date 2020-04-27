@@ -76,7 +76,7 @@ SELECT count(*) FROM tbl_npoint t1, tbl_tnpoint t2 WHERE nearestApproachInstant(
 SELECT count(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE nearestApproachInstant(t1.temp, t2.temp) IS NOT NULL;
  count 
 -------
-    78
+   100
 (1 row)
 
 SELECT count(*) FROM tbl_tnpoint t1, tbl_geometry t2 WHERE nearestApproachDistance(t1.temp, ST_SetSRID(t2.g, 5676)) IS NOT NULL;

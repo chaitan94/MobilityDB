@@ -960,7 +960,7 @@ NAI_geometry_tnpoint(PG_FUNCTION_ARGS)
 	}
 
 	Temporal *geomtemp = tnpoint_as_tgeompoint_internal(temp);
-	TemporalInst *geomresult = NAI_tpoint_geo_internal(geomtemp, gs);
+	TemporalInst *geomresult = NAI_tpoint_geo_internal(geomtemp, PointerGetDatum(gs));
 	TemporalInst *result = tgeompointinst_as_tnpointinst(geomresult);
 	pfree(geomtemp); pfree(geomresult);
 	PG_FREE_IF_COPY(gs, 0);
@@ -978,7 +978,7 @@ NAI_npoint_tnpoint(PG_FUNCTION_ARGS)
 	Datum geom = npoint_as_geom_internal(np);
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 	Temporal *geomtemp = tnpoint_as_tgeompoint_internal(temp);
-	TemporalInst *geomresult = NAI_tpoint_geo_internal(geomtemp, gs);
+	TemporalInst *geomresult = NAI_tpoint_geo_internal(geomtemp, PointerGetDatum(gs));
 	TemporalInst *result = tgeompointinst_as_tnpointinst(geomresult);
 	pfree(geomtemp); pfree(geomresult);
 	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
@@ -1002,7 +1002,7 @@ NAI_tnpoint_geometry(PG_FUNCTION_ARGS)
 	}
 
 	Temporal *geomtemp = tnpoint_as_tgeompoint_internal(temp);
-	TemporalInst *geomresult = NAI_tpoint_geo_internal(geomtemp, gs);
+	TemporalInst *geomresult = NAI_tpoint_geo_internal(geomtemp, PointerGetDatum(gs));
 	TemporalInst *result = tgeompointinst_as_tnpointinst(geomresult);
 	pfree(geomtemp); pfree(geomresult);
 	PG_FREE_IF_COPY(temp, 0);
@@ -1020,7 +1020,7 @@ NAI_tnpoint_npoint(PG_FUNCTION_ARGS)
 	Datum geom = npoint_as_geom_internal(np);
 	GSERIALIZED *gs = (GSERIALIZED *)PG_DETOAST_DATUM(geom);
 	Temporal *geomtemp = tnpoint_as_tgeompoint_internal(temp);
-	TemporalInst *geomresult = NAI_tpoint_geo_internal(geomtemp, gs);
+	TemporalInst *geomresult = NAI_tpoint_geo_internal(geomtemp, PointerGetDatum(gs));
 	TemporalInst *result = tgeompointinst_as_tnpointinst(geomresult);
 	pfree(geomtemp); pfree(geomresult);
 	POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
