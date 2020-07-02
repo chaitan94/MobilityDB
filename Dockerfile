@@ -15,4 +15,16 @@ RUN cd /usr/local/src/MobilityDB/build && \
 	cmake .. && \
 	make && \
 	make install
+RUN apt-get update && \
+    apt-get install -y git && \
+    apt-get install -y cmake    
+RUN rm -rf /usr/local/src/pgrouting
+RUN apt-get install -y osm2pgsql osm2pgrouting libboost-all-dev sphinxsearch
+RUN git clone https://github.com/pgRouting/pgrouting.git -b develop /usr/local/src/pgrouting
+RUN rm -rf /usr/local/src/pgrouting/build  
+RUN mkdir /usr/local/src/pgrouting/build
+RUN cd /usr/local/src/pgrouting/build && \
+	cmake .. && \
+	make && \
+	make install
 

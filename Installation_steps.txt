@@ -1,0 +1,25 @@
+# Preperation
+	sudo apt install osm2pgrouting
+	sudo apt install osm2pgsql
+	git clone https://github.com/ULB-CoDE-WIT/MobilityDB.git
+	
+	# Working directory
+		cd MobilityDB
+
+# Install docker image
+	#Build the docker file
+	sudo docker build -t mobilitydbdocker:1 .
+
+	#volume
+	sudo docker volume create mobilitydb_data
+
+	#container (Running the PostgreSQL Docker container)
+	docker run --name "mobilitydb" -d -p 25432:5432 -v mobilitydb_data:/var/lib/postgresql codewit/mobilitydb
+
+	#Testing the running MobilityDB
+	psql -h localhost -p 25432 -b mobilitydb -U docker -W docker
+
+# Workshop
+	# Decompress the osm file
+		cd MobilityDB/BerlinMOD
+		gunzip brussels.osm.gz
