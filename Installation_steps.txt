@@ -1,7 +1,8 @@
 # Preperation
 	sudo apt install osm2pgrouting
 	sudo apt install osm2pgsql
-	git clone https://github.com/ULB-CoDE-WIT/MobilityDB.git
+	sudo apt install git
+	git clone https://github.com/ULB-CoDE-WIT/MobilityDB.git -b osgeo_docker MobilityDB
 	
 	# Working directory
 		cd MobilityDB
@@ -14,7 +15,7 @@
 	sudo docker volume create mobilitydb_data
 
 	#container (Running the PostgreSQL Docker container)
-	docker run --name "mobilitydb" -d -p 25432:5432 -v mobilitydb_data:/var/lib/postgresql codewit/mobilitydb
+	docker run --name "mobilitydb" -d -p 25432:5432 -v mobilitydb_data:/var/lib/postgresql mobilitydbdocker
 
 	#Testing the running MobilityDB
 	psql -h localhost -p 25432 -b mobilitydb -U docker -W docker
