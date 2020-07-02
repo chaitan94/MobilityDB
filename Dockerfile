@@ -31,4 +31,3 @@ RUN cd /usr/local/src/pgrouting/build && \
 	cmake .. && \
 	make && \
 	make install
-
