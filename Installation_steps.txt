@@ -2,25 +2,26 @@
 	sudo apt install osm2pgrouting
 	sudo apt install osm2pgsql
 	sudo apt install git
-	git clone https://github.com/ULB-CoDE-WIT/MobilityDB.git -b osgeo_docker MobilityDB
+	sudo apt install docker.io
+	sudo systemctl start docker
+	sudo systemctl enable docker
 	
-	# Working directory
-		cd MobilityDB
+# Working directory
+	mkdir MobilityDB
+	cd MobilityDB
 
-# Install docker image
-	#Build the docker file
-	sudo docker build -t mobilitydbdocker:1 .
+# Build the docker
+	# Download the docker file
+		wget https://srv-file22.gofile.io/download/59Qxpm/Dockerfile
+	# Build it
+		sudo docker build -t mobilitydbdocker:1 .
+	# Create volume
+		sudo docker volume create mobilitydb_data	
+	# container (Running the Docker container)
+		sudo docker run --name "mobilitydb" -d -p 25432 -v mobilitydb_data:/var/lib/postgresql mobilitydbdocker:1
+	# Testing the running MobilityDB
+		psql -h localhost -p 25432 -b mobilitydb -U docker -W docker
 
-	#volume
-	sudo docker volume create mobilitydb_data
-
-	#container (Running the PostgreSQL Docker container)
-	docker run --name "mobilitydb" -d -p 25432:5432 -v mobilitydb_data:/var/lib/postgresql mobilitydbdocker
-
-	#Testing the running MobilityDB
-	psql -h localhost -p 25432 -b mobilitydb -U docker -W docker
-
-# Workshop
-	# Decompress the osm file
-		cd MobilityDB/BerlinMOD
-		gunzip brussels.osm.gz
+# Download the OSM data
+	wget https://docs.mobilitydb.com/data/datagenerator.zip
+	unzip datagenerator.zip
