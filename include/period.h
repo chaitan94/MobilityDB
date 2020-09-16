@@ -15,6 +15,7 @@
 
 #include <postgres.h>
 #include <lib/stringinfo.h>
+#include <meos/meos_c.h>
 #include <catalog/pg_type.h>
 
 #include "timetypes.h"
@@ -89,6 +90,7 @@ extern Period *period_make(TimestampTz lower, TimestampTz upper,
 extern void period_set(Period *p, TimestampTz lower, TimestampTz upper, 
 	bool lower_inc, bool upper_inc);
 extern Period *period_copy(const Period *p);
+extern MEOS_Period *period_as_meos(const Period *p);
 extern float8 period_to_secs(TimestampTz t1, TimestampTz t2);
 extern Interval *period_timespan_internal(const Period *p);
 extern Period **periodarr_normalize(Period **periods, int count, int *newcount);

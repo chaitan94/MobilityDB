@@ -190,6 +190,18 @@ period_copy(const Period *p)
 }
 
 /**
+ * Returns a copy of the period as a MEOS object
+ */
+MEOS_Period *
+period_as_meos(const Period *p)
+{
+	char *s = period_to_string(p);
+	MEOS_Period *period = MEOS_newPeriod(s);
+	pfree(s);
+	return period;
+}
+
+/**
  * Returns the number of seconds of the period as a float8 value
  */
 float8

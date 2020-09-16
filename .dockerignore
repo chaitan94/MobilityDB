@@ -1,0 +1,16 @@
+.git
+
+# Meta
+Dockerfile
+Dockerfile.new
+Dockerfile.meos
+.dockerignore
+
+# Local non-docker build files
+build
+
+# Documentation
+doc
+
+# Benchmarks
+BerlinMOD

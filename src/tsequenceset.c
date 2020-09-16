@@ -23,9 +23,11 @@
 #include "periodset.h"
 #include "timeops.h"
 #include "temporaltypes.h"
+#include "temporal_parser.h"
 #include "temporal_util.h"
 #include "oidcache.h"
 #include "temporal_boxops.h"
+#include "temporal_util.h"
 #include "rangetypes_ext.h"
 
 #include "tpoint.h"
@@ -236,6 +238,18 @@ tsequenceset_from_base(PG_FUNCTION_ARGS)
 }
 
 /**
+ * Construct a temporal sequence set value from from a MEOS object
+ * TODO: Only supports float as of for current PoC
+ */
+TSequenceSet *
+tsequenceset_from_meos(MEOS_TFloatSeqSet *meos_seqset)
+{
+	char *s = MEOS_TFloatSeqSet_str(meos_seqset);
+	TSequenceSet *result = (TSequenceSet *) temporal_parse(&s, FLOAT8OID);
+	return result;
+}
+
+/**
  * Append an instant to the temporal value
  */
 TSequenceSet *
@@ -306,6 +320,25 @@ tsequenceset_copy(const TSequenceSet *ts)
 	TSequenceSet *result = palloc0(VARSIZE(ts));
 	memcpy(result, ts, VARSIZE(ts));
 	return result;
+}
+
+/**
+ * Returns a copy of the temporal value as a MEOS object
+ * TODO: Only supports float as of for current PoC
+ */
+MEOS_TFloatSeqSet *
+tsequenceset_as_meos(const TSequenceSet *ts)
+{
+	Oid type = ts->valuetypid;
+	if (type == FLOAT8OID || type == type_oid(T_DOUBLE2) ||
+		type == type_oid(T_DOUBLE3) || type == type_oid(T_DOUBLE4)) {
+		char *result = tsequenceset_to_string(ts, &call_output);
+		MEOS_TFloatSeqSet *meos_ts = MEOS_newTFloatSeqSet(result);
+		pfree(result);
+		return meos_ts;
+	}
+	ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				errmsg("Only supports float as of for current PoC")));
 }
 
 /*****************************************************************************/
@@ -1805,37 +1838,13 @@ tsequenceset_restrict_period(const TSequenceSet *ts, const Period *p, bool atfun
 	/* General case */
 	if (atfunc)
 	{
-		int loc;
-		tsequenceset_find_timestamp(ts, p->lower, &loc);
-		/* We are sure that loc < ts->count because of the bounding period test above */
-		TSequence **sequences = palloc(sizeof(TSequence *) * (ts->count - loc));
-		TSequence *tofree[2];
-		int k = 0, l = 0;
-		for (int i = loc; i < ts->count; i++)
-		{
-			seq = tsequenceset_seq_n(ts, i);
-			if (contains_period_period_internal(p, &seq->period))
-				sequences[k++] = seq;
-			else if (overlaps_period_period_internal(p, &seq->period))
-			{
-				TSequence *newseq = tsequence_at_period(seq, p);
-				sequences[k++] = tofree[l++] = newseq;
-			}
-			int cmp = timestamp_cmp_internal(p->upper, seq->period.upper);
-			if (cmp < 0 || (cmp == 0 && seq->period.upper_inc))
-				break;
-		}
-		if (k == 0)
-		{
-			pfree(sequences);
-			return NULL;
-		}
-		/* Since both the tsequenceset and the period are normalized it is not 
-		 * necessary to normalize the result of the projection */
-		TSequenceSet *result = tsequenceset_make(sequences, k, NORMALIZE_NO);
-		for (int i = 0; i < l; i++)
-			pfree(tofree[i]);
-		pfree(sequences);
+		MEOS_TFloatSeqSet *seqset = tsequenceset_as_meos(ts);
+		MEOS_Period *period = period_as_meos(p);
+		MEOS_TFloatSeqSet *r_seqset = MEOS_TFloatSeqSet_atPeriod(seqset, period);
+		TSequenceSet *result = tsequenceset_from_meos(r_seqset);
+		MEOS_deletePeriod(period);
+		MEOS_deleteTFloatSeqSet(seqset);
+		MEOS_deleteTFloatSeqSet(r_seqset);
 		return result;
 	}
 	else

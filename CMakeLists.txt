@@ -167,6 +167,14 @@ if(NOT HAS_FFSL)
        add_definitions(-D NO_FFSL)
 endif()
 
+# MEOS needs to be cloned in this location
+# It's C API (meos_c) also needs to be built beforehand
+set(MEOS_PATH /meos)
+
+target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "${MEOS_PATH}/capi/include")
+target_link_directories(${CMAKE_PROJECT_NAME} PUBLIC "${MEOS_PATH}/build/capi")
+target_link_libraries(${CMAKE_PROJECT_NAME} meos_c)
+
 add_custom_command(
 	OUTPUT ${SQLPP}
 	COMMAND mkdir -p ${CMAKE_BINARY_DIR}/sqlin
@@ -196,5 +204,3 @@ add_custom_target(install_restart
                   COMMAND systemctl restart postgresql
                   DEPENDS ${PROJECT_NAME}
                   COMMENT "Restarting PostgreSQL")
-
-

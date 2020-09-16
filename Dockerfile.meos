@@ -1,0 +1,40 @@
+FROM kartoza/postgis:11.5-2.8
+ENV POSTGRES_DBNAME=mobilitydb
+ENV POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,mobilitydb
+ENV EXTRA_CONF="shared_preload_libraries = 'pg_cron,postgis-2.5'\nmax_locks_per_transaction = 150\n"
+RUN apt-get update \
+ && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    libpq-dev \
+    liblwgeom-dev \
+    libproj-dev \
+    libjson-c-dev \
+    libgsl-dev \
+    libgslcblas0 \
+    postgresql-server-dev-11 \
+    libgeos-dev \
+    python-pip \
+    gdb
+
+# To get latest cmake
+RUN pip install cmake
+
+# Build MEOS C API library in /meos
+RUN git clone https://github.com/adonmo/meos.git -b tseqset-atperiod /meos --depth=1 && \
+    cd /meos && \
+    cmake -B build/capi -S capi -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build/capi --config Release && \
+    cp /meos/build/capi/libmeos_c.so /usr/lib && \
+    rm -rf build
+
+ADD . /usr/local/src/MobilityDB
+RUN mkdir /usr/local/src/MobilityDB/build && \
+    cd /usr/local/src/MobilityDB/build && \
+    cmake .. && \
+    make && \
+    make install && \
+    rm -rf /usr/local/src/MobilityDB
+
+COPY /scripts/docker-entrypoint.sh /scripts/docker-entrypoint.sh

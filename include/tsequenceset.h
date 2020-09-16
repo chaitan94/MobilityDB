@@ -15,6 +15,7 @@
 
 #include <postgres.h>
 #include <catalog/pg_type.h>
+#include <meos/meos_c.h>
 #include <utils/array.h>
 #include <utils/rangetypes.h>
 
@@ -30,6 +31,7 @@ extern TSequenceSet *tsequenceset_make(TSequence **sequences, int count,
 extern TSequenceSet * tsequenceset_make_free(TSequence **sequences, int count, 
 	bool normalize);
 extern TSequenceSet *tsequenceset_copy(const TSequenceSet *ts);
+extern MEOS_TFloatSeqSet *tsequenceset_as_meos(const TSequenceSet *ts);
 extern bool tsequenceset_find_timestamp(const TSequenceSet *ts, TimestampTz t,
 	int *loc);
 extern double tsequenceset_interval_double(const TSequenceSet *ts);
@@ -67,6 +69,8 @@ extern TSequenceSet *tsequenceset_from_base_internal(Datum value,
 	Oid valuetypid, const PeriodSet *ps, bool linear);
 
 extern Datum tsequenceset_from_base(PG_FUNCTION_ARGS);
+
+extern TSequenceSet *tsequenceset_from_meos(MEOS_TFloatSeqSet *meos_seqset);
 
 /* Append and merge functions */
 
