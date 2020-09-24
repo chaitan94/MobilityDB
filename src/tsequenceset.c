@@ -23,7 +23,6 @@
 #include "periodset.h"
 #include "timeops.h"
 #include "temporaltypes.h"
-#include "temporal_parser.h"
 #include "temporal_util.h"
 #include "oidcache.h"
 #include "temporal_boxops.h"
@@ -238,15 +237,20 @@ tsequenceset_from_base(PG_FUNCTION_ARGS)
 }
 
 /**
- * Construct a temporal sequence set value from from a MEOS object
+ * Construct a temporal sequence set from a MEOS object
  * TODO: Only supports float as of for current PoC
  */
 TSequenceSet *
 tsequenceset_from_meos(MEOS_TFloatSeqSet *meos_seqset)
 {
-	char *s = MEOS_TFloatSeqSet_str(meos_seqset);
-	TSequenceSet *result = (TSequenceSet *) temporal_parse(&s, FLOAT8OID);
-	return result;
+	int count;
+	MEOS_TFloatSeq **meos_seqs = MEOS_TFloatSeqSet_sequences(meos_seqset, &count);
+	TSequence **sequences = palloc(sizeof(TSequence *) * count);
+	for (int i = 0; i < count; i++)
+	{
+		sequences[i] = tsequence_from_meos(meos_seqs[i]);
+	}
+	return tsequenceset_make_free(sequences, count, NORMALIZE_NO);
 }
 
 /**
@@ -332,9 +336,23 @@ tsequenceset_as_meos(const TSequenceSet *ts)
 	Oid type = ts->valuetypid;
 	if (type == FLOAT8OID || type == type_oid(T_DOUBLE2) ||
 		type == type_oid(T_DOUBLE3) || type == type_oid(T_DOUBLE4)) {
-		char *result = tsequenceset_to_string(ts, &call_output);
-		MEOS_TFloatSeqSet *meos_ts = MEOS_newTFloatSeqSet(result);
-		pfree(result);
+
+		MEOS_TFloatSeq **sequences = palloc0(sizeof(MEOS_TFloatSeq *) * ts->count);
+		for (int i = 0; i < ts->count; i++) {
+			TSequence *sequence = tsequenceset_seq_n(ts, i);
+			sequences[i] = tsequence_as_meos(sequence);
+		}
+
+		MEOS_TFloatSeqSet *meos_ts = MEOS_newTFloatSeqSet_SI(
+			sequences,
+			ts->count,
+			MEOS_Interpolation_Linear
+		);
+
+		for (int i = 0; i < ts->count; i++) {
+			MEOS_deleteTFloatSeq(sequences[i]);
+		}
+		pfree(sequences);
 		return meos_ts;
 	}
 	ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),

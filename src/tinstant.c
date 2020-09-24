@@ -77,6 +77,27 @@ tinstant_value_copy(const TInstant *inst)
 }
 
 /**
+ * Returns a copy of the temporal value as a MEOS object
+ * TODO: Only supports float as of for current PoC
+ */
+MEOS_TFloatInst *tinstant_as_meos(const TInstant *inst)
+{
+	Oid type = inst->valuetypid;
+	if (type == FLOAT8OID || type == type_oid(T_DOUBLE2) ||
+		type == type_oid(T_DOUBLE3) || type == type_oid(T_DOUBLE4)) {
+
+		MEOS_TFloatInst *meos_inst = MEOS_newTFloatInst_VT(
+			(float) DatumGetFloat8(tinstant_value(inst)),
+			timestamptz_to_time_t(inst->t)
+		);
+
+		return meos_inst;
+	}
+	ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				errmsg("Only supports float as of for current PoC")));
+}
+
+/**
  * Construct a temporal instant value from the arguments
  *
  * The memory structure of a temporal instant value is as follows
@@ -139,6 +160,20 @@ tinstant_make(Datum value, TimestampTz t, Oid valuetypid)
 		POSTGIS_FREE_IF_COPY_P(gs, DatumGetPointer(value));
 	}
 	return result;
+}
+
+/**
+ * Construct a temporal instant from a MEOS object
+ * TODO: Only supports float as of for current PoC
+ */
+TInstant *
+tinstant_from_meos(MEOS_TFloatInst *meos_inst)
+{
+	return tinstant_make(
+		Float8GetDatum(MEOS_TFloatInst_value(meos_inst)),
+		time_t_to_timestamptz(MEOS_TFloatInst_timestamp(meos_inst)),
+		FLOAT8OID
+	);
 }
 
 /**

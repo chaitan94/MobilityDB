@@ -195,10 +195,12 @@ period_copy(const Period *p)
 MEOS_Period *
 period_as_meos(const Period *p)
 {
-	char *s = period_to_string(p);
-	MEOS_Period *period = MEOS_newPeriod(s);
-	pfree(s);
-	return period;
+	return MEOS_newPeriod_TTBB(
+		timestamptz_to_time_t(p->lower),
+		timestamptz_to_time_t(p->upper),
+		p->lower_inc,
+		p->upper_inc
+	);
 }
 
 /**

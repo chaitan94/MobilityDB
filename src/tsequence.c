@@ -1103,6 +1103,30 @@ tsequence_from_base(PG_FUNCTION_ARGS)
 }
 
 /**
+ * Construct a temporal sequence from a MEOS object
+ * TODO: Only supports float as of for current PoC
+ */
+TSequence *
+tsequence_from_meos(MEOS_TFloatSeq *meos_seq)
+{
+	int count;
+	MEOS_TFloatInst **meos_insts = MEOS_TFloatSeq_instants(meos_seq, &count);
+	TInstant **instants = palloc(sizeof(TInstant *) * count);
+	for (int i = 0; i < count; i++)
+	{
+		instants[i] = tinstant_from_meos(meos_insts[i]);
+	}
+	return tsequence_make_free(
+		instants,
+		count,
+		MEOS_TFloatSeq_lower_inc(meos_seq),
+		MEOS_TFloatSeq_upper_inc(meos_seq),
+		MEOS_TFloatSeq_interpolation(meos_seq) == MEOS_Interpolation_Linear,
+		NORMALIZE_NO
+	);
+}
+
+/**
  * Append an instant to the temporal value
  */
 Temporal *
@@ -1265,6 +1289,41 @@ tsequence_copy(const TSequence *seq)
 	TSequence *result = palloc0(VARSIZE(seq));
 	memcpy(result, seq, VARSIZE(seq));
 	return result;
+}
+
+/**
+ * Returns a copy of the temporal value as a MEOS object
+ * TODO: Only supports float as of for current PoC
+ */
+MEOS_TFloatSeq *
+tsequence_as_meos(const TSequence *seq)
+{
+	Oid type = seq->valuetypid;
+	if (type == FLOAT8OID || type == type_oid(T_DOUBLE2) ||
+		type == type_oid(T_DOUBLE3) || type == type_oid(T_DOUBLE4)) {
+
+		MEOS_TFloatInst **instants = palloc0(sizeof(MEOS_TFloatInst *) * seq->count);
+		for (int i = 0; i < seq->count; i++) {
+			TInstant *instant = tsequence_inst_n(seq, i);
+			instants[i] = tinstant_as_meos(instant);
+		}
+
+		MEOS_TFloatSeq *meos_seq = MEOS_newTFloatSeq_IBBI(
+			instants,
+			seq->count,
+			seq->period.lower_inc,
+			seq->period.upper_inc,
+			MEOS_Interpolation_Linear
+		);
+
+		for (int i = 0; i < seq->count; i++) {
+			MEOS_deleteTFloatInst(instants[i]);
+		}
+		pfree(instants);
+		return meos_seq;
+	}
+	ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				errmsg("Only supports float as of for current PoC")));
 }
 
 /**

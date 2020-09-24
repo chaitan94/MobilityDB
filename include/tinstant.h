@@ -15,6 +15,7 @@
 
 #include <postgres.h>
 #include <catalog/pg_type.h>
+#include <meos/meos_c.h>
 #include <utils/array.h>
 #include <utils/rangetypes.h>
 
@@ -24,7 +25,9 @@
 /*****************************************************************************/
  
 extern TInstant *tinstant_make(Datum value, TimestampTz t, Oid valuetypid);
+extern TInstant *tinstant_from_meos(MEOS_TFloatInst *meos_inst);
 extern TInstant *tinstant_copy(const TInstant *inst);
+extern MEOS_TFloatInst *tinstant_as_meos(const TInstant *inst);
 extern Datum* tinstant_value_ptr(const TInstant *inst);
 extern Datum tinstant_value(const TInstant *inst);
 extern Datum tinstant_value_copy(const TInstant *inst);
